@@ -10,18 +10,6 @@
                                "source snapshot of Davorak/PandocFilters" "https://github.com/Davorak/PandocFilters"
                                #f))
 
-(define-public drazzilb08-daps-source
-  (make-github-source-snapshot "drazzilb08-daps-source" "Drazzilb08" "Drazzilb08" "daps"
-                               "9ea4bdffa389455a1bdcb14f46f21571635d1225" "119c8lfn5z8ifmhgd29b50zsw6scsb0lha9zngjw8llkqmixxq79"
-                               "source snapshot of Drazzilb08/daps" "https://github.com/Drazzilb08/daps"
-                               #f))
-
-(define-public drop-oss-drop-source
-  (make-github-source-snapshot "drop-oss-drop-source" "Drop-OSS" "Drop-OSS" "drop"
-                               "380e3a50b437fcbd93820863e9756e7fdb634e9a" "0cqqczv6sa3sbihcmswh7rswsw4fql7nxpai910vwv7jjzq7cnjj"
-                               "source snapshot of Drop-OSS/drop" "https://github.com/Drop-OSS/drop"
-                               #f))
-
 (define-public effect-ts-examples-source
   (make-github-source-snapshot "effect-ts-examples-source" "Effect-TS" "Effect-TS" "examples"
                                "91e24b045af2bcdbeb2e78e075825ed20a0038a7" "0izhxdx7d3dvk4lsbsccps9sfdhmg6mx71vkddq6r43pfblz1s7l"
@@ -44,12 +32,6 @@
   (make-github-source-snapshot "emiletrotignon-gamelle-source" "EmileTrotignon" "EmileTrotignon" "gamelle"
                                "cfe5bc6b670ec9ca9a6259fccabedd50cf0353c9" "1s0apnryv7hq97q36w0m0b8k73dbix62w6aa4h6mib17lplhhf28"
                                "source snapshot of EmileTrotignon/gamelle" "https://github.com/EmileTrotignon/gamelle"
-                               license:expat))
-
-(define-public enderfga-claw-orchestrator-source
-  (make-github-source-snapshot "enderfga-claw-orchestrator-source" "Enderfga" "Enderfga" "claw-orchestrator"
-                               "ac03371b493d2d0d2259fa22134f263335bf5d37" "0zb2f2s0s1b79w6c0azphr2lghyl6gx9g658m7lr13bbjfjmhsgq"
-                               "source snapshot of Enderfga/claw-orchestrator" "https://github.com/Enderfga/claw-orchestrator"
                                license:expat))
 
 (define-public enterprisequalitycoding-fizzbuzzenterpriseedition-source
@@ -105,18 +87,6 @@
                                "3128f5d5ad7b6242af5c8cac05a5207fcc90a6e3" "1xq68rjadc4k8a8jfjx31anq3q0z7y5z16pli71mkbxs2lzc9vna"
                                "source snapshot of Gutenberg-Labo/GL-StarTaker" "https://github.com/Gutenberg-Labo/GL-StarTaker"
                                #f))
-
-(define-public hdinnovations-unit3d-source
-  (make-github-source-snapshot "hdinnovations-unit3d-source" "HDInnovations" "HDInnovations" "UNIT3D"
-                               "8b88f4c8182eb3d3912ffef425c3224dcfd596f4" "0yamwcpw09bibdkn05inls90x731gxc2dczdmmi6llbf974sjjx7"
-                               "source snapshot of HDInnovations/UNIT3D" "https://github.com/HDInnovations/UNIT3D"
-                               license:agpl3))
-
-(define-public hkuds-clawwork-source
-  (make-github-source-snapshot "hkuds-clawwork-source" "HKUDS" "HKUDS" "ClawWork"
-                               "9c73ac05fdb0bffdb23febdd971eb70f44dd46eb" "1lhfa8my4kbjz5mn6chzbpc00kv4jjasblbs701i30y2rww25m2p"
-                               "source snapshot of HKUDS/ClawWork" "https://github.com/HKUDS/ClawWork"
-                               license:expat))
 
 (define-public hackerpoet-noneuclidean-source
   (make-github-source-snapshot "hackerpoet-noneuclidean-source" "HackerPoet" "HackerPoet" "NonEuclidean"
@@ -340,12 +310,6 @@
                                "source snapshot of froggey/Mezzano" "https://github.com/froggey/Mezzano"
                                license:expat))
 
-(define-public gameyfin-gameyfin-source
-  (make-github-source-snapshot "gameyfin-gameyfin-source" "gameyfin" "gameyfin" "gameyfin"
-                               "1f377f3ddc15358b3069833815b670f2e779cd38" "0fdri2k3dcgn4wq7qwsfp02wxfhl59m70dr2biz3i40qkvzzjdhc"
-                               "source snapshot of gameyfin/gameyfin" "https://github.com/gameyfin/gameyfin"
-                               license:agpl3))
-
 (define-public gigasquid-wonderland-clojure-katas-source
   (make-github-source-snapshot "gigasquid-wonderland-clojure-katas-source" "gigasquid" "gigasquid" "wonderland-clojure-katas"
                                "ed064709abe2e29454946b81130e6876cc2f0c66" "071yq153l38i8fqkvq5zg74sq5f78sdf42yz09b69sw5a1bzdz12"
@@ -357,12 +321,6 @@
                                "f44f670affec72a37c69a1bf103bddc044020f49" "0njfmqj0y4xljbwm5yzyrw2w5rcvabbvvs45majkym33hxhm5mkn"
                                "source snapshot of googlefonts/amstelvar" "https://github.com/googlefonts/amstelvar"
                                license:silofl1.1))
-
-(define-public gramps-project-gramps-web-source
-  (make-github-source-snapshot "gramps-project-gramps-web-source" "gramps-project" "gramps-project" "gramps-web"
-                               "9f20b3246bc0b3a212143a4f68271ce69b03b1d9" "10mwkmwh7lhsjkk7973kzp86r9c4cddcbmz4byi16p084jjgm79x"
-                               "source snapshot of gramps-project/gramps-web" "https://github.com/gramps-project/gramps-web"
-                               license:agpl3))
 
 (define-public greg-kennedy-p5-nrl-texttophoneme-source
   (make-github-source-snapshot "greg-kennedy-p5-nrl-texttophoneme-source" "greg-kennedy" "greg-kennedy" "p5-NRL-TextToPhoneme"

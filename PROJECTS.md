@@ -10,7 +10,7 @@ intentionally source-oriented data packages, as described in the README.
 
 ## Current source collections
 
-The channel exports 646 unique immutable source packages.  This is a current
+The channel exports 629 unique immutable source packages.  This is a current
 collection summary, not a future-package backlog.
 
 | Collection | Public inventory | Source packages | Exclusions and overlap handling |
@@ -18,7 +18,7 @@ collection summary, not a future-package backlog.
 | Owned `htayj` and `drbeefsupreme` originals | 53 | 51 | Two empty owned repositories have no branch or commit.  Public forks are excluded. |
 | Lars Brinkhoff historical-computing inventory | 192 relevant | 177 | Three empty repositories are omitted.  Twelve canonical PDP-10 redirects or duplicates are deduplicated against the PDP-10 collection.  The archived `tv11` source remains preserved, with no issue follow-up. |
 | PDP-10 organization inventory | 68 relevant originals | 68 | Nine archived sources remain available as snapshots.  Forks are excluded. |
-| `htayj` starred public repositories | 452 | 350 | Server/self-hosting software, archived/reference material, and source-origin or package-name overlaps/collisions are excluded. |
+| `htayj` starred public repositories | 452 | 333 | Server/self-hosting software, archived/reference material, and source-origin or package-name overlaps/collisions are excluded, including 17 additional clear server/self-host removals. |
 
 Source snapshots are preservation inputs, not assertions that a repository is
 host-installable software.  Their package definitions and hashes do not grant

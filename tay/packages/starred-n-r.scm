@@ -16,12 +16,6 @@
                                "source snapshot of Nearoo/music-tool" "https://github.com/Nearoo/music-tool"
                                license:expat))
 
-(define-public nerimity-nerimity-web-source
-  (make-github-source-snapshot "nerimity-nerimity-web-source" "Nerimity" "Nerimity" "nerimity-web"
-                               "aedd8ff68b0ee9bfbea08e02c346f0f7f6f7ef27" "0am9qdapnqsqjlsdxzgn9iff5z0rvclhsaql13597mj1lzmnmvk4"
-                               "source snapshot of Nerimity/nerimity-web" "https://github.com/Nerimity/nerimity-web"
-                               license:gpl3))
-
 (define-public octachron-roguetype-source
   (make-github-source-snapshot "octachron-roguetype-source" "Octachron" "Octachron" "roguetype"
                                "7c90a68c91dec0f56ff8b41addd6de76d3a87bd0" "1fjfy5r3047n885nnhk2925mmv7p2fmf565rvrdkfh8zhic3lm3i"
@@ -153,12 +147,6 @@
                                "53856d76e41d77ad34c4da12aae2bd7815c9f9fc" "1004lyxq22phgbynlcxxnj4i5rybxjwvbjk5ifny8p5acmlfijni"
                                "source snapshot of ocaml-multicore/eio" "https://github.com/ocaml-multicore/eio"
                                #f))
-
-(define-public omnigent-ai-omnigent-source
-  (make-github-source-snapshot "omnigent-ai-omnigent-source" "omnigent-ai" "omnigent-ai" "omnigent"
-                               "204e99d5c685bb242d84c3e1c14a3bb5565ff152" "1giyjr8w6lrnddm8wlqv6c1z5ang8hbw8hdhclzwh8qvz8hrbg2k"
-                               "source snapshot of omnigent-ai/omnigent" "https://github.com/omnigent-ai/omnigent"
-                               license:asl2.0))
 
 (define-public ondras-rot-js-source
   (make-github-source-snapshot "ondras-rot-js-source" "ondras" "ondras" "rot.js"
@@ -292,12 +280,6 @@
                                "source snapshot of raphink/geneve_1564" "https://github.com/raphink/geneve_1564"
                                license:gpl3))
 
-(define-public raydak-labs-configarr-source
-  (make-github-source-snapshot "raydak-labs-configarr-source" "raydak-labs" "raydak-labs" "configarr"
-                               "b682e7c3245f959e6d24c886dd78be35d9960b95" "1vw0g9nwa4msc5xhc8wb7hpj4ansv1i8mdsr3gknm93pqb4nwwpn"
-                               "source snapshot of raydak-labs/configarr" "https://github.com/raydak-labs/configarr"
-                               license:agpl3))
-
 (define-public redxaxder-7drl2019-source
   (make-github-source-snapshot "redxaxder-7drl2019-source" "redxaxder" "redxaxder" "7DRL2019"
                                "9b6b335b31b2a89c49a95d508f57963f6fc8ad63" "1caw6ymhik20np6vj2l0yrg3vprgizahyi9kd6ghvy8ab63wyx2g"
@@ -374,12 +356,6 @@
   (make-github-source-snapshot "rudihorn-drm-vc4-grabber-source" "rudihorn" "rudihorn" "drm-vc4-grabber"
                                "1af6f9a6845495ca7fc122cab701b9e9e855f053" "0nnvl8frmm7qjh2lhyvb9yvjq7mdsp1cgb372mig8cpn67jgpl6m"
                                "source snapshot of rudihorn/drm-vc4-grabber" "https://github.com/rudihorn/drm-vc4-grabber"
-                               license:expat))
-
-(define-public ruvnet-ruview-source
-  (make-github-source-snapshot "ruvnet-ruview-source" "ruvnet" "ruvnet" "RuView"
-                               "de27336fa1db971d4689fd2db19610e8a7966dee" "1clpqnji97wvnx4qi2j7jcc30fk1jdlp6yiwmfz7ghz4nmqcv3vf"
-                               "source snapshot of ruvnet/RuView" "https://github.com/ruvnet/RuView"
                                license:expat))
 
 (define-public ryanfb-latinocr-source

@@ -18,7 +18,7 @@ PARSED_SOURCE_PACKAGES := $(shell { \
 		tay/packages/larsbrinkhoff-a-f.scm tay/packages/larsbrinkhoff-g-m.scm \
 		tay/packages/larsbrinkhoff-n-s.scm tay/packages/larsbrinkhoff-t-z.scm; \
 	} | sed -E 's/^define-public[[:space:]]+//; /^[^"]*"/ { s/^[^"]*"//; s/".*//; }' | sort -u)
-EXPECTED_SOURCE_PACKAGE_COUNT := 646
+EXPECTED_SOURCE_PACKAGE_COUNT := 629
 SOURCE_PACKAGE_COUNT := $(words $(SOURCE_PACKAGES))
 RELEASE_FONT_PACKAGES := cadr-fonts-latin cadr-fonts-symbols dec-fonts \
 	genera-fonts-latin genera-fonts-symbols

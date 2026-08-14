@@ -40,12 +40,6 @@
                                "source snapshot of JezzaHehn/Android-Toki-Pona-Keyboard" "https://github.com/JezzaHehn/Android-Toki-Pona-Keyboard"
                                license:asl2.0))
 
-(define-public jezzahehn-ilo-wawa-source
-  (make-github-source-snapshot "jezzahehn-ilo-wawa-source" "JezzaHehn" "JezzaHehn" "ilo-wawa"
-                               "57ad75b111d5670c3ecd5640bc81fd220235e5a7" "01444ibbvkhc73p1ig07lm0h3ra737is4481wacbqpcfnnwyc2rr"
-                               "source snapshot of JezzaHehn/ilo-wawa" "https://github.com/JezzaHehn/ilo-wawa"
-                               license:expat))
-
 (define-public johndoee-autotorrent2-source
   (make-github-source-snapshot "johndoee-autotorrent2-source" "JohnDoee" "JohnDoee" "autotorrent2"
                                "dcbdf2899ddb326fef9d4845b6250bf828ea2029" "0ma2pzr3375kahqpri2s8mvik3cyvpa06fbkic16vg5m6a8hg6k8"
@@ -75,12 +69,6 @@
                                "0f5fb475f0280ee112e277e34ba15f85e53e7d8a" "07s108mm64mrk6pm468yyvj2zw62c42qp7il4fvvq25lcgq9wsck"
                                "source snapshot of KDE/plasma-bigscreen" "https://github.com/KDE/plasma-bigscreen"
                                #f))
-
-(define-public kyvero-vexus-clawmacs-legacy-source
-  (make-github-source-snapshot "kyvero-vexus-clawmacs-legacy-source" "Kyvero-Vexus" "Kyvero-Vexus" "clawmacs-legacy"
-                               "6df1fbdbbcf13b1f44aba52ce3d1123a0014402d" "07aih6bx0qfa7gimfxnq1i3xphpswjffd7p4xhzqisz0cywfkiiq"
-                               "source snapshot of Kyvero-Vexus/clawmacs-legacy" "https://github.com/Kyvero-Vexus/clawmacs-legacy"
-                               license:agpl3))
 
 (define-public lapingvino-climacs-source
   (make-github-source-snapshot "lapingvino-climacs-source" "LaPingvino" "LaPingvino" "Climacs"
@@ -364,12 +352,6 @@
                                "source snapshot of lisper/cpus-caddr" "https://github.com/lisper/cpus-caddr"
                                #f))
 
-(define-public lldap-lldap-source
-  (make-github-source-snapshot "lldap-lldap-source" "lldap" "lldap" "lldap"
-                               "9cc54ab03c5a044bfe574e30a6b6245d45c8e7b9" "0nkj1zxn9llm8rllz1hyfjqax9spjiyw4qcsjb400rgw47wax91b"
-                               "source snapshot of lldap/lldap" "https://github.com/lldap/lldap"
-                               license:gpl3))
-
 (define-public loadletter-winny-p2p-source
   (make-github-source-snapshot "loadletter-winny-p2p-source" "loadletter" "loadletter" "Winny-p2p"
                                "2395ebbc7bc039e6744834324a36c678d53d20c6" "060wbp2jm9a05x24imk1ld8pfrz46zja7zjgih44h9iv76sgzh6j"
@@ -537,12 +519,6 @@
                                "045f587b3914485baf85d9eae4f97f968cbfafaa" "05jkf3x18rj6bv2bvq0sih2590rgznrvm00ghjihy84abhy4w1xk"
                                "source snapshot of mogenslund/liquid" "https://github.com/mogenslund/liquid"
                                license:epl1.0))
-
-(define-public monicahq-monica-source
-  (make-github-source-snapshot "monicahq-monica-source" "monicahq" "monicahq" "monica"
-                               "e08e91734170b6bbd582cb578532c3948196124e" "05c0b9c3gx291xm5b2wj1c2mk852ihy1mrcbh3h7qbmygrx531r8"
-                               "source snapshot of monicahq/monica" "https://github.com/monicahq/monica"
-                               license:agpl3))
 
 (define-public moraroy-nonsteamlaunchers-on-steam-deck-source
   (make-github-source-snapshot "moraroy-nonsteamlaunchers-on-steam-deck-source" "moraroy" "moraroy" "NonSteamLaunchers-On-Steam-Deck"

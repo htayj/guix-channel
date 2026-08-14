@@ -58,12 +58,6 @@
                                "source snapshot of ahrefs/atd" "https://github.com/ahrefs/atd"
                                #f))
 
-(define-public aimh-lab-visione-source
-  (make-github-source-snapshot "aimh-lab-visione-source" "aimh-lab" "aimh-lab" "visione"
-                               "0522e311117cd0532827050621bfbe0cac4c5755" "136flr61sp40148qpvg69c0d7nyfsmnqm3avfqgpcrgfpi63clm4"
-                               "source snapshot of aimh-lab/visione" "https://github.com/aimh-lab/visione"
-                               license:eupl1.2))
-
 (define-public aiwnios-aiwnios-source
   (make-github-source-snapshot "aiwnios-aiwnios-source" "aiwnios" "aiwnios" "Aiwnios"
                                "e155e87a4a4ddae4cd7f25685d9db8869fd45a40" "0j8hkb37l5pcphq2lw84a65cr3s190kdhw5qq3ik1s41bvvkvnzi"
@@ -285,12 +279,6 @@
                                "8ec223dd9bc1f1295413216c1162ae191de4b56e" "0n5p8zp6gj0639zkmzhmd0yfxiafjag7mzqzilkk12n9nbb58scq"
                                "source snapshot of chromebreakerdev/DellBIOSTools" "https://github.com/chromebreakerdev/DellBIOSTools"
                                license:cc0))
-
-(define-public chros73-rtorrent-ps-ch-setup-source
-  (make-github-source-snapshot "chros73-rtorrent-ps-ch-setup-source" "chros73" "chros73" "rtorrent-ps-ch_setup"
-                               "ddd94381d2239ee8f5399e0a1576f0005413daa8" "0imqslmm7dj9cvi0p0nc92mxcl11smnvpr8ilb9j2dqf16i7br11"
-                               "source snapshot of chros73/rtorrent-ps-ch_setup" "https://github.com/chros73/rtorrent-ps-ch_setup"
-                               #f))
 
 (define-public ckcr4lyf-qbit-race-source
   (make-github-source-snapshot "ckcr4lyf-qbit-race-source" "ckcr4lyf" "ckcr4lyf" "qbit-race"

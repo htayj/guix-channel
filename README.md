@@ -6,14 +6,14 @@ packages for reviewed project artifacts, applications, tools, and data
 collections.  Source snapshots preserve submodule pointers but do not fetch
 submodule contents.
 
-The 2026-08-14 source collection contains 646 unique source packages:
+The 2026-08-14 source collection contains 629 unique source packages:
 
 | Collection | Source packages | Disposition |
 | --- | ---: | --- |
 | Owned `htayj` and `drbeefsupreme` originals | 51 | Nonempty owned public repositories; two empty owned repositories have no commit to package. |
 | Lars Brinkhoff historical-computing inventory | 177 | 192 relevant repositories less three empty repositories and 12 canonical PDP-10 redirects or duplicates already represented by the PDP-10 collection. |
 | PDP-10 organization inventory | 68 | Relevant original repositories, including nine archived sources retained for preservation; forks are excluded. |
-| `htayj` starred public repositories | 350 | Canonical, non-self-hosted source candidates after server/self-host, archive/reference, and overlap/collision exclusions. |
+| `htayj` starred public repositories | 333 | Canonical, non-self-hosted source candidates after server/self-host, archive/reference, and overlap/collision exclusions, including 17 additional clear server/self-host removals. |
 
 The starred inventory examined 452 public repositories.  The historical Lars
 inventory retains its archived `tv11` source snapshot, but archived material is
@@ -115,7 +115,7 @@ acquired checkout when source artwork is required.
 make check          # dry-run all package builds; run deterministic/local linters
 make lint-cve       # optional network-backed CVE database pass
 make build          # build all installable packages
-make build-sources  # fetch and build all 646 source snapshots
+make build-sources  # fetch and build all 629 source snapshots
 ```
 
 The first signed commit authorizes subsequent channel commits through
