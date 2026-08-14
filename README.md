@@ -80,6 +80,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 
 | Package | Upstream | Installed contents |
 | --- | --- | --- |
+| `atarist-font` | ntwk/atarist-font | Atari ST 8x16 Unicode BDF and generated PCF font |
 | `cadr-fonts-latin` | CADR-fonts 0.1.2 | Unicode BDF and OTB Latin fonts |
 | `cadr-fonts-symbols` | CADR-fonts 0.1.2 | Unicode BDF and OTB specialty fonts |
 | `dec-fonts` | DEC-Fonts 0.1.0-alpha.2 | BDF, OTB, and Linux-console PSF fonts |
@@ -98,19 +99,42 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `sbcl-qbcl` | qbcl | qBittorrent command-line controller |
 | `sbcl-rplaca` | rplaca | Lisp-native LLM chat interface |
 | `terminaldrome` | thafaker/TerminalDrome | Rust terminal client for Navidrome and Subsonic servers |
+| `image-tape` | larsbrinkhoff/image-tape | Magnetic-tape image reader with safe output handling |
+| `ks10-udis` | larsbrinkhoff/ks10-udis | KS10 microcode disassembler and offline fixture |
+| `emacs-treesit-sexp` | alexispurslane/treesit-sexp | Tree-sitter-aware structural editing for Emacs |
+| `dipc` | doprz/dipc | Offline-built image palette converter |
+| `nrl-text-to-phoneme` | greg-kennedy/p5-NRL-TextToPhoneme | NRL text-to-phoneme command and rule tables |
+| `you-can-datamosh-on-linux` | happyhorseskull/you-can-datamosh-on-linux | Datamoshing and video-to-GIF commands with argv-safe FFmpeg calls |
+| `xq` | sibprogrammer/xq | Offline-built XML and HTML beautifier and extractor |
 | `sentinelone` | SentinelOne Linux agent 24.3.3.1 | Proprietary x86_64 agent; authorized installer required |
 
-The font packages consume immutable generic GitHub Release archives rather
-than repackaging `.deb`, RPM, Arch, or XBPS artifacts.  CADR and DEC releases
-carry their upstream licenses.  Genera packages preserve the project's
-separate BSD-3-Clause code/documentation license and required typeface
-publication notice; that notice is not represented as an upstream license
-grant.
+These eight added installable wrappers do not add source snapshots; the source
+collection remains 629 packages.
+
+The release font packages consume immutable generic GitHub Release archives
+rather than repackaging `.deb`, RPM, Arch, or XBPS artifacts.  `atarist-font`
+uses its immutable GitHub source snapshot; its build corrects the upstream BDF
+`CHARS` header from 324 to the actual 322 glyph records and generates a PCF
+copy.  CADR and DEC releases carry their upstream licenses.  Genera packages
+preserve the project's separate BSD-3-Clause code/documentation license and
+required typeface publication notice; that notice is not represented as an
+upstream license grant.
 
 `custom-nix-pkgs` and `databases-team75` are intentionally source-oriented
 data packages, not replacements for a native application.  `bell-museum` does
 not package its Inferno submodule; use its renderer with an independently
 acquired checkout when source artwork is required.
+
+`image-tape` creates its optional output file safely and propagates write
+errors to its exit status.  The `check-image-tape` regression uses Guix's
+`tar`, `patch`, `coreutils`, and pure `gcc-toolchain` inputs with a tape shim,
+so it exercises output framing and write failures without tape hardware.
+`you-can-datamosh-on-linux` invokes FFmpeg with
+argument vectors rather than shell-command strings, so filenames and options
+containing shell metacharacters are not interpreted by a shell; its dedicated
+argv security smoke test is part of `make check`.  `dipc` and `xq` retain their
+reviewed, pinned Rust and Go dependency graphs and build without network
+resolution.
 
 `sentinelone` is source-required and is checked for enumeration, dry-run, and
 lint, but is excluded from the default `make build`.  No proprietary installer
@@ -139,7 +163,9 @@ runtime deployment.
 ## Validate
 
 ```sh
-make check          # no vendor fetch; no-network lint plus synthetic smoke test
+make check          # source-count/dry-run, no-network lint, and smoke tests
+make check-datamosh-security # package build plus argv-injection smoke test
+make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass

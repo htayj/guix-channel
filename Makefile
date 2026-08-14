@@ -22,18 +22,21 @@ EXPECTED_SOURCE_PACKAGE_COUNT := 629
 SOURCE_PACKAGE_COUNT := $(words $(SOURCE_PACKAGES))
 RELEASE_FONT_PACKAGES := cadr-fonts-latin cadr-fonts-symbols dec-fonts \
 	genera-fonts-latin genera-fonts-symbols
+FONT_PACKAGES := atarist-font $(RELEASE_FONT_PACKAGES)
 PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	computer-builder rust-computus custom-nix-pkgs databases-team75 dorxng-mcp \
 	hyprland-preview-share-picker sbcl-ivory-key manna-cadet sbcl-qbcl \
-	sbcl-rplaca terminaldrome
-INSTALLABLE_PACKAGES := $(RELEASE_FONT_PACKAGES) $(PROJECT_PACKAGES)
+	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
+	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq
+INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
 # an authorized user.  Override this variable to adjust the optional checks.
 OPTIONAL_PROPRIETARY_PACKAGES ?= sentinelone
 CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 
-.PHONY: check check-source-count check-sentinelone lint lint-cve build build-sources
+.PHONY: check check-source-count check-sentinelone check-datamosh-security \
+	check-image-tape lint lint-cve build build-sources
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -44,7 +47,14 @@ check-source-count:
 check-sentinelone:
 	tests/sentinelone-smoke.sh
 
-check: check-source-count check-sentinelone
+check-datamosh-security:
+	GUIX="$(GUIX)" tests/you-can-datamosh-on-linux-security-smoke.sh \
+		"$$($(GUIX) build -L . --no-grafts you-can-datamosh-on-linux)"
+
+check-image-tape:
+	GUIX="$(GUIX)" tests/image-tape-output-regression.sh
+
+check: check-source-count check-sentinelone check-datamosh-security check-image-tape
 	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)

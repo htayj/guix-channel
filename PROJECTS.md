@@ -109,6 +109,16 @@ These reviewed applications are installable packages outside the owned-source
 inventory above.  They are included in the channel build inventory when their
 Guix definitions enumerate and pass the package dry-run.
 
+The eight newly added wrappers below do not add source snapshots; the channel
+source collection remains 629 packages.  `atarist-font` corrects the upstream
+BDF glyph-count header before generating a PCF copy.  `image-tape` uses safe
+output-file creation and propagates write failures; its `check-image-tape`
+regression uses Guix's tar, patch, coreutils, and pure gcc-toolchain inputs
+with a tape shim, so no tape hardware is required.  The datamosh wrapper uses
+argv-based FFmpeg calls to prevent shell injection, with a dedicated security
+smoke test.  `dipc` and `xq` keep their exact pinned offline Rust and Go
+dependency graphs.
+
 `sentinelone` is the exception to the default build inventory: it is checked
 for enumeration, dry-run, and lint, but its authorized proprietary source must
 be supplied locally.  The channel's package-definition code is
@@ -126,6 +136,14 @@ dependencies may use configured substitutes.
 
 | Package | Upstream | Installed contents |
 | --- | --- | --- |
+| `atarist-font` | ntwk/atarist-font | Atari ST 8x16 Unicode BDF and generated PCF font |
 | `hyprland-preview-share-picker` | `WhySoBad/hyprland-preview-share-picker` | GTK4 Hyprland screencast picker with window previews |
 | `terminaldrome` | `thafaker/TerminalDrome` | Rust terminal client for Navidrome and Subsonic servers |
+| `image-tape` | `larsbrinkhoff/image-tape` | Magnetic-tape image reader with safe output handling |
+| `ks10-udis` | `larsbrinkhoff/ks10-udis` | KS10 microcode disassembler and offline fixture |
+| `emacs-treesit-sexp` | `alexispurslane/treesit-sexp` | Tree-sitter-aware structural editing for Emacs |
+| `dipc` | `doprz/dipc` | Offline-built image palette converter |
+| `nrl-text-to-phoneme` | `greg-kennedy/p5-NRL-TextToPhoneme` | NRL text-to-phoneme command and rule tables |
+| `you-can-datamosh-on-linux` | `happyhorseskull/you-can-datamosh-on-linux` | Datamoshing and video-to-GIF commands with argv-safe FFmpeg calls |
+| `xq` | `sibprogrammer/xq` | Offline-built XML and HTML beautifier and extractor |
 | `sentinelone` | SentinelOne Linux agent 24.3.3.1 | Proprietary x86_64 agent; authorized `.deb` required via `--with-source` |
