@@ -22,9 +22,10 @@ EXPECTED_SOURCE_PACKAGE_COUNT := 629
 SOURCE_PACKAGE_COUNT := $(words $(SOURCE_PACKAGES))
 RELEASE_FONT_PACKAGES := cadr-fonts-latin cadr-fonts-symbols dec-fonts \
 	genera-fonts-latin genera-fonts-symbols
-PROJECT_PACKAGES := aptitude-custom-aliases bell-museum computer-builder \
-	rust-computus custom-nix-pkgs databases-team75 dorxng-mcp \
-	sbcl-ivory-key manna-cadet sbcl-qbcl sbcl-rplaca
+PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
+	computer-builder rust-computus custom-nix-pkgs databases-team75 dorxng-mcp \
+	hyprland-preview-share-picker sbcl-ivory-key manna-cadet sbcl-qbcl \
+	sbcl-rplaca terminaldrome
 INSTALLABLE_PACKAGES := $(RELEASE_FONT_PACKAGES) $(PROJECT_PACKAGES)
 
 .PHONY: check check-source-count lint lint-cve build build-sources

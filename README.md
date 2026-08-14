@@ -92,10 +92,12 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `custom-nix-pkgs` | custom-nix-pkgs | Preserved Nix expressions plus a snapshot validator |
 | `databases-team75` | Databases-Team75 | Preserved legacy client source and documentation |
 | `dorxng-mcp` | dorxng-mcp | MCP server and its packaged Python dependencies |
+| `hyprland-preview-share-picker` | WhySoBad/hyprland-preview-share-picker | GTK4 Hyprland screencast picker with window previews |
 | `sbcl-ivory-key` | ivory-key | Declarative keyboard-layout compiler |
 | `manna-cadet` | manna-cadet | Space Cadet keyboard layouts and helper tools |
 | `sbcl-qbcl` | qbcl | qBittorrent command-line controller |
 | `sbcl-rplaca` | rplaca | Lisp-native LLM chat interface |
+| `terminaldrome` | thafaker/TerminalDrome | Rust terminal client for Navidrome and Subsonic servers |
 
 The font packages consume immutable generic GitHub Release archives rather
 than repackaging `.deb`, RPM, Arch, or XBPS artifacts.  CADR and DEC releases

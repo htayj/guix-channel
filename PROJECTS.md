@@ -102,3 +102,14 @@ The `drbeefsupreme` public forks `SmartMatrix`, `arduino-simple-rpc`,
 `libnotcurses-sys`, `nockchain`, `pyduino`, `simpleRPC`, and `trezor-agent`
 are likewise excluded.  Their upstream maintainers remain the appropriate
 source for Guix packaging and release metadata.
+
+## Additional installable packages
+
+These reviewed applications are installable packages outside the owned-source
+inventory above.  They are included in the channel build inventory when their
+Guix definitions enumerate and pass the package dry-run.
+
+| Package | Upstream | Installed contents |
+| --- | --- | --- |
+| `hyprland-preview-share-picker` | `WhySoBad/hyprland-preview-share-picker` | GTK4 Hyprland screencast picker with window previews |
+| `terminaldrome` | `thafaker/TerminalDrome` | Rust terminal client for Navidrome and Subsonic servers |
