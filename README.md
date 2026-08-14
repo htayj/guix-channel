@@ -25,14 +25,14 @@ Add this channel to `~/.config/guix/channels.scm`:
   (branch "master")
   (introduction
    (make-channel-introduction
-    "INITIAL-COMMIT"
+    "5de4b5693fae9aa776d089d9818126bc253a69a9"
     (openpgp-fingerprint
      "997E 2BA6 B523 4026 8A39 87E3 D94F 0A11 ACD7 8333"))))
  %default-channels)
 ```
 
-`INITIAL-COMMIT` will be replaced with the signed first commit when this
-channel is published.  Then run:
+The introduction commit is signed and its key is published on the channel's
+`keyring` branch.  Then run:
 
 ```sh
 guix pull
