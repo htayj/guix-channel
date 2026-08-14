@@ -13,6 +13,21 @@ to package.  Public forks are intentionally excluded because this channel does
 not present other maintainers' projects as Taylor's work.  See
 [`PROJECTS.md`](PROJECTS.md) for the complete disposition ledger.
 
+## License
+
+The channel-authored Scheme package definitions, channel metadata, build and
+test files, reports, documentation, and other original material in this
+repository are licensed under the GNU General Public License, version 3 or
+any later version (GPL-3.0-or-later); see [`LICENSE`](LICENSE).
+
+This grant applies only to material authored for this channel.  It does not
+relicense upstream source snapshots, fonts, applications, documents, data,
+submodules, or other artifacts fetched or packaged by these definitions.  Those
+materials retain their respective upstream licenses and notices.  A package
+definition's `license` field describes the corresponding packaged upstream
+material; it does not change that material's license or grant rights to
+relicense it.
+
 ## Add the channel
 
 Add this channel to `~/.config/guix/channels.scm`:
