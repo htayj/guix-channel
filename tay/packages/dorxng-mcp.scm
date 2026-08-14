@@ -75,8 +75,8 @@ applications.")
 (define-public python-mcp
   (package
     (name "python-mcp")
-    ;; This is the highest MCP SDK release compatible with Guix 1.5's
-    ;; python-pydantic 2.10.4.  The project accepts any MCP SDK >= 1.0.0.
+    ;; This is the highest MCP SDK release compatible with Guix's Pydantic 2
+    ;; package.  The project accepts any MCP SDK >= 1.0.0.
     (version "1.12.4")
     (source
      (origin
@@ -106,7 +106,7 @@ applications.")
            python-httpx
            python-httpx-sse
            python-jsonschema
-           python-pydantic-2
+           python-pydantic
            python-pydantic-settings
            python-multipart
            python-sse-starlette
