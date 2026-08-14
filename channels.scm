@@ -3,7 +3,7 @@
   #:export (%channels))
 
 (define %channels
-  (list
+  (cons
    (channel
     (name 'tay)
     (url "https://github.com/htayj/guix-channel")
@@ -12,6 +12,7 @@
      (make-channel-introduction
       "5de4b5693fae9aa776d089d9818126bc253a69a9"
       (openpgp-fingerprint
-       "997E 2BA6 B523 4026 8A39 87E3 D94F 0A11 ACD7 8333"))))))
+       "997E 2BA6 B523 4026 8A39 87E3 D94F 0A11 ACD7 8333"))))
+   %default-channels))
 
 %channels
