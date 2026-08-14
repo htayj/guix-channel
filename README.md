@@ -1,11 +1,11 @@
 # Taylor's Guix channel
 
-This channel packages the public GitHub projects owned by
+This channel packages public GitHub projects owned by
 [`htayj`](https://github.com/htayj).  Every non-empty owned repository is
-available as an immutable source package, pinned to a full commit and a real
-Guix/NAR hash.  Source snapshots preserve submodule pointers but do not fetch
-submodule contents.  Projects with reviewed, redistributable release artifacts
-also have directly usable packages.
+available as an immutable source snapshot, pinned to a full commit and Guix/NAR
+hash.  Source snapshots preserve submodule pointers but do not fetch submodule
+contents.  Separately, the channel provides installable packages for reviewed
+project artifacts, applications, tools, and data collections.
 
 The initial inventory was taken on 2026-08-14.  It covers 38 owned public
 repositories: 37 pinned source packages and one empty repository with no commit
@@ -42,7 +42,7 @@ For a clone of the channel, packages can be used immediately without pulling:
 
 ```sh
 guix build -L . cadr-fonts-latin
-guix install -L . genera-fonts-symbols
+guix install -L . sbcl-qbcl
 guix build -L . htayj-ivory-key-source
 ```
 
@@ -52,15 +52,26 @@ standalone executable.  Repositories without an explicit license carry a
 custom no-permission marker; do not redistribute those package outputs or
 publish substitutes for them without a separate rights review.
 
-## Directly usable packages
+## Installable packages
 
-| Package | Upstream | Contents |
+| Package | Upstream | Installed contents |
 | --- | --- | --- |
 | `cadr-fonts-latin` | CADR-fonts 0.1.2 | Unicode BDF and OTB Latin fonts |
 | `cadr-fonts-symbols` | CADR-fonts 0.1.2 | Unicode BDF and OTB specialty fonts |
 | `dec-fonts` | DEC-Fonts 0.1.0-alpha.2 | BDF, OTB, and Linux-console PSF fonts |
 | `genera-fonts-latin` | genera-fonts 0.1.1 | Unicode BDF and OTB Latin fonts |
 | `genera-fonts-symbols` | genera-fonts 0.1.1 | Unicode BDF and OTB specialty fonts |
+| `aptitude-custom-aliases` | aptitude-custom-aliases | Zsh plugin and documentation |
+| `bell-museum` | bell-museum | Museum documentation and Inferno specimen renderer |
+| `computer-builder` | computer-builder | Offline-built PC component catalog web application |
+| `rust-computus` | computus | Redistributable Rust simulation core |
+| `custom-nix-pkgs` | custom-nix-pkgs | Preserved Nix expressions plus a snapshot validator |
+| `databases-team75` | Databases-Team75 | Preserved legacy client source and documentation |
+| `dorxng-mcp` | dorxng-mcp | MCP server and its packaged Python dependencies |
+| `sbcl-ivory-key` | ivory-key | Declarative keyboard-layout compiler |
+| `manna-cadet` | manna-cadet | Space Cadet keyboard layouts and helper tools |
+| `sbcl-qbcl` | qbcl | qBittorrent command-line controller |
+| `sbcl-rplaca` | rplaca | Lisp-native LLM chat interface |
 
 The font packages consume immutable generic GitHub Release archives rather
 than repackaging `.deb`, RPM, Arch, or XBPS artifacts.  CADR and DEC releases
@@ -69,12 +80,17 @@ separate BSD-3-Clause code/documentation license and required typeface
 publication notice; that notice is not represented as an upstream license
 grant.
 
+`custom-nix-pkgs` and `databases-team75` are intentionally source-oriented
+data packages, not replacements for a native application.  `bell-museum` does
+not package its Inferno submodule; use its renderer with an independently
+acquired checkout when source artwork is required.
+
 ## Validate
 
 ```sh
-make check          # resolve packages; run deterministic/local linters
+make check          # dry-run all package builds; run deterministic/local linters
 make lint-cve       # optional network-backed CVE database pass
-make build          # build the five directly usable packages
+make build          # build all installable packages
 make build-sources  # fetch and build all 37 source snapshots
 ```
 

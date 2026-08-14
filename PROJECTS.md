@@ -2,21 +2,22 @@
 
 Inventory date: 2026-08-14.  Scope: public repositories owned by `htayj`,
 including archived originals.  Each `source` entry is exported from
-`(tay packages projects)` and installs the exact pinned Git tree.  `usable`
-entries are additional end-user packages from `(tay packages fonts)`.
+`(tay packages projects)` and installs the exact pinned Git tree.  Entries in
+the additional-package column are current installable project packages; some
+are intentionally source-oriented data packages, as described in the README.
 
 | Repository | Source package | Additional package | License recorded | State |
 | --- | --- | --- | --- | --- |
-| aptitude-custom-aliases | `htayj-aptitude-custom-aliases-source` | — | unknown | archived |
-| bell-museum | `htayj-bell-museum-source` | — | MIT | active |
+| aptitude-custom-aliases | `htayj-aptitude-custom-aliases-source` | `aptitude-custom-aliases` | unknown | archived |
+| bell-museum | `htayj-bell-museum-source` | `bell-museum` | MIT | active |
 | CADR-fonts | `htayj-cadr-fonts-source` | `cadr-fonts-latin`, `cadr-fonts-symbols` | BSD-3-Clause | active |
-| computer-builder | `htayj-computer-builder-source` | — | AGPL-3.0-or-later | active |
-| computus | `htayj-computus-source` | — | mixed; review required | active |
-| custom-nix-pkgs | `htayj-custom-nix-pkgs-source` | — | unknown | active |
-| Databases-Team75 | `htayj-databases-team75-source` | — | unknown | active |
+| computer-builder | `htayj-computer-builder-source` | `computer-builder` | AGPL-3.0-or-later | active |
+| computus | `htayj-computus-source` | `rust-computus` | mixed; review required | active |
+| custom-nix-pkgs | `htayj-custom-nix-pkgs-source` | `custom-nix-pkgs` | unknown | active |
+| Databases-Team75 | `htayj-databases-team75-source` | `databases-team75` | unknown | active |
 | DEC-Fonts | `htayj-dec-fonts-source` | `dec-fonts` | MIT | active |
 | doom_emacs.d | `htayj-doom-emacs-d-source` | — | unknown | active |
-| dorxng-mcp | `htayj-dorxng-mcp-source` | — | MIT declaration | active |
+| dorxng-mcp | `htayj-dorxng-mcp-source` | `dorxng-mcp` | MIT declaration | active |
 | dotfiles | `htayj-dotfiles-source` | — | unknown | active |
 | emacs-illiterate | — | — | unknown | empty; no branch or commit |
 | flaghack | `htayj-flaghack-source` | — | AGPL-3.0-or-later | active |
@@ -26,14 +27,14 @@ entries are additional end-user packages from `(tay packages fonts)`.
 | gramps-effect-mcp | `htayj-gramps-effect-mcp-source` | — | unknown | active |
 | htayj | `htayj-profile-source` | — | unknown | active |
 | hyprland-dot | `htayj-hyprland-dot-source` | — | unknown | active |
-| ivory-key | `htayj-ivory-key-source` | — | GPL-3.0-only | active |
+| ivory-key | `htayj-ivory-key-source` | `sbcl-ivory-key` | GPL-3.0-only | active |
 | lisp-machine-container-museum | `htayj-lisp-machine-container-museum-source` | — | unknown | active |
-| manna-cadet | `htayj-manna-cadet-source` | — | MIT | active |
+| manna-cadet | `htayj-manna-cadet-source` | `manna-cadet` | MIT | active |
 | moby-mcp | `htayj-moby-mcp-source` | — | AGPL-3.0-only | active |
 | nix | `htayj-nix-source` | — | unknown | active |
 | os-directory | `htayj-os-directory-source` | — | unknown | active |
-| qbcl | `htayj-qbcl-source` | — | GPL-2.0-or-later declaration | active |
-| rplaca | `htayj-rplaca-source` | — | AGPL-3.0-only | active |
+| qbcl | `htayj-qbcl-source` | `sbcl-qbcl` | GPL-2.0-or-later declaration | active |
+| rplaca | `htayj-rplaca-source` | `sbcl-rplaca` | AGPL-3.0-only | active |
 | slophack | `htayj-slophack-source` | — | AGPL-3.0-or-later declaration | archived |
 | Sockets-Programming-Homework | `htayj-sockets-programming-homework-source` | — | unknown | active |
 | src | `htayj-src-source` | — | unknown | active |
