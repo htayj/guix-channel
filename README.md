@@ -1,16 +1,19 @@
 # Taylor's Guix channel
 
 This channel packages public GitHub projects owned by
-[`htayj`](https://github.com/htayj).  Every non-empty owned repository is
+[`htayj`](https://github.com/htayj) and
+[`drbeefsupreme`](https://github.com/drbeefsupreme).  Every non-empty owned
+repository is
 available as an immutable source snapshot, pinned to a full commit and Guix/NAR
 hash.  Source snapshots preserve submodule pointers but do not fetch submodule
 contents.  Separately, the channel provides installable packages for reviewed
 project artifacts, applications, tools, and data collections.
 
-The initial inventory was taken on 2026-08-14.  It covers 38 owned public
-repositories: 37 pinned source packages and one empty repository with no commit
-to package.  Public forks are intentionally excluded because this channel does
-not present other maintainers' projects as Taylor's work.  See
+The initial inventory was taken on 2026-08-14.  It covers 53 owned public
+repositories: 51 pinned source packages and two empty repositories with no
+commit to package.  Public forks are intentionally excluded because this
+channel does not present other maintainers' projects as work owned by these
+accounts.  See
 [`PROJECTS.md`](PROJECTS.md) for the complete disposition ledger.
 
 ## License
@@ -61,11 +64,12 @@ guix install -L . sbcl-qbcl
 guix build -L . htayj-ivory-key-source
 ```
 
-Source snapshots install below `share/htayj/projects/REPOSITORY`.  They are
+Source snapshots install below `share/ACCOUNT/projects/REPOSITORY`.  They are
 development and preservation inputs, not claims that every repository has a
 standalone executable.  Repositories without an explicit license carry a
 custom no-permission marker; do not redistribute those package outputs or
-publish substitutes for them without a separate rights review.
+publish substitutes for them without a separate rights review.  This caveat
+applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 
 ## Installable packages
 
@@ -106,7 +110,7 @@ acquired checkout when source artwork is required.
 make check          # dry-run all package builds; run deterministic/local linters
 make lint-cve       # optional network-backed CVE database pass
 make build          # build all installable packages
-make build-sources  # fetch and build all 37 source snapshots
+make build-sources  # fetch and build all 51 source snapshots
 ```
 
 The first signed commit authorizes subsequent channel commits through

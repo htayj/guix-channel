@@ -1,7 +1,8 @@
 GUIX ?= guix
 
-SOURCE_PACKAGES := $(shell rg -o 'htayj-[a-z0-9-]+-source' \
-	tay/packages/projects.scm | sort -u)
+SOURCE_PACKAGES := $(shell rg --no-filename -o -P \
+	'define-public[[:space:]]+[a-z0-9][a-z0-9-]*-source' tay/packages | \
+	sed -E 's/^define-public[[:space:]]+//' | sort -u)
 RELEASE_FONT_PACKAGES := cadr-fonts-latin cadr-fonts-symbols dec-fonts \
 	genera-fonts-latin genera-fonts-symbols
 PROJECT_PACKAGES := aptitude-custom-aliases bell-museum computer-builder \

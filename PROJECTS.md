@@ -1,10 +1,14 @@
 # Public project inventory
 
-Inventory date: 2026-08-14.  Scope: public repositories owned by `htayj`,
-including archived originals.  Each `source` entry is exported from
-`(tay packages projects)` and installs the exact pinned Git tree.  Entries in
-the additional-package column are current installable project packages; some
-are intentionally source-oriented data packages, as described in the README.
+Inventory date: 2026-08-14.  Scope: public repositories owned by `htayj` and
+`drbeefsupreme`, including archived originals.  Each `source` entry installs
+the exact pinned Git tree.  The `htayj` entries are exported from
+`(tay packages projects)`; the `drbeefsupreme` entries are exported from their
+corresponding `(tay packages drbeefsupreme ...)` modules.  Entries in the
+additional-package column are current installable project packages; some are
+intentionally source-oriented data packages, as described in the README.
+
+## htayj owned originals
 
 | Repository | Source package | Additional package | License recorded | State |
 | --- | --- | --- | --- | --- |
@@ -47,10 +51,37 @@ are intentionally source-oriented data packages, as described in the README.
 | www-vexillomancy-org | `htayj-www-vexillomancy-org-source` | — | AGPL-3.0-only | active |
 | yaourt-custom-aliases | `htayj-yaourt-custom-aliases-source` | — | unknown | active |
 
+## drbeefsupreme owned originals
+
+This current disposition contains 15 owned originals: 14 nonempty source
+packages and the empty `flaghack` repository.  It is an inventory, not a
+future-package backlog.
+
+| Repository | Source package | Additional package | License recorded | State |
+| --- | --- | --- | --- | --- |
+| dotfiles | `drbeefsupreme-dotfiles-source` | — | unknown; no explicit redistribution permission | active |
+| flaghack | — | — | unknown; no explicit redistribution permission | empty; no branch or commit |
+| flaghack-infinity | `drbeefsupreme-flaghack-infinity-source` | — | unknown; no explicit redistribution permission | active |
+| flaghack2 | `drbeefsupreme-flaghack2-source` | — | unknown; no explicit redistribution permission | active |
+| flaghack3 | `drbeefsupreme-flaghack3-source` | — | unknown; no explicit redistribution permission | active |
+| flags | `drbeefsupreme-flags-source` | — | unknown; no explicit redistribution permission | active |
+| ghostty-vexillomancy | `drbeefsupreme-ghostty-vexillomancy-source` | — | unknown; no explicit redistribution permission | active |
+| qyron | `drbeefsupreme-qyron-source` | — | unknown; no explicit redistribution permission | active |
+| qyron-teensy | `drbeefsupreme-qyron-teensy-source` | — | unknown; no explicit redistribution permission | active |
+| qyron-tui | `drbeefsupreme-qyron-tui-source` | — | unknown; no explicit redistribution permission | active |
+| rlox | `drbeefsupreme-rlox-source` | — | unknown; no explicit redistribution permission | active |
+| sign-of-itself | `drbeefsupreme-sign-of-itself-source` | — | unknown; no explicit redistribution permission | active |
+| swarm | `drbeefsupreme-swarm-source` | — | unknown; no explicit redistribution permission | active |
+| tassh | `drbeefsupreme-tassh-source` | — | MIT | active |
+| test-repo | `drbeefsupreme-test-repo-source` | — | unknown; no explicit redistribution permission | active |
+
 ## Excluded forks
 
-The public forks `abtop`, `awesome-fonts`, `docker-rtorrent-pyro`,
+The `htayj` public forks `abtop`, `awesome-fonts`, `docker-rtorrent-pyro`,
 `pi-dynamic-workflows`, `prezto`, `q4`, `react-blessed`,
-`rms-support-letter.github.io`, `stickerpicker`, and `winamp` are not packaged
-by this ownership-scoped channel.  Their upstream maintainers remain the
-appropriate source for Guix packaging and release metadata.
+`rms-support-letter.github.io`, `stickerpicker`, and `winamp` are not packaged.
+The `drbeefsupreme` public forks `SmartMatrix`, `arduino-simple-rpc`,
+`documentation`, `fib-anyon`, `hyperbolic_canvas`, `kalshi-trade-rs`,
+`libnotcurses-sys`, `nockchain`, `pyduino`, `simpleRPC`, and `trezor-agent`
+are likewise excluded.  Their upstream maintainers remain the appropriate
+source for Guix packaging and release metadata.
