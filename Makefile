@@ -27,8 +27,13 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	hyprland-preview-share-picker sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome
 INSTALLABLE_PACKAGES := $(RELEASE_FONT_PACKAGES) $(PROJECT_PACKAGES)
+# These packages are enumerated and linted, but are not part of the default
+# build because their source artifacts are proprietary and must be supplied by
+# an authorized user.  Override this variable to adjust the optional checks.
+OPTIONAL_PROPRIETARY_PACKAGES ?= sentinelone
+CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 
-.PHONY: check check-source-count lint lint-cve build build-sources
+.PHONY: check check-source-count check-sentinelone lint lint-cve build build-sources
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -36,17 +41,20 @@ check-source-count:
 	@test "$(SOURCE_PACKAGES)" = "$(PARSED_SOURCE_PACKAGES)" || \
 		{ echo "exported and parsed source package inventories differ"; exit 1; }
 
-check: check-source-count
-	$(GUIX) build -L . --dry-run $(INSTALLABLE_PACKAGES) $(SOURCE_PACKAGES)
-	$(GUIX) lint -L . --exclude=cve,refresh,archival \
-		$(INSTALLABLE_PACKAGES) $(SOURCE_PACKAGES)
+check-sentinelone:
+	tests/sentinelone-smoke.sh
+
+check: check-source-count check-sentinelone
+	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
+	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \
+		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 
 lint: check-source-count
-	$(GUIX) lint -L . --exclude=cve,refresh,archival \
-		$(INSTALLABLE_PACKAGES) $(SOURCE_PACKAGES)
+	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \
+		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 
 lint-cve: check-source-count
-	$(GUIX) lint -L . --checkers=cve $(INSTALLABLE_PACKAGES) $(SOURCE_PACKAGES)
+	$(GUIX) lint -L . --checkers=cve $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 
 build:
 	$(GUIX) build -L . $(INSTALLABLE_PACKAGES)

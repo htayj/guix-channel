@@ -109,7 +109,23 @@ These reviewed applications are installable packages outside the owned-source
 inventory above.  They are included in the channel build inventory when their
 Guix definitions enumerate and pass the package dry-run.
 
+`sentinelone` is the exception to the default build inventory: it is checked
+for enumeration, dry-run, and lint, but its authorized proprietary source must
+be supplied locally.  The channel's package-definition code is
+GPL-3.0-or-later; that license does not license the SentinelOne agent.
+Building requires `guix build -L . --with-source=sentinelone=/path/to/authorized-x86_64.deb sentinelone`, which
+copies the authorized installer into the local Guix store.  The package output
+is non-substitutable, but that alone does not prevent proprietary source or
+output paths from being served by `guix publish`; isolate, remove, or ACL those
+paths and never publish them.  Management tokens must never enter the
+repository or Guix store, and the privileged service/state needed at runtime is
+outside this channel's implementation and validation scope.  `make
+check-sentinelone` runs only a synthetic smoke test: it needs no SentinelOne
+artifact or SentinelOne/vendor network access, although realizing free Guix
+dependencies may use configured substitutes.
+
 | Package | Upstream | Installed contents |
 | --- | --- | --- |
 | `hyprland-preview-share-picker` | `WhySoBad/hyprland-preview-share-picker` | GTK4 Hyprland screencast picker with window previews |
 | `terminaldrome` | `thafaker/TerminalDrome` | Rust terminal client for Navidrome and Subsonic servers |
+| `sentinelone` | SentinelOne Linux agent 24.3.3.1 | Proprietary x86_64 agent; authorized `.deb` required via `--with-source` |

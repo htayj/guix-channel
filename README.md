@@ -98,6 +98,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `sbcl-qbcl` | qbcl | qBittorrent command-line controller |
 | `sbcl-rplaca` | rplaca | Lisp-native LLM chat interface |
 | `terminaldrome` | thafaker/TerminalDrome | Rust terminal client for Navidrome and Subsonic servers |
+| `sentinelone` | SentinelOne Linux agent 24.3.3.1 | Proprietary x86_64 agent; authorized installer required |
 
 The font packages consume immutable generic GitHub Release archives rather
 than repackaging `.deb`, RPM, Arch, or XBPS artifacts.  CADR and DEC releases
@@ -111,12 +112,38 @@ data packages, not replacements for a native application.  `bell-museum` does
 not package its Inferno submodule; use its renderer with an independently
 acquired checkout when source artwork is required.
 
+`sentinelone` is source-required and is checked for enumeration, dry-run, and
+lint, but is excluded from the default `make build`.  No proprietary installer
+is included in this channel.  To build it, supply an authorized matching
+x86_64 `.deb` explicitly:
+
+```sh
+guix build -L . --with-source=sentinelone=/path/to/SentinelAgent-Linux-24-3-3-1-x86-64-release-24-3-3_linux_x86_64_v24_3_3_1.deb sentinelone
+```
+
+The channel's package definition and documentation are GPL-3.0-or-later under
+[`LICENSE`](LICENSE); any upstream notices are recorded separately in
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).  Neither those notices nor
+the channel license grants rights to the proprietary SentinelOne agent.  Never
+commit the installer or a management token to this repository.
+`--with-source` imports the authorized installer into the local Guix store for
+the build, so treat that source and local-store exposure as sensitive: the
+fixed-output source may remain there.  The package output is marked
+non-substitutable, but that alone does not prevent proprietary source or output
+paths from being served by `guix publish`; isolate, remove, or ACL such paths
+and never publish them.  Never supply a management token at build time or place
+it in the repository or store.  Running the agent requires a privileged system
+service and persistent state; this channel does not configure or validate that
+runtime deployment.
+
 ## Validate
 
 ```sh
-make check          # dry-run all package builds; run deterministic/local linters
+make check          # no vendor fetch; no-network lint plus synthetic smoke test
+make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
+make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass
-make build          # build all installable packages
+make build          # build free installable packages (not sentinelone)
 make build-sources  # fetch and build all 629 source snapshots
 ```
 
