@@ -1,20 +1,24 @@
 # Taylor's Guix channel
 
-This channel packages public GitHub projects owned by
-[`htayj`](https://github.com/htayj) and
-[`drbeefsupreme`](https://github.com/drbeefsupreme).  Every non-empty owned
-repository is
-available as an immutable source snapshot, pinned to a full commit and Guix/NAR
-hash.  Source snapshots preserve submodule pointers but do not fetch submodule
-contents.  Separately, the channel provides installable packages for reviewed
-project artifacts, applications, tools, and data collections.
+This channel preserves reviewed public GitHub source collections as immutable,
+commit-pinned Guix source snapshots, and separately provides installable
+packages for reviewed project artifacts, applications, tools, and data
+collections.  Source snapshots preserve submodule pointers but do not fetch
+submodule contents.
 
-The initial inventory was taken on 2026-08-14.  It covers 53 owned public
-repositories: 51 pinned source packages and two empty repositories with no
-commit to package.  Public forks are intentionally excluded because this
-channel does not present other maintainers' projects as work owned by these
-accounts.  See
-[`PROJECTS.md`](PROJECTS.md) for the complete disposition ledger.
+The 2026-08-14 source collection contains 646 unique source packages:
+
+| Collection | Source packages | Disposition |
+| --- | ---: | --- |
+| Owned `htayj` and `drbeefsupreme` originals | 51 | Nonempty owned public repositories; two empty owned repositories have no commit to package. |
+| Lars Brinkhoff historical-computing inventory | 177 | 192 relevant repositories less three empty repositories and 12 canonical PDP-10 redirects or duplicates already represented by the PDP-10 collection. |
+| PDP-10 organization inventory | 68 | Relevant original repositories, including nine archived sources retained for preservation; forks are excluded. |
+| `htayj` starred public repositories | 350 | Canonical, non-self-hosted source candidates after server/self-host, archive/reference, and overlap/collision exclusions. |
+
+The starred inventory examined 452 public repositories.  The historical Lars
+inventory retains its archived `tv11` source snapshot, but archived material is
+source-only and not an issue candidate.  See [`PROJECTS.md`](PROJECTS.md) for
+the collection-level scope, exclusions, and overlap handling.
 
 ## License
 
@@ -66,7 +70,8 @@ guix build -L . htayj-ivory-key-source
 
 Source snapshots install below `share/ACCOUNT/projects/REPOSITORY`.  They are
 development and preservation inputs, not claims that every repository has a
-standalone executable.  Repositories without an explicit license carry a
+standalone executable.  A source definition and its hash do not grant
+redistribution permission.  Repositories without an explicit license carry a
 custom no-permission marker; do not redistribute those package outputs or
 publish substitutes for them without a separate rights review.  This caveat
 applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
@@ -110,7 +115,7 @@ acquired checkout when source artwork is required.
 make check          # dry-run all package builds; run deterministic/local linters
 make lint-cve       # optional network-backed CVE database pass
 make build          # build all installable packages
-make build-sources  # fetch and build all 51 source snapshots
+make build-sources  # fetch and build all 646 source snapshots
 ```
 
 The first signed commit authorizes subsequent channel commits through
