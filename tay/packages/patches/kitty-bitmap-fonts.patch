@@ -1,0 +1,53 @@
+From: Arch Linux AUR kitty-bitmap package
+Subject: [PATCH] fontconfig: allow bitmap fonts by default
+
+Provenance: derived from
+https://aur.archlinux.org/cgit/aur.git/tree/Allow-bitmap-fonts.patch?h=kitty-bitmap
+with the same four default-value changes, applied against Kitty 0.46.2.  The
+AUR package recipe and this channel patch are not
+upstream Kitty code; the patched files remain GPL-3.0-or-later.
+
+diff --git a/kitty/fast_data_types.pyi b/kitty/fast_data_types.pyi
+index e69d7fa8..ad68c866 100644
+--- a/kitty/fast_data_types.pyi
++++ b/kitty/fast_data_types.pyi
+@@ -409,7 +409,7 @@
+     features: NotRequired[Tuple[ParsedFontFeature, ...]]
+ 
+ 
+-def fc_list(spacing: int = -1, allow_bitmapped_fonts: bool = False, only_variable: bool = False) -> Tuple[FontConfigPattern, ...]:
++def fc_list(spacing: int = -1, allow_bitmapped_fonts: bool = True, only_variable: bool = False) -> Tuple[FontConfigPattern, ...]:
+     pass
+ 
+ 
+@@ -421,7 +421,7 @@ def fc_match(
+     bold: bool = False,
+     italic: bool = False,
+     spacing: int = FC_MONO,
+-    allow_bitmapped_fonts: bool = False,
++    allow_bitmapped_fonts: bool = True,
+     size_in_pts: float = 0.,
+     dpi: float = 0.
+ ) -> FontConfigPattern:
+diff --git a/kitty/fontconfig.c b/kitty/fontconfig.c
+index 7156d9ee..6444d6bc 100644
+--- a/kitty/fontconfig.c
++++ b/kitty/fontconfig.c
+@@ -240,7 +240,7 @@
+ static PyObject*
+ fc_list(PyObject UNUSED *self, PyObject *args, PyObject *kw) {
+     ensure_initialized();
+-    int allow_bitmapped_fonts = 0, spacing = -1, only_variable = 0;
++    int allow_bitmapped_fonts = 1, spacing = -1, only_variable = 0;
+     PyObject *ans = NULL;
+     FcObjectSet *os = NULL;
+     FcPattern *pat = NULL;
+@@ -354,7 +354,7 @@
+ fc_match(PyObject UNUSED *self, PyObject *args) {
+     ensure_initialized();
+     char *family = NULL;
+-    int bold = 0, italic = 0, allow_bitmapped_fonts = 0, spacing = FC_MONO;
++    int bold = 0, italic = 0, allow_bitmapped_fonts = 1, spacing = FC_MONO;
+     double size_in_pts = 0, dpi = 0;
+     FcPattern *pat = NULL;
+     PyObject *ans = NULL;

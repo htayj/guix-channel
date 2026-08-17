@@ -100,6 +100,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `sbcl-rplaca` | rplaca | Lisp-native LLM chat interface |
 | `terminaldrome` | thafaker/TerminalDrome | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | larsbrinkhoff/image-tape | Magnetic-tape image reader with safe output handling |
+| `kitty-bitmap` | Kitty 0.46.2 | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
 | `ks10-udis` | larsbrinkhoff/ks10-udis | KS10 microcode disassembler and offline fixture |
 | `emacs-treesit-sexp` | alexispurslane/treesit-sexp | Tree-sitter-aware structural editing for Emacs |
 | `dipc` | doprz/dipc | Offline-built image palette converter |
@@ -136,6 +137,19 @@ argv security smoke test is part of `make check`.  `dipc` and `xq` retain their
 reviewed, pinned Rust and Go dependency graphs and build without network
 resolution.
 
+`kitty-bitmap` inherits Guix's current `kitty` package rather than replacing
+it.  Its documented AUR-derived Fontconfig patch enables native BDF/PCF font
+selection by default.  Such fixed bitmap strikes do not zoom or scale cleanly;
+use an available native size and, if needed, an explicit line height.  Its
+separate channel patch translates the raw GLFW Meta bit to Alt only at the
+child-process encoding boundary: Kitty shortcut matching still sees Meta,
+while legacy terminal applications receive ESC-prefixed Alt chords and the
+extended keyboard protocol reports Alt.  Physical Alt/XKB bindings are not
+changed.  The `check-kitty-bitmap` smoke uses Unscii's non-scalable PCF face
+and Kitty's native Fontconfig calls through `kitty +runpy`, without a display
+server.  It verifies selection and nonempty glyph-cell rasterization, but not
+a live GUI window.
+
 `sentinelone` is source-required and is checked for enumeration, dry-run, and
 lint, but is excluded from the default `make build`.  No proprietary installer
 is included in this channel.  To build it, supply an authorized matching
@@ -166,12 +180,18 @@ runtime deployment.
 make check          # source-count/dry-run, no-network lint, and smoke tests
 make check-datamosh-security # package build plus argv-injection smoke test
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
+make check-kitty-bitmap # channel-pinned Guix build plus source/key-encoding invariants and headless PCF rasterization
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass
 make build          # build free installable packages (not sentinelone)
 make build-sources  # fetch and build all 629 source snapshots
 ```
+
+`check-kitty-bitmap` uses `guix time-machine -C channels.scm --` by default
+because the host Guix may have an older Kitty definition.  Override
+`KITTY_BITMAP_GUIX` with an equivalent current Guix command prefix when
+needed.
 
 The first signed commit authorizes subsequent channel commits through
 `.guix-authorizations`.  The authorized OpenPGP fingerprint is

@@ -1,4 +1,7 @@
 GUIX ?= guix
+# kitty-bitmap needs the current Kitty package definition.  Keep this separate
+# from GUIX so existing channel checks can still be run with a chosen Guix.
+KITTY_BITMAP_GUIX ?= guix time-machine -C channels.scm --
 
 # Derive the build list from Guix's available-package enumeration, which
 # observes both define-public forms and dynamically exported snapshot packages.
@@ -27,7 +30,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	computer-builder rust-computus custom-nix-pkgs databases-team75 dorxng-mcp \
 	hyprland-preview-share-picker sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
-	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq
+	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq kitty-bitmap
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -36,7 +39,7 @@ OPTIONAL_PROPRIETARY_PACKAGES ?= sentinelone
 CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 
 .PHONY: check check-source-count check-sentinelone check-datamosh-security \
-	check-image-tape lint lint-cve build build-sources
+	check-image-tape check-kitty-bitmap lint lint-cve build build-sources
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -54,7 +57,10 @@ check-datamosh-security:
 check-image-tape:
 	GUIX="$(GUIX)" tests/image-tape-output-regression.sh
 
-check: check-source-count check-sentinelone check-datamosh-security check-image-tape
+check-kitty-bitmap:
+	GUIX="$(KITTY_BITMAP_GUIX)" tests/kitty-bitmap-smoke.sh
+
+check: check-source-count check-sentinelone check-datamosh-security check-image-tape check-kitty-bitmap
 	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)

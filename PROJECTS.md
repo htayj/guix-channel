@@ -134,12 +134,22 @@ check-sentinelone` runs only a synthetic smoke test: it needs no SentinelOne
 artifact or SentinelOne/vendor network access, although realizing free Guix
 dependencies may use configured substitutes.
 
+`kitty-bitmap` inherits the current Guix `kitty` package and its full upstream
+dependency graph; it does not replace the regular `kitty` package.  It carries
+the AUR `kitty-bitmap` Fontconfig-default change with recorded provenance,
+plus a separate channel-local child-encoding patch that turns raw XKB Meta
+into terminal Alt while leaving Kitty shortcut matching and physical Alt
+unchanged.  Bitmap-font verification is deliberately headless: Unscii PCF
+selection and nonempty glyph-cell rasterization are tested, but a live GUI
+window is not claimed.
+
 | Package | Upstream | Installed contents |
 | --- | --- | --- |
 | `atarist-font` | ntwk/atarist-font | Atari ST 8x16 Unicode BDF and generated PCF font |
 | `hyprland-preview-share-picker` | `WhySoBad/hyprland-preview-share-picker` | GTK4 Hyprland screencast picker with window previews |
 | `terminaldrome` | `thafaker/TerminalDrome` | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | `larsbrinkhoff/image-tape` | Magnetic-tape image reader with safe output handling |
+| `kitty-bitmap` | `kovidgoyal/kitty` | Native bitmap-font Kitty variant with XKB Meta-to-terminal-Alt encoding |
 | `ks10-udis` | `larsbrinkhoff/ks10-udis` | KS10 microcode disassembler and offline fixture |
 | `emacs-treesit-sexp` | `alexispurslane/treesit-sexp` | Tree-sitter-aware structural editing for Emacs |
 | `dipc` | `doprz/dipc` | Offline-built image palette converter |
