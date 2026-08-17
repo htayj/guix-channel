@@ -1,6 +1,7 @@
 ;;; Kitty variant for native bitmap fonts and XKB Meta compatibility.
 
 (define-module (tay packages kitty-bitmap)
+  #:use-module (guix gexp)
   #:use-module (guix packages)
   #:use-module ((gnu packages) #:select (search-patches))
   #:use-module (gnu packages terminals))
@@ -20,7 +21,22 @@
                 (search-patches
                  "tay/packages/patches/kitty-bitmap-fonts.patch"
                  "tay/packages/patches/kitty-bitmap-raster-metrics.patch"
-                 "tay/packages/patches/kitty-bitmap-meta-as-alt.patch")))))
+                 "tay/packages/patches/kitty-bitmap-meta-as-alt.patch")))
+       (snippet
+        #~(begin
+            #$(origin-snippet (package-source kitty))
+            ;; sphinx-inline-tabs 2023.04 assumes Docutils always supplies a
+            ;; backrefs attribute.  Docutils 0.22 may omit it, so initialize
+            ;; it before the extension's visitor copies and removes it.
+            (substitute* "docs/conf.py"
+              (("^extensions = \\[.*$")
+               "from sphinx_inline_tabs import _impl as _kitty_tabs_impl\n\
+_kitty_tabs_visit = _kitty_tabs_impl._GeneralHTMLTagElement.visit\n\
+def _kitty_safe_tabs_visit(translator, node):\n\
+    node.attributes.setdefault('backrefs', [])\n\
+    return _kitty_tabs_visit(translator, node)\n\
+_kitty_tabs_impl._GeneralHTMLTagElement.visit = staticmethod(_kitty_safe_tabs_visit)\n\n\
+extensions = [\n"))))))
     (synopsis "GPU-based terminal emulator with native bitmap-font support")
     (description
      "This variant of Kitty inherits the current Guix @code{kitty} package and
