@@ -20,6 +20,7 @@
         (append (origin-patches (package-source kitty))
                 (search-patches
                  "tay/packages/patches/kitty-bitmap-fonts.patch"
+                 "tay/packages/patches/kitty-bitmap-charcell-fonts.patch"
                  "tay/packages/patches/kitty-bitmap-raster-metrics.patch"
                  "tay/packages/patches/kitty-bitmap-meta-as-alt.patch")))
        (snippet

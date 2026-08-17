@@ -46,6 +46,8 @@ awk '
 ' "$source_tree/kitty/fast_data_types.pyi"
 grep -F 'int allow_bitmapped_fonts = 1, spacing = -1, only_variable = 0;' "$source_tree/kitty/fontconfig.c" >/dev/null
 grep -F 'int bold = 0, italic = 0, allow_bitmapped_fonts = 1, spacing = FC_MONO;' "$source_tree/kitty/fontconfig.c" >/dev/null
+grep -F 'fc_list(spacing=FC_CHARCELL)' "$source_tree/kitty/fonts/fontconfig.py" >/dev/null
+grep -F "descriptor['spacing'] in ('CHARCELL', 'MONO', 'DUAL')" "$source_tree/kitty/fonts/fontconfig.py" >/dev/null
 grep -F 'mods = (mods & ~GLFW_MOD_META) | GLFW_MOD_ALT;' "$source_tree/kitty/key_encoding.c" >/dev/null
 grep -F 'GLFW_MOD_META' "$source_tree/kitty/keys.py" >/dev/null
 grep -F 'ae(q(mods=meta)' "$source_tree/kitty_tests/keys.py" >/dev/null
@@ -73,11 +75,12 @@ FONTCONFIG_FILE="$kitty_smoke_tmp/fonts.conf" \
   "$fontconfig_out/bin/fc-cache" -f >/dev/null
 FONTCONFIG_FILE="$kitty_smoke_tmp/fonts.conf" \
   "$kitty_out/bin/kitty" +runpy \
-  'from kitty.fast_data_types import GLFW_MOD_META, Face, KeyEvent, SingleKey, fc_list, fc_match; from kitty.fonts.render import render_string; from kitty.keys import shortcut_matches; assert shortcut_matches(SingleKey(GLFW_MOD_META, False, ord("a")), KeyEvent(ord("a"), mods=GLFW_MOD_META)); w, h, cells = render_string("ABC", family="Unscii", size=8, dpi=96); assert w > 0 and h > 0 and cells and any(any(cell) for cell in cells); face = Face(fc_match("Unscii")); face.set_size(8, 96, 96); sample, cw, ch = face.render_sample_text("ABC", 160, 80); assert cw > 0 and ch > 0 and sample and any(sample); print(sorted({x["family"] for x in fc_list()})); print(fc_match("Unscii")["family"]); print("raw-meta-shortcut-ok"); print("unscii-raster-ok")' \
+  'from kitty.fast_data_types import GLFW_MOD_META, Face, KeyEvent, SingleKey, fc_list, fc_match; from kitty.fonts.fontconfig import find_best_match; from kitty.fonts.render import render_string; from kitty.keys import shortcut_matches; assert shortcut_matches(SingleKey(GLFW_MOD_META, False, ord("a")), KeyEvent(ord("a"), mods=GLFW_MOD_META)); primary = find_best_match("Unscii"); assert primary["family"] == "Unscii" and primary["spacing"] == "CHARCELL" and primary["path"].endswith(".pcf"), primary; w, h, cells = render_string("ABC", family="Unscii", size=8, dpi=96); assert w > 0 and h > 0 and cells and any(any(cell) for cell in cells); face = Face(fc_match("Unscii")); face.set_size(8, 96, 96); sample, cw, ch = face.render_sample_text("ABC", 160, 80); assert cw > 0 and ch > 0 and sample and any(sample); print(sorted({x["family"] for x in fc_list()})); print(fc_match("Unscii")["family"]); print("raw-meta-shortcut-ok"); print("unscii-primary-font-ok"); print("unscii-raster-ok")' \
   > "$kitty_smoke_tmp/font-list"
 grep -F "'Unscii'" "$kitty_smoke_tmp/font-list" >/dev/null
 grep -Fx 'Unscii' "$kitty_smoke_tmp/font-list" >/dev/null
 grep -Fx 'raw-meta-shortcut-ok' "$kitty_smoke_tmp/font-list" >/dev/null
+grep -Fx 'unscii-primary-font-ok' "$kitty_smoke_tmp/font-list" >/dev/null
 grep -Fx 'unscii-raster-ok' "$kitty_smoke_tmp/font-list" >/dev/null
 
 printf '%s\n' 'kitty-bitmap smoke passed: patched source, keyboard invariants, and Unscii PCF rasterization'
