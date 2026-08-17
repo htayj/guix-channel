@@ -1,7 +1,7 @@
 GUIX ?= guix
 # kitty-bitmap needs the current Kitty package definition.  Keep this separate
 # from GUIX so existing channel checks can still be run with a chosen Guix.
-KITTY_BITMAP_GUIX ?= guix time-machine -C channels.scm --
+KITTY_BITMAP_GUIX ?= guix time-machine -C channels.guix --
 
 # Derive the build list from Guix's available-package enumeration, which
 # observes both define-public forms and dynamically exported snapshot packages.
@@ -30,7 +30,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	computer-builder rust-computus custom-nix-pkgs databases-team75 dorxng-mcp \
 	hyprland-preview-share-picker sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
-	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq kitty-bitmap
+	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq kitty-bitmap opencode
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by

@@ -8,7 +8,7 @@ channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$channel_dir"
 
 # Deliberately allow GUIX to be a command prefix such as
-# "guix time-machine -C channels.scm --", not only an executable pathname.
+# "guix time-machine -C channels.guix --", not only an executable pathname.
 source_tree=$($guix_tool build -L . --no-grafts -S kitty-bitmap)
 select_output() {
   program=$1

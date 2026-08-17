@@ -93,6 +93,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `custom-nix-pkgs` | custom-nix-pkgs | Preserved Nix expressions plus a snapshot validator |
 | `databases-team75` | Databases-Team75 | Preserved legacy client source and documentation |
 | `dorxng-mcp` | dorxng-mcp | MCP server and its packaged Python dependencies |
+| `opencode` | anomalyco/opencode 1.18.18 | Coding-agent command-line interface and terminal UI |
 | `hyprland-preview-share-picker` | WhySoBad/hyprland-preview-share-picker | GTK4 Hyprland screencast picker with window previews |
 | `sbcl-ivory-key` | ivory-key | Declarative keyboard-layout compiler |
 | `manna-cadet` | manna-cadet | Space Cadet keyboard layouts and helper tools |
@@ -125,6 +126,18 @@ upstream license grant.
 data packages, not replacements for a native application.  `bell-museum` does
 not package its Inferno submodule; use its renderer with an independently
 acquired checkout when source artwork is required.
+
+`opencode` packages the official Bun-compiled release executable because the
+channel's Guix revision does not provide Bun and upstream's build performs
+additional network installs of platform-specific dependencies.  The package
+uses upstream's baseline x86_64 glibc archive (which avoids an AVX2 requirement)
+or its aarch64 glibc archive, verifies each with the digest published on the
+GitHub release, and runs the unmodified ELF through Guix's glibc loader.  The
+exact source tag is retained for provenance and its MIT notice is installed
+with the package.  The executable embeds the Bun runtime, JavaScript bundle,
+web UI, and native dependencies selected by upstream; they are not rebuilt or
+separately audited by this channel.  Provider credentials and services,
+downloaded language servers, and optional integrations remain runtime concerns.
 
 `image-tape` creates its optional output file safely and propagates write
 errors to its exit status.  The `check-image-tape` regression uses Guix's
@@ -188,7 +201,7 @@ make build          # build free installable packages (not sentinelone)
 make build-sources  # fetch and build all 629 source snapshots
 ```
 
-`check-kitty-bitmap` uses `guix time-machine -C channels.scm --` by default
+`check-kitty-bitmap` uses `guix time-machine -C channels.guix --` by default
 because the host Guix may have an older Kitty definition.  Override
 `KITTY_BITMAP_GUIX` with an equivalent current Guix command prefix when
 needed.
