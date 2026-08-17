@@ -95,6 +95,8 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `dorxng-mcp` | dorxng-mcp | MCP server and its packaged Python dependencies |
 | `opencode` | anomalyco/opencode 1.18.18 | Coding-agent command-line interface and terminal UI |
 | `opencode-desktop` | anomalyco/opencode desktop 1.18.18 | Electron graphical client with a bundled local backend |
+| `claude-code` | Anthropic Claude Code 2.1.233 | Proprietary agentic coding command-line interface |
+| `claude-desktop` | Anthropic Claude Desktop 1.30096.1 | Proprietary Electron client for Claude on Linux |
 | `hyprland-preview-share-picker` | WhySoBad/hyprland-preview-share-picker | GTK4 Hyprland screencast picker with window previews |
 | `sbcl-ivory-key` | ivory-key | Declarative keyboard-layout compiler |
 | `manna-cadet` | manna-cadet | Space Cadet keyboard layouts and helper tools |
@@ -111,7 +113,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `xq` | sibprogrammer/xq | Offline-built XML and HTML beautifier and extractor |
 | `sentinelone` | SentinelOne Linux agent 24.3.3.1 | Proprietary x86_64 agent; authorized installer required |
 
-These eight added installable wrappers do not add source snapshots; the source
+These ten added installable wrappers do not add source snapshots; the source
 collection remains 629 packages.
 
 The release font packages consume immutable generic GitHub Release archives
@@ -154,6 +156,30 @@ license and Chromium's bundled third-party notices are installed alongside the
 application.  The launcher automatically selects Wayland or X11, retains the
 `opencode:` URL handler, and stores credentials and project state only in the
 user's normal configuration and data directories.
+
+`claude-code` packages Anthropic's official x86_64 or aarch64 glibc Debian
+release.  Upstream distributes a Bun-compiled native executable rather than a
+buildable application source tree; the package pins the release repository's
+published digest, patches the ELF interpreter and glibc runpath for Guix,
+retains the bundled cross-architecture `ripgrep`, and sets
+`DISABLE_UPDATES=1` so neither automatic nor manual update paths replace the
+store-managed executable.  The vendor copyright file says
+that use is governed by Anthropic's applicable consumer or commercial terms.
+Authentication, provider access, settings, plugins, MCP servers, hooks, and
+session data remain runtime concerns in the user's directories.
+
+`claude-desktop` packages Anthropic's official x86_64 or aarch64 Linux beta
+Debian release.  The package identifies the application as proprietary and
+contains Electron 42.7, native Node modules, helper executables, Cowork VM
+assets, Chromium notices, and separate Apache-2.0/BSD-3-Clause virtiofsd
+notices.  The Guix package patches the dynamic components, installs the
+upstream desktop entry and icons, and never runs the Debian maintainer script
+that would register Anthropic's apt repository.  Anthropic documents that the
+Linux application does not self-update.  Core desktop use supports Wayland or
+X11 and relies on the user's secret service and desktop portals.  Cowork is
+not configured: it additionally needs KVM access, QEMU, architecture-specific
+firmware, virtiofsd integration, about 25 GB of mutable storage, and at least
+8 GB of RAM.
 
 `image-tape` creates its optional output file safely and propagates write
 errors to its exit status.  The `check-image-tape` regression uses Guix's

@@ -31,7 +31,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	hyprland-preview-share-picker sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
 	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq kitty-bitmap opencode \
-	opencode-desktop
+	opencode-desktop claude-code claude-desktop
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
