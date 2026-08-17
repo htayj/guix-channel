@@ -94,6 +94,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `databases-team75` | Databases-Team75 | Preserved legacy client source and documentation |
 | `dorxng-mcp` | dorxng-mcp | MCP server and its packaged Python dependencies |
 | `opencode` | anomalyco/opencode 1.18.18 | Coding-agent command-line interface and terminal UI |
+| `opencode-desktop` | anomalyco/opencode desktop 1.18.18 | Electron graphical client with a bundled local backend |
 | `hyprland-preview-share-picker` | WhySoBad/hyprland-preview-share-picker | GTK4 Hyprland screencast picker with window previews |
 | `sbcl-ivory-key` | ivory-key | Declarative keyboard-layout compiler |
 | `manna-cadet` | manna-cadet | Space Cadet keyboard layouts and helper tools |
@@ -138,6 +139,21 @@ with the package.  The executable embeds the Bun runtime, JavaScript bundle,
 web UI, and native dependencies selected by upstream; they are not rebuilt or
 separately audited by this channel.  Provider credentials and services,
 downloaded language servers, and optional integrations remain runtime concerns.
+
+`opencode-desktop` uses the official architecture-specific Debian release
+bundle.  A source build is not currently reproducible in this channel: Guix
+does not package Bun, upstream requires Electron 42.3.3 while the channel has
+Electron 41, and the Bun monorepo build resolves platform-specific native Node
+modules.  The package retains the exact source tag and its MIT license for
+provenance, verifies the x86_64 or aarch64 release archive, and patches the
+bundled Electron and glibc native modules for Guix.  The default v1 desktop
+backend is JavaScript inside `app.asar` and runs locally; the experimental v2
+service CLI is neither enabled nor downloaded.  Updater provider metadata is
+removed so replacement application bundles remain Guix-managed.  The Electron
+license and Chromium's bundled third-party notices are installed alongside the
+application.  The launcher automatically selects Wayland or X11, retains the
+`opencode:` URL handler, and stores credentials and project state only in the
+user's normal configuration and data directories.
 
 `image-tape` creates its optional output file safely and propagates write
 errors to its exit status.  The `check-image-tape` regression uses Guix's
