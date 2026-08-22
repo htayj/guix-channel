@@ -147,7 +147,7 @@ The MUD-client additions are end-user applications, not game servers.
 `axmud`, `kildclient`, `kmuddy`, `mushtato`, `potato`, `secretpathway`, and `trebuchet`
 are graphical clients; `go-mud`, `lyntin`, `tinyfugue`, `godisc`, and `kbtin`
 provide text-mode workflows; `blightmud`, `durthang`, and `mudpuppy` are Rust
-TUIs; and
+TUIs; `rune` is a pure-Go TUI with an embedded Lua interpreter; and
 `pycat` is a modular terminal proxy.  Their
 channel smokes use fresh homes and loopback fake-MUD/frontend sockets.
 KildClient, SecretPathway, and Trebuchet run under Guix's Xvfb; GoDisc exercises
@@ -175,6 +175,7 @@ failure; and Pycat checks safe sibling imports and live world reload.
 | `mushtato` | `N0NJY/mushtato` | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |
 | `potato` | `potatomushclient/potato` | Tcl/Tk graphical MUSH client with TLS deliberately disabled |
 | `pycat` | `cizra/pycat` | Modular Python MUD proxy client and world-module framework |
+| `rune` | `mmcdole/rune` | Pure-Go terminal MUD client with Lua, TLS, MCCP2, and GMCP |
 | `secretpathway` | `mhahnFr/SecretPathway` | Java/Swing MUD client with an LPC source editor |
 | `tinyfugue` | `ingwarsw/tinyfugue` | Scriptable terminal MUD client with TLS, MCCP, GMCP, and IPv6 |
 | `trebuchet` | `fuzzball-muck/trebuchet` | Tcl/Tk graphical MUD, MUCK, and MUSH client with MCP support |

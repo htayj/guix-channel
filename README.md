@@ -119,6 +119,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `mushtato` | MushTato 1.9.3 | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |
 | `potato` | Potato 2.0.0b19 | Tcl/Tk graphical MUSH client; insecure upstream TLS is deliberately disabled |
 | `pycat` | cizra/pycat | Modular Python MUD proxy client with user-defined world modules |
+| `rune` | Rune 0.10.1 | Pure-Go terminal MUD client with Lua, TLS, MCCP2, and GMCP |
 | `secretpathway` | SecretPathway 1.0.0 | Java/Swing MUD client with an LPC source editor |
 | `tinyfugue` | TinyFugue Rebirth 5.2.2 | Scriptable terminal MUD client with TLS, MCCP, GMCP, and IPv6 |
 | `trebuchet` | Trebuchet 1082 | Tcl/Tk graphical MUD, MUCK, and MUSH client with MCP support |
@@ -221,13 +222,14 @@ and Kitty's native Fontconfig calls through `kitty +runpy`, without a display
 server.  It verifies selection and nonempty glyph-cell rasterization, but not
 a live GUI window.
 
-The sixteen MUD clients cover distinct local interfaces.  `axmud`, `kildclient`,
+The seventeen MUD clients cover distinct local interfaces.  `axmud`, `kildclient`,
 `kmuddy`, `mushtato`, `potato`, `secretpathway`, and `trebuchet` provide GTK,
 KDE/Qt, Tcl/Tk, and Java/Swing desktops; `go-mud`, `lyntin`, `tinyfugue`,
 `godisc`, and `kbtin` provide different text-mode workflows; `blightmud`,
 `durthang`, and `mudpuppy` are modern Rust TUIs with GMCP and
 scripting features; and `pycat` is a
 terminal-facing proxy whose world modules load from the invoking directory.
+Rune is a pure-Go terminal client with an embedded Lunar Lua interpreter.
 Dedicated smokes use Guix's Xvfb where needed, fresh homes, and loopback
 fake-MUD or frontend sockets.  GoDisc also creates and removes a real
 three-pane tmux session, Durthang verifies persisted GMCP map state and
@@ -278,6 +280,7 @@ make check-mudpuppy # fresh-HOME PTY, embedded Python, loopback, and TLS-rejecti
 make check-mushtato # fresh XDG/HOME Xvfb GUI plus loopback Telnet smoke
 make check-potato   # fresh-HOME Xvfb, disabled TLS/update, and loopback smoke
 make check-pycat    # loopback-only fake-MUD proxy and user world-module smoke
+make check-rune     # namespaced PTY Telnet/GMCP/MCCP2 and verified-TLS smoke
 make check-secretpathway # fresh-HOME Xvfb Swing plus loopback Telnet smoke
 make check-tinyfugue # sanitized fresh-HOME loopback fake-MUD protocol smoke
 make check-trebuchet # fresh-HOME Xvfb Tcl/Tk plus loopback protocol smoke
