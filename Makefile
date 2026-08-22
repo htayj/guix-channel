@@ -34,7 +34,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	hyprland-preview-share-picker sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
 	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq kitty-bitmap opencode \
-	opencode-desktop claude-code claude-desktop axmud blightmud durthang go-mud godisc kbtin \
+	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin \
 	kildclient kmuddy lyntin mmapper mudpuppy mushkin mushtato potato pycat rune secretpathway tinyfugue trebuchet
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
@@ -44,7 +44,7 @@ OPTIONAL_PROPRIETARY_PACKAGES ?= sentinelone
 CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 
 .PHONY: check check-source-count check-sentinelone check-datamosh-security \
-	check-axmud check-blightmud check-durthang check-go-mud check-godisc check-image-tape check-kbtin \
+	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kildclient check-kmuddy check-mmapper check-mudpuppy check-mushkin check-mushtato check-potato \
 	check-kitty-bitmap check-lyntin check-pycat check-rune check-tinyfugue lint lint-cve \
 	check-secretpathway check-trebuchet build build-sources
@@ -73,6 +73,9 @@ check-image-tape:
 
 check-durthang:
 	GUIX="$(GUIX)" tests/durthang-smoke.sh
+
+check-frostbite:
+	GUIX="$(GUIX)" tests/frostbite-smoke.sh
 
 check-go-mud:
 	GUIX="$(GUIX)" tests/go-mud-smoke.sh
@@ -126,7 +129,7 @@ check-trebuchet:
 	GUIX="$(GUIX)" tests/trebuchet-smoke.sh
 
 check: check-source-count check-sentinelone check-datamosh-security \
-	check-axmud check-blightmud check-durthang check-go-mud check-godisc check-image-tape check-kbtin \
+	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kildclient check-kmuddy check-kitty-bitmap check-lyntin check-mmapper \
 	check-mudpuppy check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \

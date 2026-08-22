@@ -108,6 +108,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `axmud` | Axmud 2.0.0 | Perl/GTK3 graphical MUD client with GMCP and configurable scripting |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `durthang` | Durthang 0.2.0 | Rust TUI MUD client with TLS, GMCP, automapping, and encrypted Secret Service transport |
+| `frostbite` | Frostbite 1.18.2 | Qt5 DragonRealms client with Ruby scripting, profiles, maps, sound, and XDG state |
 | `godisc` | DavidSatimeWallin/godisc | Discworld-oriented terminal MUD client with an optional tmux workspace |
 | `go-mud` | go-mud 0.6.6 | UTF-8 terminal MUD client with Lua scripting |
 | `kbtin` | kilobyte/kbtin | TinTin-compatible terminal MUD client with TLS and MCCP |
@@ -224,8 +225,9 @@ and Kitty's native Fontconfig calls through `kitty +runpy`, without a display
 server.  It verifies selection and nonempty glyph-cell rasterization, but not
 a live GUI window.
 
-The nineteen MUD clients cover distinct local interfaces.  `axmud`, `kildclient`,
-`kmuddy`, `mmapper`, `mushkin`, `mushtato`, `potato`, `secretpathway`, and `trebuchet` provide GTK,
+The twenty MUD clients cover distinct local interfaces.  `axmud`, `frostbite`,
+`kildclient`, `kmuddy`, `mmapper`, `mushkin`, `mushtato`, `potato`,
+`secretpathway`, and `trebuchet` provide GTK,
 KDE/Qt, Tcl/Tk, and Java/Swing desktops; `go-mud`, `lyntin`, `tinyfugue`,
 `godisc`, and `kbtin` provide different text-mode workflows; `blightmud`,
 `durthang`, and `mudpuppy` are modern Rust TUIs with GMCP and
@@ -271,6 +273,7 @@ make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
 make check-durthang  # headless keyring failure plus loopback Telnet/GMCP map smoke
+make check-frostbite # namespaced Xvfb, XDG state, Ruby API, and loopback MUD smoke
 make check-go-mud   # fresh-HOME PTY, UTF-8, and Telnet negotiation smoke
 make check-godisc   # fresh-HOME tmux workspace plus loopback Telnet smoke
 make check-kbtin    # fresh-HOME loopback Telnet/parser smoke

@@ -144,7 +144,8 @@ selection and nonempty glyph-cell rasterization are tested, but a live GUI
 window is not claimed.
 
 The MUD-client additions are end-user applications, not game servers.
-`axmud`, `kildclient`, `kmuddy`, `mmapper`, `mushkin`, `mushtato`, `potato`, `secretpathway`, and `trebuchet`
+`axmud`, `frostbite`, `kildclient`, `kmuddy`, `mmapper`, `mushkin`, `mushtato`,
+`potato`, `secretpathway`, and `trebuchet`
 are graphical clients; `go-mud`, `lyntin`, `tinyfugue`, `godisc`, and `kbtin`
 provide text-mode workflows; `blightmud`, `durthang`, and `mudpuppy` are Rust
 TUIs; `rune` is a pure-Go TUI with an embedded Lua interpreter; and
@@ -164,6 +165,7 @@ failure; and Pycat checks safe sibling imports and live world reload.
 | `axmud` | `axcore/axmud` | Perl/GTK3 graphical MUD client with GMCP and configurable scripting |
 | `blightmud` | `Blightmud/Blightmud` | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `durthang` | `Pommersche92/durthang` | Rust TUI MUD client with TLS, GMCP, automapping, and Secret Service integration |
+| `frostbite` | `matoom/frostbite` | Qt5 DragonRealms client with Ruby scripting, profiles, maps, sound, and XDG state |
 | `godisc` | `DavidSatimeWallin/godisc` | Discworld terminal client and tmux workspace launcher |
 | `go-mud` | `mudclient/go-mud` | UTF-8 terminal MUD client with Lua scripting |
 | `kbtin` | `kilobyte/kbtin` | TinTin-compatible terminal MUD client with TLS and MCCP |
