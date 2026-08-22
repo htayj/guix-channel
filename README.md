@@ -105,6 +105,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `terminaldrome` | thafaker/TerminalDrome | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | larsbrinkhoff/image-tape | Magnetic-tape image reader with safe output handling |
 | `kitty-bitmap` | Kitty 0.46.2 | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
+| `axmud` | Axmud 2.0.0 | Perl/GTK3 graphical MUD client with GMCP and configurable scripting |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `durthang` | Durthang 0.2.0 | Rust TUI MUD client with TLS, GMCP, automapping, and encrypted Secret Service transport |
 | `godisc` | DavidSatimeWallin/godisc | Discworld-oriented terminal MUD client with an optional tmux workspace |
@@ -220,11 +221,11 @@ and Kitty's native Fontconfig calls through `kitty +runpy`, without a display
 server.  It verifies selection and nonempty glyph-cell rasterization, but not
 a live GUI window.
 
-The fifteen MUD clients cover distinct local interfaces.  `kildclient`,
+The sixteen MUD clients cover distinct local interfaces.  `axmud`, `kildclient`,
 `kmuddy`, `mushtato`, `potato`, `secretpathway`, and `trebuchet` provide GTK,
 KDE/Qt, Tcl/Tk, and Java/Swing desktops; `go-mud`, `lyntin`, `tinyfugue`,
-`godisc`, and `kbtin` provide different text-mode workflows; `durthang` and
-`blightmud`, `durthang`, and `mudpuppy` are modern Rust TUIs with GMCP and
+`godisc`, and `kbtin` provide different text-mode workflows; `blightmud`,
+`durthang`, and `mudpuppy` are modern Rust TUIs with GMCP and
 scripting features; and `pycat` is a
 terminal-facing proxy whose world modules load from the invoking directory.
 Dedicated smokes use Guix's Xvfb where needed, fresh homes, and loopback
@@ -262,6 +263,7 @@ runtime deployment.
 ```sh
 make check          # source-count/dry-run, no-network lint, and smoke tests
 make check-datamosh-security # package build plus argv-injection smoke test
+make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
 make check-durthang  # headless keyring failure plus loopback Telnet/GMCP map smoke

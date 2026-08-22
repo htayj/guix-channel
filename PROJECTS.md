@@ -144,7 +144,7 @@ selection and nonempty glyph-cell rasterization are tested, but a live GUI
 window is not claimed.
 
 The MUD-client additions are end-user applications, not game servers.
-`kildclient`, `kmuddy`, `mushtato`, `potato`, `secretpathway`, and `trebuchet`
+`axmud`, `kildclient`, `kmuddy`, `mushtato`, `potato`, `secretpathway`, and `trebuchet`
 are graphical clients; `go-mud`, `lyntin`, `tinyfugue`, `godisc`, and `kbtin`
 provide text-mode workflows; `blightmud`, `durthang`, and `mudpuppy` are Rust
 TUIs; and
@@ -161,6 +161,7 @@ failure; and Pycat checks safe sibling imports and live world reload.
 | `terminaldrome` | `thafaker/TerminalDrome` | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | `larsbrinkhoff/image-tape` | Magnetic-tape image reader with safe output handling |
 | `kitty-bitmap` | `kovidgoyal/kitty` | Native bitmap-font Kitty variant with XKB Meta-to-terminal-Alt encoding |
+| `axmud` | `axcore/axmud` | Perl/GTK3 graphical MUD client with GMCP and configurable scripting |
 | `blightmud` | `Blightmud/Blightmud` | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `durthang` | `Pommersche92/durthang` | Rust TUI MUD client with TLS, GMCP, automapping, and Secret Service integration |
 | `godisc` | `DavidSatimeWallin/godisc` | Discworld terminal client and tmux workspace launcher |
