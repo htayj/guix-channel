@@ -107,11 +107,14 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `kitty-bitmap` | Kitty 0.46.2 | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
 | `durthang` | Durthang 0.2.0 | Rust TUI MUD client with TLS, GMCP, automapping, and encrypted Secret Service transport |
 | `godisc` | DavidSatimeWallin/godisc | Discworld-oriented terminal MUD client with an optional tmux workspace |
+| `kbtin` | kilobyte/kbtin | TinTin-compatible terminal MUD client with TLS and MCCP |
 | `kildclient` | KildClient 3.2.3 | GTK MUD client with Perl scripting, plugins, triggers, aliases, and multiple worlds |
 | `ks10-udis` | larsbrinkhoff/ks10-udis | KS10 microcode disassembler and offline fixture |
 | `lyntin` | Lyntin V 5.0.1 | Text-mode Python MUD client with aliases, triggers, scripting, and module support |
 | `pycat` | cizra/pycat | Modular Python MUD proxy client with user-defined world modules |
+| `secretpathway` | SecretPathway 1.0.0 | Java/Swing MUD client with an LPC source editor |
 | `tinyfugue` | TinyFugue Rebirth 5.2.2 | Scriptable terminal MUD client with TLS, MCCP, GMCP, and IPv6 |
+| `trebuchet` | Trebuchet 1082 | Tcl/Tk graphical MUD, MUCK, and MUSH client with MCP support |
 | `emacs-treesit-sexp` | alexispurslane/treesit-sexp | Tree-sitter-aware structural editing for Emacs |
 | `dipc` | doprz/dipc | Offline-built image palette converter |
 | `nrl-text-to-phoneme` | greg-kennedy/p5-NRL-TextToPhoneme | NRL text-to-phoneme command and rule tables |
@@ -211,15 +214,16 @@ and Kitty's native Fontconfig calls through `kitty +runpy`, without a display
 server.  It verifies selection and nonempty glyph-cell rasterization, but not
 a live GUI window.
 
-The six MUD clients cover distinct local interfaces.  `kildclient` is a GTK
-desktop client with Perl plugins; `lyntin`, `tinyfugue`, and `godisc` provide
-different text-mode workflows; `durthang` is a modern Rust TUI with GMCP
-automapping; and `pycat` is a terminal-facing proxy whose world modules load
-from the invoking directory.  Dedicated smokes use Guix's Xvfb where needed,
-fresh homes, and loopback fake-MUD or frontend sockets.  GoDisc also creates
-and removes a real three-pane tmux session, Durthang verifies persisted GMCP
-map state and explicit headless keyring failure, and Pycat checks safe sibling
-imports and live reload.  None contacts a public MUD.
+The nine MUD clients cover distinct local interfaces.  `kildclient`,
+`secretpathway`, and `trebuchet` provide GTK, Java/Swing, and Tcl/Tk desktops;
+`lyntin`, `tinyfugue`, `godisc`, and `kbtin` provide different text-mode
+workflows; `durthang` is a modern Rust TUI with GMCP automapping; and `pycat` is
+a terminal-facing proxy whose world modules load from the invoking directory.
+Dedicated smokes use Guix's Xvfb where needed, fresh homes, and loopback
+fake-MUD or frontend sockets.  GoDisc also creates and removes a real
+three-pane tmux session, Durthang verifies persisted GMCP map state and
+explicit headless keyring failure, and Pycat checks safe sibling imports and
+live reload.  None contacts a public MUD.
 
 `sentinelone` is source-required and is checked for enumeration, dry-run, and
 lint, but is excluded from the default `make build`.  No proprietary installer
@@ -253,11 +257,14 @@ make check-datamosh-security # package build plus argv-injection smoke test
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
 make check-durthang  # headless keyring failure plus loopback Telnet/GMCP map smoke
 make check-godisc   # fresh-HOME tmux workspace plus loopback Telnet smoke
+make check-kbtin    # fresh-HOME loopback Telnet/parser smoke
 make check-kildclient # Guix Xvfb plus fresh-HOME loopback fake-MUD connection
 make check-kitty-bitmap # channel-pinned Guix build plus source/key-encoding invariants and headless PCF rasterization
 make check-lyntin   # fresh-HOME version and loopback fake-MUD protocol smoke
 make check-pycat    # loopback-only fake-MUD proxy and user world-module smoke
+make check-secretpathway # fresh-HOME Xvfb Swing plus loopback Telnet smoke
 make check-tinyfugue # sanitized fresh-HOME loopback fake-MUD protocol smoke
+make check-trebuchet # fresh-HOME Xvfb Tcl/Tk plus loopback protocol smoke
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass
