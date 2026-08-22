@@ -143,11 +143,13 @@ unchanged.  Bitmap-font verification is deliberately headless: Unscii PCF
 selection and nonempty glyph-cell rasterization are tested, but a live GUI
 window is not claimed.
 
-The MUD-client additions are end-user applications, not game servers:
-`kildclient` is the GTK/Perl desktop client, `lyntin` is the Python text-mode
-client, and `pycat` is a modular terminal proxy.  Their channel smokes use
-fresh homes and only loopback fake-MUD/frontend sockets; KildClient runs under
-Guix's Xvfb, and Pycat also checks safe sibling imports and live world reload.
+The MUD-client additions are end-user applications, not game servers.
+`kildclient` is the GTK/Perl desktop client; `lyntin`, `tinyfugue`, and
+`godisc` provide text-mode workflows; `durthang` is a Rust TUI; and `pycat` is
+a modular terminal proxy.  Their channel smokes use fresh homes and loopback
+fake-MUD/frontend sockets.  KildClient runs under Guix's Xvfb, GoDisc exercises
+a real tmux workspace, Durthang checks GMCP map persistence and absent-keyring
+failure, and Pycat checks safe sibling imports and live world reload.
 
 | Package | Upstream | Installed contents |
 | --- | --- | --- |
@@ -156,10 +158,13 @@ Guix's Xvfb, and Pycat also checks safe sibling imports and live world reload.
 | `terminaldrome` | `thafaker/TerminalDrome` | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | `larsbrinkhoff/image-tape` | Magnetic-tape image reader with safe output handling |
 | `kitty-bitmap` | `kovidgoyal/kitty` | Native bitmap-font Kitty variant with XKB Meta-to-terminal-Alt encoding |
+| `durthang` | `Pommersche92/durthang` | Rust TUI MUD client with TLS, GMCP, automapping, and Secret Service integration |
+| `godisc` | `DavidSatimeWallin/godisc` | Discworld terminal client and tmux workspace launcher |
 | `kildclient` | KildClient | GTK MUD client with Perl scripting and plugins |
 | `ks10-udis` | `larsbrinkhoff/ks10-udis` | KS10 microcode disassembler and offline fixture |
 | `lyntin` | Lyntin V | Text-mode Python MUD client and module API |
 | `pycat` | `cizra/pycat` | Modular Python MUD proxy client and world-module framework |
+| `tinyfugue` | `ingwarsw/tinyfugue` | Scriptable terminal MUD client with TLS, MCCP, GMCP, and IPv6 |
 | `emacs-treesit-sexp` | `alexispurslane/treesit-sexp` | Tree-sitter-aware structural editing for Emacs |
 | `dipc` | `doprz/dipc` | Offline-built image palette converter |
 | `nrl-text-to-phoneme` | `greg-kennedy/p5-NRL-TextToPhoneme` | NRL text-to-phoneme command and rule tables |
