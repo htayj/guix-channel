@@ -117,6 +117,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `lyntin` | Lyntin V 5.0.1 | Text-mode Python MUD client with aliases, triggers, scripting, and module support |
 | `mmapper` | MMapper 26.06.0 | Qt graphical MUME client, local TLS proxy, and empty-map editor |
 | `mudpuppy` | Mudpuppy 20251214 | Rust terminal MUD client with embedded Python scripting and TLS |
+| `mushkin` | Mushkin 0.5.1 | Qt MUSHclient-compatible MUD client with Lua, TLS, and MSP |
 | `mushtato` | MushTato 1.9.3 | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |
 | `potato` | Potato 2.0.0b19 | Tcl/Tk graphical MUSH client; insecure upstream TLS is deliberately disabled |
 | `pycat` | cizra/pycat | Modular Python MUD proxy client with user-defined world modules |
@@ -223,8 +224,8 @@ and Kitty's native Fontconfig calls through `kitty +runpy`, without a display
 server.  It verifies selection and nonempty glyph-cell rasterization, but not
 a live GUI window.
 
-The eighteen MUD clients cover distinct local interfaces.  `axmud`, `kildclient`,
-`kmuddy`, `mmapper`, `mushtato`, `potato`, `secretpathway`, and `trebuchet` provide GTK,
+The nineteen MUD clients cover distinct local interfaces.  `axmud`, `kildclient`,
+`kmuddy`, `mmapper`, `mushkin`, `mushtato`, `potato`, `secretpathway`, and `trebuchet` provide GTK,
 KDE/Qt, Tcl/Tk, and Java/Swing desktops; `go-mud`, `lyntin`, `tinyfugue`,
 `godisc`, and `kbtin` provide different text-mode workflows; `blightmud`,
 `durthang`, and `mudpuppy` are modern Rust TUIs with GMCP and
@@ -279,6 +280,7 @@ make check-kitty-bitmap # channel-pinned Guix build plus source/key-encoding inv
 make check-lyntin   # fresh-HOME version and loopback fake-MUD protocol smoke
 make check-mmapper  # fresh-XDG Qt plus namespaced local TLS-proxy smoke
 make check-mudpuppy # fresh-HOME PTY, embedded Python, loopback, and TLS-rejection smoke
+make check-mushkin  # namespaced Xvfb, Lua version, MSP traversal, and LuaSec TLS smoke
 make check-mushtato # fresh XDG/HOME Xvfb GUI plus loopback Telnet smoke
 make check-potato   # fresh-HOME Xvfb, disabled TLS/update, and loopback smoke
 make check-pycat    # loopback-only fake-MUD proxy and user world-module smoke
