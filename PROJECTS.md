@@ -146,8 +146,8 @@ window is not claimed.
 The MUD-client additions are end-user applications, not game servers.
 `kildclient`, `mushtato`, `potato`, `secretpathway`, and `trebuchet` are
 graphical clients; `go-mud`, `lyntin`, `tinyfugue`, `godisc`, and `kbtin`
-provide text-mode workflows; `durthang` is a Rust TUI; and `pycat` is a
-modular terminal proxy.  Their
+provide text-mode workflows; `durthang` and `mudpuppy` are Rust TUIs; and
+`pycat` is a modular terminal proxy.  Their
 channel smokes use fresh homes and loopback fake-MUD/frontend sockets.
 KildClient, SecretPathway, and Trebuchet run under Guix's Xvfb; GoDisc exercises
 a real tmux workspace; Durthang checks GMCP map persistence and absent-keyring
@@ -167,6 +167,7 @@ failure; and Pycat checks safe sibling imports and live world reload.
 | `kildclient` | KildClient | GTK MUD client with Perl scripting and plugins |
 | `ks10-udis` | `larsbrinkhoff/ks10-udis` | KS10 microcode disassembler and offline fixture |
 | `lyntin` | Lyntin V | Text-mode Python MUD client and module API |
+| `mudpuppy` | `mudpuppy-rs/mudpuppy` | Rust terminal MUD client with embedded Python scripting and TLS |
 | `mushtato` | `N0NJY/mushtato` | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |
 | `potato` | `potatomushclient/potato` | Tcl/Tk graphical MUSH client with TLS deliberately disabled |
 | `pycat` | `cizra/pycat` | Modular Python MUD proxy client and world-module framework |

@@ -32,7 +32,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
 	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq kitty-bitmap opencode \
 	opencode-desktop claude-code claude-desktop durthang go-mud godisc kbtin \
-	kildclient lyntin mushtato potato pycat secretpathway tinyfugue trebuchet
+	kildclient lyntin mudpuppy mushtato potato pycat secretpathway tinyfugue trebuchet
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -42,7 +42,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 
 .PHONY: check check-source-count check-sentinelone check-datamosh-security \
 	check-durthang check-go-mud check-godisc check-image-tape check-kbtin \
-	check-kildclient check-mushtato check-potato \
+	check-kildclient check-mudpuppy check-mushtato check-potato \
 	check-kitty-bitmap check-lyntin check-pycat check-tinyfugue lint lint-cve \
 	check-secretpathway check-trebuchet build build-sources
 
@@ -83,6 +83,9 @@ check-kitty-bitmap:
 check-lyntin:
 	GUIX="$(GUIX)" tests/lyntin-smoke.sh
 
+check-mudpuppy:
+	GUIX="$(GUIX)" tests/mudpuppy-smoke.sh
+
 check-mushtato:
 	GUIX="$(GUIX)" tests/mushtato-smoke.sh
 
@@ -103,7 +106,7 @@ check-trebuchet:
 
 check: check-source-count check-sentinelone check-datamosh-security \
 	check-durthang check-go-mud check-godisc check-image-tape check-kbtin \
-	check-kildclient check-kitty-bitmap check-lyntin check-mushtato \
+	check-kildclient check-kitty-bitmap check-lyntin check-mudpuppy check-mushtato \
 	check-potato check-pycat check-secretpathway \
 	check-tinyfugue check-trebuchet
 	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)

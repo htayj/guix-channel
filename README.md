@@ -112,6 +112,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `kildclient` | KildClient 3.2.3 | GTK MUD client with Perl scripting, plugins, triggers, aliases, and multiple worlds |
 | `ks10-udis` | larsbrinkhoff/ks10-udis | KS10 microcode disassembler and offline fixture |
 | `lyntin` | Lyntin V 5.0.1 | Text-mode Python MUD client with aliases, triggers, scripting, and module support |
+| `mudpuppy` | Mudpuppy 20251214 | Rust terminal MUD client with embedded Python scripting and TLS |
 | `mushtato` | MushTato 1.9.3 | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |
 | `potato` | Potato 2.0.0b19 | Tcl/Tk graphical MUSH client; insecure upstream TLS is deliberately disabled |
 | `pycat` | cizra/pycat | Modular Python MUD proxy client with user-defined world modules |
@@ -217,12 +218,12 @@ and Kitty's native Fontconfig calls through `kitty +runpy`, without a display
 server.  It verifies selection and nonempty glyph-cell rasterization, but not
 a live GUI window.
 
-The twelve MUD clients cover distinct local interfaces.  `kildclient`,
+The thirteen MUD clients cover distinct local interfaces.  `kildclient`,
 `mushtato`, `potato`, `secretpathway`, and `trebuchet` provide GTK, Qt,
 Tcl/Tk, and Java/Swing desktops; `go-mud`, `lyntin`, `tinyfugue`, `godisc`, and
-`kbtin` provide different text-mode workflows; `durthang` is a modern Rust TUI
-with GMCP automapping; and `pycat` is a terminal-facing proxy whose world
-modules load from the invoking directory.
+`kbtin` provide different text-mode workflows; `durthang` and `mudpuppy` are
+modern Rust TUIs with GMCP and scripting features; and `pycat` is a
+terminal-facing proxy whose world modules load from the invoking directory.
 Dedicated smokes use Guix's Xvfb where needed, fresh homes, and loopback
 fake-MUD or frontend sockets.  GoDisc also creates and removes a real
 three-pane tmux session, Durthang verifies persisted GMCP map state and
@@ -266,6 +267,7 @@ make check-kbtin    # fresh-HOME loopback Telnet/parser smoke
 make check-kildclient # Guix Xvfb plus fresh-HOME loopback fake-MUD connection
 make check-kitty-bitmap # channel-pinned Guix build plus source/key-encoding invariants and headless PCF rasterization
 make check-lyntin   # fresh-HOME version and loopback fake-MUD protocol smoke
+make check-mudpuppy # fresh-HOME PTY, embedded Python, loopback, and TLS-rejection smoke
 make check-mushtato # fresh XDG/HOME Xvfb GUI plus loopback Telnet smoke
 make check-potato   # fresh-HOME Xvfb, disabled TLS/update, and loopback smoke
 make check-pycat    # loopback-only fake-MUD proxy and user world-module smoke
