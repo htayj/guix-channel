@@ -105,7 +105,10 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `terminaldrome` | thafaker/TerminalDrome | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | larsbrinkhoff/image-tape | Magnetic-tape image reader with safe output handling |
 | `kitty-bitmap` | Kitty 0.46.2 | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
+| `kildclient` | KildClient 3.2.3 | GTK MUD client with Perl scripting, plugins, triggers, aliases, and multiple worlds |
 | `ks10-udis` | larsbrinkhoff/ks10-udis | KS10 microcode disassembler and offline fixture |
+| `lyntin` | Lyntin V 5.0.1 | Text-mode Python MUD client with aliases, triggers, scripting, and module support |
+| `pycat` | cizra/pycat | Modular Python MUD proxy client with user-defined world modules |
 | `emacs-treesit-sexp` | alexispurslane/treesit-sexp | Tree-sitter-aware structural editing for Emacs |
 | `dipc` | doprz/dipc | Offline-built image palette converter |
 | `nrl-text-to-phoneme` | greg-kennedy/p5-NRL-TextToPhoneme | NRL text-to-phoneme command and rule tables |
@@ -113,7 +116,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `xq` | sibprogrammer/xq | Offline-built XML and HTML beautifier and extractor |
 | `sentinelone` | SentinelOne Linux agent 24.3.3.1 | Proprietary x86_64 agent; authorized installer required |
 
-These ten added installable wrappers do not add source snapshots; the source
+These installable packages do not add source snapshots; the source
 collection remains 629 packages.
 
 The release font packages consume immutable generic GitHub Release archives
@@ -205,6 +208,15 @@ and Kitty's native Fontconfig calls through `kitty +runpy`, without a display
 server.  It verifies selection and nonempty glyph-cell rasterization, but not
 a live GUI window.
 
+The three MUD clients cover distinct local interfaces.  `kildclient` is a GTK
+desktop client with Perl plugins; `lyntin` supplies the upstream text-mode
+Python interface; and `pycat` is a terminal-facing loopback proxy whose world
+modules can be loaded from the invoking directory.  Their dedicated smokes use
+Guix's Xvfb where needed, fresh home directories, and only local fake-MUD or
+frontend sockets.  Pycat additionally checks sibling world-module imports,
+reloads, and resistance to a same-named cwd core module.  None contacts a
+public MUD.
+
 `sentinelone` is source-required and is checked for enumeration, dry-run, and
 lint, but is excluded from the default `make build`.  No proprietary installer
 is included in this channel.  To build it, supply an authorized matching
@@ -235,7 +247,10 @@ runtime deployment.
 make check          # source-count/dry-run, no-network lint, and smoke tests
 make check-datamosh-security # package build plus argv-injection smoke test
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
+make check-kildclient # Guix Xvfb plus fresh-HOME loopback fake-MUD connection
 make check-kitty-bitmap # channel-pinned Guix build plus source/key-encoding invariants and headless PCF rasterization
+make check-lyntin   # fresh-HOME version and loopback fake-MUD protocol smoke
+make check-pycat    # loopback-only fake-MUD proxy and user world-module smoke
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass

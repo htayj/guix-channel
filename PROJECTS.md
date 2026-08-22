@@ -109,7 +109,7 @@ These reviewed applications are installable packages outside the owned-source
 inventory above.  They are included in the channel build inventory when their
 Guix definitions enumerate and pass the package dry-run.
 
-The eight newly added wrappers below do not add source snapshots; the channel
+These installable packages do not add source snapshots; the channel
 source collection remains 629 packages.  `atarist-font` corrects the upstream
 BDF glyph-count header before generating a PCF copy.  `image-tape` uses safe
 output-file creation and propagates write failures; its `check-image-tape`
@@ -143,6 +143,12 @@ unchanged.  Bitmap-font verification is deliberately headless: Unscii PCF
 selection and nonempty glyph-cell rasterization are tested, but a live GUI
 window is not claimed.
 
+The MUD-client additions are end-user applications, not game servers:
+`kildclient` is the GTK/Perl desktop client, `lyntin` is the Python text-mode
+client, and `pycat` is a modular terminal proxy.  Their channel smokes use
+fresh homes and only loopback fake-MUD/frontend sockets; KildClient runs under
+Guix's Xvfb, and Pycat also checks safe sibling imports and live world reload.
+
 | Package | Upstream | Installed contents |
 | --- | --- | --- |
 | `atarist-font` | ntwk/atarist-font | Atari ST 8x16 Unicode BDF and generated PCF font |
@@ -150,7 +156,10 @@ window is not claimed.
 | `terminaldrome` | `thafaker/TerminalDrome` | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | `larsbrinkhoff/image-tape` | Magnetic-tape image reader with safe output handling |
 | `kitty-bitmap` | `kovidgoyal/kitty` | Native bitmap-font Kitty variant with XKB Meta-to-terminal-Alt encoding |
+| `kildclient` | KildClient | GTK MUD client with Perl scripting and plugins |
 | `ks10-udis` | `larsbrinkhoff/ks10-udis` | KS10 microcode disassembler and offline fixture |
+| `lyntin` | Lyntin V | Text-mode Python MUD client and module API |
+| `pycat` | `cizra/pycat` | Modular Python MUD proxy client and world-module framework |
 | `emacs-treesit-sexp` | `alexispurslane/treesit-sexp` | Tree-sitter-aware structural editing for Emacs |
 | `dipc` | `doprz/dipc` | Offline-built image palette converter |
 | `nrl-text-to-phoneme` | `greg-kennedy/p5-NRL-TextToPhoneme` | NRL text-to-phoneme command and rule tables |
