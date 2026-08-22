@@ -144,9 +144,10 @@ selection and nonempty glyph-cell rasterization are tested, but a live GUI
 window is not claimed.
 
 The MUD-client additions are end-user applications, not game servers.
-`kildclient`, `secretpathway`, and `trebuchet` are graphical clients;
-`lyntin`, `tinyfugue`, `godisc`, and `kbtin` provide text-mode workflows;
-`durthang` is a Rust TUI; and `pycat` is a modular terminal proxy.  Their
+`kildclient`, `mushtato`, `potato`, `secretpathway`, and `trebuchet` are
+graphical clients; `go-mud`, `lyntin`, `tinyfugue`, `godisc`, and `kbtin`
+provide text-mode workflows; `durthang` is a Rust TUI; and `pycat` is a
+modular terminal proxy.  Their
 channel smokes use fresh homes and loopback fake-MUD/frontend sockets.
 KildClient, SecretPathway, and Trebuchet run under Guix's Xvfb; GoDisc exercises
 a real tmux workspace; Durthang checks GMCP map persistence and absent-keyring
@@ -161,10 +162,13 @@ failure; and Pycat checks safe sibling imports and live world reload.
 | `kitty-bitmap` | `kovidgoyal/kitty` | Native bitmap-font Kitty variant with XKB Meta-to-terminal-Alt encoding |
 | `durthang` | `Pommersche92/durthang` | Rust TUI MUD client with TLS, GMCP, automapping, and Secret Service integration |
 | `godisc` | `DavidSatimeWallin/godisc` | Discworld terminal client and tmux workspace launcher |
+| `go-mud` | `mudclient/go-mud` | UTF-8 terminal MUD client with Lua scripting |
 | `kbtin` | `kilobyte/kbtin` | TinTin-compatible terminal MUD client with TLS and MCCP |
 | `kildclient` | KildClient | GTK MUD client with Perl scripting and plugins |
 | `ks10-udis` | `larsbrinkhoff/ks10-udis` | KS10 microcode disassembler and offline fixture |
 | `lyntin` | Lyntin V | Text-mode Python MUD client and module API |
+| `mushtato` | `N0NJY/mushtato` | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |
+| `potato` | `potatomushclient/potato` | Tcl/Tk graphical MUSH client with TLS deliberately disabled |
 | `pycat` | `cizra/pycat` | Modular Python MUD proxy client and world-module framework |
 | `secretpathway` | `mhahnFr/SecretPathway` | Java/Swing MUD client with an LPC source editor |
 | `tinyfugue` | `ingwarsw/tinyfugue` | Scriptable terminal MUD client with TLS, MCCP, GMCP, and IPv6 |

@@ -31,8 +31,8 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	hyprland-preview-share-picker sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
 	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq kitty-bitmap opencode \
-	opencode-desktop claude-code claude-desktop durthang godisc kbtin kildclient \
-	lyntin pycat secretpathway tinyfugue trebuchet
+	opencode-desktop claude-code claude-desktop durthang go-mud godisc kbtin \
+	kildclient lyntin mushtato potato pycat secretpathway tinyfugue trebuchet
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -41,7 +41,8 @@ OPTIONAL_PROPRIETARY_PACKAGES ?= sentinelone
 CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 
 .PHONY: check check-source-count check-sentinelone check-datamosh-security \
-	check-durthang check-godisc check-image-tape check-kbtin check-kildclient \
+	check-durthang check-go-mud check-godisc check-image-tape check-kbtin \
+	check-kildclient check-mushtato check-potato \
 	check-kitty-bitmap check-lyntin check-pycat check-tinyfugue lint lint-cve \
 	check-secretpathway check-trebuchet build build-sources
 
@@ -64,6 +65,9 @@ check-image-tape:
 check-durthang:
 	GUIX="$(GUIX)" tests/durthang-smoke.sh
 
+check-go-mud:
+	GUIX="$(GUIX)" tests/go-mud-smoke.sh
+
 check-godisc:
 	GUIX="$(GUIX)" tests/godisc-smoke.sh
 
@@ -79,6 +83,12 @@ check-kitty-bitmap:
 check-lyntin:
 	GUIX="$(GUIX)" tests/lyntin-smoke.sh
 
+check-mushtato:
+	GUIX="$(GUIX)" tests/mushtato-smoke.sh
+
+check-potato:
+	GUIX="$(GUIX)" tests/potato-smoke.sh
+
 check-pycat:
 	GUIX="$(GUIX)" tests/pycat-smoke.sh
 
@@ -92,8 +102,9 @@ check-trebuchet:
 	GUIX="$(GUIX)" tests/trebuchet-smoke.sh
 
 check: check-source-count check-sentinelone check-datamosh-security \
-	check-durthang check-godisc check-image-tape check-kbtin check-kildclient \
-	check-kitty-bitmap check-lyntin check-pycat check-secretpathway \
+	check-durthang check-go-mud check-godisc check-image-tape check-kbtin \
+	check-kildclient check-kitty-bitmap check-lyntin check-mushtato \
+	check-potato check-pycat check-secretpathway \
 	check-tinyfugue check-trebuchet
 	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \

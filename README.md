@@ -107,10 +107,13 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `kitty-bitmap` | Kitty 0.46.2 | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
 | `durthang` | Durthang 0.2.0 | Rust TUI MUD client with TLS, GMCP, automapping, and encrypted Secret Service transport |
 | `godisc` | DavidSatimeWallin/godisc | Discworld-oriented terminal MUD client with an optional tmux workspace |
+| `go-mud` | go-mud 0.6.6 | UTF-8 terminal MUD client with Lua scripting |
 | `kbtin` | kilobyte/kbtin | TinTin-compatible terminal MUD client with TLS and MCCP |
 | `kildclient` | KildClient 3.2.3 | GTK MUD client with Perl scripting, plugins, triggers, aliases, and multiple worlds |
 | `ks10-udis` | larsbrinkhoff/ks10-udis | KS10 microcode disassembler and offline fixture |
 | `lyntin` | Lyntin V 5.0.1 | Text-mode Python MUD client with aliases, triggers, scripting, and module support |
+| `mushtato` | MushTato 1.9.3 | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |
+| `potato` | Potato 2.0.0b19 | Tcl/Tk graphical MUSH client; insecure upstream TLS is deliberately disabled |
 | `pycat` | cizra/pycat | Modular Python MUD proxy client with user-defined world modules |
 | `secretpathway` | SecretPathway 1.0.0 | Java/Swing MUD client with an LPC source editor |
 | `tinyfugue` | TinyFugue Rebirth 5.2.2 | Scriptable terminal MUD client with TLS, MCCP, GMCP, and IPv6 |
@@ -214,11 +217,12 @@ and Kitty's native Fontconfig calls through `kitty +runpy`, without a display
 server.  It verifies selection and nonempty glyph-cell rasterization, but not
 a live GUI window.
 
-The nine MUD clients cover distinct local interfaces.  `kildclient`,
-`secretpathway`, and `trebuchet` provide GTK, Java/Swing, and Tcl/Tk desktops;
-`lyntin`, `tinyfugue`, `godisc`, and `kbtin` provide different text-mode
-workflows; `durthang` is a modern Rust TUI with GMCP automapping; and `pycat` is
-a terminal-facing proxy whose world modules load from the invoking directory.
+The twelve MUD clients cover distinct local interfaces.  `kildclient`,
+`mushtato`, `potato`, `secretpathway`, and `trebuchet` provide GTK, Qt,
+Tcl/Tk, and Java/Swing desktops; `go-mud`, `lyntin`, `tinyfugue`, `godisc`, and
+`kbtin` provide different text-mode workflows; `durthang` is a modern Rust TUI
+with GMCP automapping; and `pycat` is a terminal-facing proxy whose world
+modules load from the invoking directory.
 Dedicated smokes use Guix's Xvfb where needed, fresh homes, and loopback
 fake-MUD or frontend sockets.  GoDisc also creates and removes a real
 three-pane tmux session, Durthang verifies persisted GMCP map state and
@@ -256,11 +260,14 @@ make check          # source-count/dry-run, no-network lint, and smoke tests
 make check-datamosh-security # package build plus argv-injection smoke test
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
 make check-durthang  # headless keyring failure plus loopback Telnet/GMCP map smoke
+make check-go-mud   # fresh-HOME PTY, UTF-8, and Telnet negotiation smoke
 make check-godisc   # fresh-HOME tmux workspace plus loopback Telnet smoke
 make check-kbtin    # fresh-HOME loopback Telnet/parser smoke
 make check-kildclient # Guix Xvfb plus fresh-HOME loopback fake-MUD connection
 make check-kitty-bitmap # channel-pinned Guix build plus source/key-encoding invariants and headless PCF rasterization
 make check-lyntin   # fresh-HOME version and loopback fake-MUD protocol smoke
+make check-mushtato # fresh XDG/HOME Xvfb GUI plus loopback Telnet smoke
+make check-potato   # fresh-HOME Xvfb, disabled TLS/update, and loopback smoke
 make check-pycat    # loopback-only fake-MUD proxy and user world-module smoke
 make check-secretpathway # fresh-HOME Xvfb Swing plus loopback Telnet smoke
 make check-tinyfugue # sanitized fresh-HOME loopback fake-MUD protocol smoke
