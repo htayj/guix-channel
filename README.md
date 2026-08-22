@@ -110,6 +110,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `go-mud` | go-mud 0.6.6 | UTF-8 terminal MUD client with Lua scripting |
 | `kbtin` | kilobyte/kbtin | TinTin-compatible terminal MUD client with TLS and MCCP |
 | `kildclient` | KildClient 3.2.3 | GTK MUD client with Perl scripting, plugins, triggers, aliases, and multiple worlds |
+| `kmuddy` | KMuddy 1.1 | KDE MUD client with scripting, mapping, MCCP, MSP, and MXP |
 | `ks10-udis` | larsbrinkhoff/ks10-udis | KS10 microcode disassembler and offline fixture |
 | `lyntin` | Lyntin V 5.0.1 | Text-mode Python MUD client with aliases, triggers, scripting, and module support |
 | `mudpuppy` | Mudpuppy 20251214 | Rust terminal MUD client with embedded Python scripting and TLS |
@@ -218,10 +219,11 @@ and Kitty's native Fontconfig calls through `kitty +runpy`, without a display
 server.  It verifies selection and nonempty glyph-cell rasterization, but not
 a live GUI window.
 
-The thirteen MUD clients cover distinct local interfaces.  `kildclient`,
-`mushtato`, `potato`, `secretpathway`, and `trebuchet` provide GTK, Qt,
-Tcl/Tk, and Java/Swing desktops; `go-mud`, `lyntin`, `tinyfugue`, `godisc`, and
-`kbtin` provide different text-mode workflows; `durthang` and `mudpuppy` are
+The fourteen MUD clients cover distinct local interfaces.  `kildclient`,
+`kmuddy`, `mushtato`, `potato`, `secretpathway`, and `trebuchet` provide GTK,
+KDE/Qt, Tcl/Tk, and Java/Swing desktops; `go-mud`, `lyntin`, `tinyfugue`,
+`godisc`, and `kbtin` provide different text-mode workflows; `durthang` and
+`mudpuppy` are
 modern Rust TUIs with GMCP and scripting features; and `pycat` is a
 terminal-facing proxy whose world modules load from the invoking directory.
 Dedicated smokes use Guix's Xvfb where needed, fresh homes, and loopback
@@ -265,6 +267,7 @@ make check-go-mud   # fresh-HOME PTY, UTF-8, and Telnet negotiation smoke
 make check-godisc   # fresh-HOME tmux workspace plus loopback Telnet smoke
 make check-kbtin    # fresh-HOME loopback Telnet/parser smoke
 make check-kildclient # Guix Xvfb plus fresh-HOME loopback fake-MUD connection
+make check-kmuddy   # fresh-XDG Xvfb plus loopback Telnet/MCCP/MXP smoke
 make check-kitty-bitmap # channel-pinned Guix build plus source/key-encoding invariants and headless PCF rasterization
 make check-lyntin   # fresh-HOME version and loopback fake-MUD protocol smoke
 make check-mudpuppy # fresh-HOME PTY, embedded Python, loopback, and TLS-rejection smoke

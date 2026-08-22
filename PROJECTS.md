@@ -144,8 +144,8 @@ selection and nonempty glyph-cell rasterization are tested, but a live GUI
 window is not claimed.
 
 The MUD-client additions are end-user applications, not game servers.
-`kildclient`, `mushtato`, `potato`, `secretpathway`, and `trebuchet` are
-graphical clients; `go-mud`, `lyntin`, `tinyfugue`, `godisc`, and `kbtin`
+`kildclient`, `kmuddy`, `mushtato`, `potato`, `secretpathway`, and `trebuchet`
+are graphical clients; `go-mud`, `lyntin`, `tinyfugue`, `godisc`, and `kbtin`
 provide text-mode workflows; `durthang` and `mudpuppy` are Rust TUIs; and
 `pycat` is a modular terminal proxy.  Their
 channel smokes use fresh homes and loopback fake-MUD/frontend sockets.
@@ -165,6 +165,7 @@ failure; and Pycat checks safe sibling imports and live world reload.
 | `go-mud` | `mudclient/go-mud` | UTF-8 terminal MUD client with Lua scripting |
 | `kbtin` | `kilobyte/kbtin` | TinTin-compatible terminal MUD client with TLS and MCCP |
 | `kildclient` | KildClient | GTK MUD client with Perl scripting and plugins |
+| `kmuddy` | `KDE/kmuddy` | KDE MUD client with scripting, mapping, MCCP, MSP, and MXP |
 | `ks10-udis` | `larsbrinkhoff/ks10-udis` | KS10 microcode disassembler and offline fixture |
 | `lyntin` | Lyntin V | Text-mode Python MUD client and module API |
 | `mudpuppy` | `mudpuppy-rs/mudpuppy` | Rust terminal MUD client with embedded Python scripting and TLS |
