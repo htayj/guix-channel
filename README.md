@@ -115,6 +115,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `kmuddy` | KMuddy 1.1 | KDE MUD client with scripting, mapping, MCCP, MSP, and MXP |
 | `ks10-udis` | larsbrinkhoff/ks10-udis | KS10 microcode disassembler and offline fixture |
 | `lyntin` | Lyntin V 5.0.1 | Text-mode Python MUD client with aliases, triggers, scripting, and module support |
+| `mmapper` | MMapper 26.06.0 | Qt graphical MUME client, local TLS proxy, and empty-map editor |
 | `mudpuppy` | Mudpuppy 20251214 | Rust terminal MUD client with embedded Python scripting and TLS |
 | `mushtato` | MushTato 1.9.3 | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |
 | `potato` | Potato 2.0.0b19 | Tcl/Tk graphical MUSH client; insecure upstream TLS is deliberately disabled |
@@ -222,8 +223,8 @@ and Kitty's native Fontconfig calls through `kitty +runpy`, without a display
 server.  It verifies selection and nonempty glyph-cell rasterization, but not
 a live GUI window.
 
-The seventeen MUD clients cover distinct local interfaces.  `axmud`, `kildclient`,
-`kmuddy`, `mushtato`, `potato`, `secretpathway`, and `trebuchet` provide GTK,
+The eighteen MUD clients cover distinct local interfaces.  `axmud`, `kildclient`,
+`kmuddy`, `mmapper`, `mushtato`, `potato`, `secretpathway`, and `trebuchet` provide GTK,
 KDE/Qt, Tcl/Tk, and Java/Swing desktops; `go-mud`, `lyntin`, `tinyfugue`,
 `godisc`, and `kbtin` provide different text-mode workflows; `blightmud`,
 `durthang`, and `mudpuppy` are modern Rust TUIs with GMCP and
@@ -276,6 +277,7 @@ make check-kildclient # Guix Xvfb plus fresh-HOME loopback fake-MUD connection
 make check-kmuddy   # fresh-XDG Xvfb plus loopback Telnet/MCCP/MXP smoke
 make check-kitty-bitmap # channel-pinned Guix build plus source/key-encoding invariants and headless PCF rasterization
 make check-lyntin   # fresh-HOME version and loopback fake-MUD protocol smoke
+make check-mmapper  # fresh-XDG Qt plus namespaced local TLS-proxy smoke
 make check-mudpuppy # fresh-HOME PTY, embedded Python, loopback, and TLS-rejection smoke
 make check-mushtato # fresh XDG/HOME Xvfb GUI plus loopback Telnet smoke
 make check-potato   # fresh-HOME Xvfb, disabled TLS/update, and loopback smoke
