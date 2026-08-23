@@ -144,7 +144,7 @@ selection and nonempty glyph-cell rasterization are tested, but a live GUI
 window is not claimed.
 
 The MUD-client additions are end-user applications, not game servers.
-`axmud`, `frostbite`, `kildclient`, `kmuddy`, `mmapper`, `mushkin`, `mushtato`,
+`axmud`, `frostbite`, `kildclient`, `kmuddy`, `mmapper`, `mudlet`, `mushkin`, `mushtato`,
 `potato`, `secretpathway`, and `trebuchet`
 are graphical clients; `go-mud`, `lyntin`, `tinyfugue`, `godisc`, and `kbtin`
 provide text-mode workflows; `blightmud`, `durthang`, and `mudpuppy` are Rust
@@ -174,6 +174,7 @@ failure; and Pycat checks safe sibling imports and live world reload.
 | `ks10-udis` | `larsbrinkhoff/ks10-udis` | KS10 microcode disassembler and offline fixture |
 | `lyntin` | Lyntin V | Text-mode Python MUD client and module API |
 | `mmapper` | `MUME/MMapper` | Qt graphical MUME client, local TLS proxy, and empty-map editor |
+| `mudlet` | `Mudlet/Mudlet` | Qt6 graphical MUD client with Lua scripting, mapping, multimedia, MXP, and GMCP |
 | `mudpuppy` | `mudpuppy-rs/mudpuppy` | Rust terminal MUD client with embedded Python scripting and TLS |
 | `mushkin` | `justinpopa/mushkin` | Qt MUSHclient-compatible client with Lua, TLS, and MSP |
 | `mushtato` | `N0NJY/mushtato` | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |

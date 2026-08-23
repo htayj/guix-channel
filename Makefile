@@ -35,7 +35,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
 	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq kitty-bitmap opencode \
 	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin \
-	kildclient kmuddy lyntin mmapper mudpuppy mushkin mushtato potato pycat rune secretpathway tinyfugue trebuchet
+	kildclient kmuddy lyntin mmapper mudlet mudpuppy mushkin mushtato potato pycat rune secretpathway tinyfugue trebuchet
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -45,7 +45,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 
 .PHONY: check check-source-count check-sentinelone check-datamosh-security \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
-	check-kildclient check-kmuddy check-mmapper check-mudpuppy check-mushkin check-mushtato check-potato \
+	check-kildclient check-kmuddy check-mmapper check-mudlet check-mudpuppy check-mushkin check-mushtato check-potato \
 	check-kitty-bitmap check-lyntin check-pycat check-rune check-tinyfugue lint lint-cve \
 	check-secretpathway check-trebuchet build build-sources
 
@@ -101,6 +101,9 @@ check-lyntin:
 check-mmapper:
 	GUIX="$(GUIX)" tests/mmapper-smoke.sh
 
+check-mudlet:
+	GUIX="$(GUIX)" tests/mudlet-smoke.sh
+
 check-mudpuppy:
 	GUIX="$(GUIX)" tests/mudpuppy-smoke.sh
 
@@ -130,7 +133,7 @@ check-trebuchet:
 
 check: check-source-count check-sentinelone check-datamosh-security \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
-	check-kildclient check-kmuddy check-kitty-bitmap check-lyntin check-mmapper \
+	check-kildclient check-kmuddy check-kitty-bitmap check-lyntin check-mmapper check-mudlet \
 	check-mudpuppy check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
 	check-tinyfugue check-trebuchet

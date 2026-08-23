@@ -117,6 +117,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `ks10-udis` | larsbrinkhoff/ks10-udis | KS10 microcode disassembler and offline fixture |
 | `lyntin` | Lyntin V 5.0.1 | Text-mode Python MUD client with aliases, triggers, scripting, and module support |
 | `mmapper` | MMapper 26.06.0 | Qt graphical MUME client, local TLS proxy, and empty-map editor |
+| `mudlet` | Mudlet 4.22.0 | Qt6 graphical MUD client with Lua scripting, mapping, multimedia, MXP, and GMCP |
 | `mudpuppy` | Mudpuppy 20251214 | Rust terminal MUD client with embedded Python scripting and TLS |
 | `mushkin` | Mushkin 0.5.1 | Qt MUSHclient-compatible MUD client with Lua, TLS, and MSP |
 | `mushtato` | MushTato 1.9.3 | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |
@@ -225,8 +226,8 @@ and Kitty's native Fontconfig calls through `kitty +runpy`, without a display
 server.  It verifies selection and nonempty glyph-cell rasterization, but not
 a live GUI window.
 
-The twenty MUD clients cover distinct local interfaces.  `axmud`, `frostbite`,
-`kildclient`, `kmuddy`, `mmapper`, `mushkin`, `mushtato`, `potato`,
+The twenty-one MUD clients cover distinct local interfaces.  `axmud`, `frostbite`,
+`kildclient`, `kmuddy`, `mmapper`, `mudlet`, `mushkin`, `mushtato`, `potato`,
 `secretpathway`, and `trebuchet` provide GTK,
 KDE/Qt, Tcl/Tk, and Java/Swing desktops; `go-mud`, `lyntin`, `tinyfugue`,
 `godisc`, and `kbtin` provide different text-mode workflows; `blightmud`,
@@ -282,6 +283,7 @@ make check-kmuddy   # fresh-XDG Xvfb plus loopback Telnet/MCCP/MXP smoke
 make check-kitty-bitmap # channel-pinned Guix build plus source/key-encoding invariants and headless PCF rasterization
 make check-lyntin   # fresh-HOME version and loopback fake-MUD protocol smoke
 make check-mmapper  # fresh-XDG Qt plus namespaced local TLS-proxy smoke
+make check-mudlet   # namespaced Qt6, Lua modules, multimedia, and loopback Telnet smoke
 make check-mudpuppy # fresh-HOME PTY, embedded Python, loopback, and TLS-rejection smoke
 make check-mushkin  # namespaced Xvfb, Lua version, MSP traversal, and LuaSec TLS smoke
 make check-mushtato # fresh XDG/HOME Xvfb GUI plus loopback Telnet smoke
