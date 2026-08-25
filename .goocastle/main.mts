@@ -477,7 +477,7 @@ const resolveForIssue = async (issue) => {
 
 const nextActionableIssue = async (excludedIssues = new Set()) => {
   const issues = (await ghJson([
-    "issue", "list", "--state", "open", "--limit", "100",
+    "issue", "list", "--state", "open", "--limit", "1000",
     "--json", "number,title,body,labels",
   ], validateGitHubIssueListPayload)).filter((issue) => issue.labels.some((label) => label.name === "ready-for-agent"));
   issues.sort((left, right) => left.number - right.number);
