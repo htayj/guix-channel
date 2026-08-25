@@ -29,6 +29,14 @@ test -n "$emacs_out"
 posframe_out=$($guix_bin build emacs-posframe)
 xvfb_out=$($guix_bin build xvfb-run)
 test -x "$xvfb_out/bin/xvfb-run"
+unshare_out=
+for candidate in $($guix_bin build util-linux); do
+    if test -x "$candidate/bin/unshare"; then
+        unshare_out=$candidate/bin/unshare
+        break
+    fi
+done
+test -n "$unshare_out"
 
 license="$package_out/share/doc/emacs-org-popup-posframe/LICENSE"
 test -f "$license"
@@ -47,8 +55,8 @@ package_lisp_dir=$(dirname "$package_lisp")
 posframe_lisp_dir=$(dirname "$posframe_lisp")
 
 temporary=$(mktemp -d -t emacs-org-popup-posframe-smoke.XXXXXX)
-trap 'rmdir "$temporary/home" "$temporary/config" "$temporary/data" "$temporary/cache" "$temporary"' EXIT HUP INT TERM
-mkdir "$temporary/home" "$temporary/config" "$temporary/data" "$temporary/cache"
+trap 'rm -rf -- "$temporary"' EXIT HUP INT TERM
+mkdir "$temporary/home" "$temporary/config" "$temporary/data" "$temporary/cache" "$temporary/tmp"
 
 before="$temporary/package-before"
 after="$temporary/package-after"
@@ -60,15 +68,25 @@ clean_emacs() {
         XDG_CONFIG_HOME="$temporary/config" \
         XDG_DATA_HOME="$temporary/data" \
         XDG_CACHE_HOME="$temporary/cache" \
+        TMPDIR="$temporary/tmp" \
         LANG=C.UTF-8 \
         PATH="$PATH" \
         "$@"
 }
 
+if ! clean_emacs "$unshare_out" --user --map-root-user --net --fork /bin/true; then
+    echo "emacs-org-popup-posframe-smoke: network namespaces are required" >&2
+    exit 1
+fi
+
+offline_emacs() {
+    clean_emacs "$unshare_out" --user --map-root-user --net --fork "$@"
+}
+
 # In batch mode posframe-workable-p is false; enabling the mode must still add
 # its Org advice and disabling it must remove the advice without writing to the
 # installed output or consulting user configuration/network state.
-clean_emacs "$emacs_out/bin/emacs" --batch -Q \
+offline_emacs "$emacs_out/bin/emacs" --batch -Q \
     -L "$package_lisp_dir" -L "$posframe_lisp_dir" \
     --eval "(progn
       (require 'org)
@@ -87,23 +105,34 @@ clean_emacs "$emacs_out/bin/emacs" --batch -Q \
 
 # A separate graphical session proves that the installed display helper creates
 # a live child frame.  Xvfb supplies an isolated display and no network path.
-clean_emacs "$xvfb_out/bin/xvfb-run" -a "$emacs_out/bin/emacs" --batch -Q \
+offline_emacs "$xvfb_out/bin/xvfb-run" -a "$emacs_out/bin/emacs" --batch -Q \
     -L "$package_lisp_dir" -L "$posframe_lisp_dir" \
     --eval "(progn
       (require 'org)
       (require 'posframe)
       (require 'org-popup-posframe)
-      (let ((buffer (get-buffer-create \" *org-popup-posframe-smoke*\")))
+      (let ((buffer (get-buffer-create \" *org-popup-posframe-smoke*\"))
+            child-frame)
         (unwind-protect
             (progn
               (with-current-buffer buffer (org-mode))
               (org-popup-posframe--show-buffer buffer #'posframe-poshandler-frame-center)
               (with-current-buffer buffer
                 (unless (and (boundp 'posframe--frame) (frame-live-p posframe--frame))
-                  (error \"posframe child frame was not created\"))))
+                  (error \"posframe child frame was not created\"))
+                (setq child-frame posframe--frame)))
           (posframe-hide buffer)
-          (kill-buffer buffer))))"
+          (posframe-delete buffer)
+          (when (frame-live-p child-frame)
+            (error \"posframe child frame was not deleted\"))
+          (when (get-buffer buffer)
+            (error \"posframe buffer was not deleted\")))))"
+
+for state_dir in "$temporary/home" "$temporary/config" "$temporary/data" \
+    "$temporary/cache" "$temporary/tmp"; do
+    test -z "$(find "$state_dir" -mindepth 1 -print -quit)"
+done
 
 find "$package_out" -type f -exec sha256sum {} \; | LC_ALL=C sort >"$after"
 cmp "$before" "$after"
-test -z "$(find "$package_out" -type f -perm /022 -print)"
+test -z "$(find "$package_out" -type f -perm /222 -print)"
