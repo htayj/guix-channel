@@ -29,6 +29,12 @@ proof_root=$(mktemp -d -t goocastle-guix-package-proof.XXXXXX)
 trap 'rm -rf "$proof_root"' EXIT HUP INT TERM
 mkdir "$proof_root/home" "$proof_root/config" "$proof_root/data" "$proof_root/cache"
 
+# Realize every changed sibling before any check or smoke gate.  A package's
+# integration smoke test may intentionally exercise a later-defined backend.
+for package in $packages; do
+  "$guix_bin" build -L . --no-grafts "$package" >/dev/null
+done
+
 for package in $packages; do
   smoke="tests/$package-smoke.sh"
   test -f "$smoke" || {
