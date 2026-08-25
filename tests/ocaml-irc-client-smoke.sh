@@ -9,7 +9,7 @@ channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$channel_dir"
 
 if test "$#" -gt 1; then
-    echo "usage: $0 [irc-client-unix-output]" >&2
+    echo "usage: $0 [package-output]" >&2
     exit 64
 fi
 
@@ -20,11 +20,37 @@ else
 fi
 
 test -d "$irc_out"
-test -s "$irc_out/share/doc/ocaml-irc-client/LICENSE"
-grep -F "Permission is hereby granted" \
-    "$irc_out/share/doc/ocaml-irc-client/LICENSE" >/dev/null
-test -s "$irc_out/share/doc/ocaml-irc-client/README.md"
-test -s "$irc_out/lib/ocaml/site-lib/irc-client-unix/META"
+if test -s "$irc_out/lib/ocaml/site-lib/irc-client-unix/META"; then
+    package_kind=unix
+    integration_out=$irc_out
+elif test -s "$irc_out/lib/ocaml/site-lib/irc-client/META"; then
+    package_kind=core
+elif test -s "$irc_out/lib/ocaml/site-lib/irc-client-lwt/META"; then
+    package_kind=lwt
+elif test -s "$irc_out/lib/ocaml/site-lib/irc-client-lwt-ssl/META"; then
+    package_kind=lwt-ssl
+elif test -s "$irc_out/lib/ocaml/site-lib/lwt_ssl/META"; then
+    package_kind=lwt-ssl-adapter
+else
+    echo "ocaml-irc-client-smoke: unrecognized findlib output" >&2
+    exit 1
+fi
+
+if test "$package_kind" = lwt-ssl-adapter; then
+    documentation=$irc_out/share/doc/ocaml-lwt-ssl
+    test -s "$documentation/COPYING"
+    grep -F "LGPL version 2.1" "$documentation/COPYING" >/dev/null
+    test -s "$documentation/README.md"
+else
+    documentation=$irc_out/share/doc/ocaml-irc-client
+    test -s "$documentation/LICENSE"
+    grep -F "Permission is hereby granted" "$documentation/LICENSE" >/dev/null
+    test -s "$documentation/README.md"
+fi
+
+if test "$package_kind" != unix; then
+    integration_out=$($guix_tool build -L . --no-grafts --check ocaml-irc-client-unix)
+fi
 
 # Install the library and the compiler into a fresh profile.  This proves
 # that the package is usable through Guix's installed findlib contract rather
@@ -40,7 +66,7 @@ xdg_state=$temporary/xdg-state
 mkdir -p "$home" "$xdg_config" "$xdg_cache" "$xdg_data" "$xdg_state"
 
 $guix_tool package -L . --no-grafts -p "$profile" \
-    -i ocaml ocaml-findlib python ocaml-irc-client-unix
+    -i ocaml ocaml-findlib python util-linux ocaml-irc-client-unix
 
 test -x "$profile/bin/ocamlfind"
 test -x "$profile/bin/ocamlopt"
@@ -56,7 +82,9 @@ if test "${IRC_CLIENT_SMOKE_IN_NETNS:-}" != 1; then
         ip_bin=$iproute_out/sbin/ip
     fi
     test -x "$ip_bin"
-    if ! unshare --user --map-root-user --net --fork \
+    unshare_bin=$profile/bin/unshare
+    test -x "$unshare_bin"
+    if ! "$unshare_bin" --user --map-root-user --net --fork \
             sh -c '"$1" link set lo up' sh "$ip_bin"; then
         echo "ocaml-irc-client-smoke: user+network namespaces are required" >&2
         exit 1
@@ -64,7 +92,7 @@ if test "${IRC_CLIENT_SMOKE_IN_NETNS:-}" != 1; then
     exec env IRC_CLIENT_SMOKE_IN_NETNS=1 \
         IRC_CLIENT_SMOKE_NETWORK_MODE=namespace \
         GUIX="$guix_tool" \
-        unshare --user --map-root-user --net --fork \
+        "$unshare_bin" --user --map-root-user --net --fork \
         sh -c '"$1" link set lo up; exec "$2" "$3"' \
         sh "$ip_bin" "$0" "$irc_out"
 fi
@@ -103,7 +131,7 @@ let () =
   with Exit -> ()
 EOF
 
-ocamlfind ocamlopt -package irc-client-unix -linkpkg \
+"$profile/bin/ocamlfind" ocamlopt -package irc-client-unix -linkpkg \
     -o "$temporary/client" "$client"
 
 before=$temporary/output-before
@@ -114,7 +142,7 @@ find "$irc_out" -printf '%y %m %s %T@ %p\n' | sort > "$before"
 
 findlib_path=$("$profile/bin/ocamlfind" query irc-client-unix)
 case "$findlib_path" in
-    "$profile"/*|"$irc_out"/*) : ;;
+    "$profile"/*|"$integration_out"/*) : ;;
     *)
         echo "ocaml-irc-client-smoke: findlib resolved outside the installed output" >&2
         exit 1

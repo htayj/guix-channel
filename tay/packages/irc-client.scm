@@ -2,7 +2,9 @@
 
 (define-module (tay packages irc-client)
   #:use-module (guix build-system dune)
+  #:use-module (guix download)
   #:use-module (guix gexp)
+  #:use-module (guix git-download)
   #:use-module (guix packages)
   #:use-module (guix utils)
   #:use-module ((guix licenses) #:prefix license:)
@@ -108,7 +110,7 @@ client library.  It depends only on the core library and Guix's Lwt runtime."
              "https://github.com/ocsigen/lwt_ssl/releases/download/"
              version "/lwt_ssl-" version ".tbz"))
        (sha256
-        (base32 "1cq21b97mv7kfzhw7wkl184b6vfbpaciz11hcr8i6ms10m48i6kp"))))
+        (base32 "0xwsi140ahap2d8ncc443ycvmjvdnc40lx7jqghpgwzcgb90l0mk"))))
     (build-system dune-build-system)
     (arguments
      (list
