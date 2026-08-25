@@ -104,6 +104,9 @@ export XDG_DATA_HOME=$xdg_data
 export XDG_STATE_HOME=$xdg_state
 shell_path=$PATH
 export PATH=$profile/bin:$shell_path
+# Do not source the host profile.  Findlib discovers the installed library
+# only through this fresh profile's site-lib path.
+export OCAMLPATH=$profile/lib/ocaml/site-lib
 export LC_ALL=C
 
 client=$temporary/client.ml
