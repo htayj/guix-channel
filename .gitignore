@@ -1,0 +1,4 @@
+.goocastle/.env
+.goocastle/logs/
+.goocastle/state/
+.goocastle/worktrees/

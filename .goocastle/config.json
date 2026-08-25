@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "sandbox": "guix",
+  "agent": "codex",
+  "model": "gpt-5.6-terra",
+  "effort": "high",
+  "issueTracker": "github",
+  "template": "sequential-reviewer",
+  "taskLimits": {
+    "maxTasks": 1,
+    "maxConcurrentTasks": 1,
+    "interTaskDelayMs": 600000
+  },
+  "timeouts": {
+    "idleMs": 1800000,
+    "completionMs": 14400000
+  },
+  "retryPolicy": {
+    "maxAttempts": 3,
+    "initialDelayMs": 1000,
+    "maxDelayMs": 30000,
+    "jitterRatio": 0.2
+  },
+  "failurePolicy": "stop",
+  "logging": {
+    "type": "stdout"
+  },
+  "network": true,
+  "resourcePolicy": {
+    "cores": 4,
+    "emulateFhs": true,
+    "nesting": false
+  },
+  "runtimeLimits": {
+    "outputBytes": 8388608,
+    "logBytes": 8388608,
+    "wallTimeMs": 14400000
+  },
+  "secrets": {
+    "environment": [
+      "OPENAI_API_KEY"
+    ],
+    "files": [
+      ".codex/auth.json"
+    ]
+  },
+  "commitSigning": {
+    "mode": "required"
+  },
+  "issueSpecification": {
+    "version": 1,
+    "mode": "required",
+    "requiredSections": [
+      "Context",
+      "Acceptance criteria",
+      "Candidate",
+      "Scope and blockers",
+      "Acceptance checks"
+    ],
+    "acceptanceCriteriaSection": "Acceptance checks",
+    "minimumContextLength": 1,
+    "minimumSectionLength": 1,
+    "minimumCriterionLength": 1,
+    "minimumCriteria": 1
+  }
+}
