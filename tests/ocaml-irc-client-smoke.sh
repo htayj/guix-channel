@@ -169,6 +169,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import time
 
 client = pathlib.Path(sys.argv[1])
 listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -193,22 +194,40 @@ with tempfile.TemporaryDirectory(prefix="irc-client-runtime-") as runtime:
                                 stderr=subprocess.PIPE, text=True)
     peer = None
     try:
-        peer, address = listener.accept()
+        deadline = time.monotonic() + 8
+        while True:
+            try:
+                listener.settimeout(max(0.01, deadline - time.monotonic()))
+                peer, address = listener.accept()
+                break
+            except TimeoutError:
+                if process.poll() is not None:
+                    stdout, stderr = process.communicate()
+                    raise AssertionError(("client exited before connecting", process.returncode, stdout, stderr))
+                if time.monotonic() >= deadline:
+                    raise AssertionError(("client did not connect", process.poll()))
         assert address[0] == "127.0.0.1", address
         peer.settimeout(8)
+        # The library's synchronous connect waits for the server welcome
+        # before returning, as a real IRC server does.
+        peer.sendall(b":fake.local 001 smoke-nick :welcome\r\n")
         received = b""
         while b"USER smoke-user" not in received:
             part = peer.recv(4096)
             assert part, received
             received += part
         assert b"NICK smoke-nick\r\n" in received, received
-        peer.sendall(b":fake.local 001 smoke-nick :welcome\r\n")
-        while b"PRIVMSG #smoke :client-payload\r\n" not in received:
+        while b"PRIVMSG #smoke client-payload\r\n" not in received:
             part = peer.recv(4096)
             assert part, received
             received += part
         peer.sendall(b":fake.local PRIVMSG #smoke :server-payload\r\n")
-        stdout, stderr = process.communicate(timeout=8)
+        try:
+            stdout, stderr = process.communicate(timeout=8)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            stdout, stderr = process.communicate()
+            raise AssertionError(("client did not finish", stdout, stderr, received))
         assert process.returncode == 0, (process.returncode, stdout, stderr)
         assert "irc-client-loopback-ok" in stdout, (stdout, stderr)
     finally:
