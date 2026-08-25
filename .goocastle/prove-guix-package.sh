@@ -36,7 +36,10 @@ for package in $packages; do
     exit 1
   }
   "$guix_bin" lint -L . --no-network --exclude=cve,refresh,archival "$package"
-  output=$("$guix_bin" build -L . --no-grafts --check "$package")
+  # Guix's --check rebuild compares against an already-realized ordinary
+  # output; invoking it first fails before any reproducibility proof exists.
+  output=$("$guix_bin" build -L . --no-grafts "$package")
+  "$guix_bin" build -L . --no-grafts --check "$package"
   test -n "$output"
   HOME="$proof_root/home" XDG_CONFIG_HOME="$proof_root/config" \
     XDG_DATA_HOME="$proof_root/data" XDG_CACHE_HOME="$proof_root/cache" \
