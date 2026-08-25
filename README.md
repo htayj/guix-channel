@@ -112,6 +112,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `godisc` | DavidSatimeWallin/godisc | Discworld-oriented terminal MUD client with an optional tmux workspace |
 | `go-mud` | go-mud 0.6.6 | UTF-8 terminal MUD client with Lua scripting |
 | `kbtin` | kilobyte/kbtin | TinTin-compatible terminal MUD client with TLS and MCCP |
+| `kbredir` | larsbrinkhoff/kbredir 0.9 | VT220, Linux-console, xev, XSendEvent, and XTEST keyboard-event redirects |
 | `kildclient` | KildClient 3.2.3 | GTK MUD client with Perl scripting, plugins, triggers, aliases, and multiple worlds |
 | `kmuddy` | KMuddy 1.1 | KDE MUD client with scripting, mapping, MCCP, MSP, and MXP |
 | `ks10-udis` | larsbrinkhoff/ks10-udis | KS10 microcode disassembler and offline fixture |
