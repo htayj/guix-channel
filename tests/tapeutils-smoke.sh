@@ -17,7 +17,7 @@ else
 fi
 
 python_out=
-for candidate in $($guix_bin build python); do
+for candidate in $($guix_bin build --no-grafts --no-substitutes python); do
     if test -x "$candidate/bin/python3"; then
         python_out=$candidate
         break
@@ -45,7 +45,9 @@ def tree_digest(root):
     for path in sorted(root.rglob("*")):
         status = path.lstat()
         digest.update(str(path.relative_to(root)).encode("utf-8"))
-        digest.update(status.st_mode.to_bytes(4, "little"))
+        digest.update(repr((status.st_mode, status.st_uid, status.st_gid,
+                            status.st_size, status.st_mtime_ns,
+                            status.st_ctime_ns)).encode("ascii"))
         if path.is_symlink():
             digest.update(os.readlink(path).encode("utf-8"))
         elif path.is_file():
