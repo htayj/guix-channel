@@ -509,10 +509,14 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
     "--json", "number,title,body,labels",
   ], validateGitHubIssueListPayload)).filter((issue) => issue.labels.some((label) =>
     label.name === "ready-for-agent" || label.name.startsWith("gooflow:")));
+  // A runner may refresh itself through an older runtime whose validated v1
+  // task limits predate priorityLabels.  Preserve its historical numerical
+  // ordering instead of failing during recovery.
+  const priorityLabels = projectConfig.taskLimits.priorityLabels ?? [];
   const priorityOf = (issue) => {
-    const index = projectConfig.taskLimits.priorityLabels.findIndex((label) =>
+    const index = priorityLabels.findIndex((label) =>
       issue.labels.some((candidate) => candidate.name === label));
-    return index === -1 ? projectConfig.taskLimits.priorityLabels.length : index;
+    return index === -1 ? priorityLabels.length : index;
   };
   issues.sort((left, right) => priorityOf(left) - priorityOf(right) || left.number - right.number);
   for (const issue of issues) {
