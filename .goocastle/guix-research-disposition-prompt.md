@@ -29,5 +29,11 @@ specific isolated, meaningful smoke-proof plan.  State precise acceptance facts,
 not generic recommendations.  The finding becomes the Context of a new
 host-created implementation issue.
 
+For every independently fetched source origin, including each Git submodule,
+record explicit license evidence at its exact fixed revision.  A parent
+repository's license never proves the license of a separately fetched submodule.
+If any required origin lacks a clear redistribution grant, choose `blocked` and
+name the origin, revision, missing evidence, and the condition that unblocks it.
+
 Never include credentials, push, create/close issues, or claim package proof.
 Finish with `<promise>COMPLETE</promise>` only after the JSON result is written.
