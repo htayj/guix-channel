@@ -35,7 +35,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
 	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq kitty-bitmap opencode \
 	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin \
-	kildclient kmuddy lyntin mmapper mudlet mudpuppy mushkin mushtato ocaml-irc-client \
+	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy mushkin mushtato ocaml-irc-client \
 	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl \
 	potato pycat rune secretpathway tinyfugue trebuchet
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
@@ -47,7 +47,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 
 .PHONY: check check-source-count check-sentinelone check-datamosh-security \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
-	check-kildclient check-kmuddy check-mmapper check-mudlet check-mudpuppy check-mushkin check-mushtato check-ocaml-irc-client check-potato \
+	check-kildclient check-kmuddy check-flex-launcher check-mmapper check-mudlet check-mudpuppy check-mushkin check-mushtato check-ocaml-irc-client check-potato \
 	check-kitty-bitmap check-lyntin check-pycat check-rune check-tinyfugue lint lint-cve \
 	check-secretpathway check-trebuchet build build-sources
 
@@ -93,6 +93,9 @@ check-kildclient:
 
 check-kmuddy:
 	GUIX="$(GUIX)" tests/kmuddy-smoke.sh
+
+check-flex-launcher:
+	GUIX="$(GUIX)" tests/flex-launcher-smoke.sh
 
 check-kitty-bitmap:
 	GUIX="$(KITTY_BITMAP_GUIX)" tests/kitty-bitmap-smoke.sh
