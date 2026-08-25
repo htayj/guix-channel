@@ -37,14 +37,12 @@
           (let ((documentation
                  (string-append #$output "/share/doc/" #$documentation-name)))
             (mkdir-p documentation)
-            (install-file "LICENSE"
-                          (string-append documentation "/LICENSE"))
-            (install-file "README.md"
-                          (string-append documentation "/README.md")))))))
+            (install-file "LICENSE" documentation)
+            (install-file "README.md" documentation))))))
 
 (define* (make-irc-client-package name dune-package synopsis description
                                    propagated-inputs
-                                   #:key (tests? #f) (native-inputs '()))
+                                   #:key (native-inputs '()))
   (package
     (name name)
     (version %irc-client-version)
@@ -53,7 +51,6 @@
     (arguments
      (list
       #:package dune-package
-      #:tests? tests?
       #:phases (irc-client-common-phases "ocaml-irc-client")))
     (propagated-inputs propagated-inputs)
     (native-inputs native-inputs)
@@ -73,7 +70,6 @@ implementing blocking or cooperative transports.  The source is pinned to the
 upstream irc-client.0.7.1 release commit and builds without opam or network
 access."
    (list ocaml-base64 ocaml-logs ocaml-result)
-   #:tests? #t
    #:native-inputs (list ocaml-ounit)))
 
 (define-public ocaml-irc-client-unix
