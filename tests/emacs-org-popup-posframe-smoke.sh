@@ -121,5 +121,5 @@ offline_emacs "$xvfb_out/bin/xvfb-run" -a "$emacs_out/bin/emacs" \
       (kill-emacs 0))"
 
 find "$package_out" -type f -exec sha256sum {} \; | LC_ALL=C sort >"$after"
-cmp "$before" "$after"
+diff -u "$before" "$after"
 test -z "$(find "$package_out" -type f -perm /222 -print)"
