@@ -490,7 +490,12 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
     "issue", "list", "--state", "open", "--limit", "1000",
     "--json", "number,title,body,labels",
   ], validateGitHubIssueListPayload)).filter((issue) => issue.labels.some((label) => label.name === "ready-for-agent"));
-  issues.sort((left, right) => left.number - right.number);
+  const priorityOf = (issue) => {
+    const index = projectConfig.taskLimits.priorityLabels.findIndex((label) =>
+      issue.labels.some((candidate) => candidate.name === label));
+    return index === -1 ? projectConfig.taskLimits.priorityLabels.length : index;
+  };
+  issues.sort((left, right) => priorityOf(left) - priorityOf(right) || left.number - right.number);
   for (const issue of issues) {
     if (excludedIssues.has(issue.number)) continue;
     let explanation;
