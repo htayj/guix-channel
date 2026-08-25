@@ -1119,7 +1119,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           runtimeLimits: projectConfig.runtimeLimits,
           preserveEnv: sandboxAccess.preserveEnv,
           homeFiles,
-          ...(sandboxAccess.requestsGuixDaemon ? { guixDaemonSocket: { hostPath: "/var/guix/daemon-socket/socket" } } : {}),
+          ...(sandboxAccess.requestsGuixDaemon ? { guixDaemonSocket: true } : {}),
           exposes: codexBinDirectory ? [{ hostPath: codexBinDirectory, sandboxPath: "/opt/goocastle-codex" }] : [],
         }),
         env: { ...sandboxAccess.environment, GOOCASTLE_ISSUE_NUMBER: String(issue.number) },
