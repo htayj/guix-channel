@@ -2,6 +2,46 @@
   "version": 1,
   "workflows": [
     {
+      "name": "guix-research-disposition",
+      "enforcedDefault": false,
+      "selectorLabels": ["state:research"],
+      "issueSpecificationMode": "disabled",
+      "requiredPhases": ["research-and-dispose"],
+      "disposition": {
+        "resultPath": ".goocastle/research-disposition.json",
+        "allowed": [
+          {
+            "name": "blocked",
+            "labels": ["state:blocked"]
+          },
+          {
+            "name": "implementation-ready",
+            "labels": ["state:blocked"],
+            "implementationTicket": {
+              "title": "Implement researched Guix package outcome for #{{issueNumber}}: {{issueTitle}}",
+              "context": "This delivery ticket was created from research issue #{{issueNumber}} ({{issueTitle}}).\n\nThe host-validated research finding follows:\n\n{{finding}}",
+              "acceptanceCriteria": [
+                "Implement the viable package change identified in the host-validated research finding.",
+                "Preserve Guix source provenance, licensing, and deterministic build requirements recorded in the finding.",
+                "Add and pass a package-specific safe smoke proof using isolated HOME/XDG state before closure."
+              ]
+            }
+          }
+        ]
+      },
+      "phases": [
+        {
+          "name": "research-and-dispose",
+          "type": "agent",
+          "promptFile": ".goocastle/guix-research-disposition-prompt.md",
+          "provider": "codex",
+          "model": "gpt-5.6-luna",
+          "effort": "xhigh",
+          "capabilities": { "network": true }
+        }
+      ]
+    },
+    {
       "name": "guix-package-quality-gates",
       "enforcedDefault": true,
       "requiredPhases": [
