@@ -122,7 +122,8 @@ with tempfile.TemporaryDirectory(prefix="vt05-smoke-") as temporary:
         "XDG_CACHE_HOME": str(cache), "XDG_DATA_HOME": str(data),
         "XDG_STATE_HOME": str(state), "XDG_RUNTIME_DIR": str(runtime),
         "DISPLAY": ":99", "LIBGL_ALWAYS_SOFTWARE": "1",
-        "SDL_AUDIODRIVER": "dummy", "LC_ALL": "C.UTF-8", "PATH": "",
+        "SDL_AUDIODRIVER": "dummy", "SDL_RENDER_DRIVER": "software",
+        "LC_ALL": "C.UTF-8", "PATH": "",
     }
     for name in ("http_proxy", "https_proxy", "all_proxy", "HTTP_PROXY",
                  "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY", "no_proxy"):
