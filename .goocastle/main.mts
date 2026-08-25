@@ -989,21 +989,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       BASE_BRANCH: baseBranch,
       CODING_STANDARDS: codingStandards,
     };
-    const interruptedPhases = journal.phases.filter((phase) => phase.state === "running" && phase.startSha);
-    for (const phase of interruptedPhases) {
-      const phaseHead = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
-      if (phaseHead !== phase.startSha) {
-        const commitCount = Number(hostGit(["rev-list", "--count", phase.startSha + ".." + phaseHead], { encoding: "utf8" }).trim());
-        journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
-          phases: [...journal.phases.filter((item) => item.name !== phase.name), {
-            ...phase,
-            state: "complete",
-            commitCount,
-            completedAt: new Date().toISOString(),
-          }],
-        });
-      }
-    }
+    // A running phase has no completion evidence. Leave it pending and rerun
+    // it on resume even if the branch moved before the interruption.
     const templatePhases = [
         {
           type: "agent",
