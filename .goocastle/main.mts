@@ -1,12 +1,12 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
-import { access, constants, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
+import { access, constants, lstat, mkdtemp, readFile, realpath, stat, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { isAbsolute, join, resolve } from "node:path";
+import { isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const GENERATED_RUNNER_RUNTIME_API_VERSION = 1;
-const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-1/journal-1";
+const GENERATED_RUNNER_RUNTIME_API_VERSION = 2;
+const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-2/journal-1";
 const GENERATED_RUNNER_JOURNAL_SCHEMA_VERSION = 1;
 const SELF_HOSTED_RUNTIME_ROOT_ENVIRONMENT = "GOOCASTLE_SELF_HOSTED_RUNTIME_ROOT";
 const hostWorkTree = process.cwd();
@@ -117,7 +117,7 @@ const runtimeModuleUrl = (() => {
   return moduleUrl;
 })();
 const runtimeModule = await import(runtimeModuleUrl);
-const { AGENT_PROVIDER_REGISTRY, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialTaskJournal, generatedRunnerRuntimeHandshake, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
+const { AGENT_PROVIDER_REGISTRY, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialTaskJournal, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, parseGooflowDispositionResult, renderGooflowImplementationTicket, renderGooflowDispositionComment, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
 const runtimeHandshake = typeof generatedRunnerRuntimeHandshake === "function"
   ? generatedRunnerRuntimeHandshake()
   : undefined;
@@ -454,6 +454,18 @@ const validateIssue = (issue) => {
   for (const warning of explanation.warnings) console.error("WARNING: " + warning);
   return explanation;
 };
+const validateIssueForWorkflow = (issue, workflow) => {
+  const policy = {
+    ...projectConfig.issueSpecification,
+    ...(workflow?.issueSpecificationMode === undefined ? {} : { mode: workflow.issueSpecificationMode }),
+  };
+  const explanation = validateIssueSpecification(
+    { number: issue.number, body: issue.body },
+    policy,
+  );
+  for (const warning of explanation.warnings) console.error("WARNING: " + warning);
+  return explanation;
+};
 const reportInvalidReadyIssue = (issue, error) => {
   const detail = error instanceof Error ? error.message : String(error);
   console.error(
@@ -485,11 +497,18 @@ const resolveForIssue = async (issue) => {
   return resolved;
 };
 
+const hasTerminalBlockedLabel = (issue) =>
+  issue.labels.some((label) => label.name === "state:blocked");
+
 const nextActionableIssue = async (excludedIssues = new Set()) => {
   const issues = (await ghJson([
+    // The GitHub CLI fetches only the requested number of entries.  Keep the scan
+    // large enough that an older explicitly-ready issue is not hidden by a
+    // newly-created research backlog.
     "issue", "list", "--state", "open", "--limit", "1000",
     "--json", "number,title,body,labels",
-  ], validateGitHubIssueListPayload)).filter((issue) => issue.labels.some((label) => label.name === "ready-for-agent"));
+  ], validateGitHubIssueListPayload)).filter((issue) => issue.labels.some((label) =>
+    label.name === "ready-for-agent" || label.name.startsWith("gooflow:")));
   const priorityOf = (issue) => {
     const index = projectConfig.taskLimits.priorityLabels.findIndex((label) =>
       issue.labels.some((candidate) => candidate.name === label));
@@ -498,10 +517,14 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
   issues.sort((left, right) => priorityOf(left) - priorityOf(right) || left.number - right.number);
   for (const issue of issues) {
     if (excludedIssues.has(issue.number)) continue;
+    if (hasTerminalBlockedLabel(issue)) continue;
+    let resolved;
     let explanation;
     try {
-      explanation = validateIssue(issue);
+      resolved = await resolveForIssue(issue);
+      explanation = validateIssueForWorkflow(issue, resolved.workflow);
     } catch (error) {
+      if (error instanceof Error && error.message.startsWith("Missing .goocastle/gooflow.json")) throw error;
       reportInvalidReadyIssue(issue, error);
       continue;
     }
@@ -516,8 +539,11 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
     }
     if (unblocked) {
       const selected = await selectedIssue(issue.number);
+      const resolved = await resolveForIssue(selected);
+      const selectorLabels = resolved.workflow?.selectorLabels ?? ["ready-for-agent"];
+      if (!selectorLabels.every((label) => selected.labels.some((entry) => entry.name === label))) continue;
       try {
-        explanation = validateIssue(selected);
+        explanation = validateIssueForWorkflow(selected, resolved.workflow);
       } catch (error) {
         reportInvalidReadyIssue(selected, error);
         continue;
@@ -546,6 +572,155 @@ const pushAndReconcile = async (integrationSha) => await retrySequential(async (
 }, projectConfig.retryPolicy, { retryable: isTransientSequentialError });
 
 const phaseRecord = (journal, name) => journal.phases.find((phase) => phase.name === name);
+const dispositionResultFromSandbox = async (sandbox, policy) => {
+  const worktree = resolve(sandbox.worktreePath);
+  const path = resolve(worktree, policy.resultPath);
+  const containment = relative(worktree, path);
+  if (containment === "" || containment === ".." || containment.startsWith(".." + "/") || isAbsolute(containment)) {
+    throw new Error("Configured Gooflow disposition result path escapes the sandbox worktree; fix disposition.resultPath before resuming");
+  }
+  let info;
+  try {
+    info = await lstat(path);
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      throw new Error("Non-delivery Gooflow did not write its disposition result at " + policy.resultPath + ". Write the required JSON result and resume with: " + resumeRecoveryCommand());
+    }
+    throw error;
+  }
+  if (info.isSymbolicLink() || !info.isFile() || (await realpath(path)) !== path) {
+    throw new Error("Refusing non-regular or symlinked Gooflow disposition result at " + policy.resultPath + "; replace it with a regular file and resume");
+  }
+  const result = parseGooflowDispositionResult(await readFile(path, "utf8"), policy);
+  await unlink(path);
+  return result;
+};
+const applyDisposition = async (journal, issue) => {
+  const selected = journal.disposition;
+  if (!selected) throw new Error("Non-delivery Gooflow has no recorded disposition; rerun its pending phases to produce one");
+  const epoch = journal.epoch ?? 1;
+  const exactImplementationTickets = async (ticket) => {
+    const marker = gooflowImplementationTicketMarker(WORKFLOW_NAME, issue.number, epoch, selected.disposition);
+    const candidates = await ghJson([
+      "issue", "list", "--state", "all", "--limit", "100", "--search", marker,
+      "--json", "number,title,body,labels",
+    ], validateGitHubIssueListPayload);
+    const receiptMatches = candidates.filter((candidate) => candidate.title === ticket.title && candidate.body.includes(marker));
+    if (receiptMatches.length > 1) {
+      throw new Error("Found multiple implementation tickets with the Goocastle receipt for #" + issue.number + "; resolve the duplicate tickets manually, then resume with: " + resumeRecoveryCommand());
+    }
+    return candidates.filter((candidate) => candidate.title === ticket.title && candidate.body === ticket.body);
+  };
+  if (selected.implementationTicket) {
+    let ticket = selected.implementationTicket;
+    if (ticket.create !== "complete") {
+      let matches = await exactImplementationTickets(ticket);
+      if (matches.length > 1) {
+        throw new Error("Found multiple implementation tickets with the exact Goocastle receipt for #" + issue.number + "; resolve the duplicate tickets manually, then resume with: " + resumeRecoveryCommand());
+      }
+      if (matches.length === 0) {
+        // A started boundary is deliberately ambiguous: the host could have exited
+        // after GitHub accepted a create but before recording its number.
+        // A second create here could make a duplicate while issue search is
+        // still indexing the durable receipt, so only reconcile on resume.
+        if (ticket.create === "started") {
+          throw new Error("Could not determine whether Goocastle created the implementation ticket for #" + issue.number + ". Do not create another ticket; wait for GitHub issue search to index the receipt, then resume with: " + resumeRecoveryCommand());
+        }
+        journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+          disposition: { ...selected, implementationTicket: { ...ticket, create: "started" } }, status: "active",
+        });
+        ticket = journal.disposition.implementationTicket;
+        try {
+          const output = execFileSync("gh", ["issue", "create", "--title", ticket.title, "--body", ticket.body], { encoding: "utf8" });
+          const issueNumber = /\/issues\/([1-9][0-9]*)\/?\s*$/.exec(output)?.[1];
+          if (issueNumber === undefined) throw new Error("gh issue create did not return an issue URL");
+          const createdIssueNumber = Number(issueNumber);
+          if (!Number.isSafeInteger(createdIssueNumber)) throw new Error("gh issue create returned an unsafe issue number");
+          const created = await selectedIssue(createdIssueNumber);
+          if (created.title !== ticket.title || created.body !== ticket.body) {
+            throw new Error("gh issue create returned an issue without the expected Goocastle receipt");
+          }
+          matches = [created];
+        } catch {
+          // A failed transport can still mean GitHub accepted the create.
+          // Reconcile once, but never retry the non-idempotent mutation.
+          matches = await exactImplementationTickets(ticket);
+          if (matches.length === 0) {
+            throw new Error("Could not determine whether Goocastle created the implementation ticket for #" + issue.number + ". Do not create another ticket; wait for GitHub issue search to index the receipt, then resume with: " + resumeRecoveryCommand());
+          }
+        }
+      }
+      if (matches.length > 1) {
+        throw new Error("Found multiple implementation tickets with the exact Goocastle receipt for #" + issue.number + "; resolve the duplicate tickets manually, then resume with: " + resumeRecoveryCommand());
+      }
+      if (matches.length !== 1) {
+        throw new Error("Could not verify the created implementation ticket for #" + issue.number + ". Wait for GitHub issue search to index the receipt, then resume with: " + resumeRecoveryCommand());
+      }
+      ticket = { ...ticket, issueNumber: matches[0].number, create: "complete" };
+      journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+        disposition: { ...journal.disposition, implementationTicket: ticket }, status: "active",
+      });
+    }
+    ticket = journal.disposition.implementationTicket;
+    if (ticket.labels !== "complete") {
+      if (ticket.issueNumber === undefined) throw new Error("Created implementation ticket has no recorded issue number; resume with: " + resumeRecoveryCommand());
+      journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+        disposition: { ...journal.disposition, implementationTicket: { ...ticket, labels: "started" } }, status: "active",
+      });
+      for (const label of ticket.labelsToAdd) {
+        const hasLabel = async () => (await selectedIssue(ticket.issueNumber)).labels.some((entry) => entry.name === label);
+        if (await hasLabel()) continue;
+        await retrySequential(async () => {
+          if (await hasLabel()) return;
+          execFileSync("gh", ["issue", "edit", String(ticket.issueNumber), "--add-label", label], { stdio: "inherit" });
+        }, projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+      }
+      journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+        disposition: { ...journal.disposition, implementationTicket: { ...journal.disposition.implementationTicket, labels: "complete" } }, status: "active",
+      });
+    }
+  }
+  const implementationIssueNumber = journal.disposition.implementationTicket?.issueNumber;
+  const comment = renderGooflowDispositionComment(WORKFLOW_NAME, issue.number, epoch, selected, implementationIssueNumber);
+  const commentAlreadyApplied = async () =>
+    (await selectedIssue(issue.number)).comments.some((entry) => entry.body === comment);
+  if (selected.comment !== "complete") {
+    journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+      disposition: { ...selected, comment: "started" }, status: "active",
+    });
+    // The marker is predictable and may appear in unrelated user comments.
+    // Only the complete, journaled host receipt proves this boundary ran.
+    if (!(await commentAlreadyApplied())) {
+      // A transport error can arrive after GitHub accepted the comment. Check
+      // the durable external receipt before every retry to avoid duplicates.
+      await retrySequential(async () => {
+        if (await commentAlreadyApplied()) return;
+        execFileSync("gh", ["issue", "comment", String(issue.number), "--body", comment], {
+          stdio: "inherit",
+        });
+      }, projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+    }
+    journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+      disposition: { ...journal.disposition, comment: "complete" }, status: "active",
+    });
+  }
+  if (journal.disposition.labels !== "complete") {
+    journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+      disposition: { ...journal.disposition, labels: "started" }, status: "active",
+    });
+    const current = await selectedIssue(issue.number);
+    for (const label of journal.disposition.labelsToAdd) {
+      if (current.labels.some((entry) => entry.name === label)) continue;
+      await retrySequential(() => execFileSync("gh", ["issue", "edit", String(issue.number), "--add-label", label], {
+        stdio: "inherit",
+      }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+    }
+    journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+      disposition: { ...journal.disposition, labels: "complete" }, status: "complete",
+    });
+  }
+  return journal;
+};
 const gitAt = (directory, args, options = {}) => execFileSync(
   "git",
   ["-c", "core.hooksPath=/dev/null", "-C", directory, ...args],
@@ -898,10 +1073,25 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       attemptedIssues.add(journal.issueNumber);
       console.log("\n=== Reconciling cleanup for delivered #" + issue.number + " from journal ===\n");
     } else {
+    issue = await selectedIssue(journal.issueNumber);
+    // A retained journal is recovery state, not authority to resume an issue
+    // whose current terminal disposition says it must remain blocked. Check the
+    // live issue before any branch, journal, or sandbox recovery action.
+    if (issue.state === "OPEN" && hasTerminalBlockedLabel(issue)) {
+      deferredJournalIssues.add(issue.number);
+      attemptedIssues.add(issue.number);
+      console.log(
+        "Skipping open terminally blocked issue #" + issue.number +
+          " (state:blocked); its preserved journal and worktree remain unchanged.",
+      );
+      // A skipped terminal journal must not consume an execution slot; continue
+      // this run with the next currently eligible issue.
+      task -= 1;
+      continue;
+    }
     if (journal.baseBranch !== baseBranch) {
       throw new Error("Journal for #" + journal.issueNumber + " expects base branch " + journal.baseBranch + "; check out that branch and run goocastle resume");
     }
-    issue = await selectedIssue(journal.issueNumber);
     issueContext = snapshotGitHubIssue(issue, journal.issueNumber);
     const explanation = validateIssue(issue);
     let decision = "initial";
@@ -994,8 +1184,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       BASE_BRANCH: baseBranch,
       CODING_STANDARDS: codingStandards,
     };
-    // A running phase has no completion evidence. Leave it pending and rerun
-    // it on resume even if the branch moved before the interruption.
+    // A running record has no completion evidence.  A process can die after
+    // committing but before the phase callback, so branch movement is not a
+    // substitute for a successful required command or agent completion.
+    // Leave it pending and rerun it on resume.
     const templatePhases = [
         {
           type: "agent",
@@ -1033,6 +1225,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     const materializedGooflow = resolvedGooflow.workflow
       ? materializeIssueWorkflow(resolvedGooflow.workflow, issue)
       : undefined;
+    const dispositionPolicy = materializedGooflow?.disposition;
     const selectedAgents = materializedGooflow
       ? agentProvenance(materializedGooflow)
       : templateAgentProvenance(templatePhases);
@@ -1083,16 +1276,22 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       ? issueGooflowSetup(materializedGooflow, projectConfig)
       : [];
     const requiredGooflowPhases = new Set(materializedGooflow?.requiredPhases ?? []);
+    // A disposition is the terminal receipt for a non-delivery workflow. If
+    // interruption follows a completed phase but precedes receipt capture,
+    // rerun its idempotent research phases rather than treating phase state as
+    // evidence of a host-valid result.
+    const dispositionResultRequired = dispositionPolicy !== undefined && journal.disposition === undefined;
+    let capturedDisposition;
     const pendingPhases = phases.filter((phase) => {
       const record = phaseRecord(journal, phase.name);
-      return record?.state !== "complete" || record?.stoppedEarly === true;
+      return dispositionResultRequired || record?.state !== "complete" || record?.stoppedEarly === true;
     });
     if (pendingPhases.length > 0) {
       // Setup commands run before onPhaseStart and are allowed to use Git, so
       // prepare the same signing boundary before the sandbox can execute
       // them. Their commits are recorded separately from agent work.
       const setupSigningBoundary = signingBoundary("setup", "workflow");
-      if (setup.length > 0) journal = await prepareCommitSigning(journal, setupSigningBoundary);
+      if (setup.length > 0 && dispositionPolicy === undefined) journal = await prepareCommitSigning(journal, setupSigningBoundary);
       // Sandbox capability access must follow the same materialized workflow
       // that supplies the phases and setup. A repository policy overlay may
       // add or remove a phase capability, so checking the pre-materialized
@@ -1121,15 +1320,15 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       const result = await retrySequential(() => runWorkflow({
         sandbox,
         setup,
-        phases: phases.filter((phase) => phaseRecord(journal, phase.name)?.state !== "complete"),
+        phases: phases.filter((phase) => dispositionResultRequired || phaseRecord(journal, phase.name)?.state !== "complete"),
         onSetupComplete: async () => {
           if (setupObserved) return;
           setupObserved = true;
           const setupHead = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
-          if (setupHead !== setupStartSha) journal = await recordUnsignedCommit(journal, setupSigningBoundary);
+          if (dispositionPolicy === undefined && setupHead !== setupStartSha) journal = await recordUnsignedCommit(journal, setupSigningBoundary);
         },
         onPhaseStart: async (phase) => {
-          journal = await prepareCommitSigning(journal, signingBoundary("phase", phase.name));
+          if (dispositionPolicy === undefined) journal = await prepareCommitSigning(journal, signingBoundary("phase", phase.name));
           journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
             status: "active",
             phases: [...journal.phases.filter((item) => item.name !== phase.name), {
@@ -1163,7 +1362,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
               completedAt: new Date().toISOString(),
             }],
           });
-          if ((observedCommitCount ?? commitCount ?? 0) > 0) {
+          if (dispositionPolicy === undefined && (observedCommitCount ?? commitCount ?? 0) > 0) {
             journal = await recordUnsignedCommit(journal, signingBoundary("phase", phaseResult.name));
           }
         },
@@ -1178,6 +1377,33 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           console.warn("Phase " + failure.phase.name + " failed but continuing by Gooflow policy.");
         },
       }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+      if (dispositionPolicy !== undefined && journal.disposition === undefined) {
+        const result = await dispositionResultFromSandbox(sandbox, dispositionPolicy);
+        const implementationTicket = gooflowDispositionImplementationTicket(dispositionPolicy, result.disposition);
+        capturedDisposition = {
+          disposition: {
+            disposition: result.disposition,
+            finding: result.finding,
+            labelsToAdd: gooflowDispositionLabels(dispositionPolicy, result.disposition),
+            ...(implementationTicket === undefined ? {} : {
+              implementationTicket: {
+                ...renderGooflowImplementationTicket(implementationTicket, {
+                  issueNumber: issue.number,
+                  issueTitle: issue.title,
+                  workflow: WORKFLOW_NAME,
+                  epoch: journal.epoch ?? 1,
+                  disposition: result.disposition,
+                  finding: result.finding,
+                }),
+                create: "pending",
+                labels: "pending",
+              },
+            }),
+            comment: "pending",
+            labels: "pending",
+          },
+        };
+      }
       closeResult = await sandbox.close();
       sandbox = undefined;
       if (closeResult.preservedWorktreePath) throw new Error("Uncommitted changes preserved at " + closeResult.preservedWorktreePath);
@@ -1192,11 +1418,26 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             " failed; inspect the preserved branch and resume with: " + resumeRecoveryCommand(),
         );
       }
+      // Capture the result only after its sandbox is cleanly finalized and
+      // required gates have passed. A crash after this point can resume the
+      // host boundaries without retaining a completed research worktree.
+      if (capturedDisposition !== undefined) {
+        journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+          ...capturedDisposition,
+          status: "active",
+        });
+      }
       if (result.stoppedEarly) journal = await transitionSequentialTaskJournal(gitCommonDir, journal, { status: "failed" });
     }
     const stoppedPhase = phases.find((phase) => phaseRecord(journal, phase.name)?.stoppedEarly === true);
     if (stoppedPhase) {
       throw new Error("Required Gooflow phase " + JSON.stringify(stoppedPhase.name) + " made no commits for #" + issue.number + "; inspect the preserved branch and resume after fixing the phase");
+    }
+    if (dispositionPolicy !== undefined) {
+      journal = await applyDisposition(journal, issue);
+      console.log("Recorded disposition " + JSON.stringify(journal.disposition?.disposition) + " for #" + issue.number + ".");
+      await persistInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs);
+      continue;
     }
     const branchHead = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
     if (branchHead === baseHead) {
