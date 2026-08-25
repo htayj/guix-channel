@@ -34,12 +34,12 @@ gforth_out=$(find_program_output bin/gforth gforth)
 source_out=$($guix_bin build -L "$channel_dir" larsbrinkhoff-forth-mode-source)
 emacs_bin=$emacs_out/bin/emacs
 gforth_bin=$gforth_out/bin/gforth
-fixtures=$source_out/share/larsbrinkhoff/projects/forth-mode
+source_fixtures=$source_out/share/larsbrinkhoff/projects/forth-mode
 
 test -x "$emacs_bin"
 test -x "$gforth_bin"
-test -d "$fixtures/test"
-test -f "$fixtures/LICENSE"
+test -d "$source_fixtures/test"
+test -f "$source_fixtures/LICENSE"
 
 license=$(find "$package_out/share/doc" -type f -name LICENSE -print | sed -n '1p')
 test -n "$license"
@@ -67,6 +67,14 @@ trap 'rm -rf -- "$temporary"' EXIT HUP INT TERM
 mkdir "$temporary/home" "$temporary/config" "$temporary/data" \
       "$temporary/cache" "$temporary/state" "$temporary/runtime"
 chmod 700 "$temporary/runtime"
+
+# Block mode normalizes buffers while visiting block files.  Stage only the
+# upstream fixtures in writable temporary space; the source and package
+# outputs remain immutable inputs to this proof.
+mkdir "$temporary/fixtures"
+cp -R "$source_fixtures/test" "$temporary/fixtures/test"
+chmod -R u+rwX "$temporary/fixtures"
+fixtures=$temporary/fixtures
 
 output_fingerprint() {
     find "$package_out" -xdev -type f -exec sha256sum {} \; | LC_ALL=C sort | sha256sum
