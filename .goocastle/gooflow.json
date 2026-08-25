@@ -44,6 +44,7 @@
     {
       "name": "guix-package-quality-gates",
       "enforcedDefault": true,
+      "issueSpecificationMode": "disabled",
       "requiredPhases": [
         "package-implementation",
         "channel-inventory",
@@ -88,6 +89,7 @@
     {
       "name": "guix-package-moderate",
       "enforcedDefault": false,
+      "issueSpecificationMode": "disabled",
       "requiredPhases": [
         "package-implementation",
         "channel-inventory",
