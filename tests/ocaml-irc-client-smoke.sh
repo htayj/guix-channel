@@ -66,7 +66,7 @@ xdg_state=$temporary/xdg-state
 mkdir -p "$home" "$xdg_config" "$xdg_cache" "$xdg_data" "$xdg_state"
 
 $guix_tool package -L . --no-grafts -p "$profile" \
-    -i ocaml ocaml-findlib python util-linux ocaml-irc-client-unix
+    -i ocaml@4.14.3 ocaml-findlib python util-linux ocaml-irc-client-unix
 
 test -x "$profile/bin/ocamlfind"
 test -x "$profile/bin/ocamlopt"
