@@ -1093,7 +1093,12 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       throw new Error("Journal for #" + journal.issueNumber + " expects base branch " + journal.baseBranch + "; check out that branch and run goocastle resume");
     }
     issueContext = snapshotGitHubIssue(issue, journal.issueNumber);
-    const explanation = validateIssue(issue);
+    // Resumption must use the same routed policy as fresh selection.  A
+    // research Gooflow may deliberately disable the repository's delivery
+    // specification policy, so validating before routing rejects a valid
+    // journal solely because it was interrupted.
+    resolvedGooflow = await resolveForIssue(issue);
+    const explanation = validateIssueForWorkflow(issue, resolvedGooflow.workflow);
     let decision = "initial";
     if (journal.specification && (
       journal.specification.policyVersion !== explanation.policyVersion ||
@@ -1111,7 +1116,6 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       console.error("WARNING: accepting the changed specification for #" + issue.number + " because GOOCASTLE_SPECIFICATION_OVERRIDE=1 was explicitly set; review the preserved branch and criteria.");
     }
     specification = specificationProvenance(explanation, decision);
-    resolvedGooflow = await resolveForIssue(issue);
     attemptedIssues.add(issue.number);
     console.log("\n=== Resuming #" + issue.number + " " + issue.title + " from journal ===\n");
     }
