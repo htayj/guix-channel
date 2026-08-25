@@ -7,7 +7,7 @@
   "issueTracker": "github",
   "template": "sequential-reviewer",
   "taskLimits": {
-    "maxTasks": 1,
+    "maxTasks": 500,
     "maxConcurrentTasks": 1,
     "interTaskDelayMs": 600000
   },
