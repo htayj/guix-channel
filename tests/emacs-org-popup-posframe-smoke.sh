@@ -58,9 +58,11 @@ temporary=$(mktemp -d -t emacs-org-popup-posframe-smoke.XXXXXX)
 trap 'rm -rf -- "$temporary"' EXIT HUP INT TERM
 mkdir "$temporary/home" "$temporary/config" "$temporary/data" "$temporary/cache" "$temporary/tmp"
 
-before="$temporary/package-before"
-after="$temporary/package-after"
-find "$package_out" -type f -exec sha256sum {} \; | LC_ALL=C sort >"$before"
+output_fingerprint() {
+    find "$package_out" -type f -exec sha256sum {} \; | LC_ALL=C sort | sha256sum
+}
+
+before_fingerprint=$(output_fingerprint)
 
 clean_emacs() {
     env -i \
@@ -120,6 +122,6 @@ offline_emacs "$xvfb_out/bin/xvfb-run" -a "$emacs_out/bin/emacs" \
         (error \"posframe graphical support is unavailable\"))
       (kill-emacs 0))"
 
-find "$package_out" -type f -exec sha256sum {} \; | LC_ALL=C sort >"$after"
-diff -u "$before" "$after"
+after_fingerprint=$(output_fingerprint)
+test "$before_fingerprint" = "$after_fingerprint"
 test -z "$(find "$package_out" -type f -perm /222 -print)"
