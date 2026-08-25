@@ -128,6 +128,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `secretpathway` | SecretPathway 1.0.0 | Java/Swing MUD client with an LPC source editor |
 | `tinyfugue` | TinyFugue Rebirth 5.2.2 | Scriptable terminal MUD client with TLS, MCCP, GMCP, and IPv6 |
 | `trebuchet` | Trebuchet 1082 | Tcl/Tk graphical MUD, MUCK, and MUSH client with MCP support |
+| `vt05` | aap/vt05 | SDL emulators for six classic text terminals |
 | `emacs-treesit-sexp` | alexispurslane/treesit-sexp | Tree-sitter-aware structural editing for Emacs |
 | `dipc` | doprz/dipc | Offline-built image palette converter |
 | `nrl-text-to-phoneme` | greg-kennedy/p5-NRL-TextToPhoneme | NRL text-to-phoneme command and rule tables |
@@ -294,6 +295,7 @@ make check-rune     # namespaced PTY Telnet/GMCP/MCCP2 and verified-TLS smoke
 make check-secretpathway # fresh-HOME Xvfb Swing plus loopback Telnet smoke
 make check-tinyfugue # sanitized fresh-HOME loopback fake-MUD protocol smoke
 make check-trebuchet # fresh-HOME Xvfb Tcl/Tk plus loopback protocol smoke
+make check-vt05 # isolated Xvfb SDL window plus PTY TERM-contract smoke
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass
