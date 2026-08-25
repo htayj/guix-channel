@@ -38,7 +38,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin \
 	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy mushkin mushtato ocaml-irc-client \
 	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl \
-	kbredir potato pycat rune secretpathway tinyfugue trebuchet
+	kbredir potato pycat rune secretpathway tinyfugue trebuchet tapeutils
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -50,7 +50,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-flex-launcher check-mmapper check-mudlet check-mudpuppy check-mushkin check-mushtato check-ocaml-irc-client check-potato \
 	check-kitty-bitmap check-lyntin check-pycat check-rune check-tinyfugue lint lint-cve \
-	check-secretpathway check-trebuchet check-emacs-org-popup-posframe build build-sources
+	check-secretpathway check-tapeutils check-trebuchet check-emacs-org-popup-posframe build build-sources
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -140,6 +140,9 @@ check-secretpathway:
 check-tinyfugue:
 	GUIX="$(GUIX)" tests/tinyfugue-smoke.sh
 
+check-tapeutils:
+	GUIX="$(GUIX)" tests/tapeutils-smoke.sh
+
 check-trebuchet:
 	GUIX="$(GUIX)" tests/trebuchet-smoke.sh
 
@@ -151,7 +154,7 @@ check: check-source-count check-sentinelone check-datamosh-security \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
 	check-mudpuppy check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
-	check-tinyfugue check-trebuchet check-emacs-org-popup-posframe
+	check-tinyfugue check-tapeutils check-trebuchet check-emacs-org-popup-posframe
 	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
