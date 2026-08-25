@@ -120,10 +120,8 @@ client library.  It depends only on the core library and Guix's Lwt runtime."
               (let ((documentation
                      (string-append #$output "/share/doc/ocaml-lwt-ssl")))
                 (mkdir-p documentation)
-                (install-file "COPYING"
-                              (string-append documentation "/COPYING"))
-                (install-file "README.md"
-                              (string-append documentation "/README.md"))))))))
+                (install-file "COPYING" documentation)
+                (install-file "README.md" documentation)))))))
     (propagated-inputs (list ocaml-lwt ocaml-ssl))
     (home-page "https://github.com/ocsigen/lwt_ssl")
     (synopsis "OpenSSL binding with concurrent Lwt I/O")
