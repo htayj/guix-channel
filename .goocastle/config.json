@@ -29,7 +29,8 @@
   "resourcePolicy": {
     "cores": 4,
     "emulateFhs": true,
-    "nesting": false
+    "nesting": false,
+    "guixDaemon": true
   },
   "runtimeLimits": {
     "outputBytes": 8388608,

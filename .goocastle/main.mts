@@ -234,8 +234,12 @@ const forgeTokenEnvironment = "GH_TOKEN";
 const workflowRequestsForgeAccess = (workflow) =>
   [...(workflow?.phases ?? []), ...(workflow?.setup ?? [])]
     .some((entry) => entry.capabilities?.environment?.includes(forgeTokenEnvironment) === true);
+const workflowRequestsGuixDaemon = (workflow) =>
+  [...(workflow?.phases ?? []), ...(workflow?.setup ?? [])]
+    .some((entry) => entry.capabilities?.guixDaemon === true);
 const sandboxAccessForWorkflow = (workflow) => {
   const requestsForgeAccess = workflowRequestsForgeAccess(workflow);
+  const requestsGuixDaemon = workflowRequestsGuixDaemon(workflow);
   if (requestsForgeAccess && !sandboxEnvironment[forgeTokenEnvironment]) {
     throw new Error(
       "Gooflow requests GH_TOKEN for a sandbox phase, but no GH_TOKEN value is available. " +
@@ -245,7 +249,13 @@ const sandboxAccessForWorkflow = (workflow) => {
   const environment = { ...sandboxEnvironment };
   const preserveEnv = preservedEnvironment.filter((name) => requestsForgeAccess || name !== forgeTokenEnvironment);
   if (!requestsForgeAccess) delete environment[forgeTokenEnvironment];
-  return { environment, preserveEnv };
+  if (requestsGuixDaemon && !projectConfig.resourcePolicy.guixDaemon) {
+    throw new Error(
+      "Gooflow requests the Guix daemon, but resourcePolicy.guixDaemon is false. " +
+      "Enable it only for reviewed package-build workflows and retry",
+    );
+  }
+  return { environment, preserveEnv, requestsGuixDaemon };
 };
 
 const MAX_TASKS = projectConfig.taskLimits.maxTasks;
@@ -1109,6 +1119,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           runtimeLimits: projectConfig.runtimeLimits,
           preserveEnv: sandboxAccess.preserveEnv,
           homeFiles,
+          ...(sandboxAccess.requestsGuixDaemon ? { guixDaemonSocket: { hostPath: "/var/guix/daemon-socket/socket" } } : {}),
           exposes: codexBinDirectory ? [{ hostPath: codexBinDirectory, sandboxPath: "/opt/goocastle-codex" }] : [],
         }),
         env: { ...sandboxAccess.environment, GOOCASTLE_ISSUE_NUMBER: String(issue.number) },
