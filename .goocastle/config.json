@@ -9,7 +9,13 @@
   "taskLimits": {
     "maxTasks": 500,
     "maxConcurrentTasks": 1,
-    "interTaskDelayMs": 600000
+    "interTaskDelayMs": 600000,
+    "priorityLabels": [
+      "priority:quick",
+      "complexity:low",
+      "complexity:medium",
+      "complexity:high"
+    ]
   },
   "timeouts": {
     "idleMs": 1800000,
