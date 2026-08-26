@@ -860,7 +860,7 @@ const reconciliationRecovery = (journal) =>
   "Resolve the preserved replay with: " + shellDisplayCommand("git", ["-C", journal.reconciliation.recoveryWorktreePath, "rebase", "--continue"]) +
   "; or abandon only the replay with: " + shellDisplayCommand("git", ["-C", journal.reconciliation.recoveryWorktreePath, "rebase", "--abort"]) + ". " +
   "The original work is recoverable with: " + shellDisplayCommand("git", ["-C", hostWorkTree, "branch", "-f", "--", journal.branch, journal.reconciliation.backupBranch]);
-const reconcileBaseAdvance = async (journal, issueNumber) => {
+const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => {
   const currentBase = hostGit(["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
   const recordedBase = journal.reconciliation?.state === "started"
     ? journal.reconciliation.sourceBaseSha
@@ -902,7 +902,19 @@ const reconcileBaseAdvance = async (journal, issueNumber) => {
     if (checkedOutWorktree === undefined) hostGit(["branch", "-f", journal.branch, currentBase]);
     else {
       const dirty = gitAt(checkedOutWorktree, ["status", "--porcelain=v1", "-z"], { encoding: "utf8" });
-      if (dirty.length > 0) throw new Error("Cannot fast-forward #" + issueNumber + ": its task worktree has uncommitted changes at " + checkedOutWorktree);
+      // A non-delivery phase may leave its sandbox result behind when the
+      // host rejects it before cleanup.  Its next run is required to replace
+      // that exact untracked file, so permit deleting only that disposable
+      // handoff; every other worktree mutation remains recovery evidence.
+      const disposableResult = dispositionPolicy === undefined || journal.disposition !== undefined
+        ? undefined
+        : "?? " + dispositionPolicy.resultPath + " ";
+      if (dirty.length > 0 && dirty !== disposableResult) {
+        throw new Error("Cannot fast-forward #" + issueNumber + ": its task worktree has uncommitted changes at " + checkedOutWorktree);
+      }
+      if (dirty === disposableResult) {
+        gitAt(checkedOutWorktree, ["clean", "-f", "--", dispositionPolicy.resultPath], { stdio: "inherit" });
+      }
       gitAt(checkedOutWorktree, ["reset", "--keep", currentBase], { stdio: "inherit" });
     }
     return await transitionSequentialTaskJournal(gitCommonDir, journal, {
@@ -1271,7 +1283,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       // issue-close retry for an already-delivered cleanup-only journal.
       continue;
     }
-    journal = await reconcileBaseAdvance(journal, issue.number);
+    journal = await reconcileBaseAdvance(journal, issue.number, dispositionPolicy);
     baseHead = journal.reconciliation?.state === "complete"
       ? journal.reconciliation.reconciledBaseSha
       : journal.baseSha;
