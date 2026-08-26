@@ -30,6 +30,7 @@ test -n "$python_out"
 import hashlib
 import os
 import pathlib
+import struct
 import subprocess
 import sys
 import tempfile
@@ -103,16 +104,69 @@ with tempfile.TemporaryDirectory(prefix="pdp10-its-disassembler-smoke-") as temp
     assert "000000:  000000000000" in result.stdout
     assert "000001:  400000000000  setz" in result.stdout
 
-    # The two compatibility names select behavior from argv[0].  Their own
-    # usage text proves both installed executable names are independently
-    # invocable without a wrapper or a shared mutable runtime directory.
-    for program in ("tito", "failsafe", "dumper", "mini-dumper"):
-        result = subprocess.run([out / "bin" / program], env=environment,
-                                cwd=work, stdin=subprocess.DEVNULL,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                text=True)
-        assert result.returncode != 0
-        assert f"Usage: {out / 'bin' / program}" in result.stderr
+    # An empty local input is enough to exercise dumper's argv[0]-selected
+    # format: the mini-dumper output contains one extra tape mark.
+    empty = work / "empty"
+    empty.touch()
+    dumper_tapes = {}
+    for program in ("dumper", "mini-dumper"):
+        tape = work / f"{program}.tape"
+        subprocess.run([out / "bin" / program, "-c", "-Wbin", "-f", tape,
+                        "empty"], env=environment, cwd=work,
+                       stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE, check=True)
+        dumper_tapes[program] = tape.read_bytes()
+    assert len(dumper_tapes["mini-dumper"]) == len(dumper_tapes["dumper"]) + 8
+
+    # This local 9-track fixture has one empty file in a minimal saveset.  Its
+    # listing differs only because tito selects the TITO parser and failsafe
+    # selects the FAILSAFE parser from the invoked basename.  Neither command
+    # extracts files, accesses devices, or needs a mutable runtime directory.
+    fails_magic = 0o124641515463
+    afe_magic = 0o414645
+
+    def core_word(word):
+        return bytes(((word >> 28) & 0xff, (word >> 20) & 0xff,
+                       (word >> 12) & 0xff, (word >> 4) & 0xff,
+                       word & 0x0f))
+
+    def tape_record(stream, words):
+        data = b"".join(core_word(word) for word in words)
+        stream.write(struct.pack("<I", len(data)))
+        stream.write(data)
+        if len(data) % 2:
+            stream.write(b"\0")
+        if data:
+            stream.write(struct.pack("<I", len(data)))
+
+    tito_fixture = work / "tito-fixture.tape"
+    with tito_fixture.open("wb") as stream:
+        tape_record(stream, [0, fails_magic, afe_magic << 18, 0,
+                             (1 << 18) | 2])
+        stream.write(struct.pack("<I", 0))
+        block = [0] * 0o101
+        block[0] = 0o446353 << 18
+        block[0o75 - 1] = 800 << 18
+        tape_record(stream, [(0o777777 << 18) | 0o101] + block)
+        tape_record(stream, [(1 << 18) | 4, fails_magic, afe_magic << 18,
+                             0, (1 << 18) | 2])
+        stream.write(struct.pack("<I", 0))
+
+    listings = {}
+    for program in ("tito", "failsafe"):
+        result = subprocess.run(
+            [out / "bin" / program, "-t", "-Wascii", "-f", tito_fixture],
+            env=environment, cwd=work, stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True,
+            text=True)
+        listings[program] = result.stdout
+    assert "System:" in listings["tito"]
+    assert "System:" not in listings["failsafe"]
+    assert "(" in listings["tito"]
+    assert "(" not in listings["failsafe"]
+
+    for directory in (home, config, cache, data, state, runtime):
+        assert not any(directory.iterdir()), directory
 
 assert tree_digest(out) == before, "the immutable package output changed"
 print("pdp10-its-disassembler offline smoke passed")
