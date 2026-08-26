@@ -1129,6 +1129,23 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       console.log("\n=== Reconciling cleanup for delivered #" + issue.number + " from journal ===\n");
     } else {
     issue = await selectedIssue(journal.issueNumber);
+    // A forge-closed issue is an authoritative terminal disposition.  Its
+    // preserved journal may predate the delivery (or be a stale failed
+    // replay), but it must never trigger branch reconciliation or prevent
+    // unrelated eligible work from starting.
+    if (issue.state === "CLOSED" && journal.status === "failed") {
+      journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+        disposition: { ...journal.disposition, comment: "issue-closed" },
+        status: "complete",
+      });
+      attemptedIssues.add(issue.number);
+      console.log(
+        "Skipping closed issue #" + issue.number +
+        "; its preserved journal is recorded complete without replay.",
+      );
+      task -= 1;
+      continue;
+    }
     // A retained journal is recovery state, not authority to resume an issue
     // whose current terminal disposition says it must remain blocked. Check the
     // live issue before any branch, journal, or sandbox recovery action.
