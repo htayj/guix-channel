@@ -23,5 +23,8 @@ Run focused checks during implementation.  Commit the package and its smoke
 test together.  For unattended lint, use `guix lint -L . --no-network
 --exclude=cve,refresh,archival <package>`: the full networked CVE/refresh/
 archival lint is optional and must not stall this workflow.  Do not push, close an issue, edit this workflow, or work on
-other tickets.  Finish with `<promise>COMPLETE</promise>` only after the
-implementation is committed.
+other tickets.  For generated manifests or long package input lists, make
+small, syntactically complete `apply_patch` edits and validate each one before
+continuing; do not attempt to emit a generated patch from a shell/Node string,
+and do not write repository files with shell redirection.  Finish with
+`<promise>COMPLETE</promise>` only after the implementation is committed.
