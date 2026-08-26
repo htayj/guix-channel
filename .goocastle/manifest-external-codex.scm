@@ -27,5 +27,6 @@
          "nss-certs"
          "ripgrep"
          "sed"
-         "tar"))
+         "tar"
+         "xxd"))
   (packages->manifest (list goocastle-gitleaks))))

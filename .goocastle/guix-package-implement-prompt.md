@@ -28,3 +28,10 @@ small, syntactically complete `apply_patch` edits and validate each one before
 continuing; do not attempt to emit a generated patch from a shell/Node string,
 and do not write repository files with shell redirection.  Finish with
 `<promise>COMPLETE</promise>` only after the implementation is committed.
+
+For Rust packages, Cargo.lock `checksum` fields are SHA-256 digest bytes encoded
+as hexadecimal, not files or strings to hash again.  Convert each to Guix
+nix-base32 with `printf '%s' "$checksum" | xxd -r -p | guix hash -f
+nix-base32 /dev/stdin`, or use Guile's `base16-string->bytevector` plus
+`bytevector->nix-base32-string`; verify at least one result against its fetched
+crate archive.  Never leave a crate source hash blank.
