@@ -43,7 +43,7 @@
     "guixDaemon": true
   },
   "runtimeLimits": {
-    "outputBytes": 8388608,
+    "outputBytes": 67108864,
     "logBytes": 8388608,
     "wallTimeMs": 14400000
   },
