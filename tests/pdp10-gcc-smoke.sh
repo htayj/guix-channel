@@ -45,6 +45,14 @@ license_dir=$pdp10_out/share/doc/pdp10-gcc-3.2-20020416
 test -x "$compiler"
 test -x "$preprocessor"
 test -x "$pdp10_out/lib/gcc-lib/$target/3.2/cc1"
+test ! -e "$pdp10_out/bin/$target-as"
+test ! -e "$pdp10_out/bin/$target-ld"
+if "$findutils_out/bin/find" "$pdp10_out" -type f \
+    \( -name 'libgcc*.a' -o -name 'libgcc*.o' \) -print |
+    "$grep_out/bin/grep" -q .; then
+    echo "pdp10-gcc unexpectedly installed target libgcc material" >&2
+    exit 1
+fi
 for notice in COPYING COPYING.LIB README LICENSE zlib.h LIBGCJ_LICENSE; do
     test -f "$license_dir/$notice"
 done
@@ -59,7 +67,8 @@ done
 temporary=$("$coreutils_out/bin/mktemp" -d "${TMPDIR:-/tmp}/pdp10-gcc-smoke.XXXXXX")
 trap 'rm -rf "$temporary"' EXIT HUP INT TERM
 "$coreutils_out/bin/mkdir" "$temporary/home" "$temporary/config" \
-    "$temporary/data" "$temporary/cache" "$temporary/state" "$temporary/work"
+    "$temporary/data" "$temporary/cache" "$temporary/state" "$temporary/work" \
+    "$temporary/work/host-tools"
 
 # Record store contents before execution.  A package output must never change
 # while a compiler is running, even if its old driver has an unexpected path.
@@ -80,6 +89,7 @@ record_manifest "$pdp10_out" "$manifest_before"
 export PDP10_GCC_SMOKE_COMPILER=$compiler
 export PDP10_GCC_SMOKE_PREPROCESSOR=$preprocessor
 export PDP10_GCC_SMOKE_COREUTILS=$coreutils_out
+export PDP10_GCC_SMOKE_BASH=$bash_out/bin/bash
 export PDP10_GCC_SMOKE_DIFFUTILS=$diffutils_out
 export PDP10_GCC_SMOKE_GREP=$grep_out
 export PDP10_GCC_SMOKE_WORK=$temporary/work
@@ -101,15 +111,34 @@ export LC_ALL=C
         "int add(int a,int b){return a+b;}" >add.c
       "$PDP10_GCC_SMOKE_PREPROCESSOR" -P add.c add.i
       "$PDP10_GCC_SMOKE_GREP/bin/grep" -F "int add" add.i
+
+      # These deliberately successful fake host tools detect an unsafe
+      # fallback: a compiler without the package wrapper would find them in
+      # PATH during -c or linking.
+      "$PDP10_GCC_SMOKE_COREUTILS/bin/printf" '#!%s\n: > "$PDP10_GCC_SMOKE_WORK/as-used"\nexit 0\n' \
+        "$PDP10_GCC_SMOKE_BASH" >host-tools/as
+      "$PDP10_GCC_SMOKE_COREUTILS/bin/printf" '#!%s\n: > "$PDP10_GCC_SMOKE_WORK/ld-used"\nexit 0\n' \
+        "$PDP10_GCC_SMOKE_BASH" >host-tools/ld
+      "$PDP10_GCC_SMOKE_COREUTILS/bin/chmod" 755 host-tools/as host-tools/ld
+
       "$PDP10_GCC_SMOKE_COMPILER" -S -O0 -ffreestanding add.c -o add.s
       test -s add.s
       "$PDP10_GCC_SMOKE_GREP/bin/grep" -E "MOVE|ADD|POPJ" add.s
+      export PATH="$PDP10_GCC_SMOKE_WORK/host-tools"
       if "$PDP10_GCC_SMOKE_COMPILER" -c add.c -o add.o \
           >assemble.stdout 2>assemble.stderr; then
         echo "pdp10-gcc unexpectedly assembled with an unavailable target assembler" >&2
         exit 1
       fi
       test ! -e add.o
+      test ! -e as-used
+      if "$PDP10_GCC_SMOKE_COMPILER" add.c -o add \
+          >link.stdout 2>link.stderr; then
+        echo "pdp10-gcc unexpectedly linked with unavailable target tools" >&2
+        exit 1
+      fi
+      test ! -e add
+      test ! -e ld-used
     '
 
 record_manifest "$pdp10_out" "$manifest_after"

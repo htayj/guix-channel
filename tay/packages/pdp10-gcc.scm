@@ -3,10 +3,11 @@
 (define-module (tay packages pdp10-gcc)
   #:use-module (guix build-system gnu)
   #:use-module ((guix build utils)
-                #:select (install-file invoke mkdir-p))
+                #:select (install-file invoke mkdir-p wrap-program))
   #:use-module (guix gexp)
   #:use-module (guix packages)
   #:use-module ((guix licenses) #:prefix license:)
+  #:use-module (gnu packages bash)
   #:use-module (gnu packages bison)
   #:use-module (gnu packages commencement)
   #:use-module (gnu packages compiler-tools)
@@ -50,7 +51,12 @@
               ;; This selects the bundled pdp10/gas.h output dialect only.
               ;; It neither provides nor searches for a target assembler.
               "--with-gnu-as")
-      #:make-flags #~(list "all-gcc")
+      ;; The top-level all-gcc goal enters gcc/Makefile's cross `all' goal,
+      ;; which also builds libgcc.a and therefore needs a target assembler.
+      ;; start.encap is the compiler-and-cc1 subset needed for -S only.  The
+      ;; old top-level makefile clears MAKEOVERRIDES, so use an overriding
+      ;; --eval assignment that is retained by its recursive make invocation.
+      #:make-flags #~(list "all-gcc" "--eval=override ALL=start.encap")
       #:phases
       #~(modify-phases %standard-phases
           (replace 'configure
@@ -59,7 +65,7 @@
               ;; bootstrap compiler explicitly; its toolchain also provides
               ;; the host binutils used to build the native compiler programs.
               (let ((toolchain
-                     #$(this-package-native-input "gcc-toolchain-4.9")))
+                     #$(this-package-native-input "gcc-toolchain")))
                 (setenv "PATH" (string-append toolchain "/bin:" (getenv "PATH")))
                 (setenv "CC" (string-append toolchain "/bin/gcc"))
                 (setenv "CXX" (string-append toolchain "/bin/g++"))
@@ -78,7 +84,23 @@
             (lambda _
               ;; Do not build target libraries: the upstream tree has no
               ;; target assembler, linker, libc, or runnable target system.
-              (invoke "make" "install-gcc")))
+              ;; Keep the required install-gcc entry point, but omit its
+              ;; target libgcc and generated target headers.
+              (invoke "make" "install-gcc"
+                      "INSTALL_LIBGCC=" "INSTALL_HEADERS=")))
+          (add-after 'install 'restrict-target-tool-lookup
+            (lambda _
+              ;; GCC 3.2 searches PATH for the plain `as' and `ld' names
+              ;; emitted by its specs.  Keep those unsupported operations from
+              ;; discovering host tools, while retaining the private cc1
+              ;; lookup under this output.
+              (wrap-program
+               (string-append #$output "/bin/pdp10-unknown-tops20-gcc")
+               #:sh (string-append
+                     #$(this-package-input "bash-minimal") "/bin/bash")
+               `("PATH" = (,(string-append #$output "/bin")))
+               `("GCC_EXEC_PREFIX" =
+                 (,(string-append #$output "/lib/gcc-lib/"))))))
           (delete 'install-license-files)
           (add-after 'install 'install-license-notices
             (lambda _
@@ -98,6 +120,8 @@
                             "../libjava/LIBGCJ_LICENSE"))))))))
     (native-inputs
      (list gcc-toolchain-4.9 bison flex texinfo perl m4))
+    (inputs
+     (list bash-minimal))
     (supported-systems '("x86_64-linux"))
     (synopsis "GCC C backend that emits PDP-10 TOPS-20 assembly")
     (description
