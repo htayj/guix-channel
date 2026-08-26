@@ -12,9 +12,13 @@
     "interTaskDelayMs": 600000,
     "priorityLabels": [
       "priority:quick",
+      "ready-for-agent",
       "complexity:low",
+      "difficulty:easy",
       "complexity:medium",
-      "complexity:high"
+      "difficulty:moderate",
+      "complexity:high",
+      "difficulty:hard"
     ]
   },
   "timeouts": {
