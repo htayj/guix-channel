@@ -104,6 +104,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `sbcl-rplaca` | rplaca | Lisp-native LLM chat interface |
 | `terminaldrome` | thafaker/TerminalDrome | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | larsbrinkhoff/image-tape | Magnetic-tape image reader with safe output handling |
+| `apout` | DoctorWkt/Apout 2.4.0 | PDP-11 Unix a.out user-mode emulator; supply a user-owned `APOUT_ROOT` |
 | `kitty-bitmap` | Kitty 0.46.2 | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
 | `axmud` | Axmud 2.0.0 | Perl/GTK3 graphical MUD client with GMCP and configurable scripting |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
@@ -208,6 +209,12 @@ firmware, virtiofsd integration, about 25 GB of mutable storage, and at least
 errors to its exit status.  The `check-image-tape` regression uses Guix's
 `tar`, `patch`, `coreutils`, and pure `gcc-toolchain` inputs with a tape shim,
 so it exercises output framing and write failures without tape hardware.
+`apout` runs PDP-11 a.out binaries against host system-call implementations.
+Set `APOUT_ROOT` to a user-owned guest root; it is not a security sandbox,
+because Apout can access host filesystem, process, and socket APIs directly.
+Its optional smoke needs an externally supplied V7 `echo` a.out fixture whose
+provenance and redistribution clearance have been reviewed; it never fetches
+or packages a guest binary or filesystem image.
 `you-can-datamosh-on-linux` invokes FFmpeg with
 argument vectors rather than shell-command strings, so filenames and options
 containing shell metacharacters are not interpreted by a shell; its dedicated
@@ -275,6 +282,7 @@ make check-datamosh-security # package build plus argv-injection smoke test
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
+APOUT_FIXTURE=/path/to/cleared-v7-echo APOUT_FIXTURE_PROVENANCE='recorded source' APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE=yes make check-apout
 make check-durthang  # headless keyring failure plus loopback Telnet/GMCP map smoke
 make check-frostbite # namespaced Xvfb, XDG state, Ruby API, and loopback MUD smoke
 make check-go-mud   # fresh-HOME PTY, UTF-8, and Telnet negotiation smoke

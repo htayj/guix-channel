@@ -34,7 +34,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	hyprland-preview-share-picker sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
 	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a \
-	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq kitty-bitmap opencode \
+	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq apout kitty-bitmap opencode \
 	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin \
 	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy mushkin mushtato ocaml-irc-client \
 	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl \
@@ -51,7 +51,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-flex-launcher check-mmapper check-mudlet check-mudpuppy check-mushkin check-mushtato check-ocaml-irc-client check-potato \
 	check-kitty-bitmap check-lyntin check-pycat check-rune check-tinyfugue lint lint-cve \
-	check-secretpathway check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 \
+	check-secretpathway check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-apout \
 	check-emacs-org-popup-posframe check-emacs-forth-mode build build-sources
 
 check-source-count:
@@ -75,6 +75,11 @@ check-blightmud:
 
 check-image-tape:
 	GUIX="$(GUIX)" tests/image-tape-output-regression.sh
+
+# This proof requires a separately supplied and cleared V7 echo a.out
+# fixture; tests/apout-smoke.sh deliberately fails when it is absent.
+check-apout:
+	GUIX="$(GUIX)" tests/apout-smoke.sh
 
 check-durthang:
 	GUIX="$(GUIX)" tests/durthang-smoke.sh
