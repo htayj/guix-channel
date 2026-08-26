@@ -39,7 +39,8 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy mushkin mushtato ocaml-irc-client \
 	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl \
 	kbredir potato pycat rune secretpathway tinyfugue trebuchet tapeutils heroic-gogdl \
-	vt05 blincolnlights pdp10-its-disassembler itstar pdp11
+	vt05 blincolnlights pdp10-its-disassembler itstar pdp11 \
+	azurra-gtk-theme
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -53,7 +54,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-kitty-bitmap check-lyntin check-pycat check-rune check-tinyfugue lint lint-cve \
 	check-secretpathway check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-apout \
 	check-blincolnlights check-pdp10-its-disassembler \
-	check-itstar check-pdp11 \
+	check-itstar check-pdp11 check-azurra-gtk-theme \
 	check-emacs-org-popup-posframe check-emacs-forth-mode build build-sources
 
 check-source-count:
@@ -169,6 +170,9 @@ check-itstar:
 
 check-pdp11:
 	GUIX="$(GUIX)" tests/pdp11-smoke.sh
+
+check-azurra-gtk-theme:
+	GUIX="$(GUIX)" tests/azurra-gtk-theme-smoke.sh
 
 check-trebuchet:
 	GUIX="$(GUIX)" tests/trebuchet-smoke.sh
