@@ -38,7 +38,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin \
 	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy mushkin mushtato ocaml-irc-client \
 	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl \
-	kbredir potato pycat rune secretpathway tinyfugue trebuchet tapeutils \
+	kbredir potato pycat rune secretpathway tinyfugue trebuchet tapeutils heroic-gogdl \
 	vt05
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
@@ -51,7 +51,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-flex-launcher check-mmapper check-mudlet check-mudpuppy check-mushkin check-mushtato check-ocaml-irc-client check-potato \
 	check-kitty-bitmap check-lyntin check-pycat check-rune check-tinyfugue lint lint-cve \
-	check-secretpathway check-tapeutils check-trebuchet check-vt05 \
+	check-secretpathway check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 \
 	check-emacs-org-popup-posframe check-emacs-forth-mode build build-sources
 
 check-source-count:
@@ -145,6 +145,9 @@ check-tinyfugue:
 check-tapeutils:
 	GUIX="$(GUIX)" tests/tapeutils-smoke.sh
 
+check-heroic-gogdl:
+	GUIX="$(GUIX)" tests/heroic-gogdl-smoke.sh
+
 check-vt05:
 	GUIX="$(GUIX)" tests/vt05-smoke.sh
 
@@ -162,7 +165,7 @@ check: check-source-count check-sentinelone check-datamosh-security \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
 	check-mudpuppy check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
-	check-tinyfugue check-tapeutils check-trebuchet check-vt05 check-emacs-org-popup-posframe \
+	check-tinyfugue check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-emacs-org-popup-posframe \
 	check-emacs-forth-mode
 	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \

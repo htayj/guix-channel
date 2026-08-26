@@ -64,24 +64,27 @@ if command -v unshare >/dev/null 2>&1 \
 fi
 
 run_isolated() {
-    if test -n "$namespace_prefix"; then
-        # shellcheck disable=SC2086
-        $namespace_prefix env -i \
-            HOME="$home" XDG_CONFIG_HOME="$xdg_config" \
-            GOGDL_CONFIG_PATH="$gogdl_config" \
-            GUIX_PYTHONPATH="$site_packages" \
-            PATH="$gogdl_out/bin:$python_out/bin" \
-            LC_ALL=C.UTF-8 PYTHONNOUSERSITE=1 \
-            "$@"
-    else
-        env -i \
-            HOME="$home" XDG_CONFIG_HOME="$xdg_config" \
-            GOGDL_CONFIG_PATH="$gogdl_config" \
-            GUIX_PYTHONPATH="$site_packages" \
-            PATH="$gogdl_out/bin:$python_out/bin" \
-            LC_ALL=C.UTF-8 PYTHONNOUSERSITE=1 \
-            "$@"
-    fi
+    (
+        cd "$work"
+        if test -n "$namespace_prefix"; then
+            # shellcheck disable=SC2086
+            $namespace_prefix env -i \
+                HOME="$home" XDG_CONFIG_HOME="$xdg_config" \
+                GOGDL_CONFIG_PATH="$gogdl_config" \
+                GUIX_PYTHONPATH="$site_packages" \
+                PATH="$gogdl_out/bin:$python_out/bin" \
+                LC_ALL=C.UTF-8 PYTHONNOUSERSITE=1 \
+                "$@"
+        else
+            env -i \
+                HOME="$home" XDG_CONFIG_HOME="$xdg_config" \
+                GOGDL_CONFIG_PATH="$gogdl_config" \
+                GUIX_PYTHONPATH="$site_packages" \
+                PATH="$gogdl_out/bin:$python_out/bin" \
+                LC_ALL=C.UTF-8 PYTHONNOUSERSITE=1 \
+                "$@"
+        fi
+    )
 }
 
 test "$(run_isolated "$gogdl_out/bin/gogdl" --version)" = 1.3.0
