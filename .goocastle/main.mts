@@ -354,6 +354,39 @@ const prepareCommitSigning = async (journal, boundary) => {
   }
   throw new Error("Required commit signing remains unavailable before " + boundary + ". Unlock the signer, then resume the preserved journal.");
 };
+// Agent sandboxes deliberately do not inherit the host's GnuPG home.  A
+// successful host preflight therefore is not evidence that commits made by an
+// agent are signed.  Do the verification at the host boundary, before a phase
+// can be recorded as complete or its branch can be integrated.
+const requireSignedPhaseCommits = async (journal, boundary, startSha, endSha) => {
+  if (signingMode !== "required" || startSha === endSha) return journal;
+  const commits = hostGit(["rev-list", "--reverse", startSha + ".." + endSha], { encoding: "utf8" })
+    .trim().split("\n").filter(Boolean);
+  const unsigned = commits.filter((commit) => {
+    try { hostGit(["verify-commit", commit], { encoding: "utf8" }); return false; }
+    catch { return true; }
+  });
+  if (unsigned.length === 0) return journal;
+  const prior = journal.commitSigning;
+  const blocked = prior?.blockedBoundaries ?? [];
+  journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+    commitSigning: {
+      mode: signingMode,
+      blockedBoundaries: addSigningBoundary(blocked, boundary),
+      ...(prior?.unsignedBoundaries?.length ? { unsignedBoundaries: prior.unsignedBoundaries } : {}),
+    },
+  });
+  throw new Error("Required commit signing rejected " + String(unsigned.length) + " unsigned commit(s) before " + boundary + ". The task branch is preserved; sign or replace those commits, then resume with: " + resumeRecoveryCommand());
+};
+const signRequiredPhaseCommits = (branch, startSha, endSha) => {
+  if (signingMode !== "required" || startSha === endSha) return endSha;
+  const worktree = branchWorktreePath(branch);
+  if (worktree === undefined) throw new Error("Required commit signing cannot locate the task worktree for " + branch + ". The branch is preserved for recovery.");
+  // Sandbox agents cannot safely receive the host GnuPG material.  Replay the
+  // already-reviewed linear phase commits at the trusted host boundary instead.
+  gitAt(worktree, ["rebase", "--exec", "git -c commit.gpgSign=true commit --amend --no-edit", startSha], { stdio: "inherit" });
+  return hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
+};
 const hostGitConfigPath = resolve(hostWorkTree, stripTrailingLineEnding(hostGit(["rev-parse", "--git-path", "config"], {
   encoding: "utf8",
 })));
@@ -1349,9 +1382,12 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         },
         onPhaseComplete: async (phaseResult) => {
           const phaseStartSha = phaseRecord(journal, phaseResult.name)?.startSha;
-          const phaseHead = phaseStartSha === undefined
+          let phaseHead = phaseStartSha === undefined
             ? undefined
             : hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
+          if (dispositionPolicy === undefined && phaseStartSha !== undefined && phaseHead !== undefined) {
+            phaseHead = signRequiredPhaseCommits(branch, phaseStartSha, phaseHead);
+          }
           const commitCount = phaseResult.type === "agent"
             ? phaseResult.result.commits.length
             : undefined;
@@ -1360,6 +1396,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             : Number(hostGit(["rev-list", "--count", phaseStartSha + ".." + phaseHead], { encoding: "utf8" }).trim());
           const configuredPhase = phases.find((phase) => phase.name === phaseResult.name);
           const stoppedEarly = configuredPhase?.type === "agent" && configuredPhase.stopOnNoCommits === true && commitCount === 0;
+          if (dispositionPolicy === undefined && phaseStartSha !== undefined && phaseHead !== undefined) {
+            journal = await requireSignedPhaseCommits(journal, signingBoundary("phase", phaseResult.name), phaseStartSha, phaseHead);
+          }
           journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
             phases: [...journal.phases.filter((item) => item.name !== phaseResult.name), {
               name: phaseResult.name,
