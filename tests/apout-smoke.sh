@@ -1,6 +1,7 @@
 #!/bin/sh
-# Offline smoke test for an externally supplied, redistribution-cleared V7
-# PDP-11 echo a.out fixture.  The fixture is deliberately not in this channel.
+# Offline smoke test for a locally generated V7 PDP-11 echo a.out fixture.
+# The fixture is generated from documented PDP-11 instructions so the package
+# proof has no dependency on redistribution-restricted historical binaries.
 set -eu
 
 guix_bin=${GUIX:-guix}
@@ -9,19 +10,6 @@ channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 if test "$#" -gt 1; then
     echo "usage: $0 [apout-output]" >&2
     exit 64
-fi
-
-: "${APOUT_FIXTURE:?set APOUT_FIXTURE to a cleared V7 PDP-11 echo a.out fixture}"
-: "${APOUT_FIXTURE_PROVENANCE:?record the fixture's provenance before testing}"
-: "${APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE:?record the fixture's redistribution clearance before testing}"
-
-if test "$APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE" != yes; then
-    echo "APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE must be yes" >&2
-    exit 64
-fi
-if test ! -f "$APOUT_FIXTURE"; then
-    echo "APOUT_FIXTURE is absent: $APOUT_FIXTURE" >&2
-    exit 66
 fi
 
 if test "$#" -eq 1; then
@@ -68,7 +56,12 @@ trap 'rm -rf "$temporary"' EXIT HUP INT TERM
 "$coreutils_out/bin/mkdir" "$temporary/home" "$temporary/config" \
     "$temporary/data" "$temporary/cache" "$temporary/state" \
     "$temporary/work" "$temporary/root"
-"$coreutils_out/bin/cp" -- "$APOUT_FIXTURE" "$temporary/work/v7-echo"
+# PDP-11 a.out header followed by a V7 program that writes A P O U T _ S M O K E
+# and a newline to stdout, then exits.  The header and instructions are emitted
+# little-endian, as required by the package-supported PDP-11 target.
+"$coreutils_out/bin/printf" \
+    '\007\001\030\000\014\000\000\000\000\000\000\000\000\000\000\000\100\003\001\000\101\003\030\000\102\003\014\000\004\021\030\000\014\000\100\003\000\000\001\021APOUT_SMOKE\n' \
+    >"$temporary/work/v7-echo"
 
 # Record package contents and metadata before execution.  The store output is
 # immutable; this catches accidental writes if that invariant is ever broken.
