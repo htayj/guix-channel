@@ -893,6 +893,26 @@ const reconcileBaseAdvance = async (journal, issueNumber) => {
     );
   }
   const taskHead = hostGit(["rev-parse", journal.branch], { encoding: "utf8" }).trim();
+  // A task that has not produced commits is exactly its recorded base.  There
+  // is nothing to replay: advance its checked-out worktree directly instead
+  // of creating a rebase worktree that can fail during otherwise-idempotent
+  // finalization.
+  if (taskHead === recordedBase) {
+    const checkedOutWorktree = branchWorktreePath(journal.branch);
+    if (checkedOutWorktree === undefined) hostGit(["branch", "-f", journal.branch, currentBase]);
+    else {
+      const dirty = gitAt(checkedOutWorktree, ["status", "--porcelain=v1", "-z"], { encoding: "utf8" });
+      if (dirty.length > 0) throw new Error("Cannot fast-forward #" + issueNumber + ": its task worktree has uncommitted changes at " + checkedOutWorktree);
+      gitAt(checkedOutWorktree, ["reset", "--keep", currentBase], { stdio: "inherit" });
+    }
+    return await transitionSequentialTaskJournal(gitCommonDir, journal, {
+      reconciliation: {
+        state: "complete", originalBaseSha: journal.baseSha, reconciledBaseSha: currentBase,
+        sourceBaseSha: recordedBase, taskHead, rewrittenHead: currentBase,
+        backupBranch: journal.reconciliation?.state === "started" ? journal.reconciliation.backupBranch : journal.branch + "-before-reconcile-" + taskHead.slice(0, 12),
+      },
+    });
+  }
   if (journal.reconciliation?.state === "started" &&
       journal.reconciliation.reconciledBaseSha === currentBase &&
       taskHead !== journal.reconciliation.taskHead) {
@@ -1349,6 +1369,11 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       ? issueGooflowPhases(materializedGooflow, projectConfig, promptArgs, {
           directory: hostWorkTree,
           agentCommands: codexBinDirectory ? { codex: codexCommand } : {},
+          ...(dispositionPolicy === undefined ? {} : {
+            hostPromptSuffix: "HOST-ENFORCED DISPOSITION HANDOFF: Before completing this phase, write exactly {version: 1, disposition, finding} to " +
+              JSON.stringify(dispositionPolicy.resultPath) + ". The disposition must be one of " +
+              JSON.stringify(dispositionPolicy.allowed.map((option) => option.name)) + ". The finding must be non-empty, at most 10000 characters, and the complete UTF-8 JSON file at most 16384 bytes. Summarize evidence; do not enumerate large dependency lists. Verify its byte length before completing. This host contract overrides any conflicting repository prompt.",
+          }),
         })
       : templatePhases;
     const setup = materializedGooflow
