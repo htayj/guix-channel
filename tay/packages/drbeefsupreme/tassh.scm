@@ -252,7 +252,7 @@
               ;; \`setup daemon\` must invoke the installed wrapper, not the
               ;; cargo-install location assumed by upstream.
               (substitute* "src/setup.rs"
-                (("    home_dir.*")
+                (("    home_dir.*cargo/bin/tassh.*")
                  "    PathBuf::from(std::env::var(\"TASSH_BINARY\").unwrap())"))))
           (delete 'package)
           (add-after 'check-for-pregenerated-files
