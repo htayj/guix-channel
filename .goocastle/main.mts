@@ -1134,10 +1134,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // replay), but it must never trigger branch reconciliation or prevent
     // unrelated eligible work from starting.
     if (issue.state === "CLOSED" && journal.status === "failed") {
-      journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
-        disposition: { ...journal.disposition, comment: "issue-closed" },
-        status: "complete",
-      });
+      journal = await transitionSequentialTaskJournal(
+        gitCommonDir,
+        journal,
+        journal.disposition
+          ? { disposition: { ...journal.disposition, comment: "issue-closed" }, status: "complete" }
+          : { status: "complete" },
+      );
       attemptedIssues.add(issue.number);
       console.log(
         "Skipping closed issue #" + issue.number +
