@@ -36,7 +36,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a \
 	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq apout kitty-bitmap opencode \
 	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin \
-	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy mushkin mushtato ocaml-irc-client \
+	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy notion-river mushkin mushtato ocaml-irc-client \
 	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl \
 	kbredir potato pycat rune secretpathway tinyfugue trebuchet tapeutils heroic-gogdl \
 	vt05 blincolnlights pdp10-its-disassembler itstar pdp11 pdp6 uc-explorer \
@@ -50,7 +50,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 
 .PHONY: check check-source-count check-sentinelone check-datamosh-security \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
-	check-kbredir check-kildclient check-kmuddy check-flex-launcher check-mmapper check-mudlet check-mudpuppy check-mushkin check-mushtato check-ocaml-irc-client check-potato \
+	check-kbredir check-kildclient check-kmuddy check-flex-launcher check-mmapper check-mudlet check-mudpuppy check-notion-river check-mushkin check-mushtato check-ocaml-irc-client check-potato \
 	check-kitty-bitmap check-lyntin check-pycat check-rune check-tinyfugue lint lint-cve \
 	check-secretpathway check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-apout \
 	check-blincolnlights check-pdp10-its-disassembler \
@@ -126,6 +126,9 @@ check-mudlet:
 check-mudpuppy:
 	GUIX="$(GUIX)" tests/mudpuppy-smoke.sh
 
+check-notion-river:
+	GUIX="$(GUIX)" tests/notion-river-smoke.sh
+
 check-mushkin:
 	GUIX="$(GUIX)" tests/mushkin-smoke.sh
 
@@ -197,7 +200,7 @@ check-emacs-forth-mode:
 check: check-source-count check-sentinelone check-datamosh-security \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
-	check-mudpuppy check-mushkin check-mushtato \
+	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
 	check-tinyfugue check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-emacs-org-popup-posframe \
 	check-emacs-forth-mode

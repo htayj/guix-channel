@@ -121,6 +121,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `mmapper` | MMapper 26.06.0 | Qt graphical MUME client, local TLS proxy, and empty-map editor |
 | `mudlet` | Mudlet 4.22.0 | Qt6 graphical MUD client with Lua scripting, mapping, multimedia, MXP, and GMCP |
 | `mudpuppy` | Mudpuppy 20251214 | Rust terminal MUD client with embedded Python scripting and TLS |
+| `notion-river` | Marenz/notion-river 0.6.0-14.ge79dea3 | Static tiling window manager for a separately supplied River 0.4.x+ compositor |
 | `mushkin` | Mushkin 0.5.1 | Qt MUSHclient-compatible MUD client with Lua, TLS, and MSP |
 | `mushtato` | MushTato 1.9.3 | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |
 | `potato` | Potato 2.0.0b19 | Tcl/Tk graphical MUSH client; insecure upstream TLS is deliberately disabled |
@@ -295,6 +296,7 @@ make check-lyntin   # fresh-HOME version and loopback fake-MUD protocol smoke
 make check-mmapper  # fresh-XDG Qt plus namespaced local TLS-proxy smoke
 make check-mudlet   # namespaced Qt6, Lua modules, multimedia, and loopback Telnet smoke
 make check-mudpuppy # fresh-HOME PTY, embedded Python, loopback, and TLS-rejection smoke
+make check-notion-river # private XDG session wrapper, IPC path, notices, and immutable-output smoke
 make check-mushkin  # namespaced Xvfb, Lua version, MSP traversal, and LuaSec TLS smoke
 make check-mushtato # fresh XDG/HOME Xvfb GUI plus loopback Telnet smoke
 make check-potato   # fresh-HOME Xvfb, disabled TLS/update, and loopback smoke
