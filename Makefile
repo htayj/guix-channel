@@ -39,7 +39,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy mushkin mushtato ocaml-irc-client \
 	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl \
 	kbredir potato pycat rune secretpathway tinyfugue trebuchet tapeutils heroic-gogdl \
-	vt05 blincolnlights
+	vt05 blincolnlights pdp10-its-disassembler
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -52,7 +52,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-kbredir check-kildclient check-kmuddy check-flex-launcher check-mmapper check-mudlet check-mudpuppy check-mushkin check-mushtato check-ocaml-irc-client check-potato \
 	check-kitty-bitmap check-lyntin check-pycat check-rune check-tinyfugue lint lint-cve \
 	check-secretpathway check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-apout \
-	check-blincolnlights \
+	check-blincolnlights check-pdp10-its-disassembler \
 	check-emacs-org-popup-posframe check-emacs-forth-mode build build-sources
 
 check-source-count:
@@ -160,6 +160,9 @@ check-vt05:
 check-blincolnlights:
 	GUIX="$(GUIX)" tests/blincolnlights-smoke.sh
 
+check-pdp10-its-disassembler:
+	GUIX="$(GUIX)" tests/pdp10-its-disassembler-smoke.sh
+
 check-trebuchet:
 	GUIX="$(GUIX)" tests/trebuchet-smoke.sh
 
@@ -174,7 +177,7 @@ check: check-source-count check-sentinelone check-datamosh-security \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
 	check-mudpuppy check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
-	check-tinyfugue check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-emacs-org-popup-posframe \
+	check-tinyfugue check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-emacs-org-popup-posframe \
 	check-emacs-forth-mode
 	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \
