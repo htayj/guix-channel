@@ -47,6 +47,8 @@ find_output ()
 bash_out=$(find_output bin/bash bash)
 coreutils_out=$(find_output bin/sha256sum coreutils)
 findutils_out=$(find_output bin/find findutils)
+grep_out=$(find_output bin/grep grep)
+diffutils_out=$(find_output bin/cmp diffutils)
 util_linux_out=$(find_output bin/unshare util-linux)
 
 test -x "$apout_out/bin/apout"
@@ -54,11 +56,11 @@ test -f "$apout_out/share/man/man1/apout.1.zst"
 for document in README CHANGES LIMITATIONS TODO LICENSE COPYRIGHT; do
     test -f "$apout_out/share/doc/apout-0-bd9af21/$document"
 done
-"$coreutils_out/bin/grep" -F "GNU GENERAL PUBLIC LICENSE" \
+"$grep_out/bin/grep" -F "GNU GENERAL PUBLIC LICENSE" \
     "$apout_out/share/doc/apout-0-bd9af21/LICENSE"
-"$coreutils_out/bin/grep" -F "Warren Toomey" \
+"$grep_out/bin/grep" -F "Warren Toomey" \
     "$apout_out/share/doc/apout-0-bd9af21/COPYRIGHT"
-"$coreutils_out/bin/grep" -F "Eric A. Edwards" \
+"$grep_out/bin/grep" -F "Eric A. Edwards" \
     "$apout_out/share/doc/apout-0-bd9af21/COPYRIGHT"
 
 temporary=$("$coreutils_out/bin/mktemp" -d "${TMPDIR:-/tmp}/apout-smoke.XXXXXX")
@@ -72,8 +74,17 @@ trap 'rm -rf "$temporary"' EXIT HUP INT TERM
 # immutable; this catches accidental writes if that invariant is ever broken.
 manifest_before=$temporary/manifest-before
 manifest_after=$temporary/manifest-after
-"$findutils_out/bin/find" "$apout_out" -printf '%P %m %s %T@\n' | \
-    "$coreutils_out/bin/sort" | "$coreutils_out/bin/sha256sum" >"$manifest_before"
+record_manifest ()
+{
+    output=$1
+    manifest=$2
+    "$findutils_out/bin/find" "$output" -printf '%P %m %s %T@\n' | \
+        "$coreutils_out/bin/sort" >"$manifest"
+    "$findutils_out/bin/find" "$output" -type f \
+        -exec "$coreutils_out/bin/sha256sum" {} + | \
+        "$coreutils_out/bin/sort" >>"$manifest"
+}
+record_manifest "$apout_out" "$manifest_before"
 
 # A V7 echo a.out needs no guest executable lookup: it is loaded from the
 # supplied fixture and performs a native write(2).  The expected transcript is
@@ -81,6 +92,8 @@ manifest_after=$temporary/manifest-after
 export APOUT_SMOKE_APOUT=$apout_out/bin/apout
 export APOUT_SMOKE_FIXTURE=v7-echo
 export APOUT_SMOKE_COREUTILS=$coreutils_out
+export APOUT_SMOKE_GREP=$grep_out
+export APOUT_SMOKE_DIFFUTILS=$diffutils_out
 export APOUT_SMOKE_WORK=$temporary/work
 export APOUT_SMOKE_ROOT=$temporary/root
 export HOME=$temporary/home
@@ -97,19 +110,18 @@ export LC_ALL=C
       export APOUT_UNIX_VERSION=V7
       "$APOUT_SMOKE_APOUT" "$APOUT_SMOKE_FIXTURE" APOUT_SMOKE >actual 2>stderr
       "$APOUT_SMOKE_COREUTILS/bin/printf" "APOUT_SMOKE\\n" >expected
-      "$APOUT_SMOKE_COREUTILS/bin/cmp" expected actual
+      "$APOUT_SMOKE_DIFFUTILS/bin/cmp" expected actual
       if "$APOUT_SMOKE_COREUTILS/bin/env" -u APOUT_ROOT \
           "$APOUT_SMOKE_APOUT" "$APOUT_SMOKE_FIXTURE" \
           >no-root.stdout 2>no-root.stderr; then
         echo "apout unexpectedly accepted an unset APOUT_ROOT" >&2
         exit 1
       fi
-      "$APOUT_SMOKE_COREUTILS/bin/grep" -F \
+      "$APOUT_SMOKE_GREP/bin/grep" -F \
         "APOUT_ROOT env variable not set before running apout" no-root.stderr
     '
 
-"$findutils_out/bin/find" "$apout_out" -printf '%P %m %s %T@\n' | \
-    "$coreutils_out/bin/sort" | "$coreutils_out/bin/sha256sum" >"$manifest_after"
-"$coreutils_out/bin/cmp" "$manifest_before" "$manifest_after"
+record_manifest "$apout_out" "$manifest_after"
+"$diffutils_out/bin/cmp" "$manifest_before" "$manifest_after"
 
 printf '%s\n' "apout offline smoke passed: V7 echo, APOUT_ROOT contract, and GPL notices"
