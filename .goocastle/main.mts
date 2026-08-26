@@ -721,9 +721,9 @@ const applyDisposition = async (journal, issue) => {
   const comment = renderGooflowDispositionComment(WORKFLOW_NAME, issue.number, epoch, selected, implementationIssueNumber);
   const commentAlreadyApplied = async () =>
     (await selectedIssue(issue.number)).comments.some((entry) => entry.body === comment);
-  if (selected.comment !== "complete") {
+  if (journal.disposition.comment !== "complete") {
     journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
-      disposition: { ...selected, comment: "started" }, status: "active",
+      disposition: { ...journal.disposition, comment: "started" }, status: "active",
     });
     // The marker is predictable and may appear in unrelated user comments.
     // Only the complete, journaled host receipt proves this boundary ran.
@@ -1255,12 +1255,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     console.log("\n=== Task " + task + "/" + MAX_TASKS + ": #" + issue.number + " " + issue.title + " ===\n");
   }
   const branch = journal.branch;
-  // Resolve the non-delivery policy before reconciliation: it determines
-  // whether a failed sandbox result is a disposable handoff or user work.
-  const materializedGooflow = resolvedGooflow.workflow
-    ? materializeIssueWorkflow(resolvedGooflow.workflow, issue)
-    : undefined;
-  const dispositionPolicy = materializedGooflow?.disposition;
+  let materializedGooflow;
+  let dispositionPolicy;
   let baseHead = journal.reconciliation?.state === "complete"
     ? journal.reconciliation.reconciledBaseSha
     : journal.baseSha;
@@ -1289,6 +1285,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       // issue-close retry for an already-delivered cleanup-only journal.
       continue;
     }
+    // Resolve the non-delivery policy before reconciliation: it determines
+    // whether a failed sandbox result is a disposable handoff or user work.
+    // Delivered cleanup journals intentionally have no routed workflow here.
+    materializedGooflow = resolvedGooflow.workflow
+      ? materializeIssueWorkflow(resolvedGooflow.workflow, issue)
+      : undefined;
+    dispositionPolicy = materializedGooflow?.disposition;
     journal = await reconcileBaseAdvance(journal, issue.number, dispositionPolicy);
     baseHead = journal.reconciliation?.state === "complete"
       ? journal.reconciliation.reconciledBaseSha
