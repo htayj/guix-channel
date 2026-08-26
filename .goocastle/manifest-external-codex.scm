@@ -11,6 +11,7 @@
   (specifications->manifest
    (list "bash"
          "coreutils"
+         "curl"
          "findutils"
          "gawk"
          "glibc-locales"
@@ -18,10 +19,12 @@
          "gnupg"
          "github-cli"
          "grep"
+         "jq"
          "guix"
          "make"
          "node"
          "nss-certs"
          "ripgrep"
-         "sed"))
+         "sed"
+         "tar"))
   (packages->manifest (list goocastle-gitleaks))))
