@@ -9,7 +9,7 @@ guix_bin=${GUIX:-guix}
 base_ref=origin/master
 git rev-parse --verify "$base_ref" >/dev/null 2>&1 || base_ref=master
 base=$(git merge-base HEAD "$base_ref")
-changed_modules=$(git diff --name-only "$base"...HEAD -- tay/packages | sed -n 's|^tay/packages/\([A-Za-z0-9-]*\)\.scm$|\1|p' | sort -u)
+changed_modules=$(git diff --name-only "$base"...HEAD -- tay/packages | sed -n 's|^tay/packages/\(.*\)\.scm$|\1|p' | sort -u)
 test -n "$changed_modules" || {
   echo "safe-package-proof: active change adds no package module under tay/packages" >&2
   exit 1
