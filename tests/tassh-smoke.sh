@@ -1,5 +1,6 @@
 #!/bin/sh
-# Exercise tassh entirely in a fresh user/network namespace and loopback mesh.
+# Exercise tassh entirely in fresh user/network/PID namespaces and a loopback
+# mesh.
 set -eu
 
 guix_bin=${GUIX:-guix}
@@ -49,11 +50,12 @@ test "$(find "$tassh_out/share/doc/tassh/third-party-licenses" -type f | wc -l)"
 "$tassh_out/bin/tassh" setup --help >/dev/null
 "$tassh_out/bin/tassh" setup daemon --help >/dev/null
 
-# A private network namespace permits the local protocol but no external
-# network.  Each daemon has an isolated home/runtime tree; fake tailscale
-# exposes different 127/8 endpoints without a tailnet.
-exec "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
-    --mount --propagation private \
+# Private network and PID namespaces permit the local protocol but no external
+# network or inherited SSH processes.  Each daemon has an isolated
+# home/runtime/XDG tree; fake tailscale exposes different 127/8 endpoints
+# without a tailnet.
+exec "$util_linux_out/bin/unshare" --user --map-root-user --net --pid --fork \
+    --mount --mount-proc --propagation private \
     "$python_out/bin/python3" - "$tassh_out" "$xclip_out/bin/xclip" \
     "$iproute_out/sbin/ip" "$util_linux_out/bin/mount" \
     "$xorg_out/bin/Xvfb" "$weston_out/bin/weston" \
@@ -128,8 +130,14 @@ with tempfile.TemporaryDirectory(prefix="tassh-smoke-") as temporary:
         (fake / command).chmod(0o755)
 
     def environment(home, runtime, address):
+        config, data, cache, state = (home / "config", home / "data",
+                                      home / "cache", home / "state")
+        for directory in (config, data, cache, state):
+            directory.mkdir()
         return {
             "HOME": str(home), "XDG_RUNTIME_DIR": str(runtime),
+            "XDG_CONFIG_HOME": str(config), "XDG_DATA_HOME": str(data),
+            "XDG_CACHE_HOME": str(cache), "XDG_STATE_HOME": str(state),
             "PATH": str(fake), "TASSH_TEST_IP": address,
             "LC_ALL": "C.UTF-8",
         }

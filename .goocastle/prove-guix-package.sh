@@ -22,8 +22,21 @@ for module in $changed_modules; do
     echo "safe-package-proof: tay/packages/$module.scm exports no package" >&2
     exit 1
   }
-  packages="$packages $names"
+  for name in $names; do
+    # Source-preservation helpers are package inputs, not end-user
+    # deliverables.  The consuming package realizes them above and owns the
+    # required reproducibility and runtime smoke proof.
+    case "$name" in
+      *-source) ;;
+      *) packages="$packages $name" ;;
+    esac
+  done
 done
+
+test -n "$packages" || {
+  echo "safe-package-proof: active change adds no deliverable package" >&2
+  exit 1
+}
 
 proof_root=$(mktemp -d -t goocastle-guix-package-proof.XXXXXX)
 trap 'rm -rf "$proof_root"' EXIT HUP INT TERM
