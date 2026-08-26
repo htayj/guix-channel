@@ -40,7 +40,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl \
 	kbredir potato pycat rune secretpathway tinyfugue trebuchet tapeutils heroic-gogdl \
 	vt05 blincolnlights pdp10-its-disassembler itstar pdp11 pdp6 uc-explorer \
-	azurra-gtk-theme
+	azurra-gtk-theme pdp10-xpl-pdp-10
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -54,7 +54,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-kitty-bitmap check-lyntin check-pycat check-rune check-tinyfugue lint lint-cve \
 	check-secretpathway check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-apout \
 	check-blincolnlights check-pdp10-its-disassembler \
-	check-itstar check-pdp11 check-azurra-gtk-theme check-pdp6 \
+	check-itstar check-pdp11 check-azurra-gtk-theme check-pdp6 check-pdp10-xpl-pdp-10 \
 	check-emacs-org-popup-posframe check-emacs-forth-mode build build-sources
 
 check-source-count:
@@ -176,6 +176,10 @@ check-azurra-gtk-theme:
 
 check-pdp6:
 	GUIX="$(GUIX)" tests/pdp6-smoke.sh
+
+check-pdp10-xpl-pdp-10:
+	GUIX="$(GUIX)" tests/pdp10-xpl-pdp-10-smoke.sh \
+		"$$($(GUIX) build -L . --no-grafts pdp10-xpl-pdp-10)"
 
 check-trebuchet:
 	GUIX="$(GUIX)" tests/trebuchet-smoke.sh
