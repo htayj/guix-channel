@@ -1582,7 +1582,15 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     await persistInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs);
     refreshAfterIntegration = !RESUME_ONLY && task < MAX_TASKS;
   } catch (error) {
-    journal = await transitionSequentialTaskJournal(gitCommonDir, journal, { status: "failed" }).catch(() => journal);
+    const failure = error instanceof Error ? error.message : String(error);
+    // Persist a bounded diagnostic before releasing the sandbox.  A completed
+    // agent phase can still fail host-side validation (for example, when a
+    // disposition result is absent); without this the recovery journal is
+    // indistinguishable from an interrupted run.
+    journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+      status: "failed",
+      failure: failure.slice(0, 2048),
+    }).catch(() => journal);
     const recovery = closeResult ?? (sandbox ? await sandbox.close().catch(() => ({})) : {});
     await restoreHostGitConfig().catch((restoreError) => {
       console.error("Could not restore host Git config: " + restoreError);
