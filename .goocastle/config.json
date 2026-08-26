@@ -27,7 +27,7 @@
     "maxDelayMs": 30000,
     "jitterRatio": 0.2
   },
-  "failurePolicy": "stop",
+  "failurePolicy": "continue",
   "logging": {
     "type": "stdout"
   },
