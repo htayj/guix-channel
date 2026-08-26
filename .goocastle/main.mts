@@ -981,6 +981,10 @@ const reconcileBaseAdvance = async (journal, issueNumber) => {
   return journal;
 };
 const deferredJournalIssues = new Set();
+// A terminally blocked journal is intentionally skipped while a different
+// eligible task proceeds.  A failed journal is different: before selecting
+// fresh work, the run must stop and expose its recovery boundary.
+const failedJournalIssues = new Set();
 const incompleteJournal = async () => {
   const candidates = (await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME))
     .filter((journal) => journal.status !== "complete" &&
@@ -1086,6 +1090,20 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     break;
   }
   if (!journal) {
+    // The continue policy deliberately preserves a failed task for explicit recovery,
+    // but it must not let an unattended run quietly consume fresh issues once
+    // every recoverable journal has been deferred in this process.  Stop at
+    // that durable boundary; a new invocation clears the in-memory deferral
+    // set and retries the preserved work before selecting new work.
+    if (failedJournalIssues.size > 0) {
+      const deferred = [...failedJournalIssues].sort((left, right) => left - right);
+      console.error(
+        "Deferred failed or terminal journals remain: " + deferred.map((number) => "#" + number).join(", ") +
+        ". No fresh issue will start in this invocation. Resume with: " + resumeRecoveryCommand(),
+      );
+      process.exitCode = 1;
+      break;
+    }
     // A completed ticket leaves a durable eligibility boundary. Reconcile it
     // before any fresh issue list/view request; an incomplete journal is the
     // same-ticket resume path and must remain immediate.
@@ -1566,6 +1584,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     }
     if (projectConfig.failurePolicy === "continue") {
       deferredJournalIssues.add(issue.number);
+      failedJournalIssues.add(issue.number);
       console.error("Task #" + issue.number + " failed; continuing by policy. Resume with: " + resumeRecoveryCommand());
       continue;
     }
