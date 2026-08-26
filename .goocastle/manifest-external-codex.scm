@@ -18,6 +18,7 @@
          "git"
          "gnupg"
          "github-cli"
+         "gzip"
          "grep"
          "jq"
          "guix"

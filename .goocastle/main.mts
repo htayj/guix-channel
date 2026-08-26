@@ -542,16 +542,23 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
     "--json", "number,title,body,labels",
   ], validateGitHubIssueListPayload)).filter((issue) => issue.labels.some((label) =>
     label.name === "ready-for-agent" || label.name.startsWith("gooflow:")));
-  // A runner may refresh itself through an older runtime whose validated v1
-  // task limits predate priorityLabels.  Preserve its historical numerical
-  // ordering instead of failing during recovery.
+  // Scheduling is deliberately opt-in for v1 projects.  Explicit priority
+  // labels remain first; a repository can then prefer delivery over research
+  // and define its own ascending difficulty vocabulary.
   const priorityLabels = projectConfig.taskLimits.priorityLabels ?? [];
+  const deliveryFirst = projectConfig.taskLimits.deliveryFirst ?? false;
+  const difficultyLabels = projectConfig.taskLimits.difficultyLabels ?? [];
   const priorityOf = (issue) => {
     const index = priorityLabels.findIndex((label) =>
       issue.labels.some((candidate) => candidate.name === label));
     return index === -1 ? priorityLabels.length : index;
   };
-  issues.sort((left, right) => priorityOf(left) - priorityOf(right) || left.number - right.number);
+  const difficultyOf = (issue) => {
+    const index = difficultyLabels.findIndex((label) =>
+      issue.labels.some((candidate) => candidate.name === label));
+    return index === -1 ? difficultyLabels.length : index;
+  };
+  const candidates = [];
   for (const issue of issues) {
     if (excludedIssues.has(issue.number)) continue;
     if (hasTerminalBlockedLabel(issue)) continue;
@@ -565,6 +572,15 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
       reportInvalidReadyIssue(issue, error);
       continue;
     }
+    candidates.push({ issue, resolved, explanation });
+  }
+  candidates.sort((left, right) =>
+    priorityOf(left.issue) - priorityOf(right.issue) ||
+    (deliveryFirst ? Number(Boolean(left.resolved.workflow?.disposition)) - Number(Boolean(right.resolved.workflow?.disposition)) : 0) ||
+    difficultyOf(left.issue) - difficultyOf(right.issue) ||
+    left.issue.number - right.issue.number);
+  for (const candidate of candidates) {
+    const { issue } = candidate;
     const section = (issue.body ?? "").match(/## Blocked by\s*([\s\S]*?)(?=\n##|$)/i)?.[1] ?? "";
     const blockers = [...section.matchAll(/#(\d+)/g)].map((match) => parseGitHubIssueReference(match[1], "Blocked by issue reference"));
     let unblocked = true;
@@ -579,13 +595,22 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
       const resolved = await resolveForIssue(selected);
       const selectorLabels = resolved.workflow?.selectorLabels ?? ["ready-for-agent"];
       if (!selectorLabels.every((label) => selected.labels.some((entry) => entry.name === label))) continue;
+      let explanation;
       try {
         explanation = validateIssueForWorkflow(selected, resolved.workflow);
       } catch (error) {
         reportInvalidReadyIssue(selected, error);
         continue;
       }
-      return { issue: selected, explanation };
+      const priority = priorityOf(selected);
+      const difficulty = difficultyOf(selected);
+      const delivery = !resolved.workflow?.disposition;
+      const rationale = "priority=" + (priority === priorityLabels.length ? "none" : JSON.stringify(priorityLabels[priority])) +
+        "; delivery=" + (delivery ? "yes" : "research/disposition") +
+        "; difficulty=" + (difficulty === difficultyLabels.length ? "none" : JSON.stringify(difficultyLabels[difficulty])) +
+        "; tie-breaker=#" + selected.number;
+      console.log("Scheduler selected #" + selected.number + ": " + rationale);
+      return { issue: selected, explanation, rationale };
     }
   }
   return undefined;
@@ -1052,6 +1077,19 @@ const reportRecovery = (issue, branch, integration, recovery) => {
   }
 };
 const resumeRecoveryCommand = () => shellDisplayCommand("goocastle", ["resume", hostWorkTree]);
+const boundedFailureKind = (error) => {
+  const messages = [];
+  let current = error;
+  while (current instanceof Error && messages.length < 4) {
+    messages.push(current.message.toLowerCase());
+    current = current.cause;
+  }
+  const reason = messages.join(" ");
+  return reason.includes("timeout") ? "timeout"
+    : reason.includes("resource-limit") || reason.includes("resource limit") ? "resource-limit"
+      : reason.includes("cancellation") || reason.includes("aborted") ? "cancelled"
+        : "error";
+};
 const reportTransientDeliveryPause = (journal) => {
   console.error(
     "Delivery paused after bounded transient Git transport retries. " +
@@ -1166,13 +1204,24 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // replay), but it must never trigger branch reconciliation or prevent
     // unrelated eligible work from starting.
     if (issue.state === "CLOSED" && journal.status === "failed") {
-      journal = await transitionSequentialTaskJournal(
-        gitCommonDir,
-        journal,
-        journal.disposition
-          ? { disposition: { ...journal.disposition, comment: "issue-closed" }, status: "complete" }
-          : { status: "complete" },
-      );
+      if (journal.merge === "complete" && journal.push === "complete" && journal.remoteVerification === "complete") {
+        // The close request may have reached GitHub before its transport
+        // failed.  A live CLOSED state is the durable receipt for that host
+        // boundary, so finalize it before performing ordinary cleanup.
+        journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+          issueClose: "complete",
+          status: "active",
+        });
+        journal = await reconcileDeliveredCleanup(journal, issue.number);
+      } else {
+        journal = await transitionSequentialTaskJournal(
+          gitCommonDir,
+          journal,
+          journal.disposition
+            ? { disposition: { ...journal.disposition, comment: "issue-closed" }, status: "complete" }
+            : { status: "complete" },
+        );
+      }
       attemptedIssues.add(issue.number);
       console.log(
         "Skipping closed issue #" + issue.number +
@@ -1252,7 +1301,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       branch,
       specification,
     });
-    console.log("\n=== Task " + task + "/" + MAX_TASKS + ": #" + issue.number + " " + issue.title + " ===\n");
+    console.log("\n=== Task " + task + "/" + MAX_TASKS + ": #" + issue.number + " " + issue.title + " ===\nScheduler rationale: " + selected.rationale + "\n");
   }
   const branch = journal.branch;
   let materializedGooflow;
@@ -1494,14 +1543,20 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           }
         },
         onPhaseFailure: async (failure) => {
+          // Do not retain exception text here: command stderr and provider
+          // errors can contain credentials.  This deliberately compact receipt
+          // still tells an unattended operator whether a bounded gate elapsed.
+          const kind = boundedFailureKind(failure.error);
+          const recovery = "Inspect the preserved branch, correct the phase, then resume with: " + resumeRecoveryCommand();
           journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
             phases: [...journal.phases.filter((item) => item.name !== failure.phase.name), {
               name: failure.phase.name,
               state: "failed",
               ...(phaseRecord(journal, failure.phase.name)?.startSha === undefined ? {} : { startSha: phaseRecord(journal, failure.phase.name).startSha }),
+              failureReceipt: { kind, recovery },
             }],
           });
-          console.warn("Phase " + failure.phase.name + " failed but continuing by Gooflow policy.");
+          console.warn("Phase " + failure.phase.name + " failed (" + kind + "); " + recovery);
         },
       }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
       if (dispositionPolicy !== undefined && journal.disposition === undefined) {
@@ -1624,14 +1679,26 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     await persistInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs);
     refreshAfterIntegration = !RESUME_ONLY && task < MAX_TASKS;
   } catch (error) {
-    const failure = error instanceof Error ? error.message : String(error);
+    const kind = boundedFailureKind(error);
+    const recoveryCommand = resumeRecoveryCommand();
+    const failedPhase = error !== null && typeof error === "object" && error.name === "WorkflowPhaseError" && error.phase !== null && typeof error.phase === "object"
+      ? error.phase
+      : undefined;
     // Persist a bounded diagnostic before releasing the sandbox.  A completed
     // agent phase can still fail host-side validation (for example, when a
     // disposition result is absent); without this the recovery journal is
     // indistinguishable from an interrupted run.
     journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
       status: "failed",
-      failure: failure.slice(0, 2048),
+      failure: "Goocastle task failed (" + kind + "); inspect the preserved branch and resume with: " + recoveryCommand,
+      ...(failedPhase === undefined ? {} : {
+        phases: [...journal.phases.filter((item) => item.name !== failedPhase.name), {
+          name: failedPhase.name,
+          state: "failed",
+          ...(phaseRecord(journal, failedPhase.name)?.startSha === undefined ? {} : { startSha: phaseRecord(journal, failedPhase.name).startSha }),
+          failureReceipt: { kind, recovery: "Inspect the preserved branch, correct the phase, then resume with: " + recoveryCommand },
+        }],
+      }),
     }).catch(() => journal);
     const recovery = closeResult ?? (sandbox ? await sandbox.close().catch(() => ({})) : {});
     await restoreHostGitConfig().catch((restoreError) => {
