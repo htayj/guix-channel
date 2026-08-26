@@ -31,7 +31,7 @@ find_output ()
 }
 
 bash_out=$(find_output bin/bash bash)
-coreutils_out=$(find_output bin/coreutils coreutils)
+coreutils_out=$(find_output bin/mktemp coreutils)
 diffutils_out=$(find_output bin/cmp diffutils)
 findutils_out=$(find_output bin/find findutils)
 grep_out=$(find_output bin/grep grep)
@@ -115,15 +115,17 @@ export LC_ALL=C
       # These deliberately successful fake host tools detect an unsafe
       # fallback: a compiler without the package wrapper would find them in
       # PATH during -c or linking.
-      "$PDP10_GCC_SMOKE_COREUTILS/bin/printf" '#!%s\n: > "$PDP10_GCC_SMOKE_WORK/as-used"\nexit 0\n' \
-        "$PDP10_GCC_SMOKE_BASH" >host-tools/as
-      "$PDP10_GCC_SMOKE_COREUTILS/bin/printf" '#!%s\n: > "$PDP10_GCC_SMOKE_WORK/ld-used"\nexit 0\n' \
-        "$PDP10_GCC_SMOKE_BASH" >host-tools/ld
+      "$PDP10_GCC_SMOKE_COREUTILS/bin/printf" "%s\n" \
+        "#!$PDP10_GCC_SMOKE_BASH" \
+        ": > \"$PDP10_GCC_SMOKE_WORK/as-used\"" "exit 0" >host-tools/as
+      "$PDP10_GCC_SMOKE_COREUTILS/bin/printf" "%s\n" \
+        "#!$PDP10_GCC_SMOKE_BASH" \
+        ": > \"$PDP10_GCC_SMOKE_WORK/ld-used\"" "exit 0" >host-tools/ld
       "$PDP10_GCC_SMOKE_COREUTILS/bin/chmod" 755 host-tools/as host-tools/ld
 
       "$PDP10_GCC_SMOKE_COMPILER" -S -O0 -ffreestanding add.c -o add.s
       test -s add.s
-      "$PDP10_GCC_SMOKE_GREP/bin/grep" -E "MOVE|ADD|POPJ" add.s
+      "$PDP10_GCC_SMOKE_GREP/bin/grep" -Ei "MOVE|ADD|POPJ" add.s
       export PATH="$PDP10_GCC_SMOKE_WORK/host-tools"
       if "$PDP10_GCC_SMOKE_COMPILER" -c add.c -o add.o \
           >assemble.stdout 2>assemble.stderr; then

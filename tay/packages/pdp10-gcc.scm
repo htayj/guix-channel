@@ -45,12 +45,13 @@
               "--disable-multilib"
               "--disable-shared"
               "--disable-threads"
-              "--disable-libstdc++-v3"
               "--disable-libgcj"
               "--disable-checking"
-              ;; This selects the bundled pdp10/gas.h output dialect only.
-              ;; It neither provides nor searches for a target assembler.
-              "--with-gnu-as")
+              ;; The preserved GNU-as branch omits backend helpers required
+              ;; by this GCC revision.  Its self-contained TOPS-20 MACRO
+              ;; dialect supplies them, but this package still installs no
+              ;; target assembler and never permits host-tool fallback.
+              "--with-as=macro")
       ;; The top-level all-gcc goal enters gcc/Makefile's cross `all' goal,
       ;; which also builds libgcc.a and therefore needs a target assembler.
       ;; start.encap is the compiler-and-cc1 subset needed for -S only.  The
@@ -59,22 +60,36 @@
       #:make-flags #~(list "all-gcc" "--eval=override ALL=start.encap")
       #:phases
       #~(modify-phases %standard-phases
+          (add-before 'configure 'fix-obstack-pointer-increments
+            (lambda _
+              ;; GCC 3.2 casts next_free before applying ++.  Current C
+              ;; rejects incrementing that cast result; advance next_free
+              ;; explicitly after storing the pointer instead.
+              (substitute* "include/obstack.h"
+                (("\\*\\(\\(void \\*\\*\\)__o->next_free\\)\\+\\+ = \\(\\(void \\*\\)datum\\);")
+                 "(*((void **) __o->next_free) = ((void *) datum), __o->next_free += sizeof (void *));"))))
           (replace 'configure
             (lambda* (#:key configure-flags #:allow-other-keys)
-              ;; GCC requires a separate build directory.  Use the older
-              ;; bootstrap compiler explicitly; its toolchain also provides
-              ;; the host binutils used to build the native compiler programs.
+              ;; GCC requires a separate build directory.  Use Guix's
+              ;; maintained host toolchain, which also provides the host
+              ;; binutils needed to build the native compiler programs.
               (let ((toolchain
                      #$(this-package-native-input "gcc-toolchain")))
                 (setenv "PATH" (string-append toolchain "/bin:" (getenv "PATH")))
                 (setenv "CC" (string-append toolchain "/bin/gcc"))
                 (setenv "CXX" (string-append toolchain "/bin/g++"))
-                ;; Do not mix the default build-system GCC's search paths
-                ;; with the selected GCC 4.9 bootstrap toolchain.
-                (for-each unsetenv
-                          '("CPATH" "C_INCLUDE_PATH" "CPLUS_INCLUDE_PATH"
-                            "OBJC_INCLUDE_PATH" "OBJCPLUS_INCLUDE_PATH"
-                            "LIBRARY_PATH"))
+                ;; GCC 3.2's configure probes use K&R-era implicit return
+                ;; types.  GCC 14 diagnoses those as errors in its default
+                ;; mode; GNU89 is the source language assumed by this tree.
+                (setenv "CFLAGS" "-std=gnu89")
+                ;; GCC 3.2's top-level configure hard-codes /bin/sh when it
+                ;; validates config.sub.  The isolated Guix build has no
+                ;; such host path, so provide its shell explicitly.
+                (setenv "CONFIG_SHELL"
+                        (string-append
+                         #$(this-package-input "bash-minimal") "/bin/sh"))
+                ;; Keep Guix's inherited header search paths: glibc's public
+                ;; headers intentionally include the matching Linux headers.
                 (mkdir-p "build")
                 (chdir "build")
                 (apply invoke "../configure"
@@ -82,12 +97,23 @@
                        configure-flags))))
           (replace 'install
             (lambda _
-              ;; Do not build target libraries: the upstream tree has no
-              ;; target assembler, linker, libc, or runnable target system.
-              ;; Keep the required install-gcc entry point, but omit its
-              ;; target libgcc and generated target headers.
-              (invoke "make" "install-gcc"
-                      "INSTALL_LIBGCC=" "INSTALL_HEADERS=")))
+              ;; The legacy install-gcc target also runs fixincludes, which
+              ;; is unrelated to an assembly-only cross compiler and cannot
+              ;; process current system headers.  Install just the already
+              ;; built driver, preprocessor, cc1 and specs in GCC's native
+              ;; lookup layout; no target headers, runtime or tools exist.
+              (let* ((target "pdp10-unknown-tops20")
+                     (bin (string-append #$output "/bin"))
+                     (lib (string-append #$output "/lib/gcc-lib/"
+                                         target "/3.2")))
+                (mkdir-p bin)
+                (mkdir-p lib)
+                (invoke "cp" "-p" "gcc/xgcc"
+                        (string-append bin "/" target "-gcc"))
+                (invoke "cp" "-p" "gcc/cpp"
+                        (string-append bin "/" target "-cpp"))
+                (for-each (lambda (file) (install-file file lib))
+                          '("gcc/cc1" "gcc/specs")))))
           (add-after 'install 'restrict-target-tool-lookup
             (lambda _
               ;; GCC 3.2 searches PATH for the plain `as' and `ld' names
@@ -119,7 +145,7 @@
                             "../zlib/zlib.h"
                             "../libjava/LIBGCJ_LICENSE"))))))))
     (native-inputs
-     (list gcc-toolchain-4.9 bison flex texinfo perl m4))
+     (list gcc-toolchain bison flex texinfo perl m4))
     (inputs
      (list bash-minimal))
     (supported-systems '("x86_64-linux"))
