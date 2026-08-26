@@ -33,7 +33,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	computer-builder rust-computus custom-nix-pkgs databases-team75 dorxng-mcp \
 	hyprland-preview-share-picker sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
-	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a \
+	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a emacs-aidermacs \
 	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq apout kitty-bitmap opencode \
 	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin \
 	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy notion-river mushkin mushtato ocaml-irc-client \
@@ -55,7 +55,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-secretpathway check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-apout \
 	check-blincolnlights check-pdp10-its-disassembler \
 	check-itstar check-pdp11 check-azurra-gtk-theme check-pdp6 check-pdp10-xpl-pdp-10 check-faugus-launcher \
-	check-emacs-org-popup-posframe check-emacs-forth-mode build build-sources
+	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs build build-sources
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -197,13 +197,16 @@ check-emacs-org-popup-posframe:
 check-emacs-forth-mode:
 	GUIX="$(GUIX)" tests/emacs-forth-mode-smoke.sh
 
+check-emacs-aidermacs:
+	GUIX="$(GUIX)" tests/emacs-aidermacs-smoke.sh
+
 check: check-source-count check-sentinelone check-datamosh-security \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
 	check-tinyfugue check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-emacs-org-popup-posframe \
-	check-emacs-forth-mode
+	check-emacs-forth-mode check-emacs-aidermacs
 	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
