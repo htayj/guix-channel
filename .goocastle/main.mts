@@ -1255,6 +1255,12 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     console.log("\n=== Task " + task + "/" + MAX_TASKS + ": #" + issue.number + " " + issue.title + " ===\n");
   }
   const branch = journal.branch;
+  // Resolve the non-delivery policy before reconciliation: it determines
+  // whether a failed sandbox result is a disposable handoff or user work.
+  const materializedGooflow = resolvedGooflow.workflow
+    ? materializeIssueWorkflow(resolvedGooflow.workflow, issue)
+    : undefined;
+  const dispositionPolicy = materializedGooflow?.disposition;
   let baseHead = journal.reconciliation?.state === "complete"
     ? journal.reconciliation.reconciledBaseSha
     : journal.baseSha;
@@ -1333,10 +1339,6 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // Specification, dependency, and exact repository-local Gooflow routing
     // have all passed before this journal or sandbox can create task state.
     const selectedGooflow = resolvedGooflow.workflow?.name ?? "template";
-    const materializedGooflow = resolvedGooflow.workflow
-      ? materializeIssueWorkflow(resolvedGooflow.workflow, issue)
-      : undefined;
-    const dispositionPolicy = materializedGooflow?.disposition;
     const selectedAgents = materializedGooflow
       ? agentProvenance(materializedGooflow)
       : templateAgentProvenance(templatePhases);
