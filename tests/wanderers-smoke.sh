@@ -125,8 +125,12 @@ assert (out / "share" / "wanderers" / "data" / "dg" / "cave1.au").is_file()
 assert "GNU GENERAL PUBLIC LICENSE" in (out / "share" / "doc" / "wanderers" / "COPYING").read_text()
 readme = (out / "share" / "doc" / "wanderers" / "README.markdown").read_text()
 assert "GPL3 license" in readme and "BSD 2-clause license" in readme
-assert "Redistribution and use in source and binary forms" in (out / "share" / "doc" / "wanderers" / "lib" / "glcaml_stub.c").read_text()
-assert "GNU Library General Public License version 2" in (out / "share" / "doc" / "wanderers" / "lib" / "sdl_stub.c").read_text()
+library = out / "share" / "doc" / "wanderers" / "lib"
+for name in ("glcaml.ml", "glcaml.mli", "glcaml_stub.c", "win.ml", "win.mli"):
+    assert "Redistribution and use in source and binary forms" in (library / name).read_text()
+for name in ("sdl.ml", "sdl.mli", "sdl_stub.c"):
+    assert "GNU Library General Public License version 2" in (library / name).read_text()
+assert "permission is granted to anyone to use this software" in (library / "sdl.mli").read_text().lower()
 assert (out / "share" / "doc" / "wanderers" / "OCamlMakefile").is_file()
 
 # The namespace must contain only loopback, and Xvfb is explicitly forbidden
