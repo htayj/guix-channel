@@ -40,7 +40,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl \
 	kbredir potato pycat rune secretpathway tinyfugue trebuchet tapeutils heroic-gogdl \
 	vt05 weidu blincolnlights pdp10-its-disassembler itstar pdp11 pdp6 uc-explorer \
-	azurra-gtk-theme pdp10-xpl-pdp-10 faugus-launcher react-blessed
+	azurra-gtk-theme pdp10-xpl-pdp-10 faugus-launcher react-blessed wanderers
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -56,6 +56,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-blincolnlights check-pdp10-its-disassembler \
 	check-itstar check-pdp11 check-azurra-gtk-theme check-pdp6 check-pdp10-xpl-pdp-10 check-faugus-launcher \
 	check-react-blessed \
+	check-wanderers \
 	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs build build-sources
 
 check-source-count:
@@ -195,6 +196,9 @@ check-faugus-launcher:
 check-react-blessed:
 	GUIX="$(GUIX)" tests/react-blessed-smoke.sh
 
+check-wanderers:
+	GUIX="$(GUIX)" tests/wanderers-smoke.sh
+
 check-trebuchet:
 	GUIX="$(GUIX)" tests/trebuchet-smoke.sh
 
@@ -212,7 +216,7 @@ check: check-source-count check-sentinelone check-datamosh-security \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
-	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-emacs-org-popup-posframe \
+	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-wanderers check-emacs-org-popup-posframe \
 	check-emacs-forth-mode check-emacs-aidermacs
 	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \
