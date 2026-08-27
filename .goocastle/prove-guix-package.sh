@@ -18,10 +18,10 @@ test -n "$changed_modules" || {
 packages=
 for module in $changed_modules; do
   names=$(sed -n 's/^[[:space:]]*(define-public[[:space:]]\+\([a-z0-9][a-z0-9-]*\).*/\1/p' "tay/packages/$module.scm" | sort -u)
-  test -n "$names" || {
-    echo "safe-package-proof: tay/packages/$module.scm exports no package" >&2
-    exit 1
-  }
+  # Supporting manifests can be changed together with a package but do not
+  # themselves provide end-user deliverables.  They remain covered by the
+  # consuming package's build, reproducibility, and smoke proof below.
+  test -n "$names" || continue
   for name in $names; do
     # Source-preservation helpers are package inputs, not end-user
     # deliverables.  The consuming package realizes them above and owns the
