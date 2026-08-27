@@ -1041,10 +1041,12 @@ const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => 
   return journal;
 };
 const deferredJournalIssues = new Set();
+const terminallyBlockedJournalIssues = new Set();
 // A terminally blocked journal is intentionally skipped while a different
 // eligible task proceeds.  A failed journal is different: before selecting
 // fresh work, the run must stop and expose its recovery boundary.
-const failedJournalIssues = new Set();
+const retryableFailedPhaseIssues = new Set();
+const manuallyRecoverableJournalIssues = new Set();
 const incompleteJournal = async () => {
   const candidates = (await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME))
     .filter((journal) => journal.status !== "complete" &&
@@ -1155,26 +1157,36 @@ const reexecuteDogfoodRunner = (nextTask, attemptedIssues) => {
 const attemptedIssues = new Set(reexecutionState.attemptedIssues);
 for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
   let journal = await incompleteJournal();
-  if (!journal && RESUME_ONLY) {
-    // Resume-only mode is strictly recovery-only. It must not consume the
-    // pacing boundary left by an earlier delivery when there is no journal to
-    // resume, and it must not wait merely to report that recovery is done.
-    console.log("No incomplete " + WORKFLOW_NAME + " journals remain.");
-    break;
-  }
   if (!journal) {
-    // The continue policy deliberately preserves a failed task for explicit recovery,
-    // but it must not let an unattended run quietly consume fresh issues once
-    // every recoverable journal has been deferred in this process.  Stop at
-    // that durable boundary; a new invocation clears the in-memory deferral
-    // set and retries the preserved work before selecting new work.
-    if (failedJournalIssues.size > 0) {
-      const deferred = [...failedJournalIssues].sort((left, right) => left - right);
+    // A failed phase deliberately remains retryable, even when this invocation
+    // is resume-only. Check this boundary before the no-journal message so a
+    // second failed attempt cannot be reported as successful recovery.
+    if (retryableFailedPhaseIssues.size > 0 || manuallyRecoverableJournalIssues.size > 0) {
+      const retryable = [...retryableFailedPhaseIssues].sort((left, right) => left - right);
+      const manual = [...manuallyRecoverableJournalIssues].sort((left, right) => left - right);
+      const blocked = [...terminallyBlockedJournalIssues].sort((left, right) => left - right);
       console.error(
-        "Deferred failed or terminal journals remain: " + deferred.map((number) => "#" + number).join(", ") +
-        ". No fresh issue will start in this invocation. Resume with: " + resumeRecoveryCommand(),
+        (retryable.length === 0 ? "" : "Retryable failed phase journals remain: " + retryable.map((number) => "#" + number).join(", ") + ". ") +
+        (manual.length === 0 ? "" : "Manually recoverable journals remain: " + manual.map((number) => "#" + number).join(", ") + ". ") +
+        (blocked.length === 0 ? "" : "Terminally blocked journals were skipped and preserved: " + blocked.map((number) => "#" + number).join(", ") + ". ") +
+        "No fresh issue will start in this invocation. Resume with: " + resumeRecoveryCommand(),
       );
       process.exitCode = 1;
+      break;
+    }
+    if (RESUME_ONLY) {
+      // Resume-only mode is strictly recovery-only. It must not consume the
+      // pacing boundary left by an earlier delivery when there is no journal to
+      // resume, and it must not wait merely to report that recovery is done.
+      if (terminallyBlockedJournalIssues.size > 0) {
+        const blocked = [...terminallyBlockedJournalIssues].sort((left, right) => left - right);
+        console.log(
+          "No retryable " + WORKFLOW_NAME + " journals remain. Terminally blocked journals were skipped and preserved: " +
+            blocked.map((number) => "#" + number).join(", ") + ".",
+        );
+      } else {
+        console.log("No incomplete " + WORKFLOW_NAME + " journals remain.");
+      }
       break;
     }
     // A completed ticket leaves a durable eligibility boundary. Reconcile it
@@ -1238,6 +1250,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // live issue before any branch, journal, or sandbox recovery action.
     if (issue.state === "OPEN" && hasTerminalBlockedLabel(issue)) {
       deferredJournalIssues.add(issue.number);
+      terminallyBlockedJournalIssues.add(issue.number);
       attemptedIssues.add(issue.number);
       console.log(
         "Skipping open terminally blocked issue #" + issue.number +
@@ -1277,6 +1290,20 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     specification = specificationProvenance(explanation, decision);
     attemptedIssues.add(issue.number);
     console.log("\n=== Resuming #" + issue.number + " " + issue.title + " from journal ===\n");
+    const failedPhaseNames = journal.phases
+      .filter((phase) => phase.state === "failed")
+      .map((phase) => phase.name);
+    if (failedPhaseNames.length > 0) {
+      console.log(
+        "Retrying failed sequential phase(s) " + failedPhaseNames.map((name) => JSON.stringify(name)).join(", ") +
+          " for #" + issue.number + "; completed phase receipts and issue identity are preserved.",
+      );
+    } else if (journal.status === "failed") {
+      console.log(
+        "Resuming manually recoverable journal state for #" + issue.number +
+          "; delivery and recovery boundaries are preserved.",
+      );
+    }
     }
   } else {
     const selected = await nextActionableIssue(attemptedIssues);
@@ -1727,8 +1754,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     }
     if (projectConfig.failurePolicy === "continue") {
       deferredJournalIssues.add(issue.number);
-      failedJournalIssues.add(issue.number);
-      console.error("Task #" + issue.number + " failed; continuing by policy. Resume with: " + resumeRecoveryCommand());
+      if (journal.phases.some((phase) => phase.state === "failed")) {
+        retryableFailedPhaseIssues.add(issue.number);
+        console.error("Task #" + issue.number + " failed in a retryable phase; continuing by policy. Resume with: " + resumeRecoveryCommand());
+      } else {
+        manuallyRecoverableJournalIssues.add(issue.number);
+        console.error("Task #" + issue.number + " requires manual recovery; continuing by policy. Resume with: " + resumeRecoveryCommand());
+      }
       continue;
     }
     throw error;
