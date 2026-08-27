@@ -88,11 +88,12 @@
           ;; documented integration and must never be promoted by default.
           (replace 'patch-dependencies (lambda _ #t))
           (delete 'delete-lockfiles)
-          (add-after 'materialize-locked-node-modules 'remove-optional-devtools-peer
+          (add-after 'materialize-locked-node-modules 'remove-build-dependencies
             (lambda _
               (modify-json
                (delete-fields
-                '("peerDependencies.react-devtools-core"
+                '("devDependencies"
+                  "peerDependencies.react-devtools-core"
                   "peerDependenciesMeta.react-devtools-core")
                 #:strict? #f))))
           (replace 'configure (lambda _ #t))
@@ -101,11 +102,15 @@
               (invoke #$(file-append node-lts "/bin/node")
                       "node_modules/rollup/dist/bin/rollup" "-c")))
           (replace 'check
-            (lambda* (#:key tests? #:allow-other-keys)
+            (lambda* (#:key inputs tests? #:allow-other-keys)
               (when tests?
-                (invoke #$(file-append node-lts "/bin/node")
-                        "node_modules/mocha/bin/mocha" "-R" "spec"
-                        "--require" "@babel/register" "./test/endpoint.js"))))
+                ;; The materialized tree has no npm-generated .bin links;
+                ;; expose Mocha directly while running the upstream script.
+                (setenv "PATH"
+                        (string-append (getcwd) "/node_modules/mocha/bin:"
+                                       (getenv "PATH")))
+                (invoke (string-append (assoc-ref inputs "node") "/bin/npm")
+                        "--offline" "test"))))
           (replace 'install
             (lambda _
               (let ((module (string-append #$output "/lib/node_modules/react-blessed"))

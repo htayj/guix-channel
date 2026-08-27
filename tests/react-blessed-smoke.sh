@@ -18,11 +18,14 @@ test -s "$out/share/doc/react-blessed/README.md"
 grep -q 'Permission is hereby granted' "$out/share/doc/react-blessed/LICENSE.txt"
 grep -q 'MIT' "$module/package.json"
 grep -q 'SIL Open Font License' "$module/node_modules/blessed/usr/fonts/LICENSE"
-! grep -q 'react-devtools-core' "$module/package.json"
 test ! -e "$module/node_modules/react-devtools-core"
 test -d "$module/node_modules/react-reconciler"
 test -d "$module/node_modules/react"
 test -d "$module/node_modules/blessed"
+if grep -q 'react-devtools-core' "$module/package.json"; then
+  echo 'react-blessed smoke: optional DevTools dependency leaked into package metadata' >&2
+  exit 1
+fi
 
 before=$($guix_bin hash -S nar "$out")
 scratch=$(mktemp -d)
@@ -48,10 +51,18 @@ EOF
 HOME="$scratch/home" XDG_CONFIG_HOME="$scratch/config" \
 XDG_CACHE_HOME="$scratch/cache" XDG_STATE_HOME="$scratch/state" \
 TERM=xterm-256color NODE_PATH="$out/lib/node_modules:$module/node_modules" \
-  "$util_linux/bin/script" -q -e -c "${NODE:-$node_out/bin/node} '$scratch/smoke.js'" /dev/null >"$scratch/pty.out" 2>&1
+  "$util_linux/bin/script" -q -e -c \
+  "stty rows 24 cols 80; exec ${NODE:-$node_out/bin/node} '$scratch/smoke.js'" \
+  /dev/null >"$scratch/pty.out" 2>&1
 
-# Blessed's output is ANSI-heavy; the marker itself must reach the PTY.
-tr -d '\r' <"$scratch/pty.out" | grep -q 'react-blessed-guix-smoke'
+# Blessed's output is ANSI-heavy, and the 20-column box wraps the marker.
+# Strip the terminal controls and line breaks before checking visible output.
+escape=$(printf '\033')
+sed -E \
+  -e "s|${escape}\\[[0-9;?]*[ -/]*[@-~]||g" \
+  -e "s|${escape}[=>78]||g" \
+  "$scratch/pty.out" | tr -d '\r\n' >"$scratch/pty.clean"
+grep -q 'react-blessed-guix-smoke' "$scratch/pty.clean"
 after=$($guix_bin hash -S nar "$out")
 test "$before" = "$after"
 printf '%s\n' 'react-blessed isolated React/Fiber/Blessed smoke passed'
