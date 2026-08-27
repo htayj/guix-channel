@@ -487,7 +487,7 @@ const validateIssue = (issue) => {
   for (const warning of explanation.warnings) console.error("WARNING: " + warning);
   return explanation;
 };
-const validateIssueForWorkflow = (issue, workflow) => {
+const validateIssueForWorkflow = (issue, workflow, { reportWarnings = true } = {}) => {
   const policy = {
     ...projectConfig.issueSpecification,
     ...(workflow?.issueSpecificationMode === undefined ? {} : { mode: workflow.issueSpecificationMode }),
@@ -496,7 +496,7 @@ const validateIssueForWorkflow = (issue, workflow) => {
     { number: issue.number, body: issue.body },
     policy,
   );
-  for (const warning of explanation.warnings) console.error("WARNING: " + warning);
+  if (reportWarnings) for (const warning of explanation.warnings) console.error("WARNING: " + warning);
   return explanation;
 };
 const reportInvalidReadyIssue = (issue, error) => {
@@ -511,18 +511,18 @@ const requestedGooflowOverride = process.env.GOOCASTLE_GOOFLOW_OVERRIDE;
 if (requestedGooflowOverride && process.env.GOOCASTLE_GOOFLOW_BYPASS === "1") {
   throw new Error("GOOCASTLE_GOOFLOW_OVERRIDE conflicts with GOOCASTLE_GOOFLOW_BYPASS; choose one explicit workflow selection");
 }
-const resolveForIssue = async (issue) => {
+const resolveForIssue = async (issue, { reportSelection = true } = {}) => {
   const resolved = await resolveIssueGooflow({
     directory: hostWorkTree,
     config: projectConfig,
     issue: { number: issue.number, labels: issue.labels ?? [] },
     ...(requestedGooflowOverride ? { override: requestedGooflowOverride } : process.env.GOOCASTLE_GOOFLOW_BYPASS === "1" ? { override: "template" } : {}),
-    onSelection: (selection) => console.log(
+    ...(reportSelection ? { onSelection: (selection) => console.log(
       "Selected Gooflow " + JSON.stringify(selection.workflow?.name ?? "template") +
         " via " + selection.source +
         (selection.schemaVersion === undefined ? "" : " (schema v" + selection.schemaVersion + ")") +
         (selection.override === undefined ? "" : "; explicit override=" + JSON.stringify(selection.override)),
-    ),
+    ) } : {}),
   });
   if (resolved.selection.source === "template-fallback") {
     throw new Error("Missing .goocastle/gooflow.json; create the enforced Gooflow standard or set GOOCASTLE_GOOFLOW_BYPASS=1 for an audited template bypass");
@@ -565,8 +565,11 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
     let resolved;
     let explanation;
     try {
-      resolved = await resolveForIssue(issue);
-      explanation = validateIssueForWorkflow(issue, resolved.workflow);
+      // Candidate routing is a preflight, not an execution event.  Avoid
+      // emitting a workflow selection and legacy-policy warning for every
+      // open issue; the selected ticket is resolved again and reported below.
+      resolved = await resolveForIssue(issue, { reportSelection: false });
+      explanation = validateIssueForWorkflow(issue, resolved.workflow, { reportWarnings: false });
     } catch (error) {
       if (error instanceof Error && error.message.startsWith("Missing .goocastle/gooflow.json")) throw error;
       reportInvalidReadyIssue(issue, error);
@@ -610,7 +613,7 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
         "; difficulty=" + (difficulty === difficultyLabels.length ? "none" : JSON.stringify(difficultyLabels[difficulty])) +
         "; tie-breaker=#" + selected.number;
       console.log("Scheduler selected #" + selected.number + ": " + rationale);
-      return { issue: selected, explanation, rationale };
+      return { issue: selected, resolved, explanation, rationale };
     }
   }
   return undefined;
@@ -1289,7 +1292,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     attemptedIssues.add(issue.number);
     const explanation = selected.explanation;
     specification = specificationProvenance(explanation);
-    resolvedGooflow = await resolveForIssue(issue);
+    // nextActionableIssue refreshed, routed, and reported this exact forge
+    // snapshot immediately before returning it. Reuse that provenance instead
+    // of reporting the same selection a second time.
+    resolvedGooflow = selected.resolved;
     const branch = "goocastle/" + WORKFLOW_NAME + "/issue-" + issue.number + "-" + Date.now() + "-" + task;
     const baseHead = hostGit(["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
     journal = await createSequentialTaskJournal({
