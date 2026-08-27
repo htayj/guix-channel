@@ -5,6 +5,7 @@
   #:use-module (guix download)
   #:use-module (guix gexp)
   #:use-module (guix packages)
+  #:use-module (guix utils)
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (gnu packages bash)
   #:use-module (gnu packages base)
@@ -48,7 +49,8 @@
               ;; dune, findlib, camlp4, generated parser, or network fetch is
               ;; involved.
               (invoke "make" "-f" "makefile.inc" "nc"
-                      "CC=cc-for-target"
+                      (string-append "CC=" #$(cc-for-target))
+                      (string-append "SHELL=" #$(file-append bash-minimal "/bin/sh"))
                       (string-append "CFLAGS=-I" #$sdl12-compat "/include")
                       (string-append "LDFLAGS=-L" #$sdl12-compat "/lib"))))
           (replace 'install
@@ -71,7 +73,7 @@
                 (mkdir-p (dirname wrapper))
                 (call-with-output-file wrapper
                   (lambda (port)
-                    (format port "#!~a/bin/sh~%set -eu~%~
+                    (format port "#!~a~%set -eu~%~
 state=\"${XDG_DATA_HOME:-${HOME:?}/.local/share}/wanderers\"~%
 ~a -p \"$state\"~%
 if test ! -e \"$state/data\" && test ! -L \"$state/data\"; then~%
@@ -81,8 +83,8 @@ cd \"$state\"~%
 export LD_LIBRARY_PATH=~s\"${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\"~%
 exec ~s \"$@\"~%"
                             #$(file-append bash-minimal "/bin/sh")
-                            #$(file-append coreutils "/bin/mkdir")
-                            #$(file-append coreutils "/bin/ln")
+                            #$(file-append coreutils-minimal "/bin/mkdir")
+                            #$(file-append coreutils-minimal "/bin/ln")
                             data
                             (string-append #$sdl12-compat "/lib:"
                                            #$mesa "/lib:")
@@ -92,9 +94,9 @@ exec ~s \"$@\"~%"
     ;; libraries used directly by the upstream makefile.
     (native-inputs (list ocaml-4.07))
     ;; SDL 1.2 compatibility headers/libraries are required by sdl_stub.c;
-    ;; GLCaml dynamically opens libGL.so.1 at runtime.  Coreutils and Bash are
+    ;; GLCaml dynamically opens libGL.so.1 at runtime.  Minimal Coreutils and Bash are
     ;; explicit runtime dependencies of the store-safe launcher.
-    (inputs (list bash-minimal coreutils mesa sdl12-compat))
+    (inputs (list bash-minimal coreutils-minimal mesa sdl12-compat))
     (home-page "https://github.com/a-nikolaev/wanderers")
     (synopsis "Open-world adventure and dungeon-crawling game")
     (description
