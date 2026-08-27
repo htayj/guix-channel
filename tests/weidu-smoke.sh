@@ -80,26 +80,41 @@ assert "Regents of the University of California" in (
 
 before_files, before_digests = output_snapshot(out)
 
-# Make /tmp private before the fixture creates any mutable path.  Along with
-# the fresh HOME/XDG paths and working directory below, this confines all
-# normal WeiDU logs, backups, and generated files to this mount namespace.
+# Make mount propagation private before the fixture creates any mutable path,
+# then replace /tmp in this namespace.  Along with the fresh HOME/XDG paths
+# and working directory below, this confines all normal WeiDU logs, backups,
+# and generated files to this mount namespace.
+subprocess.run([mount, "--make-rprivate", "/"], check=True)
 subprocess.run(
     [mount, "-t", "tmpfs", "-o", "mode=1777", "tmpfs", "/tmp"], check=True
 )
 
 with tempfile.TemporaryDirectory(prefix="weidu-smoke-") as temporary:
     root = pathlib.Path(temporary)
-    home, config, cache, data, work = [root / name for name in
-                                       ("home", "config", "cache", "data", "work")]
-    for directory in (home, config, cache, data, work):
+    home, config, cache, data, tmp, work = [root / name for name in
+                                            ("home", "config", "cache", "data",
+                                             "tmp", "work")]
+    for directory in (home, config, cache, data, tmp, work):
         directory.mkdir()
     environment = {
         "HOME": str(home),
         "XDG_CONFIG_HOME": str(config),
         "XDG_CACHE_HOME": str(cache),
         "XDG_DATA_HOME": str(data),
+        "TMPDIR": str(tmp),
         "LC_ALL": "C",
         "PATH": "",
+    }
+
+    # /tmp is a fresh mount, so any path appearing there outside ROOT after
+    # this snapshot is a write that escaped the fixture directory.  Capture
+    # the isolated user-state directories separately so unexpected XDG/HOME
+    # writes are also detected instead of being hidden by the broad ROOT
+    # snapshot.
+    temporary_before = set(pathlib.Path("/tmp").rglob("*"))
+    state_before = {
+        directory: output_snapshot(directory)
+        for directory in (home, config, cache, data)
     }
 
     def run(arguments):
@@ -138,9 +153,14 @@ with tempfile.TemporaryDirectory(prefix="weidu-smoke-") as temporary:
     assert install_result.returncode == 0, install_result.stdout
     assert (work / "output.txt").read_bytes() == (work / "input.txt").read_bytes()
 
-    # The fixture's only writable namespace is the private /tmp mount, and
-    # each mutable HOME/XDG/CWD path is rooted in this temporary directory.
-    assert all(path.is_relative_to(root) for path in root.rglob("*"))
+    temporary_after = set(pathlib.Path("/tmp").rglob("*"))
+    escaped = sorted(
+        str(path) for path in temporary_after - temporary_before
+        if not path.is_relative_to(root)
+    )
+    assert not escaped, escaped
+    for directory, snapshot in state_before.items():
+        assert output_snapshot(directory) == snapshot, directory
 
 after_files, after_digests = output_snapshot(out)
 assert before_files == after_files, (before_files, after_files)

@@ -94,6 +94,10 @@ the generator needed by WeiDU, without optional extras or OCaml tests.")
       #~(modify-phases %standard-phases
           ;; This is a makefile-only project.
           (delete 'configure)
+          ;; The custom documentation tree below is the package's complete
+          ;; licence/documentation location; avoid a duplicate auto-installed
+          ;; COPYING under share/doc/weidu-252.01.
+          (delete 'install-license-files)
           (replace 'install
             (lambda _
               (let* ((out #$output)
@@ -113,10 +117,19 @@ the generator needed by WeiDU, without optional extras or OCaml tests.")
                           '("COPYING" "README.md" "README-WeiDU-Changes.txt"))
                 ;; Preserve the separately identified bundled notices next
                 ;; to the GPL notice.  The fcaseopen notice also remains in
-                ;; the installed program's --licence output.
+                ;; the installed program's --licence output.  These source
+                ;; files carry the notices for the bundled implementations
+                ;; whose licenses are not separate files in the upstream tree.
                 (mkdir-p notices)
-                (install-file "elkhound/license.txt" notices)
-                (install-file "fcase/fcase.c" notices)))))))
+                (for-each (lambda (file) (install-file file notices))
+                          '("elkhound/license.txt"
+                            "fcase/fcase.c"
+                            "zlib/zlib.h"
+                            "xdiff/xinclude.h"
+                            "batteries-lite/batList.ml"
+                            "hashtbl-4.03.0/myhashtbl.ml"
+                            "src/parsing.ml"
+                            "src/myarg.ml"))))))))
     ;; WeiDU's pinned Makefile supplies its required -unsafe-string flags
     ;; itself and discovers the source-built Elkhound through PATH.
     (native-inputs (list elkhound-for-weidu ocaml-4.14-unsafe-string perl which))
