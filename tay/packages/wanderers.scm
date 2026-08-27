@@ -87,7 +87,7 @@ exec ~s \"$@\"~%"
                             #$(file-append coreutils-minimal "/bin/ln")
                             data
                             (string-append #$sdl12-compat "/lib:"
-                                           #$mesa "/lib:")
+                                           #$mesa "/lib")
                             program)))
                 (chmod wrapper #o555)))))))
     ;; OCaml 4.07 supplies ocamlopt and the graphics, unix, str, and bigarray
