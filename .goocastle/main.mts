@@ -2513,6 +2513,28 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       reportRecovery(issue, branch, integration, recovery);
     }
     attemptedIssues.add(issue.number);
+    const failedGooflowPhase = failedPhase === undefined
+      ? undefined
+      : materializedGooflow?.phases.find((phase) => phase.name === failedPhase.name);
+    const unavailableGuixDaemon = failedGooflowPhase?.capabilities?.guixDaemon === true &&
+      failureSummary?.lines.some((line) => /failed to connect to .*guix/daemon-socket/socket/u.test(line.text)) === true;
+    if (unavailableGuixDaemon) {
+      const marker = "<!-- goocastle-external-prerequisite:guix-daemon:" + String(issue.number) + " -->";
+      const comment = marker + "
+
+Goocastle blocked this ticket after the required daemon-authorized Guix proof could not reach /var/guix/daemon-socket/socket. The preserved journal and task branch remain resumable; unblock only after the daemon is available.";
+      await retryGitHub("Guix daemon prerequisite classification", async () => {
+        const current = await selectedIssue(issue.number);
+        if (!current.labels.some((label) => label.name === "state:blocked")) {
+          execFileSync("gh", ["issue", "edit", String(issue.number), "--add-label", "state:blocked", "--remove-label", "ready-for-agent"], { stdio: "inherit" });
+        }
+        if (!current.comments.some((entry) => entry.body.includes(marker))) {
+          execFileSync("gh", ["issue", "comment", String(issue.number), "--body", comment], { stdio: "inherit" });
+        }
+      });
+      console.error("Task #" + issue.number + " is blocked on the required Guix daemon; continuing to unrelated eligible work.");
+      continue;
+    }
     if (transientDeliveryPause) {
       // A local base that is ahead of origin cannot safely continue with a
       // different issue, even when phase failures are normally configured to
