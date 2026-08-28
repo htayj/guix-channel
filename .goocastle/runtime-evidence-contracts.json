@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "contracts": [
+    {
+      "issueNumber": 638,
+      "packageName": "astx",
+      "artifactPath": ".goocastle/evidence/issue-638.png",
+      "runtime": {
+        "executable": "astx",
+        "invocation": {
+          "file": "astx",
+          "args": ["--help"]
+        },
+        "successMarker": "Commands:"
+      }
+    }
+  ]
+}

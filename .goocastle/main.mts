@@ -7,8 +7,8 @@ import { homedir } from "node:os";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const GENERATED_RUNNER_RUNTIME_API_VERSION = 4;
-const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-4/journal-1";
+const GENERATED_RUNNER_RUNTIME_API_VERSION = 6;
+const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-6/journal-1";
 const GENERATED_RUNNER_JOURNAL_SCHEMA_VERSION = 1;
 // This digest is a secret-free capability identity for the generated runner.
 // It deliberately follows the checked-in runner bytes so a repaired runner
@@ -149,11 +149,12 @@ const runtimeModuleUrl = (() => {
   return moduleUrl;
 })();
 const runtimeModule = await import(runtimeModuleUrl);
-const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, materializeGooflowEvidence, parseGooflowDispositionResult, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeEvidenceComment, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
+const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, materializeGooflowEvidence, parseGooflowDispositionResult, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, validateRuntimeEvidenceCapture, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
 const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Object.freeze({
   expectedPacingMs: 5 * 60_000,
   stalledAfterMs: 15 * 60_000,
 });
+const sequentialPhaseFailureHistoryLimit = SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT ?? 8;
 const runtimeHandshake = typeof generatedRunnerRuntimeHandshake === "function"
   ? generatedRunnerRuntimeHandshake()
   : undefined;
@@ -777,6 +778,13 @@ const resolveForIssue = async (issue, { reportSelection = true } = {}) => {
   if (resolved.selection.source === "template-fallback") {
     throw new Error("Missing .goocastle/gooflow.json; create the enforced Gooflow standard or set GOOCASTLE_GOOFLOW_BYPASS=1 for an audited template bypass");
   }
+  // A per-issue evidence contract is host configuration, not issue content.
+  // Resolve it while routing candidates so a missing or malformed entry cannot
+  // create a journal or sandbox, and resolve it again after materialization
+  // immediately before the phases run.
+  if (resolved.workflow?.evidence?.runtimeContractPath !== undefined) {
+    await resolveGooflowEvidence(resolved.workflow.evidence, hostWorkTree, issue.number);
+  }
   return resolved;
 };
 
@@ -1070,6 +1078,9 @@ const runtimeEvidenceArtifactUrl = (integrationSha, artifactPath) => {
 };
 const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePhase, taskWorktree, branch, issueNumber) => {
   if (!taskWorktree) throw new Error("Cannot record runtime evidence without the task worktree; inspect the journal and resume");
+  if (!journal.runtimeEvidence?.runtimeAssertion) {
+    throw new Error("Cannot record runtime evidence without the host-validated packaged-runtime assertion; resume the screenshot phase after it emits the declared marker");
+  }
   const artifact = await inspectRuntimeEvidenceArtifact(taskWorktree.worktreePath, evidenceConfig.artifactPath);
   const status = gitAt(taskWorktree.worktreePath, ["status", "--porcelain=v1", "--untracked-files=all", "-z"], { encoding: "utf8" });
   const entries = status.split("\0").filter(Boolean);
@@ -1130,8 +1141,8 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
 };
 const postRuntimeEvidence = async (journal, evidenceConfig, integrationSha, phases, issueNumber) => {
   const evidence = journal.runtimeEvidence;
-  if (!evidence || evidence.artifact !== "complete" || !evidence.artifactSha256 || !evidence.artifactBytes || !evidence.artifactFormat || !evidence.artifactCommitSha) {
-    throw new Error("Cannot post runtime evidence before the bounded screenshot artifact is committed; inspect the preserved journal and resume");
+  if (!evidence || evidence.artifact !== "complete" || !evidence.artifactSha256 || !evidence.artifactBytes || !evidence.artifactFormat || !evidence.artifactCommitSha || !evidence.runtimeAssertion) {
+    throw new Error("Cannot post runtime evidence before the bounded screenshot artifact and packaged-runtime assertion are committed; inspect the preserved journal and resume");
   }
   const proofPhase = phases.find((phase) => phase.name === evidenceConfig.proofPhase);
   const capturePhase = phases.find((phase) => phase.name === evidenceConfig.capturePhase);
@@ -1148,6 +1159,9 @@ const postRuntimeEvidence = async (journal, evidenceConfig, integrationSha, phas
     proofCommand: proofPhase.command,
     capturePhase: evidence.capturePhase,
     captureCommand: capturePhase.command,
+    runtime: evidence.runtime,
+    runtimeAssertion: evidence.runtimeAssertion,
+    ...(evidence.runtimeContract === undefined ? {} : { runtimeContract: evidence.runtimeContract }),
     artifactPath: evidence.artifactPath,
     artifactSha256: evidence.artifactSha256,
     artifactBytes: evidence.artifactBytes,
@@ -2241,6 +2255,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       : journal.merge === "complete" ? "merged" : "not-started";
   let closeResult;
   let refreshAfterIntegration = false;
+  let freshAttemptPhaseNames = new Set();
   const failureSummaryFor = (error) => {
     const visited = new Set();
     let current = error;
@@ -2298,7 +2313,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     };
     const evidenceConfig = materializedGooflow?.evidence === undefined
       ? undefined
-      : materializeGooflowEvidence(materializedGooflow.evidence, promptArgs);
+      : await resolveGooflowEvidence(materializeGooflowEvidence(materializedGooflow.evidence, promptArgs), hostWorkTree, issue.number);
     if (journal.runtimeEvidence !== undefined && evidenceConfig === undefined &&
       (journal.runtimeEvidence.artifact !== "complete" || journal.runtimeEvidence.comment !== "complete")) {
       throw new Error("Runtime evidence receipt for #" + issue.number + " is pending but the selected Gooflow no longer declares it; restore the original evidence configuration before resuming");
@@ -2314,7 +2329,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // A running record has no completion evidence.  A process can die after
     // committing but before the phase callback, so branch movement is not a
     // substitute for a successful required command or agent completion.
-    // Leave it pending and rerun it on resume.
+    // Leave it pending and rerun it on resume. Recovered phases additionally
+    // pass through a durable `fresh` record before an executor is launched.
     const templatePhases = [
         {
           type: "agent",
@@ -2419,6 +2435,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         priorEvidence.proofPhase !== evidenceConfig.proofPhase ||
         priorEvidence.capturePhase !== evidenceConfig.capturePhase ||
         priorEvidence.artifactPath !== evidenceConfig.artifactPath ||
+        JSON.stringify(priorEvidence.runtime) !== JSON.stringify(evidenceConfig.runtime) ||
+        JSON.stringify(priorEvidence.runtimeContract) !== JSON.stringify(evidenceConfig.runtimeContract) ||
         priorEvidence.adapter !== evidenceConfig.adapter
       )) {
         throw new Error("Runtime evidence configuration changed after journaling for #" + issue.number + "; inspect the preserved journal and restore the original package proof/capture configuration before resuming");
@@ -2431,6 +2449,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             proofPhase: evidenceConfig.proofPhase,
             capturePhase: evidenceConfig.capturePhase,
             artifactPath: evidenceConfig.artifactPath,
+            runtime: evidenceConfig.runtime,
+            ...(evidenceConfig.runtimeContract === undefined ? {} : { runtimeContract: evidenceConfig.runtimeContract }),
             adapter: evidenceConfig.adapter,
             artifact: "pending",
             comment: "pending",
@@ -2467,12 +2487,53 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         ? repairPhases.some((candidate) => candidate?.name === phase.name)
         : dispositionResultRequired || record?.state !== "complete" || record?.stoppedEarly === true;
     });
+    const freshAttemptPhases = activeRepair
+      ? repairPhases
+      : pendingPhases.filter((phase) => {
+          const record = phaseRecord(journal, phase.name);
+          return record?.state === "failed" || record?.state === "fresh";
+        });
     // A capture can complete before the host commits its declared artifact.
     // Recreate the task-worktree boundary on resume even though no executable
     // phase remains, so the artifact receipt can finish without replaying the
     // package proof or screenshot command.
     const evidenceArtifactPending = evidenceConfig !== undefined && journal.runtimeEvidence?.artifact !== "complete";
     if (pendingPhases.length > 0 || evidenceArtifactPending) {
+      if (freshAttemptPhases.length > 0) {
+        const freshNames = new Set(freshAttemptPhases.map((phase) => phase.name));
+        const freshStartedAt = new Date().toISOString();
+        journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+          status: "active",
+          phases: journal.phases.map((record) => {
+            if (!freshNames.has(record.name)) return record;
+            const phase = phases.find((candidate) => candidate.name === record.name);
+            const phaseLiveness = phase?.liveness ?? defaultSequentialPhaseLiveness;
+            const history = [
+              ...(record.failureHistory ?? []),
+              ...(record.failureReceipt === undefined ? [] : [record.failureReceipt]),
+            ].slice(-sequentialPhaseFailureHistoryLimit);
+            const attempt = record.attempt === undefined
+              ? record.state === "failed" ? 2 : 1
+              : record.attempt + 1;
+            return {
+              name: record.name,
+              state: "fresh",
+              attempt,
+              startSha: hostGit(["rev-parse", branch], { encoding: "utf8" }).trim(),
+              liveness: {
+                executorId: EXECUTOR_ID,
+                startedAt: freshStartedAt,
+                activityAt: freshStartedAt,
+                supervisorHeartbeatAt: freshStartedAt,
+                expectedPacingMs: phaseLiveness.expectedPacingMs,
+                stalledAfterMs: phaseLiveness.stalledAfterMs,
+              },
+              ...(history.length === 0 ? {} : { failureHistory: history }),
+            };
+          }),
+        });
+        freshAttemptPhaseNames = freshNames;
+      }
       // Setup commands run before onPhaseStart and are allowed to use Git, so
       // prepare the same signing boundary before the sandbox can execute
       // them. Their commits are recorded separately from agent work.
@@ -2491,7 +2552,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       // Keep the task worktree owner separate from the disposable Guix
       // sandbox. A failed command must leave the exact linked worktree
       // available for resume; createWorktree reuses it by branch after any
-      // base reconciliation.
+      // base reconciliation. Persist the fresh boundary first so worktree
+      // setup failures still leave an actionable phase receipt.
       taskWorktree = await retrySequential(() => createWorktree({
         cwd: hostWorkTree,
         branchStrategy: { type: "branch", branch, base: baseHead },
@@ -2548,21 +2610,35 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           journal = await prepareCommitSigning(journal, signingBoundary("phase", phase.name));
           const phaseLiveness = phase.liveness ?? defaultSequentialPhaseLiveness;
           const phaseStartedAt = new Date().toISOString();
-          journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
-            status: "active",
-            ...(evidenceConfig?.capturePhase === phase.name && journal.runtimeEvidence === undefined ? {} : {}),
-            phases: [...journal.phases.filter((item) => item.name !== phase.name), {
-              name: phase.name,
-              state: "running",
-              startSha: hostGit(["rev-parse", branch], { encoding: "utf8" }).trim(),
-              liveness: {
+          const existingRecord = phaseRecord(journal, phase.name);
+          const attempt = existingRecord?.attempt ?? 1;
+          // Fresh records are staged for the whole sequential retry batch so
+          // setup failures can identify every recovery phase. Refresh the
+          // execution boundary here: later phases must not claim commits or
+          // liveness from an earlier phase in that batch.
+          const startSha = existingRecord?.state === "fresh"
+            ? hostGit(["rev-parse", branch], { encoding: "utf8" }).trim()
+            : existingRecord?.startSha ?? hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
+          const liveness = existingRecord?.state === "fresh" && existingRecord.liveness !== undefined
+            ? { ...existingRecord.liveness, startedAt: phaseStartedAt, activityAt: phaseStartedAt, supervisorHeartbeatAt: phaseStartedAt, providerProgressAt: undefined }
+            : {
                 executorId: EXECUTOR_ID,
                 startedAt: phaseStartedAt,
                 activityAt: phaseStartedAt,
                 supervisorHeartbeatAt: phaseStartedAt,
                 expectedPacingMs: phaseLiveness.expectedPacingMs,
                 stalledAfterMs: phaseLiveness.stalledAfterMs,
-              },
+              };
+          journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+            status: "active",
+            ...(evidenceConfig?.capturePhase === phase.name && journal.runtimeEvidence === undefined ? {} : {}),
+            phases: [...journal.phases.filter((item) => item.name !== phase.name), {
+              name: phase.name,
+              state: "running",
+              attempt,
+              startSha,
+              liveness,
+              ...(existingRecord?.failureHistory === undefined ? {} : { failureHistory: existingRecord.failureHistory }),
             }],
             ...(evidenceConfig?.capturePhase === phase.name && journal.runtimeEvidence !== undefined ? {
               runtimeEvidence: { ...journal.runtimeEvidence, artifact: "started" },
@@ -2594,7 +2670,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           });
         },
         onPhaseComplete: async (phaseResult) => {
-          const phaseStartSha = phaseRecord(journal, phaseResult.name)?.startSha;
+          const phaseBeforeComplete = phaseRecord(journal, phaseResult.name);
+          const phaseStartSha = phaseBeforeComplete?.startSha;
           let phaseHead = phaseStartSha === undefined
             ? undefined
             : hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
@@ -2602,6 +2679,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             ? phaseResult.result.commits.length
             : undefined;
           const configuredPhase = phases.find((phase) => phase.name === phaseResult.name);
+          const runtimeAssertion = phaseResult.type === "command" && evidenceConfig?.capturePhase === phaseResult.name
+            ? validateRuntimeEvidenceCapture(phaseResult.result.stdout, evidenceConfig.runtime)
+            : undefined;
           const commandReceipt = phaseResult.type === "command" && configuredPhase?.type === "command" &&
             phaseResult.result.exitCode === 0 && !phaseResult.result.exitReason
             ? { command: configuredPhase.command, exitCode: 0 }
@@ -2620,11 +2700,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             phases: [...journal.phases.filter((item) => item.name !== phaseResult.name), {
               name: phaseResult.name,
               state: "complete",
+              ...(phaseBeforeComplete?.attempt === undefined ? {} : { attempt: phaseBeforeComplete.attempt }),
               ...(commitCount === undefined ? {} : { commitCount }),
-              ...(phaseRecord(journal, phaseResult.name)?.startSha === undefined ? {} : { startSha: phaseRecord(journal, phaseResult.name).startSha }),
-              ...(phaseRecord(journal, phaseResult.name)?.liveness === undefined ? {} : {
-                liveness: { ...phaseRecord(journal, phaseResult.name).liveness, activityAt: new Date().toISOString(), supervisorHeartbeatAt: new Date().toISOString() },
+              ...(phaseBeforeComplete?.startSha === undefined ? {} : { startSha: phaseBeforeComplete.startSha }),
+              ...(phaseBeforeComplete?.liveness === undefined ? {} : {
+                liveness: { ...phaseBeforeComplete.liveness, activityAt: new Date().toISOString(), supervisorHeartbeatAt: new Date().toISOString() },
               }),
+              ...(phaseBeforeComplete?.failureHistory === undefined ? {} : { failureHistory: phaseBeforeComplete.failureHistory }),
               ...(stoppedEarly ? { stoppedEarly: true } : {}),
               ...(stopReason === undefined ? {} : { stopReason }),
               ...(commandReceipt === undefined ? {} : { commandReceipt }),
@@ -2633,6 +2715,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
               }),
               completedAt: new Date().toISOString(),
             }],
+            ...(runtimeAssertion === undefined || journal.runtimeEvidence === undefined ? {} : {
+              runtimeEvidence: { ...journal.runtimeEvidence, runtimeAssertion },
+            }),
           });
           if ((observedCommitCount ?? commitCount ?? 0) > 0) {
             journal = await recordUnsignedCommit(journal, signingBoundary("phase", phaseResult.name));
@@ -2645,14 +2730,17 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           const kind = boundedFailureKind(failure.error);
           const recovery = "Inspect the preserved branch, correct the phase, then resume with: " + resumeRecoveryCommand();
           const failureSummary = failureSummaryFor(failure.error);
+          const phaseBeforeFailure = phaseRecord(journal, failure.phase.name);
           journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
             phases: [...journal.phases.filter((item) => item.name !== failure.phase.name), {
               name: failure.phase.name,
               state: "failed",
-              ...(phaseRecord(journal, failure.phase.name)?.startSha === undefined ? {} : { startSha: phaseRecord(journal, failure.phase.name).startSha }),
-              ...(phaseRecord(journal, failure.phase.name)?.liveness === undefined ? {} : {
-                liveness: { ...phaseRecord(journal, failure.phase.name).liveness, activityAt: new Date().toISOString(), supervisorHeartbeatAt: new Date().toISOString() },
+              ...(phaseBeforeFailure?.attempt === undefined ? {} : { attempt: phaseBeforeFailure.attempt }),
+              ...(phaseBeforeFailure?.startSha === undefined ? {} : { startSha: phaseBeforeFailure.startSha }),
+              ...(phaseBeforeFailure?.liveness === undefined ? {} : {
+                liveness: { ...phaseBeforeFailure.liveness, activityAt: new Date().toISOString(), supervisorHeartbeatAt: new Date().toISOString() },
               }),
+              ...(phaseBeforeFailure?.failureHistory === undefined ? {} : { failureHistory: phaseBeforeFailure.failureHistory }),
               failureReceipt: {
                 kind,
                 recovery,
@@ -2966,6 +3054,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     const failedPhase = error !== null && typeof error === "object" && error.name === "WorkflowPhaseError" && error.phase !== null && typeof error.phase === "object"
       ? error.phase
       : undefined;
+    const freshRecoveryNames = failedPhase === undefined
+      ? new Set(journal.phases.filter((phase) => phase.state === "fresh" && freshAttemptPhaseNames.has(phase.name)).map((phase) => phase.name))
+      : new Set([failedPhase.name]);
+    const recoveryFailureNames = freshRecoveryNames.size === 0 ? undefined : freshRecoveryNames;
     // Persist a bounded diagnostic before releasing the sandbox.  A completed
     // agent phase can still fail host-side validation (for example, when a
     // disposition result is absent); without this the recovery journal is
@@ -2973,19 +3065,32 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
       status: "failed",
       failure: "Goocastle task failed (" + kind + ")" + failureDiagnosticFor(failureSummary, 1_000) + "; inspect the preserved branch and resume with: " + recoveryCommand,
-      ...(failedPhase === undefined ? {} : {
-        phases: [...journal.phases.filter((item) => item.name !== failedPhase.name), {
-          name: failedPhase.name,
-          state: "failed",
-          ...(phaseRecord(journal, failedPhase.name)?.startSha === undefined ? {} : { startSha: phaseRecord(journal, failedPhase.name).startSha }),
-          failureReceipt: {
-            kind,
-            recovery: "Inspect the preserved branch, correct the phase, then resume with: " + recoveryCommand,
-            ...(failureSummary === undefined ? {} : { failureSummary }),
-            ...(daemonOperation === undefined ? {} : { guixDaemonOperation: daemonOperation }),
-          },
-          ...(daemonOperation === undefined ? {} : { guixDaemonOperation: daemonOperation }),
-        }],
+      ...(recoveryFailureNames === undefined ? {} : {
+        phases: [
+          ...journal.phases.filter((item) => !recoveryFailureNames.has(item.name)),
+          ...[...recoveryFailureNames].map((name) => {
+            const previous = phaseRecord(journal, name);
+            return {
+              name,
+              state: "failed",
+              ...(previous?.attempt === undefined ? {} : { attempt: previous.attempt }),
+              ...(previous?.startSha === undefined ? {} : { startSha: previous.startSha }),
+              ...(previous?.liveness === undefined ? {} : {
+                liveness: { ...previous.liveness, activityAt: new Date().toISOString(), supervisorHeartbeatAt: new Date().toISOString() },
+              }),
+              ...(previous?.failureHistory === undefined ? {} : { failureHistory: previous.failureHistory }),
+              failureReceipt: {
+                kind,
+                recovery: (failedPhase === undefined
+                  ? "Recovery could not start phase " + JSON.stringify(name) + "; inspect the preserved branch, then resume with: "
+                  : "Inspect the preserved branch, correct the phase, then resume with: ") + recoveryCommand,
+                ...(failureSummary === undefined ? {} : { failureSummary }),
+                ...(daemonOperation === undefined ? {} : { guixDaemonOperation: daemonOperation }),
+              },
+              ...(daemonOperation === undefined ? {} : { guixDaemonOperation: daemonOperation }),
+            };
+          }),
+        ],
       }),
     }).catch(() => journal);
     const evidenceSandboxRecovery = evidenceSandbox ? await evidenceSandbox.close().catch(() => ({})) : {};

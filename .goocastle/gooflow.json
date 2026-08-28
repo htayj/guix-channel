@@ -53,10 +53,9 @@
         "runtime-screenshot"
       ],
       "evidence": {
-        "packageName": "Guix package issue #{{ISSUE_NUMBER}}",
         "proofPhase": "safe-package-proof",
         "capturePhase": "runtime-screenshot",
-        "artifactPath": ".goocastle/evidence/issue-{{ISSUE_NUMBER}}.png",
+        "runtimeContractPath": ".goocastle/runtime-evidence-contracts.json",
         "adapter": "github-issue-comment"
       },
       "phases": [
@@ -113,10 +112,9 @@
         "runtime-screenshot"
       ],
       "evidence": {
-        "packageName": "Guix package issue #{{ISSUE_NUMBER}}",
         "proofPhase": "safe-package-proof",
         "capturePhase": "runtime-screenshot",
-        "artifactPath": ".goocastle/evidence/issue-{{ISSUE_NUMBER}}.png",
+        "runtimeContractPath": ".goocastle/runtime-evidence-contracts.json",
         "adapter": "github-issue-comment"
       },
       "phases": [
