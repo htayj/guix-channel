@@ -14,7 +14,8 @@ fi
 if test "$#" -eq 1; then
     game_out=$1
 else
-    game_out=$($guix_bin build -L . --no-grafts clojure-roguelike)
+    game_out=$($guix_bin build -L . --no-grafts --no-substitutes \
+        clojure-roguelike)
 fi
 
 if test "${CLOJURE_ROGUELIKE_SMOKE_IN_NETNS:-}" != 1; then
@@ -62,8 +63,9 @@ cleanup() {
     rm -rf "$scratch"
 }
 trap cleanup EXIT INT TERM
-mkdir -p "$scratch/home" "$scratch/config" "$scratch/cache" \
-    "$scratch/state" "$scratch/tmp" "$scratch/caller" "$scratch/jar"
+mkdir -p "$scratch/home" "$scratch/config" "$scratch/data" \
+    "$scratch/cache" "$scratch/state" "$scratch/tmp" \
+    "$scratch/caller" "$scratch/jar"
 
 (cd "$scratch/jar" && "$jar_bin" xf "$game_out/share/java/clojure-roguelike.jar")
 tr -d '\r' <"$scratch/jar/META-INF/MANIFEST.MF" | \
@@ -74,6 +76,7 @@ test -f "$scratch/jar/clojure/lang/Compiler.class"
 if (
     cd "$scratch/caller"
     HOME="$scratch/home" XDG_CONFIG_HOME="$scratch/config" \
+    XDG_DATA_HOME="$scratch/data" \
     XDG_CACHE_HOME="$scratch/cache" XDG_STATE_HOME="$scratch/state" \
     TMPDIR="$scratch/tmp" TERM=xterm-256color LC_ALL=C.UTF-8 \
       "$script_bin" -qefc \
@@ -99,8 +102,9 @@ printf '%s\n' \
 
 # The program is one-shot and should leave neither mutable state nor any
 # altered package bytes behind.
-test -z "$(find "$scratch/home" "$scratch/config" "$scratch/cache" \
-    "$scratch/state" "$scratch/caller" -mindepth 1 -print -quit)"
+test -z "$(find "$scratch/home" "$scratch/config" "$scratch/data" \
+    "$scratch/cache" "$scratch/state" "$scratch/tmp" "$scratch/caller" \
+    -mindepth 1 -print -quit)"
 after=$($guix_bin hash -S nar "$game_out")
 test "$before" = "$after"
 printf '%s\n' 'clojure-roguelike isolated terminal smoke passed'
