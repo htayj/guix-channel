@@ -612,7 +612,7 @@ const ghJson = async (args, validate) => {
     }, projectConfig.retryPolicy, { retryable: isTransientSequentialError });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    if (args[0] !== "issue" || args[1] !== "list" || !/api.github.com/graphql|graphql/i.test(detail)) throw error;
+    if (args[0] !== "issue" || args[1] !== "list" || !/api\.github\.com\/graphql|graphql/i.test(detail)) throw error;
     console.error("GitHub GraphQL issue discovery failed; retrying the same bounded issue scan through the REST API.");
     return await retrySequential(() => ghRestIssueList(args), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
   }
