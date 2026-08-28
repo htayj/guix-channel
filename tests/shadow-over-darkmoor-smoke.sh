@@ -127,6 +127,26 @@ def read_terminal(fd, timeout):
     return bytes(data)
 
 
+def read_until(fd, marker, timeout):
+    data = bytearray()
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        ready, _, _ = select.select([fd], [], [], 0.15)
+        if not ready:
+            continue
+        try:
+            chunk = os.read(fd, 8192)
+        except OSError:
+            break
+        if not chunk:
+            break
+        data.extend(chunk)
+        if marker in data:
+            return bytes(data)
+    raise AssertionError(f"did not observe terminal marker {marker!r}: "
+                         + data.decode("utf-8", "replace")[-4000:])
+
+
 def wait_exit(pid, timeout):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -172,13 +192,13 @@ with tempfile.TemporaryDirectory(prefix="shadow-over-darkmoor-smoke-") as tmp:
 
     transcript = bytearray()
     try:
-        # open-title sleeps for three seconds; then Enter advances intro,
-        # Enter advances help, and q exits from the real main menu.
-        time.sleep(3.5)
+        # Drive the actual terminal state machine, observing each prompt so
+        # input cannot be consumed by an earlier pause on a slower host.
+        transcript.extend(read_until(terminal, b"Hit ENTER to continue.", 6))
         os.write(terminal, b"\n")
-        time.sleep(0.3)
+        transcript.extend(read_until(terminal, b"Hit ENTER to continue.", 6))
         os.write(terminal, b"\n")
-        time.sleep(0.3)
+        transcript.extend(read_until(terminal, b"q  Quit the game", 6))
         os.write(terminal, b"q\n")
         transcript.extend(read_terminal(terminal, 3))
         wait_exit(pid, 5)
