@@ -54,10 +54,13 @@
             (lambda* (#:key inputs #:allow-other-keys)
               (for-each
                (lambda (input)
-                 (copy-recursively
-                  (string-append (assoc-ref inputs input)
-                                 "/src/main/clojure")
-                  "src/clj/"))
+                 (let ((source-dir (string-append "runtime-sources/" input)))
+                   (mkdir-p source-dir)
+                   (invoke "tar" "-xf" (assoc-ref inputs input)
+                           "-C" source-dir "--strip-components=1")
+                   (copy-recursively
+                    (string-append source-dir "/src/main/clojure")
+                    "src/clj/")))
                '("clojure-spec-alpha-source"
                  "clojure-core-specs-alpha-source"))))
           (add-after 'unpack-runtime-spec-sources 'fix-manifest-classpath
@@ -71,7 +74,16 @@
               (call-with-output-file "maven-classpath.properties"
                 (lambda (port)
                   (display "maven.compile.classpath=\n" port)))))
-          (replace 'install (install-jars "./"))
+          ;; The upstream jar target creates both a versioned jar and the
+          ;; clojure.jar convenience copy.  Install only one so consumers
+          ;; cannot accidentally assemble an ambiguous runtime classpath.
+          (replace 'install
+            (lambda* (#:key outputs #:allow-other-keys)
+              (let ((share (string-append (assoc-ref outputs "out")
+                                          "/share/java")))
+                (mkdir-p share)
+                (install-file "clojure-1.10.0.jar" share)
+                #t)))
           ;; The Clojure readme documents the bundled ASM and Guava notices;
           ;; install it alongside the exact EPL text for the final package.
           (add-after 'install 'install-runtime-notices
@@ -82,7 +94,8 @@
                 (install-file "readme.txt" doc)
                 (install-file "epl-v10.html" doc)))))))
     (native-inputs
-     (list `("clojure-spec-alpha-source"
+     (list `("tar" ,tar)
+           `("clojure-spec-alpha-source"
              ,clojure-spec-alpha-0.2.176-source)
            `("clojure-core-specs-alpha-source"
              ,clojure-core-specs-alpha-0.2.44-source)))
