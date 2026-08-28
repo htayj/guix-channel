@@ -2430,7 +2430,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     const requiredGooflowPhases = new Set(materializedGooflow?.requiredPhases ?? []);
     if (evidenceConfig !== undefined) {
       const priorEvidence = journal.runtimeEvidence;
-      if (priorEvidence !== undefined && (
+      if (priorEvidence !== undefined && !priorEvidence.legacy && (
         priorEvidence.packageName !== evidenceConfig.packageName ||
         priorEvidence.proofPhase !== evidenceConfig.proofPhase ||
         priorEvidence.capturePhase !== evidenceConfig.capturePhase ||
@@ -2441,8 +2441,23 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       )) {
         throw new Error("Runtime evidence configuration changed after journaling for #" + issue.number + "; inspect the preserved journal and restore the original package proof/capture configuration before resuming");
       }
-      if (priorEvidence === undefined) {
+      if (priorEvidence === undefined || priorEvidence.legacy) {
+        // Pre-assertion journals can be read for recovery but their screenshot
+        // is intentionally not trusted as packaged-program proof.  Replace
+        // the receipt from the reviewed current contract and replay capture.
+        const legacyCapturePhase = priorEvidence?.legacy
+          ? phases.find((phase) => phase.name === evidenceConfig.capturePhase)
+          : undefined;
         journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+          ...(legacyCapturePhase === undefined ? {} : {
+            phases: journal.phases.map((record) => record.name !== legacyCapturePhase.name ? record : {
+              name: record.name,
+              state: "fresh",
+              attempt: (record.attempt ?? 0) + 1,
+              startSha: hostGit(["rev-parse", branch], { encoding: "utf8" }).trim(),
+              ...(record.failureHistory === undefined ? {} : { failureHistory: record.failureHistory }),
+            }),
+          }),
           runtimeEvidence: {
             version: 1,
             packageName: evidenceConfig.packageName,
