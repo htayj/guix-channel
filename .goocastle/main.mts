@@ -914,16 +914,29 @@ const applyDisposition = async (journal, issue) => {
         });
         ticket = journal.disposition.implementationTicket;
         try {
-          const output = execFileSync("gh", ["issue", "create", "--title", ticket.title, "--body", ticket.body], { encoding: "utf8" });
-          const issueNumber = /\/issues\/([1-9][0-9]*)\/?\s*$/.exec(output)?.[1];
-          if (issueNumber === undefined) throw new Error("gh issue create did not return an issue URL");
-          const createdIssueNumber = Number(issueNumber);
-          if (!Number.isSafeInteger(createdIssueNumber)) throw new Error("gh issue create returned an unsafe issue number");
-          const created = await selectedIssue(createdIssueNumber);
-          if (created.title !== ticket.title || created.body !== ticket.body) {
-            throw new Error("gh issue create returned an issue without the expected Goocastle receipt");
-          }
-          matches = [created];
+          await retryGitHub("implementation-ticket creation", async () => {
+            // Reconcile before every retry. GitHub can accept a mutation and
+            // lose its response; the exact receipt turns the otherwise
+            // non-idempotent create into a duplicate-safe recovery boundary.
+            const existing = await exactImplementationTickets(ticket);
+            if (existing.length > 1) {
+              throw new Error("Found multiple implementation tickets with the exact Goocastle receipt for #" + issue.number + "; resolve the duplicate tickets manually, then resume with: " + resumeRecoveryCommand());
+            }
+            if (existing.length === 1) {
+              matches = existing;
+              return;
+            }
+            const output = execFileSync("gh", ["issue", "create", "--title", ticket.title, "--body", ticket.body], { encoding: "utf8" });
+            const issueNumber = /\/issues\/([1-9][0-9]*)\/?\s*$/.exec(output)?.[1];
+            if (issueNumber === undefined) throw new Error("gh issue create did not return an issue URL");
+            const createdIssueNumber = Number(issueNumber);
+            if (!Number.isSafeInteger(createdIssueNumber)) throw new Error("gh issue create returned an unsafe issue number");
+            const created = await selectedIssue(createdIssueNumber);
+            if (created.title !== ticket.title || created.body !== ticket.body) {
+              throw new Error("gh issue create returned an issue without the expected Goocastle receipt");
+            }
+            matches = [created];
+          });
         } catch {
           // A failed transport can still mean GitHub accepted the create.
           // Reconcile once, but never retry the non-idempotent mutation.
