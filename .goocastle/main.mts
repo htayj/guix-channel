@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { access, constants, lstat, mkdtemp, readFile, realpath, stat, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
@@ -1253,14 +1254,149 @@ const terminallyBlockedJournalIssues = new Set();
 // fresh work, the run must stop and expose its recovery boundary.
 const retryableFailedPhaseIssues = new Set();
 const manuallyRecoverableJournalIssues = new Set();
+const missingBranchManualJournalIssues = new Set();
 const incompleteJournal = async () => {
-  const candidates = (await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME))
-    .filter((journal) => journal.status !== "complete" &&
-      (!deliveryComplete(journal) || journal.cleanup !== "complete") &&
+  const journals = await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME);
+  const candidates = journals
+    .filter((journal) => (!deliveryComplete(journal) || journal.cleanup !== "complete") &&
+      (journal.status !== "complete" || journal.branchRecovery !== undefined) &&
+      !(journal.status === "complete" && journal.branchRecovery?.state === "fresh-worktree" &&
+        journal.branchRecovery.sourceEpoch === undefined &&
+        journals.some((candidate) => candidate.issueNumber === journal.issueNumber &&
+          candidate.branchRecovery?.sourceEpoch === (journal.epoch ?? 1))) &&
       !deferredJournalIssues.has(journal.issueNumber));
   // Cleanup-only work is safe and visible, but must never monopolize recovery
-  // while another journal still has merge/push/close work to finish.
+  // while another journal still has merge/push/close work to finish. Terminal
+  // missing-branch receipts stay in this queue so a later launch cannot
+  // silently start a new epoch around an unresolved recovery boundary.
   return candidates.find((journal) => !deliveryComplete(journal)) ?? candidates.find(deliveryComplete);
+};
+const journalEpoch = (journal) => journal.epoch ?? 1;
+const MISSING_BRANCH_MANUAL_ACTION = "git fsck --no-reflogs --lost-found";
+const createFreshRecoveryJournal = async (terminal, sourceEpoch) => {
+  let replacement;
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const branch = "goocastle/recovery/issue-" + terminal.issueNumber + "-epoch-" + sourceEpoch + "-" + randomBytes(8).toString("hex");
+    if (exactRefSha("refs/heads/" + branch) !== undefined) continue;
+    try {
+      replacement = await createSequentialTaskJournal({
+        gitCommonDir,
+        workflow: WORKFLOW_NAME,
+        issueNumber: terminal.issueNumber,
+        baseSha: hostGit(["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
+        baseBranch,
+        branch,
+        specification: terminal.specification,
+        branchRecovery: {
+          state: "fresh-worktree",
+          reason: "missing-empty-branch",
+          sourceEpoch,
+        },
+      });
+      break;
+    } catch (error) {
+      const concurrent = (await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME)).find((candidate) =>
+        candidate.issueNumber === terminal.issueNumber &&
+        candidate.branchRecovery?.state === "fresh-worktree" &&
+        candidate.branchRecovery.sourceEpoch === sourceEpoch,
+      );
+      if (concurrent !== undefined) {
+        replacement = concurrent;
+        break;
+      }
+      throw error;
+    }
+  }
+  if (replacement === undefined) {
+    throw new Error("Could not allocate a fresh recovery branch for #" + terminal.issueNumber + "; run: " + MISSING_BRANCH_MANUAL_ACTION);
+  }
+  console.error("Recovered missing empty task branch for #" + terminal.issueNumber + " with fresh journal epoch " + journalEpoch(replacement) + ".");
+  return replacement;
+};
+// A missing ref is not by itself evidence that no work existed.  The sole
+// automatic path is deliberately narrower: no linked worktree, no phase start
+// receipt, no reconciliation receipt, and no incomplete setup receipt means
+// the runner never observed a point at which work could have been committed.
+// Every other case is terminal and manual.
+const recoverMissingTaskBranch = async (journal) => {
+  if (journal.branchRecovery?.state === "manual") return journal;
+  const sourceEpoch = journalEpoch(journal);
+  if (journal.status === "complete" && journal.branchRecovery?.state === "fresh-worktree" &&
+      journal.branchRecovery.sourceEpoch === undefined) {
+    const concurrent = (await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME)).find((candidate) =>
+      candidate.issueNumber === journal.issueNumber &&
+      candidate.branchRecovery?.state === "fresh-worktree" &&
+      candidate.branchRecovery.sourceEpoch === sourceEpoch,
+    );
+    return concurrent === undefined
+      ? await createFreshRecoveryJournal(journal, sourceEpoch)
+      : await recoverMissingTaskBranch(concurrent);
+  }
+  if (deliveryComplete(journal)) return journal;
+  const ref = "refs/heads/" + journal.branch;
+  const branchHead = exactRefSha(ref);
+  if (branchHead !== undefined) return journal;
+  const worktree = branchWorktreePath(journal.branch);
+  const setupProvesEmpty = journal.setup === undefined ||
+    (journal.setup.state === "complete" && journal.setup.startSha === journal.setup.endSha);
+  const emptyPreCommit = worktree === undefined && journal.phases.length === 0 &&
+    journal.reconciliation === undefined && setupProvesEmpty;
+  if (journal.branchRecovery?.state === "fresh-worktree" && emptyPreCommit) {
+    // A previous fresh epoch can itself be interrupted before createWorktree.
+    // Its branch is known empty, so restore only that generated ref at its
+    // recorded base and let ordinary fast-forward reconciliation continue.
+    try {
+      hostGit(["branch", journal.branch, journal.baseSha], { encoding: "utf8" });
+    } catch (error) {
+      // A concurrent resume may have restored this same generated ref after
+      // our probe. Never overwrite it; ordinary reconciliation will verify it.
+      if (exactRefSha(ref) === undefined) throw error;
+    }
+    return journal;
+  }
+  if (!emptyPreCommit) {
+    if (journal.branchRecovery?.state === "manual") return journal;
+    return await transitionSequentialTaskJournal(gitCommonDir, journal, {
+      branchRecovery: {
+        state: "manual",
+        reason: "missing-ambiguous-branch",
+        manualAction: MISSING_BRANCH_MANUAL_ACTION,
+      },
+      status: "complete",
+      failure: "Recorded task branch is missing and journal evidence cannot prove it was empty. Run the recorded manual recovery action before starting another epoch.",
+    });
+  }
+  let terminal;
+  try {
+    terminal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+      branchRecovery: { state: "fresh-worktree", reason: "missing-empty-branch" },
+      status: "complete",
+      failure: "Recorded task branch was missing before any phase start; a fresh worktree recovery was created with the original specification receipt.",
+    });
+  } catch (error) {
+    // Another resume may have atomically published the successor after this
+    // invocation read the old epoch. Reuse only the explicitly linked epoch;
+    // if it has only terminalized the source so far, this invocation can
+    // safely race to publish the single successor below.
+    const journals = await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME);
+    const concurrent = journals.find((candidate) =>
+      candidate.status !== "complete" &&
+      candidate.issueNumber === journal.issueNumber &&
+      candidate.branchRecovery?.state === "fresh-worktree" &&
+      candidate.branchRecovery.sourceEpoch === sourceEpoch,
+    );
+    if (concurrent !== undefined) return concurrent;
+    const publishedTerminal = journals.find((candidate) =>
+      candidate.status === "complete" &&
+      candidate.issueNumber === journal.issueNumber &&
+      journalEpoch(candidate) === sourceEpoch &&
+      candidate.branchRecovery?.state === "fresh-worktree" &&
+      candidate.branchRecovery.reason === "missing-empty-branch",
+    );
+    if (publishedTerminal === undefined) throw error;
+    terminal = publishedTerminal;
+  }
+  return await createFreshRecoveryJournal(terminal, sourceEpoch);
 };
 const latestCompletedBoundary = async () => {
   let latest;
@@ -1397,6 +1533,15 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     continue;
   }
   if (!journal) {
+    if (missingBranchManualJournalIssues.size > 0) {
+      const manual = [...missingBranchManualJournalIssues].sort((left, right) => left - right);
+      console.error(
+        "Missing task branches with ambiguous work remain for: " + manual.map((number) => "#" + number).join(", ") + ". " +
+        "Automatic recovery is disabled. Run exactly: " + MISSING_BRANCH_MANUAL_ACTION,
+      );
+      process.exitCode = 1;
+      break;
+    }
     // A failed phase deliberately remains retryable, even when this invocation
     // is resume-only. Check this boundary before the no-journal message so a
     // second failed attempt cannot be reported as successful recovery.
@@ -1510,6 +1655,14 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // specification policy, so validating before routing rejects a valid
     // journal solely because it was interrupted.
     resolvedGooflow = await resolveForIssue(issue);
+    journal = await recoverMissingTaskBranch(journal);
+    if (journal.branchRecovery?.state === "manual") {
+      manuallyRecoverableJournalIssues.add(journal.issueNumber);
+      missingBranchManualJournalIssues.add(journal.issueNumber);
+      deferredJournalIssues.add(journal.issueNumber);
+      task -= 1;
+      continue;
+    }
     const explanation = validateIssueForWorkflow(issue, resolvedGooflow.workflow);
     let decision = "initial";
     if (journal.specification && (
@@ -1832,7 +1985,11 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         },
       }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
       const setupStartSha = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
-      let setupObserved = setup.length === 0;
+      const setupEvidenceStartSha = journal.setup?.startSha ?? setupStartSha;
+      journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+        setup: { state: "started", startSha: setupEvidenceStartSha },
+      });
+      let setupObserved = false;
       const phaseCallbacks = {
         onSetupComplete: async () => {
           if (setupObserved) return;
@@ -1844,6 +2001,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             setupHead = signed.head;
             journal = await recordUnsignedCommit(journal, setupSigningBoundary);
           }
+          journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+            setup: { state: "complete", startSha: setupEvidenceStartSha, endSha: setupHead },
+          });
         },
         onPhaseStart: async (phase) => {
           journal = await prepareCommitSigning(journal, signingBoundary("phase", phase.name));
