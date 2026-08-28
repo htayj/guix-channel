@@ -35,6 +35,11 @@
       #:tests? #f
       #:phases
       #~(modify-phases %standard-phases
+          ;; Clojure's complete runtime jar has no external class-path jars.
+          ;; IcedTea's jar -i rejects indexing this self-contained archive, and
+          ;; the index is neither required nor useful for the uberjar consumer.
+          ;; Keep the surrounding content-ordering and timestamp phases.
+          (delete 'generate-jar-indices)
           (add-before 'build 'empty-maven-compile-classpath
             (lambda _
               (call-with-output-file "maven-classpath.properties"
