@@ -2392,11 +2392,17 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       const failedRequiredPhases = [...new Set(failedRequired.map((failure) => failure.phase.name))];
       if (failedRequiredPhases.length > 0) {
         const failedSummary = failureSummaryFor(failedRequired[0]?.error);
-        throw new Error(
+        const requiredFailure = new Error(
           "Required Gooflow phase(s) " + failedRequiredPhases.map((name) => JSON.stringify(name)).join(", ") +
             " failed; inspect the preserved branch and resume with: " + resumeRecoveryCommand() + failureDiagnosticFor(failedSummary),
           { cause: failedRequired[0]?.error },
         );
+        // Preserve the failed phase when a phase opted into continue. The
+        // outer recovery boundary needs the same phase identity as the
+        // fail-fast WorkflowPhaseError in order to classify host prerequisites.
+        requiredFailure.name = "WorkflowPhaseError";
+        requiredFailure.phase = failedRequired[0]?.phase;
+        throw requiredFailure;
       }
       // Capture the result only after its sandbox is cleanly finalized and
       // required gates have passed. A crash after this point can resume the
@@ -2549,21 +2555,51 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     const failedGooflowPhase = failedPhase === undefined
       ? undefined
       : materializedGooflow?.phases.find((phase) => phase.name === failedPhase.name);
-    const unavailableGuixDaemon = failedGooflowPhase?.capabilities?.guixDaemon === true &&
-      failureSummary?.lines.some((line) => /failed to connect to .*guix\/daemon-socket\/socket/u.test(line.text)) === true;
+    const failureText = Array.isArray(failureSummary?.lines)
+      ? failureSummary.lines.map((line) => typeof line?.text === "string" ? line.text : "").join("\n")
+      : "";
+    const unavailableGuixDaemon = failedGooflowPhase?.type === "command" &&
+      materializedGooflow?.requiredPhases?.includes(failedGooflowPhase.name) === true &&
+      failedGooflowPhase.capabilities?.guixDaemon === true &&
+      /\/var\/guix\/daemon-socket\/socket\b/iu.test(failureText) &&
+      /(?:failed|unable|cannot|could not|can't)\s+(?:to\s+)?(?:connect|reach|open|access)|(?:connection\s+refused|no such file|not found|unavailable|inaccessible|does not exist|not available|permission denied)/iu.test(failureText);
     if (unavailableGuixDaemon) {
       const marker = "<!-- goocastle-external-prerequisite:guix-daemon:" + String(issue.number) + " -->";
-      const comment = marker + "\n\nGoocastle blocked this ticket after the required daemon-authorized Guix proof could not reach /var/guix/daemon-socket/socket. The preserved journal and task branch remain resumable; unblock only after the daemon is available.";
+      const boundedEvidence = failureDiagnosticFor(failureSummary, 4_000).trim() || "(no failure evidence retained)";
+      const comment = [
+        marker,
+        "",
+        "Goocastle blocked this ticket after the required daemon-authorized Guix proof could not reach /var/guix/daemon-socket/socket.",
+        "The preserved journal and task branch remain resumable; unblock only after the daemon is available.",
+        "",
+        "Bounded failure evidence:",
+        boundedEvidence,
+      ].join("\n");
       await retryGitHub("Guix daemon prerequisite classification", async () => {
         const current = await selectedIssue(issue.number);
-        if (!current.labels.some((label) => label.name === "state:blocked")) {
-          execFileSync("gh", ["issue", "edit", String(issue.number), "--add-label", "state:blocked", "--remove-label", "ready-for-agent"], { stdio: "inherit" });
-        }
-        if (!current.comments.some((entry) => entry.body.includes(marker))) {
+        const blocked = current.labels.some((label) => label.name === "state:blocked");
+        const ready = current.labels.some((label) => label.name === "ready-for-agent");
+        // The marker is predictable and may appear in an unrelated user
+        // comment. Only the exact rendered host comment is an idempotent
+        // receipt for this classification.
+        if (!current.comments.some((entry) => entry.body === comment)) {
           execFileSync("gh", ["issue", "comment", String(issue.number), "--body", comment], { stdio: "inherit" });
+        }
+        // Publish the blocking label only after the evidence receipt exists.
+        // If the process stops between these host mutations, recovery can
+        // still finish the label without skipping a missing comment.
+        if (!blocked || ready) {
+          execFileSync("gh", [
+            "issue", "edit", String(issue.number),
+            ...(blocked ? [] : ["--add-label", "state:blocked"]),
+            ...(ready ? ["--remove-label", "ready-for-agent"] : []),
+          ], { stdio: "inherit" });
         }
       });
       console.error("Task #" + issue.number + " is blocked on the required Guix daemon; continuing to unrelated eligible work.");
+      // A terminal prerequisite classification is not completed work. Do not
+      // consume the queue slot that the unrelated eligible issue needs.
+      task -= 1;
       continue;
     }
     if (transientDeliveryPause) {
