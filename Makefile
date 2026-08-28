@@ -35,7 +35,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
 	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a emacs-aidermacs \
 	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq apout kitty-bitmap opencode \
-	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin \
+	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin shadow-over-darkmoor \
 	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy notion-river mushkin mushtato ocaml-irc-client \
 	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl \
 	kbredir potato pycat rune secretpathway tinyfugue trebuchet tapeutils heroic-gogdl \
@@ -55,7 +55,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-secretpathway check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-apout \
 	check-blincolnlights check-pdp10-its-disassembler \
 	check-itstar check-pdp11 check-azurra-gtk-theme check-pdp6 check-pdp10-xpl-pdp-10 check-faugus-launcher \
-	check-react-blessed \
+	check-react-blessed check-shadow-over-darkmoor \
 	check-wanderers \
 	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs build build-sources
 
@@ -196,6 +196,9 @@ check-faugus-launcher:
 check-react-blessed:
 	GUIX="$(GUIX)" tests/react-blessed-smoke.sh
 
+check-shadow-over-darkmoor:
+	GUIX="$(GUIX)" tests/shadow-over-darkmoor-smoke.sh
+
 check-wanderers:
 	GUIX="$(GUIX)" tests/wanderers-smoke.sh
 
@@ -216,7 +219,7 @@ check: check-source-count check-sentinelone check-datamosh-security \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
-	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-wanderers check-emacs-org-popup-posframe \
+	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-wanderers check-emacs-org-popup-posframe \
 	check-emacs-forth-mode check-emacs-aidermacs
 	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \

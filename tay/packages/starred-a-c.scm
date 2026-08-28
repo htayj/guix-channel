@@ -242,7 +242,10 @@
   (make-github-source-snapshot "catspook-shadow-over-darkmoor-source" "catspook" "catspook" "Shadow_Over_Darkmoor"
                                "fe7d29690ecbefa01bd641d2179d27c6d16a105e" "0hd05jbc6asbmbz02lhdgp7dxzjmfv9kr8h6a84j2wgn0mkffr1c"
                                "source snapshot of catspook/Shadow_Over_Darkmoor" "https://github.com/catspook/Shadow_Over_Darkmoor"
-                               license:epl2.0))
+                               ;; The GPL alternative carries the GNU Classpath
+                               ;; Exception; Guix has no separate identifier for
+                               ;; that additional permission.
+                               (list license:epl2.0 license:gpl2+)))
 
 (define-public cdgriffith-fastflix-source
   (make-github-source-snapshot "cdgriffith-fastflix-source" "cdgriffith" "cdgriffith" "FastFlix"
