@@ -2271,6 +2271,11 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       const evidenceProvider = () => guix({
         manifest: codexBinDirectory ? ".goocastle/manifest-external-codex.scm" : ".goocastle/manifest.scm",
         channels: ".goocastle/channels.scm",
+        // Evidence commands do not need a synthetic account, and some
+        // rootless Guix hosts cannot resolve it in an FHS container.  Use the
+        // host-mapped caller identity while retaining the same mounts and
+        // no-network capability boundary as the proof sandbox.
+        user: execFileSync("id", ["-un"], { encoding: "utf8" }).trim(),
         cores: projectConfig.resourcePolicy.cores,
         network: false,
         emulateFhs: projectConfig.resourcePolicy.emulateFhs,
