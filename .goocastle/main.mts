@@ -7,8 +7,8 @@ import { homedir } from "node:os";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const GENERATED_RUNNER_RUNTIME_API_VERSION = 3;
-const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-3/journal-1";
+const GENERATED_RUNNER_RUNTIME_API_VERSION = 4;
+const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-4/journal-1";
 const GENERATED_RUNNER_JOURNAL_SCHEMA_VERSION = 1;
 // This digest is a secret-free capability identity for the generated runner.
 // It deliberately follows the checked-in runner bytes so a repaired runner
@@ -1156,16 +1156,25 @@ const postRuntimeEvidence = async (journal, evidenceConfig, integrationSha, phas
     artifactUrl,
   });
   const marker = "<!-- goocastle-runtime-evidence:" + WORKFLOW_NAME + ":" + String(issueNumber) + ":" + String(journal.epoch ?? 1) + " -->";
-  const current = await selectedIssue(issueNumber);
-  const existing = current.comments.find((entry) => entry.body.includes(marker));
-  if (existing && existing.body !== comment) {
-    throw new Error("A different runtime evidence receipt already exists for #" + issueNumber + "; inspect the issue comment and preserved journal before retrying");
-  }
-  if (!existing) {
+  const commentAlreadyApplied = async () => {
+    const current = await selectedIssue(issueNumber);
+    const existing = current.comments.find((entry) => entry.body.includes(marker));
+    if (existing && existing.body !== comment) {
+      throw new Error("A different runtime evidence receipt already exists for #" + issueNumber + "; inspect the issue comment and preserved journal before retrying");
+    }
+    return existing !== undefined;
+  };
+  if (!(await commentAlreadyApplied())) {
     journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
       runtimeEvidence: { ...evidence, comment: "started", artifactUrl },
     });
-    await retryGitHub("runtime-evidence comment delivery", () => execFileSync("gh", ["issue", "comment", String(issueNumber), "--body", comment], { stdio: "inherit" }));
+    // A transport error can arrive after GitHub accepted the comment. Re-read
+    // the durable external receipt before every retry so the non-idempotent
+    // mutation is never repeated after an acknowledged comment.
+    await retryGitHub("runtime-evidence comment delivery", async () => {
+      if (await commentAlreadyApplied()) return;
+      execFileSync("gh", ["issue", "comment", String(issueNumber), "--body", comment], { stdio: "inherit" });
+    });
     const posted = await selectedIssue(issueNumber);
     if (!posted.comments.some((entry) => entry.body === comment)) throw new Error("GitHub did not expose the runtime evidence receipt after posting; issue remains open, retry with: " + resumeRecoveryCommand());
   }
@@ -2066,7 +2075,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       const repairPhase = currentRepairWorkflow?.phases.find((phase) => phase.name === latestRepair?.phase);
       const canReopen = repairPhase?.type === "command" &&
         currentRepairWorkflow?.requiredPhases?.includes(latestRepair?.phase) === true &&
-        (latestRepair.phase === "safe-package-proof" || currentRepairWorkflow.evidence?.proofPhase === latestRepair.phase);
+        (latestRepair.phase === "safe-package-proof" ||
+          currentRepairWorkflow.evidence?.proofPhase === latestRepair.phase ||
+          currentRepairWorkflow.evidence?.capturePhase === latestRepair.phase);
       if (canReopen && latestRepair !== undefined) {
         const semanticFingerprint = repairSemanticFingerprintFor(currentRepairWorkflow, latestRepair.phase);
         const reopened = await reopenBlockedRequiredCommandRepair(journal, latestRepair.phase, semanticFingerprint);
@@ -2237,6 +2248,17 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       if (visited.has(current)) return undefined;
       visited.add(current);
       if (current.failureSummary && typeof current.failureSummary === "object") return current.failureSummary;
+      current = current.cause;
+    }
+    return undefined;
+  };
+  const daemonOperationFor = (error) => {
+    const visited = new Set();
+    let current = error;
+    for (let depth = 0; depth < 8 && current && typeof current === "object"; depth += 1) {
+      if (visited.has(current)) return undefined;
+      visited.add(current);
+      if (current.guixDaemonOperation && typeof current.guixDaemonOperation === "object") return current.guixDaemonOperation;
       current = current.cause;
     }
     return undefined;
@@ -2476,6 +2498,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
       if (pendingPhases.length > 0) {
         sandbox = await retrySequential(() => taskWorktree.createSandbox({
+          name: WORKFLOW_NAME + "-issue-" + issue.number,
           sandbox: guix({
             manifest: codexBinDirectory ? ".goocastle/manifest-external-codex.scm" : ".goocastle/manifest.scm",
             channels: ".goocastle/channels.scm",
@@ -2605,6 +2628,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
               ...(stoppedEarly ? { stoppedEarly: true } : {}),
               ...(stopReason === undefined ? {} : { stopReason }),
               ...(commandReceipt === undefined ? {} : { commandReceipt }),
+              ...(phaseResult.type !== "command" || phaseResult.result.guixDaemonOperation === undefined ? {} : {
+                guixDaemonOperation: phaseResult.result.guixDaemonOperation,
+              }),
               completedAt: new Date().toISOString(),
             }],
           });
@@ -2627,7 +2653,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
               ...(phaseRecord(journal, failure.phase.name)?.liveness === undefined ? {} : {
                 liveness: { ...phaseRecord(journal, failure.phase.name).liveness, activityAt: new Date().toISOString(), supervisorHeartbeatAt: new Date().toISOString() },
               }),
-              failureReceipt: { kind, recovery, ...(failureSummary === undefined ? {} : { failureSummary }) },
+              failureReceipt: {
+                kind,
+                recovery,
+                ...(failureSummary === undefined ? {} : { failureSummary }),
+                ...(failure.guixDaemonOperation === undefined ? {} : { guixDaemonOperation: failure.guixDaemonOperation }),
+              },
+              ...(failure.guixDaemonOperation === undefined ? {} : { guixDaemonOperation: failure.guixDaemonOperation }),
             }],
           });
           console.warn("Phase " + failure.phase.name + " failed (" + kind + "); " + recovery + failureDiagnosticFor(failureSummary));
@@ -2930,6 +2962,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     const kind = boundedFailureKind(error);
     const recoveryCommand = resumeRecoveryCommand();
     const failureSummary = failureSummaryFor(error);
+    const daemonOperation = daemonOperationFor(error);
     const failedPhase = error !== null && typeof error === "object" && error.name === "WorkflowPhaseError" && error.phase !== null && typeof error.phase === "object"
       ? error.phase
       : undefined;
@@ -2949,7 +2982,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             kind,
             recovery: "Inspect the preserved branch, correct the phase, then resume with: " + recoveryCommand,
             ...(failureSummary === undefined ? {} : { failureSummary }),
+            ...(daemonOperation === undefined ? {} : { guixDaemonOperation: daemonOperation }),
           },
+          ...(daemonOperation === undefined ? {} : { guixDaemonOperation: daemonOperation }),
         }],
       }),
     }).catch(() => journal);
@@ -3030,7 +3065,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     }
     const requiredCommandGate = failedGooflowPhase?.type === "command" &&
       materializedGooflow?.requiredPhases?.includes(failedGooflowPhase.name) === true &&
-      (failedGooflowPhase.name === "safe-package-proof" || materializedGooflow.evidence?.proofPhase === failedGooflowPhase.name);
+      (failedGooflowPhase.name === "safe-package-proof" ||
+        materializedGooflow.evidence?.proofPhase === failedGooflowPhase.name ||
+        materializedGooflow.evidence?.capturePhase === failedGooflowPhase.name);
     if (requiredCommandGate) {
       const semanticFingerprint = repairSemanticFingerprintFor(materializedGooflow, failedGooflowPhase.name);
       const repairResult = await scheduleRequiredCommandRepair(journal, failedGooflowPhase.name, semanticFingerprint);
