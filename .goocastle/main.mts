@@ -2283,7 +2283,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             runtimeLimits: projectConfig.runtimeLimits,
             preserveEnv: sandboxAccess.preserveEnv,
             homeFiles,
-            ...(projectConfig.resourcePolicy.guixDaemon ? { allowGuixDaemonSocket: true } : {}),
+            ...(sandboxAccess.requestsGuixDaemon ? { allowGuixDaemonSocket: true } : {}),
             exposes: codexBinDirectory ? [{ hostPath: codexBinDirectory, sandboxPath: "/opt/goocastle-codex" }] : [],
           }),
           env: {
@@ -2461,7 +2461,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       });
       const evidencePhaseIndex = evidenceConfig === undefined ? -1 : phases.findIndex((phase) => phase.name === evidenceConfig.proofPhase);
       const capturePhaseIndex = evidenceConfig === undefined ? -1 : phases.findIndex((phase) => phase.name === evidenceConfig.capturePhase);
-      const evidenceProvider = () => guix({
+      const phaseRequestsGuixDaemon = (phase) => phase.type === "command"
+        ? phase.options?.guixDaemonSocket === true
+        : phase.run.guixDaemonSocket === true;
+      const evidenceProvider = (phase) => guix({
         manifest: codexBinDirectory ? ".goocastle/manifest-external-codex.scm" : ".goocastle/manifest.scm",
         channels: ".goocastle/channels.scm",
         // Evidence commands do not need a synthetic account, and some
@@ -2476,13 +2479,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         runtimeLimits: projectConfig.runtimeLimits,
         preserveEnv: [],
         homeFiles: [],
-        ...(projectConfig.resourcePolicy.guixDaemon ? { allowGuixDaemonSocket: true } : {}),
+        ...(phaseRequestsGuixDaemon(phase) ? { allowGuixDaemonSocket: true } : {}),
         exposes: codexBinDirectory ? [{ hostPath: codexBinDirectory, sandboxPath: "/opt/goocastle-codex" }] : [],
       });
       const runEvidencePhase = async (phase) => {
         if (pendingFor([phase]).length === 0) return;
         evidenceSandbox = await retrySequential(() => taskWorktree.createSandbox({
-          sandbox: evidenceProvider(),
+          sandbox: evidenceProvider(phase),
           name: WORKFLOW_NAME + "-runtime-evidence-" + phase.name,
           env: { GOOCASTLE_ISSUE_NUMBER: String(issue.number) },
         }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
