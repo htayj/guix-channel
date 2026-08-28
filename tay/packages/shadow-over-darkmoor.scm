@@ -127,31 +127,18 @@ Over Darkmoor entirely from source, including its pinned runtime spec libraries.
       #:source-dirs #~'("src")
       #:test-dirs #~'("test")
       #:tests? #t
-      #:main-class 'darkmoor.core
-      ;; Keep this list explicit: upstream's entry namespace uses load forms,
-      ;; and the complete AOT set must be present in the standalone jar.
+      #:main-class #~'darkmoor.core
+      ;; Upstream has one entry namespace; the other source files are scripts
+      ;; which switch into it with `in-ns` and are loaded by darkmoor.core.
+      ;; Compiling those scripts as independent namespaces leaves clojure.core
+      ;; un-referred, so AOT only the true entry point.
       #:aot-include
-      #~'(darkmoor.controller
-          darkmoor.core
-          darkmoor.model.enemy-data
-          darkmoor.model.location.level-1-locations.archive
-          darkmoor.model.location.level-1-locations.armory
-          darkmoor.model.location.level-1-locations.cave
-          darkmoor.model.location.level-1-locations.crypt
-          darkmoor.model.location.level-1-locations.graveyard
-          darkmoor.model.location.level-1-locations.haunted-house
-          darkmoor.model.location.level-1-locations.level-1
-          darkmoor.model.location.level-1-locations.tavern
-          darkmoor.model.location.level-1-locations.temple-cellar
-          darkmoor.model.location.level-1-locations.temple
-          darkmoor.model.location.level-1-locations.wizard-tower
-          darkmoor.model.location.location-data
-          darkmoor.model.model
-          darkmoor.model.objects-data
-          darkmoor.model.player-data
-          darkmoor.view)
+      #~'(darkmoor.core)
       #:phases
       #~(modify-phases %standard-phases
+          ;; Documentation is installed explicitly below; this upstream
+          ;; project has no conventional Clojure documentation directories.
+          (delete 'install-doc)
           (replace 'install
             (lambda* (#:key inputs outputs #:allow-other-keys)
               (let* ((out (assoc-ref outputs "out"))
@@ -175,16 +162,19 @@ Over Darkmoor entirely from source, including its pinned runtime spec libraries.
                 (with-directory-excursion "runtime"
                   (invoke "jar" "xf" (car clojure-jars))
                   (delete-file-recursively "META-INF"))
+                ;; Merge every archive member into one tree before invoking
+                ;; jar.  Passing runtime, compiled classes, and sources as
+                ;; separate trees creates duplicate directory entries.
+                (copy-recursively "classes/darkmoor" "runtime/darkmoor")
+                (copy-recursively "src/darkmoor" "runtime/darkmoor")
+                (copy-recursively "resources" "runtime/resources")
                 ;; This is deliberately an uberjar rather than a classpath
                 ;; wrapper: every runtime class, source file, and resource is
                 ;; fixed in the output and no Leiningen/Maven resolution runs.
                 (invoke "jar" "cfe"
                         (string-append jar-dir "/shadow-over-darkmoor.jar")
                         "darkmoor.core"
-                        "-C" "runtime" "."
-                        "-C" "classes" "."
-                        "-C" "src" "darkmoor"
-                        "-C" "jar-resources" "resources")
+                        "-C" "runtime" ".")
                 (for-each
                  (lambda (file) (install-file file doc-dir))
                  '("LICENSE" "README.md" "CHANGELOG.md"))
