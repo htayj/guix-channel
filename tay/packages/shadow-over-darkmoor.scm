@@ -199,7 +199,7 @@ exec ~a/bin/java -jar ~a/share/java/shadow-over-darkmoor.jar \"$@\"~%"
                               #$bash-minimal
                               #$coreutils-minimal
                               #$coreutils-minimal
-                              out
+                              (string-append out "/share/shadow-over-darkmoor")
                               (assoc-ref inputs "icedtea")
                               out)))
                   (chmod (string-append bin "/shadow-over-darkmoor") #o555))
