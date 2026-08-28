@@ -2403,6 +2403,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       await persistInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs);
       continue;
     }
+    // Delivery is forbidden until the host-owned evidence artifact is
+    // committed.  A previous crash can leave every executable phase complete
+    // while this boundary remains pending; never let that state bypass the
+    // proof required for issue closure.
+    if (evidenceConfig !== undefined && journal.runtimeEvidence?.artifact !== "complete") {
+      throw new Error("Runtime screenshot evidence artifact is still pending; inspect the preserved worktree and resume after its host commit succeeds");
+    }
     const branchHead = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
     if (branchHead === baseHead) {
       throw new Error("Workflow produced no commits to integrate for #" + issue.number);
