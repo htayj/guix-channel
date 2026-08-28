@@ -2517,12 +2517,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       ? undefined
       : materializedGooflow?.phases.find((phase) => phase.name === failedPhase.name);
     const unavailableGuixDaemon = failedGooflowPhase?.capabilities?.guixDaemon === true &&
-      failureSummary?.lines.some((line) => /failed to connect to .*guix/daemon-socket/socket/u.test(line.text)) === true;
+      failureSummary?.lines.some((line) => /failed to connect to .*guix\/daemon-socket\/socket/u.test(line.text)) === true;
     if (unavailableGuixDaemon) {
       const marker = "<!-- goocastle-external-prerequisite:guix-daemon:" + String(issue.number) + " -->";
-      const comment = marker + "
-
-Goocastle blocked this ticket after the required daemon-authorized Guix proof could not reach /var/guix/daemon-socket/socket. The preserved journal and task branch remain resumable; unblock only after the daemon is available.";
+      const comment = marker + "\n\nGoocastle blocked this ticket after the required daemon-authorized Guix proof could not reach /var/guix/daemon-socket/socket. The preserved journal and task branch remain resumable; unblock only after the daemon is available.";
       await retryGitHub("Guix daemon prerequisite classification", async () => {
         const current = await selectedIssue(issue.number);
         if (!current.labels.some((label) => label.name === "state:blocked")) {
