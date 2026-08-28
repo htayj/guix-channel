@@ -118,7 +118,7 @@ const runtimeModuleUrl = (() => {
   return moduleUrl;
 })();
 const runtimeModule = await import(runtimeModuleUrl);
-const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, parseGooflowDispositionResult, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeEvidenceComment, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
+const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, parseGooflowDispositionResult, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeEvidenceComment, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
 const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Object.freeze({
   expectedPacingMs: 5 * 60_000,
   stalledAfterMs: 15 * 60_000,
@@ -157,6 +157,35 @@ if (projectConfig.sandbox !== "guix") {
 if (projectConfig.issueTracker !== "github") {
   throw new Error("The generated issue workflow requires the registered github issue tracker");
 }
+
+// GitHub can intermittently return an authentication-shaped 401 for a valid
+// token. Delivery below is checkpointed and reconciled before mutations, so
+// keep the harness alive through that failure rather than requiring an
+// operator to restart it. Each retry batch remains bounded; recovery waits
+// are capped and logged for visibility during a longer forge outage.
+const githubRetryPolicy = Object.freeze({
+  ...projectConfig.retryPolicy,
+  maxAttempts: Math.max(projectConfig.retryPolicy.maxAttempts, 8),
+  initialDelayMs: Math.max(projectConfig.retryPolicy.initialDelayMs, 5_000),
+  maxDelayMs: Math.max(projectConfig.retryPolicy.maxDelayMs, 120_000),
+});
+const sleep = async (milliseconds) => await new Promise((resolve) => setTimeout(resolve, milliseconds));
+const retryGitHub = async (description, operation) => {
+  let recoveryAttempt = 0;
+  for (;;) {
+    try {
+      return await retrySequential(operation, githubRetryPolicy, {
+        retryable: (error) => isTransientSequentialError(error) || isRetryableGitHubError(error),
+      });
+    } catch (error) {
+      if (!isRetryableGitHubError(error)) throw error;
+      recoveryAttempt += 1;
+      const waitMs = Math.min(10 * 60_000, 120_000 * 2 ** Math.min(recoveryAttempt - 1, 3));
+      console.error("GitHub " + description + " is still returning an authentication-shaped transient failure; retaining the journal and retrying automatically in " + Math.ceil(waitMs / 1000) + "s (recovery attempt " + recoveryAttempt + ").");
+      await sleep(waitMs);
+    }
+  }
+};
 
 const secretEnvironment = new Set(projectConfig.secrets.environment);
 const agentProvider = AGENT_PROVIDER_REGISTRY.find((provider) => provider.name === projectConfig.agent);
@@ -632,20 +661,20 @@ const ghRestIssueView = async (args, validate) => {
 };
 const ghJson = async (args, validate) => {
   try {
-    return await retrySequential(() => {
+    return await retryGitHub("issue API request", () => {
       const source = "gh " + args.slice(0, 2).join(" ");
       const output = execFileSync("gh", args, { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
       return parseGitHubIssueJson(output, source, validate);
-    }, projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+    });
   } catch (error) {
     if (args[0] !== "issue") throw error;
     if (args[1] === "list") {
       console.error("GitHub GraphQL issue discovery failed; retrying the same bounded issue scan through the REST API.");
-      return await retrySequential(() => ghRestIssueList(args), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+      return await retryGitHub("REST issue discovery", () => ghRestIssueList(args));
     }
     if (args[1] === "view") {
       console.error("GitHub GraphQL issue view failed; retrying the same issue read through the REST API.");
-      return await retrySequential(() => ghRestIssueView(args, validate), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+      return await retryGitHub("REST issue view", () => ghRestIssueView(args, validate));
     }
     throw error;
   }
@@ -920,10 +949,10 @@ const applyDisposition = async (journal, issue) => {
       for (const label of ticket.labelsToAdd) {
         const hasLabel = async () => (await selectedIssue(ticket.issueNumber)).labels.some((entry) => entry.name === label);
         if (await hasLabel()) continue;
-        await retrySequential(async () => {
+        await retryGitHub("implementation-ticket label delivery", async () => {
           if (await hasLabel()) return;
           execFileSync("gh", ["issue", "edit", String(ticket.issueNumber), "--add-label", label], { stdio: "inherit" });
-        }, projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+        });
       }
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
         disposition: { ...journal.disposition, implementationTicket: { ...journal.disposition.implementationTicket, labels: "complete" } }, status: "active",
@@ -943,12 +972,12 @@ const applyDisposition = async (journal, issue) => {
     if (!(await commentAlreadyApplied())) {
       // A transport error can arrive after GitHub accepted the comment. Check
       // the durable external receipt before every retry to avoid duplicates.
-      await retrySequential(async () => {
+      await retryGitHub("disposition comment delivery", async () => {
         if (await commentAlreadyApplied()) return;
         execFileSync("gh", ["issue", "comment", String(issue.number), "--body", comment], {
           stdio: "inherit",
         });
-      }, projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+      });
     }
     journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
       disposition: { ...journal.disposition, comment: "complete" }, status: "active",
@@ -961,9 +990,9 @@ const applyDisposition = async (journal, issue) => {
     const current = await selectedIssue(issue.number);
     for (const label of journal.disposition.labelsToAdd) {
       if (current.labels.some((entry) => entry.name === label)) continue;
-      await retrySequential(() => execFileSync("gh", ["issue", "edit", String(issue.number), "--add-label", label], {
+      await retryGitHub("disposition label delivery", () => execFileSync("gh", ["issue", "edit", String(issue.number), "--add-label", label], {
         stdio: "inherit",
-      }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+      }));
     }
     journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
       disposition: { ...journal.disposition, labels: "complete" }, status: "complete",
@@ -1057,7 +1086,7 @@ const postRuntimeEvidence = async (journal, evidenceConfig, integrationSha, phas
     journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
       runtimeEvidence: { ...evidence, comment: "started", artifactUrl },
     });
-    await retrySequential(() => execFileSync("gh", ["issue", "comment", String(issue.number), "--body", comment], { stdio: "inherit" }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+    await retryGitHub("runtime-evidence comment delivery", () => execFileSync("gh", ["issue", "comment", String(issue.number), "--body", comment], { stdio: "inherit" }));
     const posted = await selectedIssue(issue.number);
     if (!posted.comments.some((entry) => entry.body === comment)) throw new Error("GitHub did not expose the runtime evidence receipt after posting; issue remains open, retry with: " + resumeRecoveryCommand());
   }
@@ -2378,7 +2407,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     if (journal.issueClose !== "complete") {
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, { issueClose: "started" });
       if ((await ghJson(["issue", "view", String(issue.number), "--json", "state"], validateGitHubIssueStatePayload)).state !== "CLOSED") {
-        await retrySequential(() => execFileSync("gh", ["issue", "close", String(issue.number), "--comment", "Completed by Goocastle"], { stdio: "inherit" }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+        await retryGitHub("issue closure", () => execFileSync("gh", ["issue", "close", String(issue.number), "--comment", "Completed by Goocastle"], { stdio: "inherit" }));
       }
       if ((await ghJson(["issue", "view", String(issue.number), "--json", "state"], validateGitHubIssueStatePayload)).state !== "CLOSED") throw new Error("GitHub did not close #" + issue.number + "; retry with: " + shellDisplayCommand("gh", ["issue", "close", String(issue.number)]));
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, { issueClose: "complete" });
