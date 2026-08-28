@@ -43,7 +43,8 @@ test -s "$game_out/share/doc/clojure-roguelike/README.md"
 test -s "$game_out/share/doc/clojure-roguelike/CHANGELOG.md"
 test -s "$game_out/share/doc/clojure-roguelike/clojure-runtime-notices/readme.txt"
 test -s "$game_out/share/doc/clojure-roguelike/clojure-runtime-notices/epl-v10.html"
-grep -F 'ECLIPSE PUBLIC LICENSE' "$game_out/share/doc/clojure-roguelike/LICENSE" >/dev/null
+grep -F 'ECLIPSE PUBLIC' \
+    "$game_out/share/doc/clojure-roguelike/LICENSE" >/dev/null
 grep -F 'ASM bytecode engineering library' \
     "$game_out/share/doc/clojure-roguelike/clojure-runtime-notices/readme.txt" >/dev/null
 grep -F 'Guava Murmur3 hash implementation' \
@@ -90,7 +91,7 @@ fi
 test "$script_status" -eq 0
 tr -d '\r' <"$scratch/raw" >"$scratch/actual"
 
-printf '%s\n' \
+expected=$(printf '%s\n' \
     '########' \
     '#......#' \
     '#......#' \
@@ -98,7 +99,9 @@ printf '%s\n' \
     '#......#' \
     '#......#' \
     '#......#' \
-    '########' | cmp - "$scratch/actual"
+    '########')
+actual=$(cat "$scratch/actual")
+test "$actual" = "$expected"
 
 # The program is one-shot and should leave neither mutable state nor any
 # altered package bytes behind.

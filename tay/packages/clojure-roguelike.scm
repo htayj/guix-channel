@@ -75,7 +75,9 @@ Clojure-Roguelike entirely from source, without Maven or network resolution.")
     (source
      (origin
        (method url-fetch)
-       (uri "https://codeload.github.com/charlesrosenbauer/Clojure-Roguelike/tar.gz/16102d6123a19dbac03f457a13e8b9f1e181f577")
+       (uri (string-append
+             "https://codeload.github.com/charlesrosenbauer/Clojure-Roguelike/tar.gz/"
+             "16102d6123a19dbac03f457a13e8b9f1e181f577"))
        (file-name "Clojure-Roguelike-16102d6.tar.gz")
        (sha256
         (base32 "0qr8frwyig2qjmm0b3mzrzy9j8c782wkkxjc48pdfi3lyryj8l3l"))))
@@ -131,15 +133,17 @@ Clojure-Roguelike entirely from source, without Maven or network resolution.")
                   (call-with-output-file (string-append bin
                                                         "/clojure-roguelike")
                     (lambda (port)
-                      (format port "#!~a/bin/sh~%exec ~a/bin/java -jar ~a/share/java/clojure-roguelike.jar \"$@\"~%"
-                              (assoc-ref inputs "bash")
-                              (assoc-ref inputs "icedtea")
+                      (format port (string-append
+                                    "#!~a/bin/sh~%exec ~a/bin/java -jar "
+                                    "~a/share/java/clojure-roguelike.jar \"$@\"~%")
+                              (assoc-ref inputs "bash-minimal")
+                              (assoc-ref inputs "icedtea:jdk")
                               out)))
                   (chmod (string-append bin "/clojure-roguelike") #o555))
                 #t))))))
     (inputs
-     (list `("bash" ,bash-minimal)
-           `("icedtea" ,icedtea "jdk")))
+     (list `("bash-minimal" ,bash-minimal)
+           `("icedtea:jdk" ,icedtea "jdk")))
     (home-page "https://github.com/charlesrosenbauer/Clojure-Roguelike")
     (synopsis "Minimal terminal roguelike written in Clojure")
     (description
