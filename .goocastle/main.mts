@@ -1736,8 +1736,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // preserved journal may predate the delivery (or be a stale failed
     // replay), but it must never trigger branch reconciliation or prevent
     // unrelated eligible work from starting.
-    if (issue.state === "CLOSED" && journal.status === "failed" &&
-        (journal.runtimeEvidence === undefined || journal.runtimeEvidence.comment === "complete")) {
+    if (issue.state === "CLOSED" && journal.status === "failed") {
       if (journal.merge === "complete" && journal.push === "complete" && journal.remoteVerification === "complete") {
         // The close request may have reached GitHub before its transport
         // failed.  A live CLOSED state is the durable receipt for that host
