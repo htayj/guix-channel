@@ -1,14 +1,45 @@
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { access, constants, lstat, mkdtemp, readFile, realpath, stat, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { isAbsolute, join, relative, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const GENERATED_RUNNER_RUNTIME_API_VERSION = 3;
 const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-3/journal-1";
 const GENERATED_RUNNER_JOURNAL_SCHEMA_VERSION = 1;
+// This digest is a secret-free capability identity for the generated runner.
+// It deliberately follows the checked-in runner bytes so a repaired runner
+// cannot be mistaken for the one that exhausted a prior proof window.
+const RUNNER_REPAIR_SEMANTIC_FINGERPRINT = createHash("sha256")
+  .update(readFileSync(fileURLToPath(import.meta.url), "utf8"))
+  .digest("hex");
+const stableRepairJson = (value) => {
+  if (value === null) return "null";
+  if (Array.isArray(value)) return "[" + value.map(stableRepairJson).join(",") + "]";
+  if (typeof value === "object") return "{" + Object.keys(value).sort().map((key) => JSON.stringify(key) + ":" + stableRepairJson(value[key])).join(",") + "}";
+  const encoded = JSON.stringify(value);
+  return encoded === undefined ? "undefined" : encoded;
+};
+const repairSemanticFingerprintFor = (workflow, phaseName) => createHash("sha256")
+  .update(stableRepairJson({
+    version: 1,
+    runner: RUNNER_REPAIR_SEMANTIC_FINGERPRINT,
+    workflow: workflow === undefined ? undefined : {
+      name: workflow.name,
+      requiredPhases: workflow.requiredPhases,
+      setup: workflow.setup,
+      evidence: workflow.evidence,
+      // The failed gate and the agent phases rerun before it define the
+      // repair's observable branch and execution semantics. Unrelated command
+      // gates do not consume a new repair window.
+      phases: workflow.phases.filter((phase) => phase.name === phaseName || phase.type === "agent"),
+    },
+    phase: phaseName,
+  }))
+  .digest("hex");
 const SELF_HOSTED_RUNTIME_ROOT_ENVIRONMENT = "GOOCASTLE_SELF_HOSTED_RUNTIME_ROOT";
 const hostWorkTree = process.cwd();
 // Display-only POSIX renderer for operator recovery text.  Launches below
@@ -1235,6 +1266,25 @@ const reconcileDeliveredCleanup = async (journal, issueNumber) => {
   }
   return await cleanupOutcome(journal, { state: "cleaned", ref, sha: branchHead, reason: "deleted" });
 };
+const reconcileClosedRecoveryJournal = async (journal, issueNumber) => {
+  if (journal.status === "complete") return journal;
+  if (journal.merge === "complete" && journal.push === "complete" && journal.remoteVerification === "complete") {
+    if (journal.issueClose !== "complete") {
+      journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+        issueClose: "complete",
+        status: "active",
+      });
+    }
+    if (deliveryComplete(journal)) return await reconcileDeliveredCleanup(journal, issueNumber);
+  }
+  return await transitionSequentialTaskJournal(
+    gitCommonDir,
+    journal,
+    journal.disposition
+      ? { disposition: { ...journal.disposition, comment: "issue-closed" }, status: "complete" }
+      : { status: "complete" },
+  );
+};
 const reconciliationRecovery = (journal) =>
   "Original task tip is retained at " + journal.reconciliation.backupBranch + ". " +
   "Resolve the preserved replay with: " + shellDisplayCommand("git", ["-C", journal.reconciliation.recoveryWorktreePath, "rebase", "--continue"]) +
@@ -1414,7 +1464,23 @@ const incompleteJournal = async () => {
   // while another journal still has merge/push/close work to finish. Terminal
   // missing-branch receipts stay in this queue so a later launch cannot
   // silently start a new epoch around an unresolved recovery boundary.
-  return candidates.find((journal) => !deliveryComplete(journal)) ?? candidates.find(deliveryComplete);
+  const recoveryCandidates = candidates.filter((journal) => !deliveryComplete(journal));
+  if (recoveryCandidates.length > 0) {
+    // Refresh each candidate's forge state before selecting retained recovery
+    // state. A candidate that no longer has an open issue is closed or
+    // archived for scheduling purposes; preserve its journal as audit history
+    // while preventing it from monopolizing an eligible open issue.
+    for (const candidate of recoveryCandidates) {
+      const issue = await selectedIssue(candidate.issueNumber);
+      if (issue.state === "OPEN") return candidate;
+      await reconcileClosedRecoveryJournal(candidate, candidate.issueNumber);
+      console.log(
+        "Skipping closed or archived issue #" + candidate.issueNumber +
+          "; its preserved journal is recorded complete without replay.",
+      );
+    }
+  }
+  return candidates.find(deliveryComplete);
 };
 const journalEpoch = (journal) => journal.epoch ?? 1;
 const MISSING_BRANCH_MANUAL_ACTION = "git fsck --no-reflogs --lost-found";
@@ -1628,13 +1694,89 @@ const failureDiagnosticFor = (summary, maximum = 8_000) => {
 // audit phases. Keep the repair receipt in the journal so a restart cannot
 // silently turn the repair into an unbounded proof retry loop.
 const MAX_REQUIRED_COMMAND_REPAIR_EPOCHS = 2;
-const repairFingerprint = (phase, receipt) => JSON.stringify({ phase, receipt });
-const scheduleRequiredCommandRepair = async (journal, phaseName) => {
+const repairFailureFingerprint = (phase, receipt) => JSON.stringify({ phase, receipt });
+const reopenBlockedRequiredCommandRepair = async (journal, phaseName, semanticFingerprint) => {
+  if (journal.repair?.state !== "blocked") return { journal, reopened: false };
+  const latest = journal.repair.epochs.at(-1);
+  // A missing fingerprint identifies a journal written before this migration.
+  // Re-enter it once under the current runner/Gooflow identity; the normal
+  // two-attempt bound is then reinstated and future unchanged failures remain
+  // terminally blocked.
+  if (latest?.semanticFingerprint === semanticFingerprint) return { journal, reopened: false };
+  const branchHead = exactRefSha("refs/heads/" + journal.branch);
+  if (branchHead === undefined) {
+    throw new Error(
+      "Cannot reopen bounded repair for #" + journal.issueNumber + ": the preserved task branch is missing. " +
+      "Inspect the journal and run: " + resumeRecoveryCommand(),
+    );
+  }
+  const failureReceipt = latest?.failureReceipt;
+  if (failureReceipt === undefined) return { journal, reopened: false };
+  const reopened = {
+    state: "scheduled",
+    reopenedFromBlocked: true,
+    epochs: [{
+      epoch: 1,
+      phase: phaseName,
+      branch: journal.branch,
+      startSha: branchHead,
+      failureReceipt,
+      semanticFingerprint,
+      state: "scheduled",
+    }],
+  };
+  return {
+    journal: await transitionSequentialTaskJournal(gitCommonDir, journal, { repair: reopened, status: "active" }),
+    reopened: true,
+  };
+};
+const reconcileReopenedRequiredCommandRepair = async (journal, issueNumber) => {
+  if (journal.repair?.reopenedFromBlocked !== true) return journal;
+  await retryGitHub("required command repair reopening", async () => {
+    const current = await selectedIssue(issueNumber);
+    const blocked = current.labels.some((label) => label.name === "state:blocked");
+    const ready = current.labels.some((label) => label.name === "ready-for-agent");
+    if (!blocked && ready) return;
+    execFileSync("gh", [
+      "issue", "edit", String(issueNumber),
+      ...(blocked ? ["--remove-label", "state:blocked"] : []),
+      ...(ready ? [] : ["--add-label", "ready-for-agent"]),
+    ], { stdio: "inherit" });
+  });
+  const repair = journal.repair;
+  if (!repair) return journal;
+  return await transitionSequentialTaskJournal(gitCommonDir, journal, {
+    repair: { state: repair.state, epochs: repair.epochs },
+    status: "active",
+  });
+};
+const scheduleRequiredCommandRepair = async (journal, phaseName, semanticFingerprint) => {
   const phase = journal.phases.find((candidate) => candidate.name === phaseName);
   const failureReceipt = phase?.failureReceipt;
   if (failureReceipt === undefined) return { journal, blocked: false };
   const previous = journal.repair?.epochs.at(-1);
-  const sameFailure = previous !== undefined && repairFingerprint(previous.phase, previous.failureReceipt) === repairFingerprint(phaseName, failureReceipt);
+  const semanticChanged = previous !== undefined && previous.semanticFingerprint !== semanticFingerprint;
+  if (semanticChanged || (previous !== undefined && previous.semanticFingerprint === undefined)) {
+    const branchHead = hostGit(["rev-parse", journal.branch], { encoding: "utf8" }).trim();
+    const reopened = {
+      state: "scheduled",
+      ...(journal.repair?.state === "blocked" ? { reopenedFromBlocked: true } : {}),
+      epochs: [{
+        epoch: 1,
+        phase: phaseName,
+        branch: journal.branch,
+        startSha: branchHead,
+        failureReceipt,
+        semanticFingerprint,
+        state: "scheduled",
+      }],
+    };
+    return {
+      journal: await transitionSequentialTaskJournal(gitCommonDir, journal, { repair: reopened, status: "active" }),
+      blocked: false,
+    };
+  }
+  const sameFailure = previous !== undefined && repairFailureFingerprint(previous.phase, previous.failureReceipt) === repairFailureFingerprint(phaseName, failureReceipt);
   const exhausted = journal.repair?.epochs.length === MAX_REQUIRED_COMMAND_REPAIR_EPOCHS;
   if (journal.repair?.state === "blocked" || sameFailure || exhausted) {
     const existingEpochs = journal.repair?.epochs ?? [];
@@ -1647,6 +1789,7 @@ const scheduleRequiredCommandRepair = async (journal, phaseName) => {
             branch: journal.branch,
             startSha: hostGit(["rev-parse", journal.branch], { encoding: "utf8" }).trim(),
             failureReceipt,
+            semanticFingerprint,
             state: "blocked",
           }]
         : [...existingEpochs.slice(0, -1), { ...existingEpochs.at(-1), failureReceipt, state: "blocked" }];
@@ -1672,6 +1815,7 @@ const scheduleRequiredCommandRepair = async (journal, phaseName) => {
         branch: journal.branch,
         startSha: hostGit(["rev-parse", journal.branch], { encoding: "utf8" }).trim(),
         failureReceipt,
+        semanticFingerprint,
         state: "scheduled",
       },
     ],
@@ -1851,6 +1995,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
   let issueContext;
   let specification;
   let resolvedGooflow;
+  let reopenedBlockedRepair = false;
   if (journal) {
     if (deliveryComplete(journal)) {
       // A delivered journal needs no forge snapshot, specification approval,
@@ -1865,25 +2010,11 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // preserved journal may predate the delivery (or be a stale failed
     // replay), but it must never trigger branch reconciliation or prevent
     // unrelated eligible work from starting.
-    if (issue.state === "CLOSED" && journal.status === "failed") {
-      if (journal.merge === "complete" && journal.push === "complete" && journal.remoteVerification === "complete") {
-        // The close request may have reached GitHub before its transport
-        // failed.  A live CLOSED state is the durable receipt for that host
-        // boundary, so finalize it before performing ordinary cleanup.
-        journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
-          issueClose: "complete",
-          status: "active",
-        });
-        journal = await reconcileDeliveredCleanup(journal, issue.number);
-      } else {
-        journal = await transitionSequentialTaskJournal(
-          gitCommonDir,
-          journal,
-          journal.disposition
-            ? { disposition: { ...journal.disposition, comment: "issue-closed" }, status: "complete" }
-            : { status: "complete" },
-        );
-      }
+    if (issue.state === "CLOSED") {
+      // The close request may have reached GitHub before its transport
+      // failed.  A live CLOSED state is the durable receipt for that host
+      // boundary, so finalize it before performing ordinary cleanup.
+      journal = await reconcileClosedRecoveryJournal(journal, issue.number);
       attemptedIssues.add(issue.number);
       console.log(
         "Skipping closed issue #" + issue.number +
@@ -1893,21 +2024,93 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       continue;
     }
     if (issue.state === "OPEN" && journal.repair?.state === "blocked") {
-      await reconcileBlockedRequiredCommandRepair(journal, issue.number);
-      deferredJournalIssues.add(issue.number);
-      terminallyBlockedJournalIssues.add(issue.number);
-      attemptedIssues.add(issue.number);
-      console.log(
-        "Skipping open issue #" + issue.number +
-          " with durable bounded repair state:blocked; its preserved journal and worktree remain unchanged.",
+      // Resolve the current Gooflow before honoring a terminal repair state.
+      // The old ordering made a repaired proof command invisible to resume.
+      resolvedGooflow = await resolveForIssue(issue);
+      // Preserve both the issue-specification and Gooflow selection
+      // boundaries before publishing any external reopening label. A changed
+      // issue contract or workflow selection must still fail closed.
+      const repairExplanation = validateIssueForWorkflow(issue, resolvedGooflow.workflow, { reportWarnings: false });
+      if (journal.specification && (
+        journal.specification.policyVersion !== repairExplanation.policyVersion ||
+        journal.specification.policyDigest !== repairExplanation.policyDigest ||
+        journal.specification.specificationDigest !== repairExplanation.specificationDigest ||
+        journal.specification.mode !== repairExplanation.policy.mode
+      ) && !SPECIFICATION_OVERRIDE) {
+        throw new Error(
+          "Issue #" + issue.number + " specification changed since the task was journaled (body or policy digest differs). " +
+            "Review the preserved branch and journal with goocastle status, then rerun with GOOCASTLE_SPECIFICATION_OVERRIDE=1 for an explicit audited decision.",
+        );
+      }
+      const latestRepair = journal.repair.epochs.at(-1);
+      const currentRepairWorkflow = resolvedGooflow.workflow === undefined
+        ? undefined
+        : materializeIssueWorkflow(resolvedGooflow.workflow, issue);
+      const selectedGooflow = resolvedGooflow.workflow?.name ?? "template";
+      const selectedAgents = currentRepairWorkflow === undefined ? [] : agentProvenance(currentRepairWorkflow);
+      const gooflowChanged = journal.gooflow && (
+        journal.gooflow.workflow !== selectedGooflow ||
+        journal.gooflow.bypassed !== resolvedGooflow.bypassed ||
+        (journal.gooflow.source !== undefined && journal.gooflow.source !== resolvedGooflow.selection.source) ||
+        (journal.gooflow.schemaVersion !== undefined && journal.gooflow.schemaVersion !== resolvedGooflow.selection.schemaVersion) ||
+        (journal.gooflow.override !== undefined && journal.gooflow.override !== resolvedGooflow.selection.override) ||
+        (journal.gooflow.agents !== undefined && JSON.stringify(journal.gooflow.agents) !== JSON.stringify(selectedAgents))
       );
-      task -= 1;
-      continue;
+      if (gooflowChanged) {
+        throw new Error(
+          "Gooflow selection for #" + issue.number + " changed from " +
+            JSON.stringify(journal.gooflow.workflow) + " (bypassed=" + String(journal.gooflow.bypassed) + ") to " +
+            JSON.stringify(selectedGooflow) + " (bypassed=" + String(resolvedGooflow.bypassed) + "). Review the journal with goocastle status, then restore the original standard or deliberately start a new task.",
+        );
+      }
+      const repairPhase = currentRepairWorkflow?.phases.find((phase) => phase.name === latestRepair?.phase);
+      const canReopen = repairPhase?.type === "command" &&
+        currentRepairWorkflow?.requiredPhases?.includes(latestRepair?.phase) === true &&
+        (latestRepair.phase === "safe-package-proof" || currentRepairWorkflow.evidence?.proofPhase === latestRepair.phase);
+      if (canReopen && latestRepair !== undefined) {
+        const semanticFingerprint = repairSemanticFingerprintFor(currentRepairWorkflow, latestRepair.phase);
+        const reopened = await reopenBlockedRequiredCommandRepair(journal, latestRepair.phase, semanticFingerprint);
+        journal = reopened.journal;
+        if (reopened.reopened) {
+          reopenedBlockedRepair = true;
+          journal = await reconcileReopenedRequiredCommandRepair(journal, issue.number);
+          console.log(
+            "Reopened bounded repair epoch for #" + issue.number + " after the runner or Gooflow semantics changed for " +
+              JSON.stringify(latestRepair.phase) + "; implementation and audit will run before the proof is retried.",
+          );
+        } else {
+          await reconcileBlockedRequiredCommandRepair(journal, issue.number);
+          deferredJournalIssues.add(issue.number);
+          terminallyBlockedJournalIssues.add(issue.number);
+          attemptedIssues.add(issue.number);
+          console.log(
+            "Skipping open issue #" + issue.number +
+              " with durable bounded repair state:blocked; its preserved journal and worktree remain unchanged.",
+          );
+          task -= 1;
+          continue;
+        }
+      } else {
+        await reconcileBlockedRequiredCommandRepair(journal, issue.number);
+        deferredJournalIssues.add(issue.number);
+        terminallyBlockedJournalIssues.add(issue.number);
+        attemptedIssues.add(issue.number);
+        console.log(
+          "Skipping open issue #" + issue.number +
+            " with durable bounded repair state:blocked; its preserved journal and worktree remain unchanged.",
+        );
+        task -= 1;
+        continue;
+      }
+    }
+    if (journal.repair?.reopenedFromBlocked === true) {
+      reopenedBlockedRepair = true;
+      journal = await reconcileReopenedRequiredCommandRepair(journal, issue.number);
     }
     // A retained journal is recovery state, not authority to resume an issue
     // whose current terminal disposition says it must remain blocked. Check the
     // live issue before any branch, journal, or sandbox recovery action.
-    if (issue.state === "OPEN" && hasTerminalBlockedLabel(issue)) {
+    if (issue.state === "OPEN" && hasTerminalBlockedLabel(issue) && !reopenedBlockedRepair) {
       deferredJournalIssues.add(issue.number);
       terminallyBlockedJournalIssues.add(issue.number);
       attemptedIssues.add(issue.number);
@@ -2829,7 +3032,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       materializedGooflow?.requiredPhases?.includes(failedGooflowPhase.name) === true &&
       (failedGooflowPhase.name === "safe-package-proof" || materializedGooflow.evidence?.proofPhase === failedGooflowPhase.name);
     if (requiredCommandGate) {
-      const repairResult = await scheduleRequiredCommandRepair(journal, failedGooflowPhase.name);
+      const semanticFingerprint = repairSemanticFingerprintFor(materializedGooflow, failedGooflowPhase.name);
+      const repairResult = await scheduleRequiredCommandRepair(journal, failedGooflowPhase.name, semanticFingerprint);
       journal = repairResult.journal;
       if (!repairResult.blocked) {
         const epoch = journal.repair?.epochs.at(-1)?.epoch;
