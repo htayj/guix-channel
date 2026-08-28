@@ -1586,6 +1586,108 @@ const reportTransientDeliveryPause = (journal) => {
   console.error("Recovery command: " + resumeRecoveryCommand());
 };
 
+const failureDiagnosticFor = (summary, maximum = 8_000) => {
+  if (!summary || typeof summary !== "object") return "";
+  const command = shellDisplayCommand(summary.command?.file ?? "unknown", summary.command?.args ?? []);
+  const lines = Array.isArray(summary.lines) ? summary.lines.slice(-8).map((line) => "  [" + line.stream + "] " + line.text) : [];
+  const diagnostic = "\n\nFailed command: " + command + "\nExit status: " + String(summary.exitCode) +
+    "\nFinal failure lines:\n" + (lines.length > 0 ? lines.join("\n") : "  (no output retained)") +
+    (summary.truncated === true ? "\n  [earlier or oversized output omitted]" : "");
+  return diagnostic.length <= maximum ? diagnostic : diagnostic.slice(0, Math.max(0, maximum - 1)) + "…";
+};
+
+// A required command defect is different from an unavailable host
+// prerequisite: the task branch can be repaired by re-entering the agent and
+// audit phases. Keep the repair receipt in the journal so a restart cannot
+// silently turn the repair into an unbounded proof retry loop.
+const MAX_REQUIRED_COMMAND_REPAIR_EPOCHS = 2;
+const repairFingerprint = (phase, receipt) => JSON.stringify({ phase, receipt });
+const scheduleRequiredCommandRepair = async (journal, phaseName) => {
+  const phase = journal.phases.find((candidate) => candidate.name === phaseName);
+  const failureReceipt = phase?.failureReceipt;
+  if (failureReceipt === undefined) return { journal, blocked: false };
+  const previous = journal.repair?.epochs.at(-1);
+  const sameFailure = previous !== undefined && repairFingerprint(previous.phase, previous.failureReceipt) === repairFingerprint(phaseName, failureReceipt);
+  const exhausted = journal.repair?.epochs.length === MAX_REQUIRED_COMMAND_REPAIR_EPOCHS;
+  if (journal.repair?.state === "blocked" || sameFailure || exhausted) {
+    const existingEpochs = journal.repair?.epochs ?? [];
+    const blockedEpochs = journal.repair?.state === "blocked"
+      ? existingEpochs
+      : existingEpochs.length < MAX_REQUIRED_COMMAND_REPAIR_EPOCHS
+        ? [...existingEpochs.slice(0, -1), { ...existingEpochs.at(-1), state: "blocked" }, {
+            epoch: existingEpochs.length + 1,
+            phase: phaseName,
+            branch: journal.branch,
+            startSha: hostGit(["rev-parse", journal.branch], { encoding: "utf8" }).trim(),
+            failureReceipt,
+            state: "blocked",
+          }]
+        : [...existingEpochs.slice(0, -1), { ...existingEpochs.at(-1), failureReceipt, state: "blocked" }];
+    const blockedRepair = { state: "blocked", epochs: blockedEpochs };
+    return {
+      journal: journal.repair?.state === "blocked"
+        ? journal
+        : await transitionSequentialTaskJournal(gitCommonDir, journal, {
+            repair: blockedRepair,
+            status: "failed",
+          }),
+      blocked: true,
+    };
+  }
+  const epoch = (journal.repair?.epochs.length ?? 0) + 1;
+  const repair = {
+    state: "scheduled",
+    epochs: [
+      ...(journal.repair?.epochs ?? []),
+      {
+        epoch,
+        phase: phaseName,
+        branch: journal.branch,
+        startSha: hostGit(["rev-parse", journal.branch], { encoding: "utf8" }).trim(),
+        failureReceipt,
+        state: "scheduled",
+      },
+    ],
+  };
+  return {
+    journal: await transitionSequentialTaskJournal(gitCommonDir, journal, { repair, status: "active" }),
+    blocked: false,
+  };
+};
+
+const requiredCommandRepairComment = (issueNumber, phaseName, failureReceipt) => {
+  const boundedEvidence = failureDiagnosticFor(failureReceipt?.failureSummary, 4_000).trim() || "(no failure evidence retained)";
+  return [
+    "<!-- goocastle-repair-blocked:" + String(issueNumber) + ":" + phaseName + " -->",
+    "",
+    "Goocastle blocked this ticket after the bounded repair budget was exhausted for the required command gate.",
+    "The failure receipt and task branch provenance remain preserved; inspect the branch and repair the package before retrying.",
+    "",
+    "Bounded failure evidence:",
+    boundedEvidence,
+  ].join("\n");
+};
+const reconcileBlockedRequiredCommandRepair = async (journal, issueNumber) => {
+  const latest = journal.repair?.epochs.at(-1);
+  if (latest === undefined) return;
+  const comment = requiredCommandRepairComment(issueNumber, latest.phase, latest.failureReceipt);
+  await retryGitHub("required command repair escalation", async () => {
+    const current = await selectedIssue(issueNumber);
+    const blocked = current.labels.some((label) => label.name === "state:blocked");
+    const ready = current.labels.some((label) => label.name === "ready-for-agent");
+    if (!current.comments.some((entry) => entry.body === comment)) {
+      execFileSync("gh", ["issue", "comment", String(issueNumber), "--body", comment], { stdio: "inherit" });
+    }
+    if (!blocked || ready) {
+      execFileSync("gh", [
+        "issue", "edit", String(issueNumber),
+        ...(blocked ? [] : ["--add-label", "state:blocked"]),
+        ...(ready ? ["--remove-label", "ready-for-agent"] : []),
+      ], { stdio: "inherit" });
+    }
+  });
+};
+
 const reexecutionRecoveryCommand = (state) => {
   const argumentsForNode = [process.execPath, ...process.execArgv, ...process.argv.slice(1)];
   const runtimeEnvironment = [
@@ -1763,6 +1865,18 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       task -= 1;
       continue;
     }
+    if (issue.state === "OPEN" && journal.repair?.state === "blocked") {
+      await reconcileBlockedRequiredCommandRepair(journal, issue.number);
+      deferredJournalIssues.add(issue.number);
+      terminallyBlockedJournalIssues.add(issue.number);
+      attemptedIssues.add(issue.number);
+      console.log(
+        "Skipping open issue #" + issue.number +
+          " with durable bounded repair state:blocked; its preserved journal and worktree remain unchanged.",
+      );
+      task -= 1;
+      continue;
+    }
     // A retained journal is recovery state, not authority to resume an issue
     // whose current terminal disposition says it must remain blocked. Check the
     // live issue before any branch, journal, or sandbox recovery action.
@@ -1896,15 +2010,6 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       current = current.cause;
     }
     return undefined;
-  };
-  const failureDiagnosticFor = (summary, maximum = 8_000) => {
-    if (!summary || typeof summary !== "object") return "";
-    const command = shellDisplayCommand(summary.command?.file ?? "unknown", summary.command?.args ?? []);
-    const lines = Array.isArray(summary.lines) ? summary.lines.slice(-8).map((line) => "  [" + line.stream + "] " + line.text) : [];
-    const diagnostic = "\n\nFailed command: " + command + "\nExit status: " + String(summary.exitCode) +
-      "\nFinal failure lines:\n" + (lines.length > 0 ? lines.join("\n") : "  (no output retained)") +
-      (summary.truncated === true ? "\n  [earlier or oversized output omitted]" : "");
-    return diagnostic.length <= maximum ? diagnostic : diagnostic.slice(0, Math.max(0, maximum - 1)) + "…";
   };
   try {
     if (deliveryComplete(journal)) {
@@ -2083,9 +2188,20 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // evidence of a host-valid result.
     const dispositionResultRequired = dispositionPolicy !== undefined && journal.disposition === undefined;
     let capturedDisposition;
+    const activeRepair = journal.repair?.state === "scheduled" || journal.repair?.state === "running";
+    const repairPhaseName = activeRepair ? journal.repair.epochs.at(-1)?.phase : undefined;
+    const repairPhases = activeRepair
+      ? [
+          phases.find((phase) => phase.name === "implement" && phase.type === "agent"),
+          phases.find((phase) => phase.name === "edge-case-audit" && phase.type === "agent") ?? phases.find((phase) => phase.type === "agent" && /audit|review/iu.test(phase.name) && phase.name !== "implement"),
+          phases.find((phase) => phase.name === repairPhaseName),
+        ].filter((phase, index, candidates) => phase !== undefined && candidates.indexOf(phase) === index)
+      : [];
     const pendingPhases = phases.filter((phase) => {
       const record = phaseRecord(journal, phase.name);
-      return dispositionResultRequired || record?.state !== "complete" || record?.stoppedEarly === true;
+      return activeRepair
+        ? repairPhases.some((candidate) => candidate?.name === phase.name)
+        : dispositionResultRequired || record?.state !== "complete" || record?.stoppedEarly === true;
     });
     // A capture can complete before the host commits its declared artifact.
     // Recreate the task-worktree boundary on resume even though no executable
@@ -2271,6 +2387,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       };
       const runBatch = async (batchSandbox, batch, includeSetup = false) => {
         if (batch.length === 0 && !includeSetup) return undefined;
+        if (includeSetup) setupIncluded = true;
         return await retrySequential(() => runWorkflow({
           sandbox: batchSandbox,
           ...(includeSetup ? { setup } : {}),
@@ -2279,9 +2396,23 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
       };
       const workflowResults = [];
+      let setupIncluded = false;
+      let repairExecutionActive = activeRepair;
+      if (activeRepair && journal.repair !== undefined) {
+        const epochs = journal.repair.epochs;
+        const latest = epochs.at(-1);
+        if (latest !== undefined && latest.state !== "running") {
+          journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+            repair: { state: "running", epochs: [...epochs.slice(0, -1), { ...latest, state: "running" }] },
+            status: "active",
+          });
+        }
+      }
       const pendingFor = (batch) => batch.filter((phase) => {
         const record = phaseRecord(journal, phase.name);
-        return dispositionResultRequired || record?.state !== "complete" || record?.stoppedEarly === true;
+        return repairExecutionActive
+          ? repairPhases.some((candidate) => candidate?.name === phase.name)
+          : dispositionResultRequired || record?.state !== "complete" || record?.stoppedEarly === true;
       });
       const evidencePhaseIndex = evidenceConfig === undefined ? -1 : phases.findIndex((phase) => phase.name === evidenceConfig.proofPhase);
       const capturePhaseIndex = evidenceConfig === undefined ? -1 : phases.findIndex((phase) => phase.name === evidenceConfig.capturePhase);
@@ -2319,18 +2450,31 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           if (closed.preservedWorktreePath) throw new Error("Runtime evidence sandbox left uncommitted changes at " + closed.preservedWorktreePath);
         }
       };
-      if (evidenceConfig === undefined) {
-        const result = await runBatch(sandbox, pendingPhases, true);
-        if (result !== undefined) workflowResults.push(result);
-      } else {
-        const before = pendingFor(phases.slice(0, evidencePhaseIndex));
-        const between = pendingFor(phases.slice(evidencePhaseIndex + 1, capturePhaseIndex));
-        const after = pendingFor(phases.slice(capturePhaseIndex + 1));
+      const runNormalPending = async () => {
+        if (evidenceConfig === undefined) {
+          const result = await runBatch(sandbox, phases.filter((phase) => {
+            const record = phaseRecord(journal, phase.name);
+            return dispositionResultRequired || record?.state !== "complete" || record?.stoppedEarly === true;
+          }), setup.length > 0 && !setupIncluded);
+          if (result !== undefined) workflowResults.push(result);
+          return;
+        }
+        const before = phases.slice(0, evidencePhaseIndex).filter((phase) => {
+          const record = phaseRecord(journal, phase.name);
+          return dispositionResultRequired || record?.state !== "complete" || record?.stoppedEarly === true;
+        });
+        const between = phases.slice(evidencePhaseIndex + 1, capturePhaseIndex).filter((phase) => {
+          const record = phaseRecord(journal, phase.name);
+          return dispositionResultRequired || record?.state !== "complete" || record?.stoppedEarly === true;
+        });
+        const after = phases.slice(capturePhaseIndex + 1).filter((phase) => {
+          const record = phaseRecord(journal, phase.name);
+          return dispositionResultRequired || record?.state !== "complete" || record?.stoppedEarly === true;
+        });
         // A resumed evidence workflow can have every pre-proof phase already
-        // complete.  Do not invoke runWorkflow with an empty phase batch and
-        // no setup commands: that produces no executable work and prevents
-        // the failed proof from being retried.
-        const initial = await runBatch(sandbox, before, setup.length > 0);
+        // complete. Do not invoke runWorkflow with an empty phase batch and no
+        // setup commands: that produces no executable work.
+        const initial = await runBatch(sandbox, before, setup.length > 0 && !setupIncluded);
         if (initial !== undefined) workflowResults.push(initial);
         await runEvidencePhase(phases[evidencePhaseIndex]);
         const middle = await runBatch(sandbox, between);
@@ -2338,7 +2482,31 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         await runEvidencePhase(phases[capturePhaseIndex]);
         const final = await runBatch(sandbox, after);
         if (final !== undefined) workflowResults.push(final);
+      };
+      if (activeRepair) {
+        const failedRepairPhase = phases.find((phase) => phase.name === repairPhaseName);
+        const evidenceRepair = evidenceConfig !== undefined &&
+          (repairPhaseName === evidenceConfig.proofPhase || repairPhaseName === evidenceConfig.capturePhase);
+        if (evidenceRepair && failedRepairPhase !== undefined) {
+          const preparation = repairPhases.filter((phase) => phase.name !== repairPhaseName);
+          const initial = await runBatch(sandbox, preparation, setup.length > 0 && !setupIncluded);
+          if (initial !== undefined) workflowResults.push(initial);
+          await runEvidencePhase(failedRepairPhase);
+        } else {
+          const repairResult = await runBatch(sandbox, repairPhases, setup.length > 0 && !setupIncluded);
+          if (repairResult !== undefined) workflowResults.push(repairResult);
+        }
+        const epochs = journal.repair?.epochs ?? [];
+        const latest = epochs.at(-1);
+        if (latest !== undefined) {
+          journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+            repair: { state: "complete", epochs: [...epochs.slice(0, -1), { ...latest, state: "complete" }] },
+            status: "active",
+          });
+        }
+        repairExecutionActive = false;
       }
+      await runNormalPending();
       const result = {
         failures: workflowResults.flatMap((entry) => entry.failures ?? []),
         stoppedEarly: workflowResults.some((entry) => entry.stoppedEarly),
@@ -2599,6 +2767,29 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       console.error("Task #" + issue.number + " is blocked on the required Guix daemon; continuing to unrelated eligible work.");
       // A terminal prerequisite classification is not completed work. Do not
       // consume the queue slot that the unrelated eligible issue needs.
+      task -= 1;
+      continue;
+    }
+    const requiredCommandGate = failedGooflowPhase?.type === "command" &&
+      materializedGooflow?.requiredPhases?.includes(failedGooflowPhase.name) === true &&
+      (failedGooflowPhase.name === "safe-package-proof" || materializedGooflow.evidence?.proofPhase === failedGooflowPhase.name);
+    if (requiredCommandGate) {
+      const repairResult = await scheduleRequiredCommandRepair(journal, failedGooflowPhase.name);
+      journal = repairResult.journal;
+      if (!repairResult.blocked) {
+        const epoch = journal.repair?.epochs.at(-1)?.epoch;
+        console.error(
+          "Scheduled bounded repair epoch " + String(epoch) + " for #" + issue.number +
+          "; implementation and audit will run before retrying " + JSON.stringify(failedGooflowPhase.name) + ".",
+        );
+        task -= 1;
+        continue;
+      }
+      await reconcileBlockedRequiredCommandRepair(journal, issue.number);
+      console.error(
+        "Task #" + issue.number + " is blocked after bounded repair epochs for required gate " +
+        JSON.stringify(failedGooflowPhase.name) + "; continuing to unrelated eligible work.",
+      );
       task -= 1;
       continue;
     }
