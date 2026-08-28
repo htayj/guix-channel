@@ -26,7 +26,10 @@ transcript="$capture_root/runtime.txt"
 
 # The required tools are pinned in manifest.scm.  A nested `guix shell` would
 # attempt to create a profile under the container's read-only /var/guix/profiles.
-script -q -e -c "sh .goocastle/prove-guix-package.sh" "$transcript"
+# Keep the complete transcript in its bounded temporary file.  Streaming it
+# again to the phase's stdout can exhaust Goocastle's command-output budget
+# while a Guix build is otherwise healthy.
+script -q -e -c "sh .goocastle/prove-guix-package.sh" "$transcript" >/dev/null
 tail -c 12000 "$transcript" > "$transcript.tail"
 mv "$transcript.tail" "$transcript"
 convert -size 1280x -background "#101418" -fill "#e8eaed" \
