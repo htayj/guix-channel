@@ -2304,7 +2304,11 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         const before = pendingFor(phases.slice(0, evidencePhaseIndex));
         const between = pendingFor(phases.slice(evidencePhaseIndex + 1, capturePhaseIndex));
         const after = pendingFor(phases.slice(capturePhaseIndex + 1));
-        const initial = await runBatch(sandbox, before, true);
+        // A resumed evidence workflow can have every pre-proof phase already
+        // complete.  Do not invoke runWorkflow with an empty phase batch and
+        // no setup commands: that produces no executable work and prevents
+        // the failed proof from being retried.
+        const initial = await runBatch(sandbox, before, setup.length > 0);
         if (initial !== undefined) workflowResults.push(initial);
         await runEvidencePhase(phases[evidencePhaseIndex]);
         const middle = await runBatch(sandbox, between);
