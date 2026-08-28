@@ -1037,28 +1037,55 @@ const runtimeEvidenceArtifactUrl = (integrationSha, artifactPath) => {
   const encodedPath = artifactPath.split("/").map((segment) => encodeURIComponent(segment)).join("/");
   return "https://github.com/" + repository + "/blob/" + encodeURIComponent(integrationSha) + "/" + encodedPath + "?raw=1";
 };
-const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePhase) => {
+const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePhase, taskWorktree, branch, issueNumber) => {
   if (!taskWorktree) throw new Error("Cannot record runtime evidence without the task worktree; inspect the journal and resume");
   const artifact = await inspectRuntimeEvidenceArtifact(taskWorktree.worktreePath, evidenceConfig.artifactPath);
   const status = gitAt(taskWorktree.worktreePath, ["status", "--porcelain=v1", "--untracked-files=all", "-z"], { encoding: "utf8" });
-  const entries = status.split("\\0").filter(Boolean);
+  const entries = status.split("\0").filter(Boolean);
   const expected = "?? " + evidenceConfig.artifactPath;
-  if (entries.length !== 1 || entries[0] !== expected) {
+  const expectedStaged = "A  " + evidenceConfig.artifactPath;
+  const artifactCommitSubject = "test(runtime): record package screenshot for #" + String(issueNumber);
+  let artifactCommitSha;
+  if (entries.length === 0) {
+    // A crash can happen after Git commits the artifact but before the journal
+    // records the boundary. Reconcile only a clean, single-parent commit that
+    // has the exact deterministic subject and adds only the declared image.
+    const candidate = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
+    const parents = hostGit(["rev-list", "--parents", "-n", "1", candidate], { encoding: "utf8" }).trim().split(" ").filter(Boolean);
+    const changes = gitAt(taskWorktree.worktreePath, ["diff-tree", "--no-commit-id", "--name-status", "-r", "-z", parents[1] ?? candidate, candidate], { encoding: "utf8" }).split("\0").filter(Boolean);
+    const subject = hostGit(["show", "-s", "--format=%s", candidate], { encoding: "utf8" }).trim();
+    if (journal.runtimeEvidence?.artifactStartSha === undefined || parents.length !== 2 || parents[1] !== journal.runtimeEvidence.artifactStartSha || subject !== artifactCommitSubject || changes.length !== 2 || changes[0] !== "A" || changes[1] !== evidenceConfig.artifactPath) {
+      throw new Error("Runtime screenshot artifact boundary is neither the declared untracked image nor an exact committed artifact; inspect the preserved branch before resuming");
+    }
+    const signed = await ensureSignedPhaseCommits(journal, signingBoundary("runtime-evidence", capturePhase), journal.runtimeEvidence.artifactStartSha, candidate);
+    journal = signed.journal;
+    artifactCommitSha = signed.head;
+    journal = await recordUnsignedCommit(journal, signingBoundary("runtime-evidence", capturePhase));
+  } else if (entries.length !== 1 || (entries[0] !== expected && entries[0] !== expectedStaged)) {
     throw new Error("Runtime screenshot capture must produce exactly the declared untracked artifact " + JSON.stringify(evidenceConfig.artifactPath) + "; inspect the preserved branch and remove unrelated changes before resuming");
+  } else {
+    const artifactStartSha = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
+    if (journal.runtimeEvidence?.artifactStartSha !== undefined && journal.runtimeEvidence.artifactStartSha !== artifactStartSha) {
+      throw new Error("Runtime screenshot artifact branch changed before its host commit; inspect the preserved branch before resuming");
+    }
+    if (journal.runtimeEvidence?.artifactStartSha === undefined) {
+      journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+        runtimeEvidence: { ...journal.runtimeEvidence, artifactStartSha },
+      });
+    }
+    journal = await prepareCommitSigning(journal, signingBoundary("runtime-evidence", capturePhase));
+    if (entries[0] === expected) gitAt(taskWorktree.worktreePath, ["add", "--", evidenceConfig.artifactPath], { stdio: "inherit" });
+    const staged = gitAt(taskWorktree.worktreePath, ["status", "--porcelain=v1", "-z"], { encoding: "utf8" }).split("\0").filter(Boolean);
+    if (staged.length !== 1 || staged[0] !== expectedStaged) {
+      throw new Error("Runtime screenshot artifact did not stage as a new file; inspect the preserved branch and resume after correcting the capture adapter");
+    }
+    gitAt(taskWorktree.worktreePath, ["commit", "--no-verify", "-m", artifactCommitSubject], { stdio: "inherit" });
+    const unsignedArtifactCommitSha = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
+    const signed = await ensureSignedPhaseCommits(journal, signingBoundary("runtime-evidence", capturePhase), artifactStartSha, unsignedArtifactCommitSha);
+    journal = signed.journal;
+    artifactCommitSha = signed.head;
+    journal = await recordUnsignedCommit(journal, signingBoundary("runtime-evidence", capturePhase));
   }
-  journal = await prepareCommitSigning(journal, signingBoundary("runtime-evidence", capturePhase));
-  const artifactStartSha = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
-  gitAt(taskWorktree.worktreePath, ["add", "--", evidenceConfig.artifactPath], { stdio: "inherit" });
-  const staged = gitAt(taskWorktree.worktreePath, ["status", "--porcelain=v1", "-z"], { encoding: "utf8" }).split("\\0").filter(Boolean);
-  if (staged.length !== 1 || staged[0] !== "A  " + evidenceConfig.artifactPath) {
-    throw new Error("Runtime screenshot artifact did not stage as a new file; inspect the preserved branch and resume after correcting the capture adapter");
-  }
-  gitAt(taskWorktree.worktreePath, ["commit", "--no-verify", "-m", "test(runtime): record package screenshot for #" + String(issue.number)], { stdio: "inherit" });
-  const unsignedArtifactCommitSha = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
-  const signed = await ensureSignedPhaseCommits(journal, signingBoundary("runtime-evidence", capturePhase), artifactStartSha, unsignedArtifactCommitSha);
-  journal = signed.journal;
-  const artifactCommitSha = signed.head;
-  journal = await recordUnsignedCommit(journal, signingBoundary("runtime-evidence", capturePhase));
   return await transitionSequentialTaskJournal(gitCommonDir, journal, {
     runtimeEvidence: {
       ...journal.runtimeEvidence,
@@ -1070,7 +1097,7 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
     },
   });
 };
-const postRuntimeEvidence = async (journal, evidenceConfig, integrationSha, phases) => {
+const postRuntimeEvidence = async (journal, evidenceConfig, integrationSha, phases, issueNumber) => {
   const evidence = journal.runtimeEvidence;
   if (!evidence || evidence.artifact !== "complete" || !evidence.artifactSha256 || !evidence.artifactBytes || !evidence.artifactFormat || !evidence.artifactCommitSha) {
     throw new Error("Cannot post runtime evidence before the bounded screenshot artifact is committed; inspect the preserved journal and resume");
@@ -1083,7 +1110,7 @@ const postRuntimeEvidence = async (journal, evidenceConfig, integrationSha, phas
   const artifactUrl = runtimeEvidenceArtifactUrl(integrationSha, evidence.artifactPath);
   const comment = renderRuntimeEvidenceComment({
     workflow: WORKFLOW_NAME,
-    issueNumber: issue.number,
+    issueNumber,
     epoch: journal.epoch ?? 1,
     packageName: evidence.packageName,
     proofPhase: evidence.proofPhase,
@@ -1097,18 +1124,18 @@ const postRuntimeEvidence = async (journal, evidenceConfig, integrationSha, phas
     artifactCommitSha: evidence.artifactCommitSha,
     artifactUrl,
   });
-  const marker = "<!-- goocastle-runtime-evidence:" + WORKFLOW_NAME + ":" + String(issue.number) + ":" + String(journal.epoch ?? 1) + " -->";
-  const current = await selectedIssue(issue.number);
+  const marker = "<!-- goocastle-runtime-evidence:" + WORKFLOW_NAME + ":" + String(issueNumber) + ":" + String(journal.epoch ?? 1) + " -->";
+  const current = await selectedIssue(issueNumber);
   const existing = current.comments.find((entry) => entry.body.includes(marker));
   if (existing && existing.body !== comment) {
-    throw new Error("A different runtime evidence receipt already exists for #" + issue.number + "; inspect the issue comment and preserved journal before retrying");
+    throw new Error("A different runtime evidence receipt already exists for #" + issueNumber + "; inspect the issue comment and preserved journal before retrying");
   }
   if (!existing) {
     journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
       runtimeEvidence: { ...evidence, comment: "started", artifactUrl },
     });
-    await retryGitHub("runtime-evidence comment delivery", () => execFileSync("gh", ["issue", "comment", String(issue.number), "--body", comment], { stdio: "inherit" }));
-    const posted = await selectedIssue(issue.number);
+    await retryGitHub("runtime-evidence comment delivery", () => execFileSync("gh", ["issue", "comment", String(issueNumber), "--body", comment], { stdio: "inherit" }));
+    const posted = await selectedIssue(issueNumber);
     if (!posted.comments.some((entry) => entry.body === comment)) throw new Error("GitHub did not expose the runtime evidence receipt after posting; issue remains open, retry with: " + resumeRecoveryCommand());
   }
   return await transitionSequentialTaskJournal(gitCommonDir, journal, {
@@ -1127,7 +1154,7 @@ const branchWorktreePath = (branch) => {
 };
 const deliveryComplete = (journal) => journal.merge === "complete" && journal.push === "complete" &&
   journal.remoteVerification === "complete" && journal.issueClose === "complete" &&
-  (journal.runtimeEvidence === undefined || journal.runtimeEvidence.comment === "complete");
+  (journal.runtimeEvidence === undefined || (journal.runtimeEvidence.artifact === "complete" && journal.runtimeEvidence.comment === "complete"));
 const exactRefSha = (ref) => {
   try {
     hostGit(["show-ref", "--verify", "--quiet", ref], { encoding: "utf8" });
@@ -2047,6 +2074,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     const evidenceConfig = materializedGooflow?.evidence === undefined
       ? undefined
       : materializeGooflowEvidence(materializedGooflow.evidence, promptArgs);
+    if (journal.runtimeEvidence !== undefined && evidenceConfig === undefined &&
+      (journal.runtimeEvidence.artifact !== "complete" || journal.runtimeEvidence.comment !== "complete")) {
+      throw new Error("Runtime evidence receipt for #" + issue.number + " is pending but the selected Gooflow no longer declares it; restore the original evidence configuration before resuming");
+    }
     // The generated template fallback has the same hard phase wall-time
     // contract as a materialized Gooflow. Keep the legacy resource wall cap
     // out of the phase invocation so timeout receipts remain distinct from
@@ -2190,10 +2221,18 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     let capturedDisposition;
     const activeRepair = journal.repair?.state === "scheduled" || journal.repair?.state === "running";
     const repairPhaseName = activeRepair ? journal.repair.epochs.at(-1)?.phase : undefined;
+    // Gooflows may name their implementation phase after the artifact or
+    // language they produce.  The commit requirement is the workflow's
+    // explicit implementation signal; retain the first agent fallback for
+    // older Gooflows that predate that completion metadata.  Template
+    // workflows keep their historical `implement` phase name.
+    const implementationPhaseName = materializedGooflow?.phases.find((phase) => phase.type === "agent" && phase.completion?.requiresCommits === true)?.name
+      ?? materializedGooflow?.phases.find((phase) => phase.type === "agent")?.name
+      ?? "implement";
     const repairPhases = activeRepair
       ? [
-          phases.find((phase) => phase.name === "implement" && phase.type === "agent"),
-          phases.find((phase) => phase.name === "edge-case-audit" && phase.type === "agent") ?? phases.find((phase) => phase.type === "agent" && /audit|review/iu.test(phase.name) && phase.name !== "implement"),
+          phases.find((phase) => phase.name === implementationPhaseName && phase.type === "agent"),
+          phases.find((phase) => phase.name === "edge-case-audit" && phase.type === "agent") ?? phases.find((phase) => phase.type === "agent" && /audit|review/iu.test(phase.name) && phase.name !== implementationPhaseName),
           phases.find((phase) => phase.name === repairPhaseName),
         ].filter((phase, index, candidates) => phase !== undefined && candidates.indexOf(phase) === index)
       : [];
@@ -2213,7 +2252,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       // prepare the same signing boundary before the sandbox can execute
       // them. Their commits are recorded separately from agent work.
       const setupSigningBoundary = signingBoundary("setup", "workflow");
-      const initialSigningBoundary = setup.length > 0
+      const initialSigningBoundary = pendingPhases.length > 0 && setup.length > 0
         ? setupSigningBoundary
         : pendingPhases.length > 0
         ? signingBoundary("phase", pendingPhases[0].name)
@@ -2232,31 +2271,37 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         cwd: hostWorkTree,
         branchStrategy: { type: "branch", branch, base: baseHead },
       }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
-      sandbox = await retrySequential(() => taskWorktree.createSandbox({
-        sandbox: guix({
-          manifest: codexBinDirectory ? ".goocastle/manifest-external-codex.scm" : ".goocastle/manifest.scm",
-          channels: ".goocastle/channels.scm",
-          cores: projectConfig.resourcePolicy.cores,
-          network: projectConfig.network,
-          emulateFhs: projectConfig.resourcePolicy.emulateFhs,
-          nesting: projectConfig.resourcePolicy.nesting,
-          runtimeLimits: projectConfig.runtimeLimits,
-          preserveEnv: sandboxAccess.preserveEnv,
-          homeFiles,
-          ...(projectConfig.resourcePolicy.guixDaemon ? { allowGuixDaemonSocket: true } : {}),
-          exposes: codexBinDirectory ? [{ hostPath: codexBinDirectory, sandboxPath: "/opt/goocastle-codex" }] : [],
-        }),
-        env: {
-          ...sandboxAccess.environment,
-          ...commitSigningEnvironment,
-          GOOCASTLE_ISSUE_NUMBER: String(issue.number),
-        },
-      }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
-      const setupStartSha = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
-      const setupEvidenceStartSha = journal.setup?.startSha ?? setupStartSha;
-      journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
-        setup: { state: "started", startSha: setupEvidenceStartSha },
-      });
+      if (pendingPhases.length > 0) {
+        sandbox = await retrySequential(() => taskWorktree.createSandbox({
+          sandbox: guix({
+            manifest: codexBinDirectory ? ".goocastle/manifest-external-codex.scm" : ".goocastle/manifest.scm",
+            channels: ".goocastle/channels.scm",
+            cores: projectConfig.resourcePolicy.cores,
+            network: projectConfig.network,
+            emulateFhs: projectConfig.resourcePolicy.emulateFhs,
+            nesting: projectConfig.resourcePolicy.nesting,
+            runtimeLimits: projectConfig.runtimeLimits,
+            preserveEnv: sandboxAccess.preserveEnv,
+            homeFiles,
+            ...(projectConfig.resourcePolicy.guixDaemon ? { allowGuixDaemonSocket: true } : {}),
+            exposes: codexBinDirectory ? [{ hostPath: codexBinDirectory, sandboxPath: "/opt/goocastle-codex" }] : [],
+          }),
+          env: {
+            ...sandboxAccess.environment,
+            ...commitSigningEnvironment,
+            GOOCASTLE_ISSUE_NUMBER: String(issue.number),
+          },
+        }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+      }
+      let setupStartSha;
+      let setupEvidenceStartSha;
+      if (pendingPhases.length > 0) {
+        setupStartSha = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
+        setupEvidenceStartSha = journal.setup?.startSha ?? setupStartSha;
+        journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+          setup: { state: "started", startSha: setupEvidenceStartSha },
+        });
+      }
       let setupObserved = false;
       const phaseCallbacks = {
         onSetupComplete: async () => {
@@ -2474,7 +2519,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         // A resumed evidence workflow can have every pre-proof phase already
         // complete. Do not invoke runWorkflow with an empty phase batch and no
         // setup commands: that produces no executable work.
-        const initial = await runBatch(sandbox, before, setup.length > 0 && !setupIncluded);
+        const initial = await runBatch(sandbox, before, pendingPhases.length > 0 && setup.length > 0 && !setupIncluded);
         if (initial !== undefined) workflowResults.push(initial);
         await runEvidencePhase(phases[evidencePhaseIndex]);
         const middle = await runBatch(sandbox, between);
@@ -2489,11 +2534,11 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           (repairPhaseName === evidenceConfig.proofPhase || repairPhaseName === evidenceConfig.capturePhase);
         if (evidenceRepair && failedRepairPhase !== undefined) {
           const preparation = repairPhases.filter((phase) => phase.name !== repairPhaseName);
-          const initial = await runBatch(sandbox, preparation, setup.length > 0 && !setupIncluded);
+          const initial = await runBatch(sandbox, preparation, pendingPhases.length > 0 && setup.length > 0 && !setupIncluded);
           if (initial !== undefined) workflowResults.push(initial);
           await runEvidencePhase(failedRepairPhase);
         } else {
-          const repairResult = await runBatch(sandbox, repairPhases, setup.length > 0 && !setupIncluded);
+          const repairResult = await runBatch(sandbox, repairPhases, pendingPhases.length > 0 && setup.length > 0 && !setupIncluded);
           if (repairResult !== undefined) workflowResults.push(repairResult);
         }
         const epochs = journal.repair?.epochs ?? [];
@@ -2545,11 +2590,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         if (proofRecord?.state !== "complete" || captureRecord?.state !== "complete" || !proofRecord.commandReceipt || !captureRecord.commandReceipt) {
           throw new Error("Runtime screenshot evidence requires host-recorded successful proof and capture command receipts before artifact inspection; inspect the preserved journal and resume");
         }
-        journal = await runtimeEvidenceArtifactCommit(journal, evidenceConfig, evidenceConfig.capturePhase);
+        journal = await runtimeEvidenceArtifactCommit(journal, evidenceConfig, evidenceConfig.capturePhase, taskWorktree, branch, issue.number);
       }
-      closeResult = await sandbox.close();
-      sandbox = undefined;
-      if (closeResult.preservedWorktreePath) throw new Error("Uncommitted changes preserved at " + closeResult.preservedWorktreePath);
+      if (sandbox !== undefined) {
+        closeResult = await sandbox.close();
+        sandbox = undefined;
+        if (closeResult.preservedWorktreePath) throw new Error("Uncommitted changes preserved at " + closeResult.preservedWorktreePath);
+      }
       const taskWorktreeCloseResult = await taskWorktree.close();
       closeResult = taskWorktreeCloseResult;
       if (taskWorktreeCloseResult.preservedWorktreePath) {
@@ -2616,6 +2663,14 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     if (journal.integrationSha && journal.integrationSha !== branchHead) {
       throw new Error("Cannot resume #" + issue.number + ": branch " + branch + " changed from expected SHA " + journal.integrationSha + " to " + branchHead);
     }
+    // Runtime evidence is a delivery prerequisite. Post its exact receipt
+    // before merge/push so a pending comment cannot leave a partially
+    // delivered issue with no resumable evidence boundary. A legacy journal
+    // that already merged or pushed is still reconciled using its recorded
+    // integration SHA.
+    if (evidenceConfig !== undefined && journal.runtimeEvidence?.comment !== "complete") {
+      journal = await postRuntimeEvidence(journal, evidenceConfig, integrationSha, phases, issue.number);
+    }
     if (journal.merge === "complete" && hostGit(["rev-parse", "HEAD"], { encoding: "utf8" }).trim() !== integrationSha) {
       throw new Error("Cannot resume #" + issue.number + ": local " + baseBranch + " is not expected integration SHA " + integrationSha);
     }
@@ -2651,9 +2706,6 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       integration = "pushed";
     } else if (journal.remoteVerification !== "complete" || (await remoteSha()) !== integrationSha) {
       throw new Error("Cannot close #" + issue.number + ": origin/" + baseBranch + " is not expected integration SHA " + integrationSha);
-    }
-    if (evidenceConfig !== undefined && journal.runtimeEvidence?.comment !== "complete") {
-      journal = await postRuntimeEvidence(journal, evidenceConfig, integrationSha, phases);
     }
     if (journal.issueClose !== "complete") {
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, { issueClose: "started" });
