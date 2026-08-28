@@ -20,6 +20,7 @@
          "github-cli"
          "gzip"
          "grep"
+         "imagemagick"
          "jq"
          "guix"
          "make"
@@ -28,5 +29,6 @@
          "ripgrep"
          "sed"
          "tar"
+         "util-linux"
          "xxd"))
   (packages->manifest (list goocastle-gitleaks goocastle-codex))))

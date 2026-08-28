@@ -1,8 +1,5 @@
 #!/bin/sh
 # Capture a bounded terminal screenshot of the real Guix package proof.
-# The proof itself realizes, checks, and runs the changed deliverable in an
-# isolated HOME/XDG state.  This adapter records that PTY transcript as the
-# issue's reviewable runtime artifact without mounting a desktop session.
 set -eu
 
 issue_number=${GOOCASTLE_ISSUE_NUMBER:?runtime-screenshot: missing Goocastle issue number}
@@ -27,19 +24,13 @@ capture_root=$(mktemp -d -t goocastle-guix-runtime-screenshot.XXXXXX)
 trap 'rm -rf "$capture_root"' EXIT HUP INT TERM
 transcript="$capture_root/runtime.txt"
 
-# `script -e` preserves the proof's status.  ImageMagick turns the real PTY
-# transcript into a PNG while staying in the same daemon-authorized, no-network
-# evidence sandbox.  The transcript remains outside the repository; only the
-# bounded image is committed by Goocastle.
-guix shell --pure guix imagemagick util-linux -- sh -eu -c '
-  transcript=$1
-  artifact=$2
-  script -q -e -c "sh .goocastle/prove-guix-package.sh" "$transcript"
-  tail -c 12000 "$transcript" > "$transcript.tail"
-  mv "$transcript.tail" "$transcript"
-  convert -size 1280x -background "#101418" -fill "#e8eaed" \\
-    -font DejaVu-Sans-Mono -pointsize 16 -gravity northwest \\
-    "caption:@$transcript" "$artifact"
-' sh "$transcript" "$artifact"
+# The required tools are pinned in manifest.scm.  A nested `guix shell` would
+# attempt to create a profile under the container's read-only /var/guix/profiles.
+script -q -e -c "sh .goocastle/prove-guix-package.sh" "$transcript"
+tail -c 12000 "$transcript" > "$transcript.tail"
+mv "$transcript.tail" "$transcript"
+convert -size 1280x -background "#101418" -fill "#e8eaed" \
+  -font DejaVu-Sans-Mono -pointsize 16 -gravity northwest \
+  "caption:@$transcript" "$artifact"
 
 test -s "$artifact"
