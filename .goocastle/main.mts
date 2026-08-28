@@ -158,11 +158,11 @@ if (projectConfig.issueTracker !== "github") {
   throw new Error("The generated issue workflow requires the registered github issue tracker");
 }
 
-// GitHub can intermittently return an authentication-shaped 401 for a valid
-// token. Delivery below is checkpointed and reconciled before mutations, so
-// keep the harness alive through that failure rather than requiring an
-// operator to restart it. Each retry batch remains bounded; recovery waits
-// are capped and logged for visibility during a longer forge outage.
+// GitHub can intermittently return an authentication-shaped 401, rate-limit
+// response, or other transport failure. Delivery below is checkpointed and
+// reconciled before mutations, so keep the harness alive through a transient
+// forge outage rather than requiring an operator to restart it. Each retry
+// batch remains bounded; recovery waits are capped and logged for visibility.
 const githubRetryPolicy = Object.freeze({
   ...projectConfig.retryPolicy,
   maxAttempts: Math.max(projectConfig.retryPolicy.maxAttempts, 8),
@@ -178,10 +178,10 @@ const retryGitHub = async (description, operation) => {
         retryable: (error) => isTransientSequentialError(error) || isRetryableGitHubError(error),
       });
     } catch (error) {
-      if (!isRetryableGitHubError(error)) throw error;
+      if (!isTransientSequentialError(error) && !isRetryableGitHubError(error)) throw error;
       recoveryAttempt += 1;
       const waitMs = Math.min(10 * 60_000, 120_000 * 2 ** Math.min(recoveryAttempt - 1, 3));
-      console.error("GitHub " + description + " is still returning an authentication-shaped transient failure; retaining the journal and retrying automatically in " + Math.ceil(waitMs / 1000) + "s (recovery attempt " + recoveryAttempt + ").");
+      console.error("GitHub " + description + " is still returning a transient failure; retaining the journal and retrying automatically in " + Math.ceil(waitMs / 1000) + "s (recovery attempt " + recoveryAttempt + ").");
       await sleep(waitMs);
     }
   }
@@ -660,16 +660,16 @@ const ghRestIssueView = async (args, validate) => {
   return validate({ ...result, comments }, "gh api " + endpoint);
 };
 const ghJson = async (args, validate) => {
+  let output;
   try {
     // GraphQL is optional for issue discovery.  Do only ordinary bounded
     // transport retries here so a GraphQL-only authentication failure reaches
     // the REST fallback below immediately.  The fallback itself owns the
     // persistent GitHub recovery loop.
-    return await retrySequential(() => {
-      const source = "gh " + args.slice(0, 2).join(" ");
-      const output = execFileSync("gh", args, { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
-      return parseGitHubIssueJson(output, source, validate);
-    }, projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+    output = await retrySequential(() => execFileSync("gh", args, {
+      encoding: "utf8",
+      maxBuffer: 16 * 1024 * 1024,
+    }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
   } catch (error) {
     if (args[0] !== "issue") throw error;
     if (args[1] === "list") {
@@ -682,6 +682,10 @@ const ghJson = async (args, validate) => {
     }
     throw error;
   }
+  // A command that successfully returned malformed data is not a transport
+  // failure. Preserve the validation error rather than silently switching
+  // transports and weakening the forge-data boundary.
+  return parseGitHubIssueJson(output, "gh " + args.slice(0, 2).join(" "), validate);
 };
 const selectedIssue = async (number) => await ghJson([
   "issue", "view", String(number), "--json", "number,title,state,body,labels,comments",
