@@ -33,6 +33,9 @@ test -s "$darkmoor_out/share/doc/shadow-over-darkmoor/README.md"
 test -s "$darkmoor_out/share/doc/shadow-over-darkmoor/CHANGELOG.md"
 test -s "$darkmoor_out/share/doc/shadow-over-darkmoor/clojure-runtime-notices/readme.txt"
 test -s "$darkmoor_out/share/doc/shadow-over-darkmoor/clojure-runtime-notices/epl-v10.html"
+test ! -e "$darkmoor_out/share/doc/shadow-over-darkmoor/.DS_Store"
+test -z "$(find "$darkmoor_out/share/doc/shadow-over-darkmoor" \
+    -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) -print -quit)"
 grep -F 'Eclipse Public License - v 2.0' \
     "$darkmoor_out/share/doc/shadow-over-darkmoor/LICENSE" >/dev/null
 grep -F 'asciiart.eu' "$darkmoor_out/share/doc/shadow-over-darkmoor/README.md" >/dev/null
