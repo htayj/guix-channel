@@ -118,7 +118,7 @@ const runtimeModuleUrl = (() => {
   return moduleUrl;
 })();
 const runtimeModule = await import(runtimeModuleUrl);
-const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, parseGooflowDispositionResult, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeEvidenceComment, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
+const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, materializeGooflowEvidence, parseGooflowDispositionResult, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeEvidenceComment, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
 const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Object.freeze({
   expectedPacingMs: 5 * 60_000,
   stalledAfterMs: 15 * 60_000,
@@ -1940,6 +1940,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       CODING_STANDARDS: codingStandards,
       FAILURE_EVIDENCE: failureEvidenceFor(journal),
     };
+    const evidenceConfig = materializedGooflow?.evidence === undefined
+      ? undefined
+      : materializeGooflowEvidence(materializedGooflow.evidence, promptArgs);
     // The generated template fallback has the same hard phase wall-time
     // contract as a materialized Gooflow. Keep the legacy resource wall cap
     // out of the phase invocation so timeout receipts remain distinct from
@@ -2049,7 +2052,6 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       ? issueGooflowSetup(materializedGooflow, projectConfig)
       : [];
     const requiredGooflowPhases = new Set(materializedGooflow?.requiredPhases ?? []);
-    const evidenceConfig = materializedGooflow?.evidence;
     if (evidenceConfig !== undefined) {
       const priorEvidence = journal.runtimeEvidence;
       if (priorEvidence !== undefined && (
@@ -2196,6 +2198,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             ? phaseResult.result.commits.length
             : undefined;
           const configuredPhase = phases.find((phase) => phase.name === phaseResult.name);
+          const commandReceipt = phaseResult.type === "command" && configuredPhase?.type === "command" &&
+            phaseResult.result.exitCode === 0 && !phaseResult.result.exitReason
+            ? { command: configuredPhase.command, exitCode: 0 }
+            : undefined;
           const stopReason = phaseResult.type === "agent" ? phaseResult.result.stopReason : undefined;
           const stoppedEarly = stopReason !== undefined || (configuredPhase?.type === "agent" && configuredPhase.stopOnNoCommits === true && commitCount === 0);
           if (phaseStartSha !== undefined && phaseHead !== undefined) {
@@ -2217,6 +2223,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
               }),
               ...(stoppedEarly ? { stoppedEarly: true } : {}),
               ...(stopReason === undefined ? {} : { stopReason }),
+              ...(commandReceipt === undefined ? {} : { commandReceipt }),
               completedAt: new Date().toISOString(),
             }],
           });
@@ -2341,8 +2348,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       if (evidenceConfig !== undefined && journal.runtimeEvidence?.artifact !== "complete") {
         const proofRecord = phaseRecord(journal, evidenceConfig.proofPhase);
         const captureRecord = phaseRecord(journal, evidenceConfig.capturePhase);
-        if (proofRecord?.state !== "complete" || captureRecord?.state !== "complete") {
-          throw new Error("Runtime screenshot evidence requires successful proof and capture phases before artifact inspection; inspect the preserved journal and resume");
+        if (proofRecord?.state !== "complete" || captureRecord?.state !== "complete" || !proofRecord.commandReceipt || !captureRecord.commandReceipt) {
+          throw new Error("Runtime screenshot evidence requires host-recorded successful proof and capture command receipts before artifact inspection; inspect the preserved journal and resume");
         }
         journal = await runtimeEvidenceArtifactCommit(journal, evidenceConfig, evidenceConfig.capturePhase);
       }
@@ -2438,8 +2445,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     } else if (journal.remoteVerification !== "complete" || (await remoteSha()) !== integrationSha) {
       throw new Error("Cannot close #" + issue.number + ": origin/" + baseBranch + " is not expected integration SHA " + integrationSha);
     }
-    if (materializedGooflow?.evidence !== undefined && journal.runtimeEvidence?.comment !== "complete") {
-      journal = await postRuntimeEvidence(journal, materializedGooflow.evidence, integrationSha, phases);
+    if (evidenceConfig !== undefined && journal.runtimeEvidence?.comment !== "complete") {
+      journal = await postRuntimeEvidence(journal, evidenceConfig, integrationSha, phases);
     }
     if (journal.issueClose !== "complete") {
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, { issueClose: "started" });

@@ -49,8 +49,16 @@
         "package-implementation",
         "channel-inventory",
         "edge-case-audit",
-        "safe-package-proof"
+        "safe-package-proof",
+        "runtime-screenshot"
       ],
+      "evidence": {
+        "packageName": "Guix package issue #{{ISSUE_NUMBER}}",
+        "proofPhase": "safe-package-proof",
+        "capturePhase": "runtime-screenshot",
+        "artifactPath": ".goocastle/evidence/issue-{{ISSUE_NUMBER}}.png",
+        "adapter": "github-issue-comment"
+      },
       "phases": [
         {
           "name": "package-implementation",
@@ -83,6 +91,13 @@
           "command": { "file": "sh", "args": [".goocastle/prove-guix-package.sh"] },
           "capabilities": { "network": false, "guixDaemon": true },
           "timeout": { "completionMs": 14400000 }
+        },
+        {
+          "name": "runtime-screenshot",
+          "type": "command",
+          "command": { "file": "sh", "args": [".goocastle/capture-guix-package-screenshot.sh"] },
+          "capabilities": { "network": false, "guixDaemon": true },
+          "timeout": { "completionMs": 14400000 }
         }
       ]
     },
@@ -94,8 +109,16 @@
         "package-implementation",
         "channel-inventory",
         "edge-case-audit",
-        "safe-package-proof"
+        "safe-package-proof",
+        "runtime-screenshot"
       ],
+      "evidence": {
+        "packageName": "Guix package issue #{{ISSUE_NUMBER}}",
+        "proofPhase": "safe-package-proof",
+        "capturePhase": "runtime-screenshot",
+        "artifactPath": ".goocastle/evidence/issue-{{ISSUE_NUMBER}}.png",
+        "adapter": "github-issue-comment"
+      },
       "phases": [
         {
           "name": "package-implementation",
@@ -126,6 +149,13 @@
           "name": "safe-package-proof",
           "type": "command",
           "command": { "file": "sh", "args": [".goocastle/prove-guix-package.sh"] },
+          "capabilities": { "network": false, "guixDaemon": true },
+          "timeout": { "completionMs": 14400000 }
+        },
+        {
+          "name": "runtime-screenshot",
+          "type": "command",
+          "command": { "file": "sh", "args": [".goocastle/capture-guix-package-screenshot.sh"] },
           "capabilities": { "network": false, "guixDaemon": true },
           "timeout": { "completionMs": 14400000 }
         }
