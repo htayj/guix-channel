@@ -29,7 +29,10 @@ transcript="$capture_root/runtime.txt"
 # Keep the complete transcript in its bounded temporary file.  Streaming it
 # again to the phase's stdout can exhaust Goocastle's command-output budget
 # while a Guix build is otherwise healthy.
-script -q -e -c "sh .goocastle/prove-guix-package.sh" "$transcript" >/dev/null
+if ! sh .goocastle/prove-guix-package.sh >"$transcript" 2>&1; then
+  tail -c 12000 "$transcript" >&2 || true
+  exit 1
+fi
 tail -c 12000 "$transcript" > "$transcript.tail"
 mv "$transcript.tail" "$transcript"
 convert -size 1280x -background "#101418" -fill "#e8eaed" \
