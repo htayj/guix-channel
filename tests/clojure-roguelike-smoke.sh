@@ -71,14 +71,21 @@ tr -d '\r' <"$scratch/jar/META-INF/MANIFEST.MF" | \
 test -f "$scratch/jar/roguelike/core__init.class"
 test -f "$scratch/jar/clojure/lang/Compiler.class"
 
-(
+if (
     cd "$scratch/caller"
     HOME="$scratch/home" XDG_CONFIG_HOME="$scratch/config" \
     XDG_CACHE_HOME="$scratch/cache" XDG_STATE_HOME="$scratch/state" \
     TMPDIR="$scratch/tmp" TERM=xterm-256color LC_ALL=C.UTF-8 \
       "$script_bin" -qefc \
-      "printf 'q\\n' | exec '$game_out/bin/clojure-roguelike'" /dev/null | tr -d '\r'
-) >"$scratch/actual"
+      "printf 'q\\n' | exec '$game_out/bin/clojure-roguelike'" /dev/null
+) >"$scratch/raw"; then
+    script_status=0
+else
+    script_status=$?
+fi
+
+test "$script_status" -eq 0
+tr -d '\r' <"$scratch/raw" >"$scratch/actual"
 
 printf '%s\n' \
     '########' \
