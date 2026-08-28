@@ -661,11 +661,15 @@ const ghRestIssueView = async (args, validate) => {
 };
 const ghJson = async (args, validate) => {
   try {
-    return await retryGitHub("issue API request", () => {
+    // GraphQL is optional for issue discovery.  Do only ordinary bounded
+    // transport retries here so a GraphQL-only authentication failure reaches
+    // the REST fallback below immediately.  The fallback itself owns the
+    // persistent GitHub recovery loop.
+    return await retrySequential(() => {
       const source = "gh " + args.slice(0, 2).join(" ");
       const output = execFileSync("gh", args, { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
       return parseGitHubIssueJson(output, source, validate);
-    });
+    }, projectConfig.retryPolicy, { retryable: isTransientSequentialError });
   } catch (error) {
     if (args[0] !== "issue") throw error;
     if (args[1] === "list") {
