@@ -27,6 +27,9 @@
     (build-system ant-build-system)
     (arguments
      (list
+      ;; Clojure 1.8's build.xml targets Java 1.6 bytecode; retain Guix's
+      ;; Java 8 implementation instead of relying on the build-system default.
+      #:jdk icedtea
       ;; The fixed POM's extra artifacts are provided or test-only.  Its Ant
       ;; jar target needs no Maven resolution when this property is empty.
       #:tests? #f
