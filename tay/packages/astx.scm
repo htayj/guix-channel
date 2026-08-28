@@ -52,14 +52,29 @@
             (lambda _
               (let ((pnpm "package/bin/pnpm.cjs")
                     (store (string-append (getcwd) "/.pnpm-store")))
+                ;; pnpm's v3 store indexes imported tarballs by SHA-512.  The
+                ;; three SHA-1 SRI records below name the identical, fixed
+                ;; archives listed in %astx-npm-sources; normalize only their
+                ;; SRI representation so offline installation can find them.
+                (invoke "sed" "-i"
+                        "-e" "s|sha1-qCJQ3bABXponyoLoLqYDu/pF768=|sha512-ZyznvL8k/FZeQHr2T6LzcJ/+vBApDnMNZvfVFy3At0knswWd6rJ3/0Hhmpu8oqa6C92npmozs890sX9Dl6q+Qw==|g"
+                        "-e" "s|sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=|sha512-Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==|g"
+                        "-e" "s|sha1-KbvZIHinOfC8zitO5B6DeVNSKSQ=|sha512-AFBWBy9EVRTa/LhEcG8QDP3FvpwZqmvN2QFDuJswFeaVhWnZMp8q3E6Zd90SR04PlIwfGdyVjNyLPyen/ek5CQ==|g"
+                        "pnpm-lock.yaml")
+                (invoke "grep" "-q"
+                        "sha512-Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg=="
+                        "pnpm-lock.yaml")
                 (invoke "tar" "xzf" #$astx-pnpm)
                 (setenv "ESBUILD_BINARY_PATH" #$(file-append astx-esbuild "/bin/esbuild"))
                 (setenv "npm_config_update_notifier" "false")
                 ;; Seed pnpm's content-addressed store from fixed source
                 ;; inputs before asking it to resolve the frozen lockfile.
-                (apply invoke #$(file-append node-lts "/bin/node") pnpm
-                       "store" "add" "--store-dir" store
-                       (list #$@(map cdr %astx-npm-sources)))
+                (for-each
+                 (lambda (archive)
+                   (invoke #$(file-append node-lts "/bin/node") pnpm
+                           "--reporter" "silent" "store" "add"
+                           "--store-dir" store archive))
+                 (list #$@(map cdr %astx-npm-sources)))
                 (invoke #$(file-append node-lts "/bin/node") pnpm "install"
                         "--offline" "--frozen-lockfile" "--ignore-scripts"
                         "--no-optional" "--store-dir" store))))
