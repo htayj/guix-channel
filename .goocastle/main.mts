@@ -2172,6 +2172,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
                 executorId: EXECUTOR_ID,
                 startedAt: phaseStartedAt,
                 activityAt: phaseStartedAt,
+                supervisorHeartbeatAt: phaseStartedAt,
                 expectedPacingMs: phaseLiveness.expectedPacingMs,
                 stalledAfterMs: phaseLiveness.stalledAfterMs,
               },
@@ -2191,7 +2192,17 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
             phases: journal.phases.map((item) => item.name !== phase.name ? item : {
               ...item,
-              liveness: { ...item.liveness, activityAt: new Date().toISOString() },
+              liveness: { ...item.liveness, activityAt: new Date().toISOString(), supervisorHeartbeatAt: new Date().toISOString() },
+            }),
+          });
+        },
+        onPhaseProgress: async (phase) => {
+          const record = phaseRecord(journal, phase.name);
+          if (record?.state !== "running" || record.liveness?.executorId !== EXECUTOR_ID) return;
+          journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+            phases: journal.phases.map((item) => item.name !== phase.name ? item : {
+              ...item,
+              liveness: { ...item.liveness, providerProgressAt: new Date().toISOString() },
             }),
           });
         },
@@ -2225,7 +2236,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
               ...(commitCount === undefined ? {} : { commitCount }),
               ...(phaseRecord(journal, phaseResult.name)?.startSha === undefined ? {} : { startSha: phaseRecord(journal, phaseResult.name).startSha }),
               ...(phaseRecord(journal, phaseResult.name)?.liveness === undefined ? {} : {
-                liveness: { ...phaseRecord(journal, phaseResult.name).liveness, activityAt: new Date().toISOString() },
+                liveness: { ...phaseRecord(journal, phaseResult.name).liveness, activityAt: new Date().toISOString(), supervisorHeartbeatAt: new Date().toISOString() },
               }),
               ...(stoppedEarly ? { stoppedEarly: true } : {}),
               ...(stopReason === undefined ? {} : { stopReason }),
@@ -2250,7 +2261,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
               state: "failed",
               ...(phaseRecord(journal, failure.phase.name)?.startSha === undefined ? {} : { startSha: phaseRecord(journal, failure.phase.name).startSha }),
               ...(phaseRecord(journal, failure.phase.name)?.liveness === undefined ? {} : {
-                liveness: { ...phaseRecord(journal, failure.phase.name).liveness, activityAt: new Date().toISOString() },
+                liveness: { ...phaseRecord(journal, failure.phase.name).liveness, activityAt: new Date().toISOString(), supervisorHeartbeatAt: new Date().toISOString() },
               }),
               failureReceipt: { kind, recovery, ...(failureSummary === undefined ? {} : { failureSummary }) },
             }],
