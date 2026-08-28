@@ -1,4 +1,6 @@
 (authorizations
  (version 0)
  (("997E 2BA6 B523 4026 8A39  87E3 D94F 0A11 ACD7 8333"
-   (name "Taylor"))))
+   (name "Taylor"))
+  ("6A27 F433 DC22 B4DF A278  E8F3 2F12 E6A3 5F41 7606"
+   (name "htayj Agent Signing"))))
