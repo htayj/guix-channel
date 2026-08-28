@@ -1641,6 +1641,22 @@ await reconcileAbandonedPhases();
 for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
   let journal = await incompleteJournal();
   if (journal && !RESUME_ONLY && journal.phases.some((phase) => phase.failureReceipt?.kind === "stalled")) {
+    // A terminal issue label is authoritative even when the retained journal
+    // has an intentionally manual stalled-worktree receipt.  Preserve that
+    // state, but do not let already-blocked work starve a later eligible
+    // issue from the queue.
+    const stalledIssue = await selectedIssue(journal.issueNumber);
+    if (stalledIssue.state === "OPEN" && hasTerminalBlockedLabel(stalledIssue)) {
+      deferredJournalIssues.add(journal.issueNumber);
+      terminallyBlockedJournalIssues.add(journal.issueNumber);
+      attemptedIssues.add(journal.issueNumber);
+      console.log(
+        "Skipping open terminally blocked stalled journal #" + journal.issueNumber +
+        " (state:blocked); its preserved journal and worktree remain unchanged.",
+      );
+      task -= 1;
+      continue;
+    }
     manuallyRecoverableJournalIssues.add(journal.issueNumber);
     deferredJournalIssues.add(journal.issueNumber);
     console.error(
