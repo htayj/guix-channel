@@ -2087,14 +2087,21 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       const record = phaseRecord(journal, phase.name);
       return dispositionResultRequired || record?.state !== "complete" || record?.stoppedEarly === true;
     });
-    if (pendingPhases.length > 0) {
+    // A capture can complete before the host commits its declared artifact.
+    // Recreate the task-worktree boundary on resume even though no executable
+    // phase remains, so the artifact receipt can finish without replaying the
+    // package proof or screenshot command.
+    const evidenceArtifactPending = evidenceConfig !== undefined && journal.runtimeEvidence?.artifact !== "complete";
+    if (pendingPhases.length > 0 || evidenceArtifactPending) {
       // Setup commands run before onPhaseStart and are allowed to use Git, so
       // prepare the same signing boundary before the sandbox can execute
       // them. Their commits are recorded separately from agent work.
       const setupSigningBoundary = signingBoundary("setup", "workflow");
       const initialSigningBoundary = setup.length > 0
         ? setupSigningBoundary
-        : signingBoundary("phase", pendingPhases[0].name);
+        : pendingPhases.length > 0
+        ? signingBoundary("phase", pendingPhases[0].name)
+        : signingBoundary("runtime-evidence", evidenceConfig!.capturePhase);
       journal = await prepareCommitSigning(journal, initialSigningBoundary);
       // Sandbox capability access must follow the same materialized workflow
       // that supplies the phases and setup. A repository policy overlay may
