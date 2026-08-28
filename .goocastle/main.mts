@@ -577,11 +577,46 @@ const templateAgentProvenance = (phases) => phases
     effort: projectConfig.effort,
   }));
 
-const ghJson = async (args, validate) => await retrySequential(() => {
-  const source = "gh " + args.slice(0, 2).join(" ");
-  const output = execFileSync("gh", args, { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
-  return parseGitHubIssueJson(output, source, validate);
-}, projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+const ghRestIssuePage = (value, source) => {
+  if (!Array.isArray(value)) return validateGitHubIssueListPayload(value, source);
+  // The REST issues endpoint includes pull requests.  Keep the issue-list
+  // contract identical to the GitHub CLI issue-list command before validating its payload.
+  return validateGitHubIssueListPayload(value.filter((entry) =>
+    entry === null || typeof entry !== "object" || Array.isArray(entry) || !("pull_request" in entry)), source);
+};
+const ghRestIssueList = async (args) => {
+  const stateIndex = args.indexOf("--state");
+  const limitIndex = args.indexOf("--limit");
+  const state = stateIndex === -1 ? "open" : args[stateIndex + 1];
+  const limit = limitIndex === -1 ? 100 : Number(args[limitIndex + 1]);
+  if ((state !== "open" && state !== "all") || !Number.isSafeInteger(limit) || limit < 1 || limit > 1000) {
+    throw new Error("GitHub REST fallback received an unsupported issue-list request");
+  }
+  const repository = githubRepositoryFromOrigin();
+  const issues = [];
+  for (let page = 1; page <= Math.ceil(limit / 100); page += 1) {
+    const endpoint = "repos/" + repository + "/issues?state=" + state + "&per_page=100&page=" + page;
+    const output = execFileSync("gh", ["api", endpoint], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+    const received = parseGitHubIssueJson(output, "gh api " + endpoint, ghRestIssuePage);
+    issues.push(...received);
+    if (received.length < 100) break;
+  }
+  return issues.slice(0, limit);
+};
+const ghJson = async (args, validate) => {
+  try {
+    return await retrySequential(() => {
+      const source = "gh " + args.slice(0, 2).join(" ");
+      const output = execFileSync("gh", args, { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+      return parseGitHubIssueJson(output, source, validate);
+    }, projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    if (args[0] !== "issue" || args[1] !== "list" || !/api.github.com/graphql|graphql/i.test(detail)) throw error;
+    console.error("GitHub GraphQL issue discovery failed; retrying the same bounded issue scan through the REST API.");
+    return await retrySequential(() => ghRestIssueList(args), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+  }
+};
 const selectedIssue = async (number) => await ghJson([
   "issue", "view", String(number), "--json", "number,title,state,body,labels,comments",
 ], (value, source) => validateGitHubIssuePayload(value, source, number));
@@ -1806,6 +1841,14 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       CODING_STANDARDS: codingStandards,
       FAILURE_EVIDENCE: failureEvidenceFor(journal),
     };
+    // The generated template fallback has the same hard phase wall-time
+    // contract as a materialized Gooflow. Keep the legacy resource wall cap
+    // out of the phase invocation so timeout receipts remain distinct from
+    // resource-limit receipts.
+    const phaseRuntimeLimits = (() => {
+      const { wallTimeMs: _wallTimeMs, ...limits } = projectConfig.runtimeLimits;
+      return limits;
+    })();
     // A running record has no completion evidence.  A process can die after
     // committing but before the phase callback, so branch movement is not a
     // substitute for a successful required command or agent completion.
@@ -1821,8 +1864,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             promptArgs,
             maxIterations: 1,
             idleTimeoutMs: projectConfig.timeouts.idleMs,
+            timeoutMs: projectConfig.timeouts.wallMs,
             completionTimeoutMs: projectConfig.timeouts.completionMs,
-            runtimeLimits: projectConfig.runtimeLimits,
+            runtimeLimits: phaseRuntimeLimits,
             logging: projectConfig.logging,
           },
         },
@@ -1835,8 +1879,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             promptArgs,
             maxIterations: 1,
             idleTimeoutMs: projectConfig.timeouts.idleMs,
+            timeoutMs: projectConfig.timeouts.wallMs,
             completionTimeoutMs: projectConfig.timeouts.completionMs,
-            runtimeLimits: projectConfig.runtimeLimits,
+            runtimeLimits: phaseRuntimeLimits,
             logging: projectConfig.logging,
           },
         },
