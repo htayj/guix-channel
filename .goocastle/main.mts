@@ -603,6 +603,33 @@ const ghRestIssueList = async (args) => {
   }
   return issues.slice(0, limit);
 };
+const ghRestIssueView = async (args, validate) => {
+  const number = parseGitHubIssueNumber(args[2], "GitHub REST issue view");
+  const repository = githubRepositoryFromOrigin();
+  const endpoint = "repos/" + repository + "/issues/" + number;
+  const output = execFileSync("gh", ["api", endpoint], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+  const issue = JSON.parse(output);
+  if (issue === null || typeof issue !== "object" || Array.isArray(issue)) return validate(issue, "gh api " + endpoint);
+  const fields = args[args.indexOf("--json") + 1]?.split(",") ?? [];
+  const result = {
+    number: issue.number,
+    title: issue.title,
+    body: issue.body,
+    labels: issue.labels,
+    ...(fields.includes("state") ? { state: typeof issue.state === "string" ? issue.state.toUpperCase() : issue.state } : {}),
+  };
+  if (!fields.includes("comments")) return validate(result, "gh api " + endpoint);
+  const comments = [];
+  for (let page = 1; page <= 10; page += 1) {
+    const commentEndpoint = endpoint + "/comments?per_page=100&page=" + page;
+    const pageOutput = execFileSync("gh", ["api", commentEndpoint], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+    const received = JSON.parse(pageOutput);
+    if (!Array.isArray(received)) throw new Error("gh api " + commentEndpoint + " returned a malformed comments payload");
+    comments.push(...received.map((comment) => ({ body: comment.body, author: comment.user === null ? null : { login: comment.user?.login }, createdAt: comment.created_at })));
+    if (received.length < 100) break;
+  }
+  return validate({ ...result, comments }, "gh api " + endpoint);
+};
 const ghJson = async (args, validate) => {
   try {
     return await retrySequential(() => {
@@ -611,9 +638,16 @@ const ghJson = async (args, validate) => {
       return parseGitHubIssueJson(output, source, validate);
     }, projectConfig.retryPolicy, { retryable: isTransientSequentialError });
   } catch (error) {
-    if (args[0] !== "issue" || args[1] !== "list") throw error;
-    console.error("GitHub GraphQL issue discovery failed; retrying the same bounded issue scan through the REST API.");
-    return await retrySequential(() => ghRestIssueList(args), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+    if (args[0] !== "issue") throw error;
+    if (args[1] === "list") {
+      console.error("GitHub GraphQL issue discovery failed; retrying the same bounded issue scan through the REST API.");
+      return await retrySequential(() => ghRestIssueList(args), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+    }
+    if (args[1] === "view") {
+      console.error("GitHub GraphQL issue view failed; retrying the same issue read through the REST API.");
+      return await retrySequential(() => ghRestIssueView(args, validate), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+    }
+    throw error;
   }
 };
 const selectedIssue = async (number) => await ghJson([
