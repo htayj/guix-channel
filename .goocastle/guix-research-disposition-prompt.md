@@ -14,7 +14,7 @@ Write exactly one JSON object to `.goocastle/research-disposition.json` and do
 not commit it.  It must use this shape:
 
 ```json
-{"version":1,"disposition":"blocked-or-implementation-ready","finding":"..."}
+{"version":1,"disposition":"blocked-or-implementation-ready","finding":"...","runtimeEvidence":{"packageName":"...","artifactPath":".goocastle/evidence/issue-NNN.png","runtime":{"executable":"...","invocation":{"file":"...","args":["..."]},"successMarker":"..."}}}
 ```
 
 Choose `blocked` only when a concrete prerequisite or disqualifying fact makes
@@ -28,6 +28,17 @@ and dependency/input expectations; required wrapper/runtime behavior; and a
 specific isolated, meaningful smoke-proof plan.  State precise acceptance facts,
 not generic recommendations.  The finding becomes the Context of a new
 host-created implementation issue.
+
+An `implementation-ready` result MUST include `runtimeEvidence` as a separate
+top-level object.  `packageName` is the exact intended Guix package name;
+`artifactPath` is the repository-relative PNG screenshot path beginning
+`.goocastle/evidence/`; `runtime.executable` and `runtime.invocation.file` are
+the same installed executable name; `runtime.invocation.args` is the exact
+array of safe deterministic arguments; and `runtime.successMarker` is the
+single-line stdout marker the proof will assert.  Use no `runtimeEvidence` for
+`blocked` results.  This object is host-validated and copied into the delivery
+ticket's runtime-proof contract, so prose descriptions or an artifact path
+outside the repository do not substitute for it.
 
 For every independently fetched source origin, including each Git submodule,
 record explicit license evidence at its exact fixed revision.  A parent
