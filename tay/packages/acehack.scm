@@ -122,7 +122,8 @@
                            (delete-file-recursively file)
                            (delete-file file)))))
                  '("recover" "license" "Guidebook.txt" "perm" "record"
-                   "logfile" "xlogfile" "livelog" "save" "level" "lock"))
+                   "logfile" "xlogfile" "livelog" "dumps" "save" "level"
+                   "lock"))
                 (mkdir-p doc)
                 ;; dat/license is the license for the executable and every
                 ;; installed generated map/data asset in this sole origin.
@@ -137,9 +138,11 @@
                     (format port "#!~a~%set -eu~%~
 state=\"${XDG_DATA_HOME:-${HOME:?}/.local/share}/acehack\"~%
 runtime=\"${XDG_RUNTIME_DIR:-$state}\"~%
-~a -p \"$state/save\" \"$state/level\" \"$state/lock\" \"$runtime\"~%
+~a -p \"$state/dumps\" \"$state/save\" \"$state/level\" \"$state/lock\" \"$runtime\"~%
 for mutable in perm record logfile xlogfile; do~%
-  : > \"$state/$mutable\"~%
+  if test ! -e \"$state/$mutable\"; then~%
+    : > \"$state/$mutable\"~%
+  fi~%
 done~%
 rundir=$(~a -d \"$runtime/acehack.XXXXXX\")~%
 cleanup() { ~a -rf \"$rundir\"; }~%
@@ -174,7 +177,8 @@ exit $status~%"
                             #$(file-append coreutils-minimal "/bin/ln")
                             #$(file-append coreutils-minimal "/bin/basename")
                             program
-                            #$(file-append coreutils-minimal "/bin/cp")))))))
+                            #$(file-append coreutils-minimal "/bin/cp"))))
+                (chmod launcher #o555))))
           ;; Keep this last: the standard phases still strip binaries and
           ;; create a linker cache after patching shebangs.
           (add-after 'make-dynamic-linker-cache 'make-output-immutable

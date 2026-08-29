@@ -106,6 +106,23 @@ def read_until(fd, markers, timeout):
                          (markers, data.decode("utf-8", "replace")[-4000:]))
 
 
+def drain(fd, timeout):
+    data = bytearray()
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        ready, _, _ = select.select([fd], [], [], 0.15)
+        if not ready:
+            continue
+        try:
+            chunk = os.read(fd, 8192)
+        except OSError:
+            break
+        if not chunk:
+            break
+        data.extend(chunk)
+    return bytes(data)
+
+
 def wait_for_exit(pid, timeout, transcript):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -161,27 +178,45 @@ with tempfile.TemporaryDirectory(prefix="acehack-smoke-") as temporary:
     result = subprocess.run([str(launcher), "-s", "-v", "all"], cwd=caller,
                             env=score_environment, text=True, stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT, timeout=10, check=True)
-    assert result.stdout.strip() == "Cannot find any entries for all", result.stdout
+    score_lines = [line for line in result.stdout.splitlines() if line]
+    assert score_lines.count("Cannot find any entries for all") == 1, result.stdout
     assert (score_paths["data"] / "acehack").is_dir()
 
     game_environment, game_paths = environment(temporary / "game")
 
-    def start_game():
+    def start_game(*args):
         pid, terminal = pty.fork()
         if pid == 0:
             os.chdir(caller)
             fcntl.ioctl(0, termios.TIOCSWINSZ, struct.pack("HHHH", 32, 120, 0, 0))
-            os.execve(str(launcher), [str(launcher), "-u", "smoke-valkyrie-human-neutral-male"], game_environment)
+            os.execve(str(launcher), [str(launcher), *args], game_environment)
         return pid, terminal
 
-    # Start a real character, move, and save it.  The fixed -u form prevents
-    # selection dialogs from consuming the deterministic terminal input.
-    pid, terminal = start_game()
+    # Start a real character, move, and save it.  The fixed -u name identifies
+    # the save, while this key sequence chooses the legal Rogue/Human/Male/
+    # Chaotic tuple deterministically.
+    pid, terminal = start_game("-u", "smoke-valkyrie-human-neutral-male")
     transcript = bytearray()
     try:
-        transcript.extend(read_until(terminal, (b"Hello smoke", b"Welcome to AceHack"), 20))
-        os.write(terminal, b"lS")
-        transcript.extend(read_until(terminal, (b"Really save",), 8))
+        transcript.extend(read_until(terminal, (b"n - New game",), 20))
+        os.write(terminal, b"n")
+        transcript.extend(read_until(terminal, (b"Choose the class",), 8))
+        os.write(terminal, b"rHMC.")
+        lore = read_until(terminal, (b"--More--",), 20)
+        transcript.extend(lore)
+        os.write(terminal, b" ")
+        if b"Hello smoke" not in lore:
+            transcript.extend(read_until(terminal, (b"Hello smoke",), 8))
+        os.write(terminal, b"l")
+        movement = drain(terminal, 1)
+        for _ in range(3):
+            transcript.extend(movement)
+            if b"--More--" not in movement:
+                break
+            os.write(terminal, b" ")
+            movement = drain(terminal, 1)
+        os.write(terminal, b"S")
+        transcript.extend(read_until(terminal, (b"Quicksave and exit",), 8))
         os.write(terminal, b"y")
         wait_for_exit(pid, 12, bytes(transcript))
     finally:
@@ -189,15 +224,41 @@ with tempfile.TemporaryDirectory(prefix="acehack-smoke-") as temporary:
 
     user_state = game_paths["data"] / "acehack"
     assert user_state.is_dir() and any(user_state.iterdir()), list(user_state.iterdir())
+    assert (user_state / "dumps").is_dir()
 
     # A second real launch restores that save, then quits cleanly.
+    # The first -u value is a role-selection shorthand and is normalized to
+    # the player name "smoke".  Omit it here so Continue can select that save.
     pid, terminal = start_game()
     transcript = bytearray()
     try:
-        transcript.extend(read_until(terminal, (b"Restoring save file",), 20))
-        os.write(terminal, b"Q")
-        transcript.extend(read_until(terminal, (b"Really quit",), 8))
+        transcript.extend(read_until(terminal, (b"c - Continue game",), 20))
+        os.write(terminal, b"c")
+        restored = read_until(terminal, (b"Restoring save file",), 20)
+        transcript.extend(restored)
+        restored = drain(terminal, 1)
+        for _ in range(3):
+            transcript.extend(restored)
+            if b"--More--" not in restored:
+                break
+            os.write(terminal, b" ")
+            restored = drain(terminal, 1)
+        # AceHack binds uppercase Q to quiver; the safe quit command is the
+        # upstream extended command and asks for confirmation before deleting
+        # the restored save.
+        os.write(terminal, b"#quit\n")
+        transcript.extend(read_until(terminal, (b"Really abandon this game",), 8))
         os.write(terminal, b"y")
+        finished = drain(terminal, 1)
+        for _ in range(6):
+            transcript.extend(finished)
+            if b"--More--" in finished:
+                os.write(terminal, b" ")
+            elif b"Do you want your possessions identified?" in finished:
+                os.write(terminal, b"n")
+            else:
+                break
+            finished = drain(terminal, 1)
         wait_for_exit(pid, 12, bytes(transcript))
     finally:
         os.close(terminal)
