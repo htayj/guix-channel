@@ -20,6 +20,11 @@ trap 'rm -rf "$scratch"' EXIT HUP INT TERM
 mkdir -p "$scratch/home" "$scratch/xdg/cache" "$scratch/xdg/config" \
   "$scratch/xdg/data" "$scratch/xdg/state"
 
+# Exercise the installed command's public CLI surface before the transform
+# scenario below.  This proves the package wrapper locates the runtime graph.
+"$out/bin/astx" --help >"$scratch/help"
+grep -q '^Commands:' "$scratch/help"
+
 fixture=$scratch/fixture.ts
 transform=$scratch/no-match.cts
 printf '%s\n' 'export const value: number = 42' >"$fixture"
