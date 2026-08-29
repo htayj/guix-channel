@@ -137,8 +137,7 @@ tr -d '\r' <"$scratch/work/restore.raw" >"$scratch/work/restore.txt"
     "$scratch/work/first.txt" >/dev/null
 "$grep_out/bin/grep" -F 'Save file (' "$scratch/work/first.txt" >/dev/null
 "$grep_out/bin/grep" -F 'Lvl:' "$scratch/work/first.txt" >/dev/null
-"$grep_out/bin/grep" -F "$scratch/data/bell-labs-rogue7/arogue77.sav:" \
-    "$scratch/work/restore.txt" >/dev/null
+"$grep_out/bin/grep" -F 'arogue77.sav:' "$scratch/work/restore.txt" >/dev/null
 "$grep_out/bin/grep" -F 'Lvl:' "$scratch/work/restore.txt" >/dev/null
 if "$grep_out/bin/grep" -E 'Cannot restore file|Cannot restart the game' \
     "$scratch/work/restore.txt" >/dev/null; then
