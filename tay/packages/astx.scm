@@ -57,12 +57,28 @@
                 ;; archives listed in %astx-npm-sources; normalize only their
                 ;; SRI representation so offline installation can find them.
                 (invoke "sed" "-i"
-                        "-e" "s|sha1-qCJQ3bABXponyoLoLqYDu/pF768=|sha512-ZyznvL8k/FZeQHr2T6LzcJ/+vBApDnMNZvfVFy3At0knswWd6rJ3/0Hhmpu8oqa6C92npmozs890sX9Dl6q+Qw==|g"
-                        "-e" "s|sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=|sha512-Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==|g"
-                        "-e" "s|sha1-KbvZIHinOfC8zitO5B6DeVNSKSQ=|sha512-AFBWBy9EVRTa/LhEcG8QDP3FvpwZqmvN2QFDuJswFeaVhWnZMp8q3E6Zd90SR04PlIwfGdyVjNyLPyen/ek5CQ==|g"
+                        "-e" (string-append
+                              "s|sha1-qCJQ3bABXponyoLoLqYDu/pF768=|"
+                              "sha512-ZyznvL8k/FZeQHr2T6LzcJ/+vBApDnMNZvf"
+                              "VFy3At0knswWd6rJ3/0Hhmpu8oqa6C92npmozs"
+                              "890sX9Dl6q+"
+                              "Qw==|g")
+                        "-e" (string-append
+                              "s|sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=|"
+                              "sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5r"
+                              "TuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsH"
+                              "dodFvbkhKmqg==|g")
+                        "-e" (string-append
+                              "s|sha1-KbvZIHinOfC8zitO5B6DeVNSKSQ=|"
+                              "sha512-AFBWBy9EVRTa/LhEcG8QDP3FvpwZqmvN2QF"
+                              "DuJswFeaVhWnZMp8q3E6Zd90SR04PlIwfGdyVj"
+                              "NyLPyen/ek5CQ==|g")
                         "pnpm-lock.yaml")
                 (invoke "grep" "-q"
-                        "sha512-Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg=="
+                        (string-append
+                         "sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5r"
+                         "TuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsH"
+                         "dodFvbkhKmqg==")
                         "pnpm-lock.yaml")
                 (invoke "tar" "xzf" #$astx-pnpm)
                 (setenv "ESBUILD_BINARY_PATH" #$(file-append astx-esbuild "/bin/esbuild"))
@@ -80,11 +96,26 @@
                         "--no-optional" "--store-dir" store))))
           (replace 'build
             (lambda _
+              ;; pnpm's shell shim derives its location from $0, which is the
+              ;; top-level symlink when the toolchain invokes it.  Replace
+              ;; that exposed shim with a direct wrapper to the real CLI.
+              (let ((babel (car (find-files "node_modules/.pnpm"
+                                             "babel\\.js$"))))
+                (delete-file "node_modules/.bin/babel")
+                (call-with-output-file "node_modules/.bin/babel"
+                  (lambda (port)
+                    (format port "#!~a/bin/sh~%exec ~a/bin/node ~s \"$@\"~%"
+                            #$bash-minimal #$node-lts babel)))
+                (chmod "node_modules/.bin/babel" #o555))
+              (setenv "ESBUILD_BINARY_PATH"
+                      #$(file-append astx-esbuild "/bin/esbuild"))
               (invoke #$(file-append node-lts "/bin/node")
                       "node_modules/@jcoreio/toolchain/scripts/toolchain.cjs" "build")))
           (replace 'check
             (lambda* (#:key tests? #:allow-other-keys)
               (when tests?
+                (setenv "ESBUILD_BINARY_PATH"
+                        #$(file-append astx-esbuild "/bin/esbuild"))
                 (invoke #$(file-append node-lts "/bin/node")
                         "node_modules/@jcoreio/toolchain/scripts/toolchain.cjs" "test"))))
           (replace 'install
@@ -95,8 +126,7 @@
                     (module (string-append #$output "/lib/node_modules/astx"))
                     (doc (string-append #$output "/share/doc/astx"))
                     (program (string-append #$output "/bin/astx")))
-                (invoke #$(file-append node-lts "/bin/node") pnpm "prune" "--prod"
-                        "--offline" "--ignore-scripts")
+                (invoke #$(file-append node-lts "/bin/node") pnpm "prune" "--prod")
                 (mkdir-p module)
                 (copy-recursively "dist" (string-append module "/dist"))
                 (copy-recursively "node_modules" (string-append module "/node_modules"))
@@ -130,4 +160,9 @@
 It is built from the pinned upstream source with pnpm's frozen lockfile and a
 fixed offline registry archive closure.  TypeScript transforms use the matching
 source-built esbuild helper, never npm's platform binary download.")
-    (license license:expat)))
+    ;; The upstream CLI is Expat.  The installed, lockfile-selected runtime
+    ;; closure additionally contains the explicitly declared permissive
+    ;; licenses below; its package license texts are retained under share/doc.
+    (license (list license:expat license:isc license:bsd-2 license:bsd-3
+                   license:asl2.0 license:cc0 license:cc-by4.0 license:wtfpl2
+                   license:blue-oak1.0.0 license:psfl))))
