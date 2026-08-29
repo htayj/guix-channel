@@ -37,6 +37,7 @@
           "provider": "codex",
           "model": "gpt-5.6-luna",
           "effort": "xhigh",
+          "budget": { "maxCommands": 30, "maxCommandOutputBytes": 4096 },
           "capabilities": { "network": true }
         }
       ]
