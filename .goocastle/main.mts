@@ -3084,6 +3084,12 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     const kind = boundedFailureKind(error);
     const recoveryCommand = resumeRecoveryCommand();
     const failureSummary = failureSummaryFor(error);
+    // Setup failures (before an agent command exists) have no command
+    // failure summary. Preserve one bounded diagnostic so recovery does not
+    // collapse a concrete sandbox/worktree error into an opaque "error".
+    const exceptionDiagnostic = failureSummary === undefined && error instanceof Error
+      ? error.message.replace(/[\r\n\0]+/gu, " ").slice(0, 1_000)
+      : "";
     const daemonOperation = daemonOperationFor(error);
     const failedPhase = error !== null && typeof error === "object" && error.name === "WorkflowPhaseError" && error.phase !== null && typeof error.phase === "object"
       ? error.phase
@@ -3098,7 +3104,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // indistinguishable from an interrupted run.
     journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
       status: "failed",
-      failure: "Goocastle task failed (" + kind + ")" + failureDiagnosticFor(failureSummary, 1_000) + "; inspect the preserved branch and resume with: " + recoveryCommand,
+      failure: "Goocastle task failed (" + kind + ")" +
+        (exceptionDiagnostic ? ": " + exceptionDiagnostic : failureDiagnosticFor(failureSummary, 1_000)) +
+        "; inspect the preserved branch and resume with: " + recoveryCommand,
       ...(recoveryFailureNames === undefined ? {} : {
         phases: [
           ...journal.phases.filter((item) => !recoveryFailureNames.has(item.name)),
