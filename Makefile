@@ -41,7 +41,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	kbredir potato pycat rune secretpathway tinyfugue trebuchet tapeutils heroic-gogdl \
 	vt05 weidu blincolnlights pdp10-its-disassembler itstar pdp11 pdp6 uc-explorer \
 	azurra-gtk-theme pdp10-xpl-pdp-10 faugus-launcher react-blessed wanderers \
-	clojure-roguelike astx acehack
+	clojure-roguelike astx acehack bell-labs-rogue7
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -58,6 +58,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-itstar check-pdp11 check-azurra-gtk-theme check-pdp6 check-pdp10-xpl-pdp-10 check-faugus-launcher \
 	check-react-blessed check-shadow-over-darkmoor \
 	check-clojure-roguelike \
+	check-bell-labs-rogue7 \
 	check-astx \
 	check-acehack \
 	check-wanderers \
@@ -206,6 +207,9 @@ check-shadow-over-darkmoor:
 check-clojure-roguelike:
 	GUIX="$(GUIX)" tests/clojure-roguelike-smoke.sh
 
+check-bell-labs-rogue7:
+	GUIX="$(GUIX)" tests/bell-labs-rogue7-smoke.sh
+
 check-astx:
 	GUIX="$(GUIX)" tests/astx-smoke.sh
 
@@ -232,7 +236,7 @@ check: check-source-count check-sentinelone check-datamosh-security \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
-	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-astx check-acehack check-wanderers check-emacs-org-popup-posframe \
+	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-bell-labs-rogue7 check-astx check-acehack check-wanderers check-emacs-org-popup-posframe \
 	check-emacs-forth-mode check-emacs-aidermacs
 	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \
