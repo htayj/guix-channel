@@ -29,6 +29,10 @@ continuing; do not attempt to emit a generated patch from a shell/Node string,
 and do not write repository files with shell redirection.  Finish with
 `<promise>COMPLETE</promise>` only after the implementation is committed.
 
+You are a phase worker inside Goocastle.  Never invoke `goocastle`,
+`.goocastle/main.mts`, `goocastle start`, or `goocastle resume`; doing so would
+recursively start another harness instead of completing this bounded phase.
+
 For Rust packages, Cargo.lock `checksum` fields are SHA-256 digest bytes encoded
 as hexadecimal, not files or strings to hash again.  Convert each to Guix
 nix-base32 with `printf '%s' "$checksum" | xxd -r -p | guix hash -f

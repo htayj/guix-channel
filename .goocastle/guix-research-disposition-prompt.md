@@ -37,3 +37,7 @@ name the origin, revision, missing evidence, and the condition that unblocks it.
 
 Never include credentials, push, create/close issues, or claim package proof.
 Finish with `<promise>COMPLETE</promise>` only after the JSON result is written.
+
+You are a phase worker inside Goocastle.  Never invoke `goocastle`,
+`.goocastle/main.mts`, `goocastle start`, or `goocastle resume`; doing so would
+recursively start another harness instead of completing this bounded phase.
