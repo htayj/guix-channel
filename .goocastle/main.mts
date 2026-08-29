@@ -7,8 +7,8 @@ import { homedir } from "node:os";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const GENERATED_RUNNER_RUNTIME_API_VERSION = 8;
-const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-8/journal-1";
+const GENERATED_RUNNER_RUNTIME_API_VERSION = 10;
+const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-10/journal-1";
 const GENERATED_RUNNER_JOURNAL_SCHEMA_VERSION = 1;
 // This digest is a secret-free capability identity for the generated runner.
 // It deliberately follows the checked-in runner bytes so a repaired runner
@@ -154,7 +154,7 @@ const runtimeModuleUrl = (() => {
   return moduleUrl;
 })();
 const runtimeModule = await import(runtimeModuleUrl);
-const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, parseGooflowDispositionResult, quarantineManagedStateHome, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isProviderInterruption, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
+const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, parseGooflowDispositionResult, quarantineManagedStateHome, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runtimeContractIssueDigest, isRuntimeContractResolutionFailure, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isProviderInterruption, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
 const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Object.freeze({
   expectedPacingMs: 5 * 60_000,
   stalledAfterMs: 15 * 60_000,
@@ -338,6 +338,13 @@ const sandboxAccessForWorkflow = (workflow) => {
 
 const MAX_TASKS = projectConfig.taskLimits.maxTasks;
 const RESUME_ONLY = process.env.GOOCASTLE_RESUME === "1";
+// Keep the generated runner alive long enough to cancel and reap its active
+// provider. Without an installed handler Node exits immediately on SIGTERM,
+// leaving a detached Guix launcher owned by PID 1.
+const runnerCancellation = new AbortController();
+const cancelRunner = () => runnerCancellation.abort(new Error("Goocastle runner interrupted; provider cleanup is being completed"));
+process.once("SIGINT", cancelRunner);
+process.once("SIGTERM", cancelRunner);
 // A terminal bounded-repair receipt is never reopened by ordinary scheduling.
 // This opt-in is only meaningful for the explicit resume command and is kept
 // separate from the normal resume path so branch repair is deliberate.
@@ -636,7 +643,37 @@ const configuredAgent = () => createConfiguredAgent({
   effort: projectConfig.effort,
   ...(projectConfig.agent === "codex" ? { command: codexCommand } : {}),
 });
-const materializeIssueWorkflow = (workflow, _issue) => workflow;
+// Source issue labels are untrusted GitHub data. Only labels explicitly
+// configured as scheduler metadata may cross the research-to-delivery
+// boundary, and only into host-owned implementation-ticket templates. Keep
+// the configured order stable so the same source snapshot always produces
+// the same ticket labels.
+const materializeIssueWorkflowBase = (workflow, issue) => {
+  if (workflow?.disposition === undefined) return workflow;
+  const scheduling = {
+    priorityLabels: projectConfig.taskLimits.priorityLabels ?? [],
+    difficultyLabels: projectConfig.taskLimits.difficultyLabels ?? [],
+  };
+  return {
+    ...workflow,
+    disposition: {
+      ...workflow.disposition,
+      allowed: workflow.disposition.allowed.map((option) => {
+        if (option.implementationTicket === undefined) return option;
+        const labels = materializeGooflowImplementationTicketLabels(
+          issue.labels ?? [],
+          scheduling,
+          option.implementationTicket.labels ?? [],
+        );
+        return {
+          ...option,
+          implementationTicket: { ...option.implementationTicket, labels },
+        };
+      }),
+    },
+  };
+};
+const materializeIssueWorkflow = (workflow, issue) => materializeIssueWorkflowBase(workflow, issue);
 const agentProvenance = (workflow) => workflow?.phases
   .filter((phase) => phase.type === "agent")
   .map((phase) => ({
@@ -739,6 +776,64 @@ const selectedIssue = async (number) => await ghJson([
   "issue", "view", String(number), "--json", "number,title,state,body,labels,comments",
 ], (value, source) => validateGitHubIssuePayload(value, source, number));
 
+// Keep recovery mutations on a piped stderr so the shared GitHub transient
+// error classifier can see HTTP/rate-limit diagnostics without exposing them
+// in the normal runner output. The recovery helper owns the retry boundary.
+const runRuntimeContractRecoveryMutation = (args) => {
+  try {
+    execFileSync("gh", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1024 * 1024 });
+  } catch (error) {
+    const stderr = error !== null && typeof error === "object" && "stderr" in error
+      ? (error as { readonly stderr?: unknown }).stderr
+      : undefined;
+    const failure = new Error("GitHub runtime-contract recovery mutation failed; check GitHub CLI authentication and repository access, then resume the workflow", { cause: error });
+    if (typeof stderr === "string") Object.defineProperty(failure, "stderr", { value: stderr.slice(0, 16 * 1024) });
+    else if (Buffer.isBuffer(stderr)) Object.defineProperty(failure, "stderr", { value: stderr.subarray(0, 16 * 1024) });
+    throw failure;
+  }
+};
+const runtimeContractRecoveryForge = {
+  readIssue: selectedIssue,
+  addComment: async (issueNumber, body) => {
+    runRuntimeContractRecoveryMutation(["issue", "comment", String(issueNumber), "--body", body]);
+  },
+  updateLabels: async (issueNumber, labelsToAdd, labelsToRemove) => {
+    const args = ["issue", "edit", String(issueNumber)];
+    for (const label of labelsToAdd) args.push("--add-label", label);
+    for (const label of labelsToRemove) args.push("--remove-label", label);
+    runRuntimeContractRecoveryMutation(args);
+  },
+};
+const reconcileInvalidRuntimeContract = async (issue, error) => {
+  if (!isRuntimeContractResolutionFailure(error)) return false;
+  let routed;
+  try {
+    routed = await resolveIssueGooflow({
+      directory: hostWorkTree,
+      config: projectConfig,
+      issue: { number: issue.number, labels: issue.labels ?? [] },
+      ...(requestedGooflowOverride ? { override: requestedGooflowOverride } : process.env.GOOCASTLE_GOOFLOW_BYPASS === "1" ? { override: "template" } : {}),
+    });
+  } catch {
+    return false;
+  }
+  const evidence = routed.workflow?.evidence;
+  if (routed.workflow === undefined || routed.workflow.disposition !== undefined || evidence?.runtimeContractPath === undefined) return false;
+  const detail = error instanceof Error ? error.message : String(error);
+  await reconcileRuntimeContractRecovery({
+    issueNumber: issue.number,
+    workflow: routed.workflow.name,
+    contractPath: evidence.runtimeContractPath,
+    sourceDigest: runtimeContractIssueDigest(issue.body),
+    disposition: "manual-repair",
+    reasons: [detail],
+    forge: runtimeContractRecoveryForge,
+    retryPolicy: githubRetryPolicy,
+  });
+  console.error("Blocked legacy delivery issue #" + issue.number + " with state:blocked/manual-repair after its runtime contract failed validation.");
+  return true;
+};
+
 const specificationProvenance = (explanation, decision = "initial") => ({
   policyVersion: explanation.policyVersion,
   policyDigest: explanation.policyDigest,
@@ -806,8 +901,40 @@ const resolveForIssue = async (issue, { reportSelection = true } = {}) => {
 
 const hasTerminalBlockedLabel = (issue) =>
   issue.labels.some((label) => label.name === "state:blocked");
+const hasTerminalDeferredLabel = (issue) =>
+  issue.labels.some((label) => label.name === "state:deferred");
+const reportDeferredIssue = (issue) => console.log(
+  "Skipping issue #" + issue.number + "; state:deferred is a terminal scheduler exclusion. " +
+  "Remove state:deferred to reactivate it.",
+);
+const reportDeferredJournal = (issue) => console.log(
+  "Skipping open deferred journal #" + issue.number + " (state:deferred); its preserved journal and worktree remain unchanged. " +
+  "Remove state:deferred to reactivate it.",
+);
+
+// Keep generated runners compatible with test/runtime facades that predate
+// the exported predicate while making the current runtime's terminal-state
+// semantics authoritative.
+const terminalDispositionFor = (journal) => typeof isTerminalSequentialDisposition === "function"
+  ? isTerminalSequentialDisposition(journal)
+  : journal.status === "complete" && journal.disposition?.comment === "complete" && journal.disposition.labels === "complete" &&
+    (journal.disposition.implementationTicket === undefined || (
+      journal.disposition.implementationTicket.create === "complete" &&
+      journal.disposition.implementationTicket.labels === "complete" &&
+      (journal.disposition.implementationTicket.contract === undefined || journal.disposition.implementationTicket.contract === "complete")
+    ));
 
 const nextActionableIssue = async (excludedIssues = new Set()) => {
+  const latestJournalByIssue = new Map();
+  for (const journal of await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME)) {
+    const current = latestJournalByIssue.get(journal.issueNumber);
+    if (current === undefined || (journal.epoch ?? 1) > (current.epoch ?? 1)) latestJournalByIssue.set(journal.issueNumber, journal);
+  }
+  const terminalDispositionIssues = new Set(
+    [...latestJournalByIssue.values()]
+      .filter(terminalDispositionFor)
+      .map((journal) => journal.issueNumber),
+  );
   const issues = (await ghJson([
     // The GitHub CLI fetches only the requested number of entries.  Keep the scan
     // large enough that an older explicitly-ready issue is not hidden by a
@@ -835,6 +962,14 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
   const candidates = [];
   for (const issue of issues) {
     if (excludedIssues.has(issue.number)) continue;
+    if (hasTerminalDeferredLabel(issue)) {
+      reportDeferredIssue(issue);
+      continue;
+    }
+    if (terminalDispositionIssues.has(issue.number)) {
+      console.log("Skipping issue #" + issue.number + "; its terminal Gooflow disposition is already recorded in the journal.");
+      continue;
+    }
     if (hasTerminalBlockedLabel(issue)) continue;
     let resolved;
     let explanation;
@@ -847,6 +982,7 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
     } catch (error) {
       if (error instanceof Error && error.message.startsWith("Missing .goocastle/gooflow.json")) throw error;
       reportInvalidReadyIssue(issue, error);
+      if (await reconcileInvalidRuntimeContract(issue, error)) continue;
       continue;
     }
     candidates.push({ issue, resolved, explanation });
@@ -869,7 +1005,18 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
     }
     if (unblocked) {
       const selected = await selectedIssue(issue.number);
-      const resolved = await resolveForIssue(selected);
+      if (hasTerminalDeferredLabel(selected)) {
+        reportDeferredIssue(selected);
+        continue;
+      }
+      let resolved;
+      try {
+        resolved = await resolveForIssue(selected);
+      } catch (error) {
+        reportInvalidReadyIssue(selected, error);
+        if (await reconcileInvalidRuntimeContract(selected, error)) continue;
+        continue;
+      }
       const selectorLabels = resolved.workflow?.selectorLabels ?? ["ready-for-agent"];
       if (!selectorLabels.every((label) => selected.labels.some((entry) => entry.name === label))) continue;
       let explanation;
@@ -877,6 +1024,7 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
         explanation = validateIssueForWorkflow(selected, resolved.workflow);
       } catch (error) {
         reportInvalidReadyIssue(selected, error);
+        if (await reconcileInvalidRuntimeContract(selected, error)) continue;
         continue;
       }
       const priority = priorityOf(selected);
@@ -1556,6 +1704,7 @@ const incompleteJournal = async () => {
   const candidates = journals
     .filter((journal) => (!deliveryComplete(journal) || journal.cleanup !== "complete") &&
       (journal.status !== "complete" || journal.branchRecovery !== undefined) &&
+      !terminalDispositionFor(journal) &&
       !(journal.status === "complete" && journal.branchRecovery?.state === "fresh-worktree" &&
         journal.branchRecovery.sourceEpoch === undefined &&
         journals.some((candidate) => candidate.issueNumber === journal.issueNumber &&
@@ -1744,6 +1893,12 @@ const reconcileAbandonedPhases = async () => {
   if (typeof reconcileStalledSequentialPhases !== "function") return;
   for (const candidate of await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME)) {
     if (candidate.status === "complete") continue;
+    const issue = await selectedIssue(candidate.issueNumber);
+    if (issue.state === "OPEN" && hasTerminalDeferredLabel(issue)) {
+      deferredJournalIssues.add(candidate.issueNumber);
+      reportDeferredJournal(issue);
+      continue;
+    }
     const reconciled = await reconcileStalledSequentialPhases(gitCommonDir, candidate, {
       recoveryCommand: resumeRecoveryCommand(),
     });
@@ -1763,8 +1918,22 @@ const providerInterruptionFor = (error) => {
     messages.push(current.message);
     current = current.cause;
   }
-  return messages.some((message) => /\bAgent\b[\s\S]{0,256}\b(?:exited with code 137|SIGKILL)\b/iu.test(message));
+  return messages.some((message) =>
+    /\bAgent\b[\s\S]{0,256}\b(?:exited with code 137|SIGKILL)\b/iu.test(message) ||
+    /\bfailed\s+to\s+record\s+rollout\s+items\b[\s\S]{0,512}\bthread\b[\s\S]{0,256}\bnot\s+found\b/iu.test(message));
 };
+const providerStateLossFor = (error) =>
+  typeof isCodexRolloutThreadStateLoss === "function"
+    ? isCodexRolloutThreadStateLoss(error)
+    : (() => {
+        const messages = [];
+        let current = error;
+        while (current instanceof Error && messages.length < 4) {
+          messages.push(current.message);
+          current = current.cause;
+        }
+        return messages.some((message) => /\bfailed\s+to\s+record\s+rollout\s+items\b[\s\S]{0,512}\bthread\b[\s\S]{0,256}\bnot\s+found\b/iu.test(message));
+      })();
 const boundedFailureKind = (error, providerPhase = false) => {
   if (providerPhase && providerInterruptionFor(error)) return "provider-interruption";
   const messages = [];
@@ -2031,6 +2200,10 @@ const explicitlyRecoveredBlockedIssues = new Set();
 // converted to a durable, actionable terminal receipt before any new phase.
 await reconcileAbandonedPhases();
 for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
+  if (runnerCancellation.signal.aborted) {
+    process.exitCode = 1;
+    break;
+  }
   let journal = await incompleteJournal();
   if (journal && !RESUME_ONLY && journal.phases.some((phase) => phase.failureReceipt?.kind === "stalled")) {
     // A terminal issue label is authoritative even when the retained journal
@@ -2038,6 +2211,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // state, but do not let already-blocked work starve a later eligible
     // issue from the queue.
     const stalledIssue = await selectedIssue(journal.issueNumber);
+    if (stalledIssue.state === "OPEN" && hasTerminalDeferredLabel(stalledIssue)) {
+      deferredJournalIssues.add(journal.issueNumber);
+      attemptedIssues.add(journal.issueNumber);
+      reportDeferredJournal(stalledIssue);
+      task -= 1;
+      continue;
+    }
     if (stalledIssue.state === "OPEN" && hasTerminalBlockedLabel(stalledIssue)) {
       deferredJournalIssues.add(journal.issueNumber);
       terminallyBlockedJournalIssues.add(journal.issueNumber);
@@ -2142,10 +2322,28 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       task -= 1;
       continue;
     }
+    if (issue.state === "OPEN" && hasTerminalDeferredLabel(issue)) {
+      deferredJournalIssues.add(issue.number);
+      attemptedIssues.add(issue.number);
+      reportDeferredJournal(issue);
+      task -= 1;
+      continue;
+    }
     if (issue.state === "OPEN" && journal.repair?.state === "blocked") {
       // Resolve the current Gooflow before honoring a terminal repair state.
       // The old ordering made a repaired proof command invisible to resume.
-      resolvedGooflow = await resolveForIssue(issue);
+      try {
+        resolvedGooflow = await resolveForIssue(issue);
+      } catch (error) {
+        if (await reconcileInvalidRuntimeContract(issue, error)) {
+          deferredJournalIssues.add(issue.number);
+          terminallyBlockedJournalIssues.add(issue.number);
+          attemptedIssues.add(issue.number);
+          task -= 1;
+          continue;
+        }
+        throw error;
+      }
       // Preserve both the issue-specification and Gooflow selection
       // boundaries before publishing any external reopening label. A changed
       // issue contract or workflow selection must still fail closed.
@@ -2269,7 +2467,18 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // research Gooflow may deliberately disable the repository's delivery
     // specification policy, so validating before routing rejects a valid
     // journal solely because it was interrupted.
-    resolvedGooflow = await resolveForIssue(issue);
+    try {
+      resolvedGooflow = await resolveForIssue(issue);
+    } catch (error) {
+      if (await reconcileInvalidRuntimeContract(issue, error)) {
+        deferredJournalIssues.add(issue.number);
+        terminallyBlockedJournalIssues.add(issue.number);
+        attemptedIssues.add(issue.number);
+        task -= 1;
+        continue;
+      }
+      throw error;
+    }
     journal = await recoverMissingTaskBranch(journal);
     if (journal.branchRecovery?.state === "manual") {
       manuallyRecoverableJournalIssues.add(journal.issueNumber);
@@ -2424,9 +2633,20 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       CODING_STANDARDS: codingStandards,
       FAILURE_EVIDENCE: failureEvidenceFor(journal),
     };
-    const evidenceConfig = materializedGooflow?.evidence === undefined
-      ? undefined
-      : await resolveGooflowEvidence(materializeGooflowEvidence(materializedGooflow.evidence, promptArgs), hostWorkTree, issue.number);
+    let evidenceConfig;
+    if (materializedGooflow?.evidence !== undefined) {
+      try {
+        evidenceConfig = await resolveGooflowEvidence(materializeGooflowEvidence(materializedGooflow.evidence, promptArgs), hostWorkTree, issue.number);
+      } catch (error) {
+        if (await reconcileInvalidRuntimeContract(issue, error)) {
+          console.error("Task #" + issue.number + " is blocked because its runtime contract is no longer valid; continuing to unrelated eligible work.");
+          await restoreHostGitConfig();
+          task -= 1;
+          continue;
+        }
+        throw error;
+      }
+    }
     if (journal.runtimeEvidence !== undefined && evidenceConfig === undefined &&
       (journal.runtimeEvidence.artifact !== "complete" || journal.runtimeEvidence.comment !== "complete")) {
       throw new Error("Runtime evidence receipt for #" + issue.number + " is pending but the selected Gooflow no longer declares it; restore the original evidence configuration before resuming");
@@ -2459,6 +2679,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             completionTimeoutMs: projectConfig.timeouts.completionMs,
             runtimeLimits: phaseRuntimeLimits,
             logging: projectConfig.logging,
+            signal: runnerCancellation.signal,
           },
         },
         {
@@ -2474,6 +2695,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             completionTimeoutMs: projectConfig.timeouts.completionMs,
             runtimeLimits: phaseRuntimeLimits,
             logging: projectConfig.logging,
+            signal: runnerCancellation.signal,
           },
         },
       ];
@@ -2523,6 +2745,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     const configuredPhases = materializedGooflow
       ? issueGooflowPhases(materializedGooflow, projectConfig, promptArgs, {
           directory: hostWorkTree,
+          signal: runnerCancellation.signal,
           agentCommands: codexBinDirectory ? { codex: codexCommand } : {},
           ...(dispositionPolicy === undefined ? {} : {
             hostPromptSuffix: "HOST-ENFORCED DISPOSITION HANDOFF: Before completing this phase, write the required version 1 disposition JSON to " +
@@ -2541,7 +2764,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       liveness: phase.liveness ?? defaultSequentialPhaseLiveness,
     }));
     const setup = materializedGooflow
-      ? issueGooflowSetup(materializedGooflow, projectConfig)
+      ? issueGooflowSetup(materializedGooflow, projectConfig, { signal: runnerCancellation.signal })
       : [];
     const requiredGooflowPhases = new Set(materializedGooflow?.requiredPhases ?? []);
     if (evidenceConfig !== undefined) {
@@ -3308,6 +3531,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       ? error.phase
       : undefined;
     const providerInterruption = failedPhase?.type === "agent" && providerInterruptionFor(error);
+    const providerStateLoss = failedPhase?.type === "agent" && providerStateLossFor(error);
+    const providerRecoveryLabel = providerStateLoss ? "Codex rollout/thread state loss" : "provider interruption";
     const kind = boundedFailureKind(error, failedPhase?.type === "agent");
     const recoveryCommand = resumeRecoveryCommand();
     const failureSummary = failureSummaryFor(error);
@@ -3394,6 +3619,11 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     await restoreHostGitConfig().catch((restoreError) => {
       console.error("Could not restore host Git config: " + restoreError);
     });
+    if (runnerCancellation.signal.aborted) {
+      console.error("Goocastle runner interrupted after provider cleanup; resume with: " + recoveryCommand);
+      process.exitCode = 1;
+      break;
+    }
     let providerRecoveryEscalation;
     const providerBranchIsValid = providerInterruption && taskWorktreeRecovery.preservedWorktreePath !== undefined
       ? (() => {
@@ -3415,7 +3645,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       const recoveryAttempt = providerRecoveryAttempts + 1;
       const waitMs = providerRecoveryDelay(recoveryAttempt);
       console.warn(
-        "Provider interruption in agent phase " + JSON.stringify(failedPhase.name) + " for #" + issue.number +
+        "Recoverable " + providerRecoveryLabel + " in agent phase " + JSON.stringify(failedPhase.name) + " for #" + issue.number +
         "; preserved worktree and journal are valid. Re-entering with a fresh provider session after " +
         String(waitMs) + "ms backoff (automatic recovery attempt " + String(recoveryAttempt) + "/" +
         String(providerStateRecoveryMaxEpochs) + ").",
@@ -3429,7 +3659,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     }
     if (providerInterruption && currentProviderRecovery?.state === "active" && providerRecoveryAttempts >= providerStateRecoveryMaxEpochs) {
       providerRecoveryEscalation =
-        "Automatic provider interruption recovery exhausted after " + String(providerStateRecoveryMaxEpochs) +
+        "Automatic " + providerRecoveryLabel + " recovery exhausted after " + String(providerStateRecoveryMaxEpochs) +
         " fresh provider-state attempts for agent phase " + JSON.stringify(failedPhase.name) +
         ". Preserved branch and provider state homes remain in the durable journal. Inspect them, then resume with: " + resumeRecoveryCommand();
       const epochs = currentProviderRecovery.epochs.map((entry, index, entries) =>
