@@ -154,7 +154,7 @@ const runtimeModuleUrl = (() => {
   return moduleUrl;
 })();
 const runtimeModule = await import(runtimeModuleUrl);
-const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, parseGooflowDispositionResult, quarantineManagedStateHome, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
+const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, parseGooflowDispositionResult, quarantineManagedStateHome, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isProviderInterruption, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
 const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Object.freeze({
   expectedPacingMs: 5 * 60_000,
   stalledAfterMs: 15 * 60_000,
@@ -208,6 +208,12 @@ const githubRetryPolicy = Object.freeze({
   maxDelayMs: Math.max(projectConfig.retryPolicy.maxDelayMs, 120_000),
 });
 const sleep = async (milliseconds) => await new Promise((resolve) => setTimeout(resolve, milliseconds));
+const providerRecoveryDelay = (attempt) => {
+  if (typeof sequentialRetryDelay === "function") return sequentialRetryDelay(projectConfig.retryPolicy, attempt);
+  const policy = projectConfig.retryPolicy;
+  const capped = Math.min(policy.maxDelayMs, policy.initialDelayMs * 2 ** (attempt - 1));
+  return Math.min(policy.maxDelayMs, Math.max(0, Math.round(capped * (1 + ((Math.random() * 2) - 1) * policy.jitterRatio))));
+};
 const retryGitHub = async (description, operation) => {
   let recoveryAttempt = 0;
   for (;;) {
@@ -1749,7 +1755,18 @@ const reconcileAbandonedPhases = async () => {
     }
   }
 };
-const boundedFailureKind = (error) => {
+const providerInterruptionFor = (error) => {
+  if (typeof isProviderInterruption === "function") return isProviderInterruption(error);
+  const messages = [];
+  let current = error;
+  while (current instanceof Error && messages.length < 4) {
+    messages.push(current.message);
+    current = current.cause;
+  }
+  return messages.some((message) => /\bAgent\b[\s\S]{0,256}\b(?:exited with code 137|SIGKILL)\b/iu.test(message));
+};
+const boundedFailureKind = (error, providerPhase = false) => {
+  if (providerPhase && providerInterruptionFor(error)) return "provider-interruption";
   const messages = [];
   let current = error;
   while (current instanceof Error && messages.length < 4) {
@@ -2600,7 +2617,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     const repeatedAgentPhase = phases.find((phase) => {
       const record = phaseRecord(journal, phase.name);
       return phase.type === "agent" && record?.state === "failed" && record.failureReceipt !== undefined &&
-        (record.failureHistory?.length ?? 0) >= 1;
+        ((record.failureHistory?.length ?? 0) >= 1 || record.failureReceipt.kind === "provider-interruption");
     });
     if (journal.providerStateRecovery?.state === "blocked") {
       throw new Error(journal.providerStateRecovery.recovery ??
@@ -2942,7 +2959,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           // Retain only host-bounded, sandbox-redacted command evidence. Never
           // persist the exception text because provider errors can contain
           // credentials or unbounded output.
-          const kind = boundedFailureKind(failure.error);
+          const kind = boundedFailureKind(failure.error, failure.phase.type === "agent");
           const recovery = "Inspect the preserved branch, correct the phase, then resume with: " + resumeRecoveryCommand();
           const failureSummary = failureSummaryFor(failure.error);
           const phaseBeforeFailure = phaseRecord(journal, failure.phase.name);
@@ -3287,7 +3304,11 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     await persistInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs);
     refreshAfterIntegration = !RESUME_ONLY && task < MAX_TASKS;
   } catch (error) {
-    const kind = boundedFailureKind(error);
+    const failedPhase = error !== null && typeof error === "object" && error.name === "WorkflowPhaseError" && error.phase !== null && typeof error.phase === "object"
+      ? error.phase
+      : undefined;
+    const providerInterruption = failedPhase?.type === "agent" && providerInterruptionFor(error);
+    const kind = boundedFailureKind(error, failedPhase?.type === "agent");
     const recoveryCommand = resumeRecoveryCommand();
     const failureSummary = failureSummaryFor(error);
     // Setup failures (before an agent command exists) have no command
@@ -3297,9 +3318,6 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       ? error.message.replace(/[\r\n\0]+/gu, " ").slice(0, 1_000)
       : "";
     const daemonOperation = daemonOperationFor(error);
-    const failedPhase = error !== null && typeof error === "object" && error.name === "WorkflowPhaseError" && error.phase !== null && typeof error.phase === "object"
-      ? error.phase
-      : undefined;
     const freshRecoveryNames = failedPhase === undefined
       ? new Set(journal.phases.filter((phase) => phase.state === "fresh" && freshAttemptPhaseNames.has(phase.name)).map((phase) => phase.name))
       : new Set([failedPhase.name]);
@@ -3311,6 +3329,11 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       providerRecoveryEpoch !== undefined &&
       (providerRecoveryEpoch.state === "scheduled" || providerRecoveryEpoch.state === "running") &&
       freshRecoveryNames.has(providerRecoveryEpoch.phase);
+    const providerRecoveryPhaseFailed = providerInterruption &&
+      providerRecovery?.state === "active" &&
+      providerRecoveryEpoch !== undefined &&
+      (providerRecoveryEpoch.state === "scheduled" || providerRecoveryEpoch.state === "running") &&
+      failedPhase?.name === providerRecoveryEpoch.phase;
     // Persist a bounded diagnostic before releasing the sandbox.  A completed
     // agent phase can still fail host-side validation (for example, when a
     // disposition result is absent); without this the recovery journal is
@@ -3347,7 +3370,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           }),
         ],
       }),
-      ...(providerRecoveryLaunchFailed ? {
+      ...(providerRecoveryPhaseFailed || providerRecoveryLaunchFailed ? {
         providerStateRecovery: {
           state: "active" as const,
           epochs: [...providerRecovery!.epochs.slice(0, -1), { ...providerRecoveryEpoch!, state: "failed" as const }],
@@ -3371,12 +3394,66 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     await restoreHostGitConfig().catch((restoreError) => {
       console.error("Could not restore host Git config: " + restoreError);
     });
+    let providerRecoveryEscalation;
+    const providerBranchIsValid = providerInterruption && taskWorktreeRecovery.preservedWorktreePath !== undefined
+      ? (() => {
+          try {
+            return exactRefSha("refs/heads/" + branch) !== undefined;
+          } catch {
+            return false;
+          }
+        })()
+      : false;
+    const currentProviderRecovery = journal.providerStateRecovery;
+    const providerRecoveryAttempts = currentProviderRecovery?.epochs.length ?? 0;
+    const providerRecoveryCanRetry = providerInterruption &&
+      providerBranchIsValid &&
+      currentProviderRecovery?.state !== "blocked" &&
+      providerRecoveryAttempts < providerStateRecoveryMaxEpochs &&
+      journal.merge === "pending" && journal.push === "pending" && journal.remoteVerification === "pending" && journal.issueClose === "pending";
+    if (providerRecoveryCanRetry) {
+      const recoveryAttempt = providerRecoveryAttempts + 1;
+      const waitMs = providerRecoveryDelay(recoveryAttempt);
+      console.warn(
+        "Provider interruption in agent phase " + JSON.stringify(failedPhase.name) + " for #" + issue.number +
+        "; preserved worktree and journal are valid. Re-entering with a fresh provider session after " +
+        String(waitMs) + "ms backoff (automatic recovery attempt " + String(recoveryAttempt) + "/" +
+        String(providerStateRecoveryMaxEpochs) + ").",
+      );
+      if (waitMs > 0) await sleep(waitMs);
+      // The same incomplete journal is selected on the next scheduler turn;
+      // its failed provider phase causes the existing fresh-state epoch logic
+      // to quarantine the old home and create the new provider session.
+      task -= 1;
+      continue;
+    }
+    if (providerInterruption && currentProviderRecovery?.state === "active" && providerRecoveryAttempts >= providerStateRecoveryMaxEpochs) {
+      providerRecoveryEscalation =
+        "Automatic provider interruption recovery exhausted after " + String(providerStateRecoveryMaxEpochs) +
+        " fresh provider-state attempts for agent phase " + JSON.stringify(failedPhase.name) +
+        ". Preserved branch and provider state homes remain in the durable journal. Inspect them, then resume with: " + resumeRecoveryCommand();
+      const epochs = currentProviderRecovery.epochs.map((entry, index, entries) =>
+        index === entries.length - 1 ? { ...entry, state: "blocked" } : entry);
+      journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+        status: "failed",
+        failure: providerRecoveryEscalation,
+        providerStateRecovery: { state: "blocked", epochs, recovery: providerRecoveryEscalation },
+        phases: journal.phases.map((record) => record.name !== failedPhase.name ? record : {
+          ...record,
+          state: "failed",
+          failureReceipt: { ...record.failureReceipt, kind: "provider-interruption", recovery: providerRecoveryEscalation },
+        }),
+      });
+    }
     const transientDeliveryPause = isTransientSequentialError(error) && (journal.merge !== "pending" || journal.push !== "pending" || journal.remoteVerification !== "pending");
     const signingPause = error instanceof Error && error.message.startsWith("Required commit signing");
     if (transientDeliveryPause) {
       reportTransientDeliveryPause(journal);
     } else if (!signingPause) {
       reportRecovery(issue, branch, integration, recovery);
+    }
+    if (providerRecoveryEscalation !== undefined) {
+      throw new Error(providerRecoveryEscalation, { cause: error });
     }
     attemptedIssues.add(issue.number);
     const failedGooflowPhase = failedPhase === undefined
