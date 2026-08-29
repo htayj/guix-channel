@@ -7,8 +7,8 @@ import { homedir } from "node:os";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const GENERATED_RUNNER_RUNTIME_API_VERSION = 6;
-const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-6/journal-1";
+const GENERATED_RUNNER_RUNTIME_API_VERSION = 8;
+const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-8/journal-1";
 const GENERATED_RUNNER_JOURNAL_SCHEMA_VERSION = 1;
 // This digest is a secret-free capability identity for the generated runner.
 // It deliberately follows the checked-in runner bytes so a repaired runner
@@ -154,12 +154,13 @@ const runtimeModuleUrl = (() => {
   return moduleUrl;
 })();
 const runtimeModule = await import(runtimeModuleUrl);
-const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, materializeGooflowEvidence, parseGooflowDispositionResult, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, validateRuntimeEvidenceCapture, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
+const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, parseGooflowDispositionResult, quarantineManagedStateHome, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
 const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Object.freeze({
   expectedPacingMs: 5 * 60_000,
   stalledAfterMs: 15 * 60_000,
 });
 const sequentialPhaseFailureHistoryLimit = SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT ?? 8;
+const providerStateRecoveryMaxEpochs = SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS ?? 2;
 const runtimeHandshake = typeof generatedRunnerRuntimeHandshake === "function"
   ? generatedRunnerRuntimeHandshake()
   : undefined;
@@ -331,6 +332,10 @@ const sandboxAccessForWorkflow = (workflow) => {
 
 const MAX_TASKS = projectConfig.taskLimits.maxTasks;
 const RESUME_ONLY = process.env.GOOCASTLE_RESUME === "1";
+// A terminal bounded-repair receipt is never reopened by ordinary scheduling.
+// This opt-in is only meaningful for the explicit resume command and is kept
+// separate from the normal resume path so branch repair is deliberate.
+const RECOVER_BLOCKED = RESUME_ONLY && process.env.GOOCASTLE_RECOVER_BLOCKED === "1";
 const SPECIFICATION_OVERRIDE = process.env.GOOCASTLE_SPECIFICATION_OVERRIDE === "1";
 // This identity is intentionally opaque and secret-free. It proves which
 // runner last owned a phase without retaining a PID, command line, or session.
@@ -942,8 +947,37 @@ const applyDisposition = async (journal, issue) => {
     }
     return candidates.filter((candidate) => candidate.title === ticket.title && candidate.body === ticket.body);
   };
+  const validateTicketRuntimeEvidence = async (ticket) => {
+    if (ticket.runtimeEvidence === undefined) return undefined;
+    const routed = await resolveIssueGooflow({
+      directory: hostWorkTree,
+      config: projectConfig,
+      issue: { number: issue.number, labels: ticket.labelsToAdd },
+    });
+    if (routed.workflow === undefined) {
+      throw new Error("Implementation ticket runtime evidence names workflow " + JSON.stringify(ticket.runtimeEvidence.workflow) + ", but its labels do not select a delivery workflow; add the workflow assignment label and resume");
+    }
+    let handoff;
+    try {
+      handoff = validateGooflowImplementationTicketRuntimeEvidence(
+        { workflow: ticket.runtimeEvidence.workflow },
+        routed.workflow,
+        ticket.runtimeEvidence.contract,
+      );
+    } catch (error) {
+      throw new Error("Implementation ticket runtime-evidence contract is not valid for the selected workflow: " + (error instanceof Error ? error.message : String(error)) + "; fix the reviewed handoff and resume", { cause: error });
+    }
+    if (handoff.contractPath !== ticket.runtimeEvidence.contractPath ||
+        handoff.proofPhase !== ticket.runtimeEvidence.proofPhase ||
+        handoff.capturePhase !== ticket.runtimeEvidence.capturePhase ||
+        handoff.adapter !== ticket.runtimeEvidence.adapter) {
+      throw new Error("Implementation ticket runtime-evidence workflow changed after journaling; restore the selected workflow's contract path and proof phases, then resume");
+    }
+    return handoff;
+  };
   if (selected.implementationTicket) {
     let ticket = selected.implementationTicket;
+    const runtimeEvidenceHandoff = await validateTicketRuntimeEvidence(ticket);
     if (ticket.create !== "complete") {
       let matches = await exactImplementationTickets(ticket);
       if (matches.length > 1) {
@@ -1006,12 +1040,45 @@ const applyDisposition = async (journal, issue) => {
       });
     }
     ticket = journal.disposition.implementationTicket;
+    if (ticket.runtimeEvidence !== undefined && ticket.contract !== "complete") {
+      if (ticket.issueNumber === undefined || runtimeEvidenceHandoff === undefined) {
+        throw new Error("Implementation ticket runtime-evidence contract has no assigned issue number; resume the ticket creation boundary");
+      }
+      const originalBody = ticket.preContractBody ?? ticket.body;
+      const materializedBody = materializeGooflowImplementationTicketBody(originalBody, runtimeEvidenceHandoff, ticket.issueNumber);
+      if (ticket.body !== materializedBody || ticket.preContractBody === undefined) {
+        journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+          disposition: { ...journal.disposition, implementationTicket: { ...ticket, body: materializedBody, preContractBody: originalBody, contract: "started" } }, status: "active",
+        });
+        ticket = journal.disposition.implementationTicket;
+      }
+      const current = await selectedIssue(ticket.issueNumber);
+      if (current.body !== ticket.body) {
+        if (ticket.preContractBody === undefined || current.body !== ticket.preContractBody) {
+          throw new Error("Implementation ticket #" + ticket.issueNumber + " changed before its runtime-evidence contract was materialized; restore its reviewed body and resume");
+        }
+        await retryGitHub("runtime-evidence contract handoff", async () => {
+          const latest = await selectedIssue(ticket.issueNumber);
+          if (latest.body === ticket.body) return;
+          if (latest.body !== ticket.preContractBody) throw new Error("Implementation ticket #" + ticket.issueNumber + " changed before its runtime-evidence contract was materialized; restore its reviewed body and resume");
+          execFileSync("gh", ["issue", "edit", String(ticket.issueNumber), "--body", ticket.body], { stdio: "inherit" });
+        });
+      }
+      if ((await selectedIssue(ticket.issueNumber)).body !== ticket.body) {
+        throw new Error("GitHub did not expose the materialized runtime-evidence contract for implementation ticket #" + ticket.issueNumber + "; retry with: " + resumeRecoveryCommand());
+      }
+      journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+        disposition: { ...journal.disposition, implementationTicket: { ...ticket, contract: "complete" } }, status: "active",
+      });
+      ticket = journal.disposition.implementationTicket;
+    }
     if (ticket.labels !== "complete") {
       if (ticket.issueNumber === undefined) throw new Error("Created implementation ticket has no recorded issue number; resume with: " + resumeRecoveryCommand());
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
         disposition: { ...journal.disposition, implementationTicket: { ...ticket, labels: "started" } }, status: "active",
       });
-      for (const label of ticket.labelsToAdd) {
+      const labels = [...ticket.labelsToAdd.filter((label) => label !== "ready-for-agent"), ...ticket.labelsToAdd.filter((label) => label === "ready-for-agent")];
+      for (const label of labels) {
         const hasLabel = async () => (await selectedIssue(ticket.issueNumber)).labels.some((entry) => entry.name === label);
         if (await hasLabel()) continue;
         await retryGitHub("implementation-ticket label delivery", async () => {
@@ -1725,12 +1792,15 @@ const MAX_REQUIRED_COMMAND_REPAIR_EPOCHS = 2;
 const repairFailureFingerprint = (phase, receipt) => JSON.stringify({ phase, receipt });
 const reopenBlockedRequiredCommandRepair = async (journal, phaseName, semanticFingerprint) => {
   if (journal.repair?.state !== "blocked") return { journal, reopened: false };
+  // A normal scheduler launch must preserve terminal exhaustion, even when a
+  // generated runner or Gooflow changed. Only an explicit resume may reopen it.
   const latest = journal.repair.epochs.at(-1);
+  if (!RESUME_ONLY) return { journal, reopened: false };
   // A missing fingerprint identifies a journal written before this migration.
   // Re-enter it once under the current runner/Gooflow identity; the normal
   // two-attempt bound is then reinstated and future unchanged failures remain
   // terminally blocked.
-  if (latest?.semanticFingerprint === semanticFingerprint) return { journal, reopened: false };
+  if (latest?.semanticFingerprint === semanticFingerprint && !RECOVER_BLOCKED) return { journal, reopened: false };
   const branchHead = exactRefSha("refs/heads/" + journal.branch);
   if (branchHead === undefined) {
     throw new Error(
@@ -1935,6 +2005,10 @@ const reexecuteDogfoodRunner = (nextTask, attemptedIssues) => {
 };
 
 const attemptedIssues = new Set(reexecutionState.attemptedIssues);
+// An explicit blocked-repair request opens at most one fresh bounded window
+// per issue in this invocation. If that window exhausts again, leave the
+// journal terminally blocked until a later explicit command.
+const explicitlyRecoveredBlockedIssues = new Set();
 // Reconcile before either resumed work or fresh selection. A prior executor
 // cannot be assumed live after this scheduler starts, and a stale heartbeat is
 // converted to a durable, actionable terminal receipt before any new phase.
@@ -2097,15 +2171,18 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         (latestRepair.phase === "safe-package-proof" ||
           currentRepairWorkflow.evidence?.proofPhase === latestRepair.phase ||
           currentRepairWorkflow.evidence?.capturePhase === latestRepair.phase);
-      if (canReopen && latestRepair !== undefined) {
+      const explicitRecoveryAlreadyUsed = RECOVER_BLOCKED && explicitlyRecoveredBlockedIssues.has(issue.number);
+      if (canReopen && latestRepair !== undefined && !explicitRecoveryAlreadyUsed) {
         const semanticFingerprint = repairSemanticFingerprintFor(currentRepairWorkflow, latestRepair.phase);
         const reopened = await reopenBlockedRequiredCommandRepair(journal, latestRepair.phase, semanticFingerprint);
         journal = reopened.journal;
         if (reopened.reopened) {
           reopenedBlockedRepair = true;
           journal = await reconcileReopenedRequiredCommandRepair(journal, issue.number);
+          if (RECOVER_BLOCKED) explicitlyRecoveredBlockedIssues.add(issue.number);
           console.log(
-            "Reopened bounded repair epoch for #" + issue.number + " after the runner or Gooflow semantics changed for " +
+            "Reopened bounded repair epoch for #" + issue.number + " after " +
+              (RECOVER_BLOCKED ? "the explicit maintainer recovery request for " : "the runner or Gooflow semantics changed for ") +
               JSON.stringify(latestRepair.phase) + "; implementation and audit will run before the proof is retried.",
           );
         } else {
@@ -2121,6 +2198,14 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           continue;
         }
       } else {
+        if (RECOVER_BLOCKED && !canReopen) {
+          throw new Error(
+            "Cannot recover terminally blocked journal for #" + issue.number + ": " +
+              JSON.stringify(latestRepair?.phase ?? "unknown") +
+              " is not a required package-proof or runtime-evidence command gate. " +
+              "Review the preserved journal and branch; no phase was replayed.",
+          );
+        }
         await reconcileBlockedRequiredCommandRepair(journal, issue.number);
         deferredJournalIssues.add(issue.number);
         terminallyBlockedJournalIssues.add(issue.number);
@@ -2132,6 +2217,12 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         task -= 1;
         continue;
       }
+    }
+    if (journal.repair?.reopenedFromBlocked === true && !RESUME_ONLY) {
+      throw new Error(
+        "Terminal bounded repair for #" + issue.number + " was explicitly reopened but its external recovery receipt is incomplete. " +
+          "Run: " + shellDisplayCommand("goocastle", ["resume", hostWorkTree, "--recover-blocked"]),
+      );
     }
     if (journal.repair?.reopenedFromBlocked === true) {
       reopenedBlockedRepair = true;
@@ -2417,9 +2508,12 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           directory: hostWorkTree,
           agentCommands: codexBinDirectory ? { codex: codexCommand } : {},
           ...(dispositionPolicy === undefined ? {} : {
-            hostPromptSuffix: "HOST-ENFORCED DISPOSITION HANDOFF: Before completing this phase, write exactly {version: 1, disposition, finding} to " +
+            hostPromptSuffix: "HOST-ENFORCED DISPOSITION HANDOFF: Before completing this phase, write the required version 1 disposition JSON to " +
               JSON.stringify(dispositionPolicy.resultPath) + ". The disposition must be one of " +
-              JSON.stringify(dispositionPolicy.allowed.map((option) => option.name)) + ". The finding must be non-empty, at most 10000 characters, and the complete UTF-8 JSON file at most 16384 bytes. Summarize evidence; do not enumerate large dependency lists. Verify its byte length before completing. This host contract overrides any conflicting repository prompt.",
+              JSON.stringify(dispositionPolicy.allowed.map((option) => option.name)) + ". The finding must be non-empty, at most 10000 characters, and the complete UTF-8 JSON file at most 16384 bytes. Summarize evidence; do not enumerate large dependency lists. Verify its byte length before completing. This host contract overrides any conflicting repository prompt." +
+              (dispositionPolicy.allowed.some((option) => option.implementationTicket?.runtimeEvidence !== undefined)
+                ? " If you select a disposition whose implementation ticket declares runtimeEvidence, also include its reviewed runtimeEvidence draft with packageName, artifactPath, runtime.executable, the exact runtime.invocation argv, and runtime.successMarker; without that draft the host refuses to publish the delivery ticket and you must choose an actionable non-delivery disposition instead."
+                : ""),
           }),
         })
       : templatePhases;
@@ -2501,6 +2595,74 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           phases.find((phase) => phase.name === repairPhaseName),
         ].filter((phase, index, candidates) => phase !== undefined && candidates.indexOf(phase) === index)
       : [];
+    const defaultProviderStateHomeName = WORKFLOW_NAME + "-issue-" + issue.number;
+    let providerStateHomeName = journal.providerStateRecovery?.epochs.at(-1)?.stateHomeName ?? defaultProviderStateHomeName;
+    const repeatedAgentPhase = phases.find((phase) => {
+      const record = phaseRecord(journal, phase.name);
+      return phase.type === "agent" && record?.state === "failed" && record.failureReceipt !== undefined &&
+        (record.failureHistory?.length ?? 0) >= 1;
+    });
+    if (journal.providerStateRecovery?.state === "blocked") {
+      throw new Error(journal.providerStateRecovery.recovery ??
+        "Fresh provider-state recovery is terminally blocked; inspect the preserved state homes and resume only after manual repair.");
+    }
+    if (repeatedAgentPhase !== undefined) {
+      const priorRecovery = journal.providerStateRecovery;
+      const latestRecovery = priorRecovery?.epochs.at(-1);
+      // A crash after quarantine but before the phase starts leaves a
+      // scheduled epoch. Reuse that already-isolated home rather than moving
+      // it again or consuming another automatic retry.
+      if (priorRecovery?.state === "active" && latestRecovery?.phase === repeatedAgentPhase.name && latestRecovery.state === "scheduled") {
+        providerStateHomeName = latestRecovery.stateHomeName;
+      } else if ((priorRecovery?.epochs.length ?? 0) >= providerStateRecoveryMaxEpochs) {
+        const recovery = "Fresh provider-state recovery exhausted after " + providerStateRecoveryMaxEpochs +
+          " isolated retry attempts for agent phase " + JSON.stringify(repeatedAgentPhase.name) +
+          ". Preserved state homes: " + JSON.stringify((priorRecovery?.epochs ?? []).map((entry) => entry.quarantinePath ?? entry.stateHomeName)) +
+          ". Inspect the preserved branch and state homes, then resume with: " + resumeRecoveryCommand();
+        const epochs = (priorRecovery?.epochs ?? []).map((entry, index, entries) =>
+          index === entries.length - 1 ? { ...entry, state: "blocked" } : entry);
+        journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+          status: "failed",
+          failure: recovery,
+          providerStateRecovery: { state: "blocked", epochs, recovery },
+          phases: journal.phases.map((record) => record.name !== repeatedAgentPhase.name ? record : {
+            ...record,
+            failureReceipt: { ...record.failureReceipt, recovery },
+          }),
+        });
+        throw new Error(recovery);
+      } else {
+        const sourceStateHomeName = latestRecovery?.stateHomeName ?? defaultProviderStateHomeName;
+        const timestamp = new Date().toISOString().replace(/[-:]/gu, "").replace(/\.\d{3}Z$/u, "Z");
+        const quarantinePath = await quarantineManagedStateHome({
+          gitCommonDir,
+          name: sourceStateHomeName,
+          timestamp,
+        });
+        const epoch = (priorRecovery?.epochs.length ?? 0) + 1;
+        providerStateHomeName = defaultProviderStateHomeName + ".fresh-" + epoch;
+        journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+          status: "active",
+          providerStateRecovery: {
+            state: "active",
+            epochs: [
+              ...(priorRecovery?.epochs ?? []),
+              {
+                epoch,
+                phase: repeatedAgentPhase.name,
+                stateHomeName: providerStateHomeName,
+                ...(quarantinePath === undefined ? {} : { quarantinePath }),
+                state: "scheduled",
+              },
+            ],
+          },
+        });
+        console.warn(
+          "Repeated agent-phase failure for #" + issue.number + "; preserved provider state at " +
+            (quarantinePath ?? "(no prior state home)") + " and scheduled fresh isolated state " + providerStateHomeName + ".",
+        );
+      }
+    }
     const pendingPhases = phases.filter((phase) => {
       const record = phaseRecord(journal, phase.name);
       return activeRepair
@@ -2585,7 +2747,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
       if (pendingPhases.length > 0) {
         sandbox = await retrySequential(() => taskWorktree.createSandbox({
-          name: WORKFLOW_NAME + "-issue-" + issue.number,
+          name: providerStateHomeName,
           sandbox: guix({
             manifest: codexBinDirectory ? ".goocastle/manifest-external-codex.scm" : ".goocastle/manifest.scm",
             channels: ".goocastle/channels.scm",
@@ -2634,6 +2796,16 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         },
         onPhaseStart: async (phase) => {
           journal = await prepareCommitSigning(journal, signingBoundary("phase", phase.name));
+          const providerRecovery = journal.providerStateRecovery;
+          const providerRecoveryEpoch = providerRecovery?.epochs.at(-1);
+          if (providerRecovery?.state === "active" && providerRecoveryEpoch?.phase === phase.name && providerRecoveryEpoch.state === "scheduled") {
+            journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+              providerStateRecovery: {
+                state: "active",
+                epochs: [...providerRecovery.epochs.slice(0, -1), { ...providerRecoveryEpoch, state: "running" }],
+              },
+            });
+          }
           const phaseLiveness = phase.liveness ?? defaultSequentialPhaseLiveness;
           const phaseStartedAt = new Date().toISOString();
           const existingRecord = phaseRecord(journal, phase.name);
@@ -2730,6 +2902,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           const stoppedEarly = stopReason !== undefined ||
             (configuredPhase?.type === "agent" && configuredPhase.stopOnNoCommits === true &&
               (observedCommitCount ?? commitCount ?? 0) === 0);
+          const providerRecovery = journal.providerStateRecovery;
+          const providerRecoveryEpoch = providerRecovery?.epochs.at(-1);
           journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
             phases: [...journal.phases.filter((item) => item.name !== phaseResult.name), {
               name: phaseResult.name,
@@ -2749,6 +2923,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
               }),
               completedAt: new Date().toISOString(),
             }],
+            ...(providerRecovery?.state === "active" && providerRecoveryEpoch?.phase === phaseResult.name &&
+                (providerRecoveryEpoch.state === "scheduled" || providerRecoveryEpoch.state === "running") ? {
+              providerStateRecovery: {
+                state: "complete",
+                epochs: [...providerRecovery.epochs.slice(0, -1), { ...providerRecoveryEpoch, state: "complete" }],
+              },
+            } : {}),
             ...(runtimeAssertion === undefined || journal.runtimeEvidence === undefined ? {} : {
               runtimeEvidence: { ...journal.runtimeEvidence, runtimeAssertion },
             }),
@@ -2920,22 +3101,47 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       if (dispositionPolicy !== undefined && journal.disposition === undefined) {
         const dispositionResult = await dispositionResultFromSandbox(sandbox, dispositionPolicy, result.stopReason);
         const implementationTicket = gooflowDispositionImplementationTicket(dispositionPolicy, dispositionResult.disposition);
+        let renderedImplementationTicket;
+        let runtimeEvidenceHandoff;
+        if (implementationTicket !== undefined) {
+          if (implementationTicket.runtimeEvidence !== undefined) {
+            const routed = await resolveIssueGooflow({
+              directory: hostWorkTree,
+              config: projectConfig,
+              issue: {
+                number: issue.number,
+                labels: ["ready-for-agent", ...(implementationTicket.labels ?? [])],
+              },
+            });
+            if (routed.workflow === undefined) {
+              throw new Error("Research disposition selected a package delivery ticket, but its labels do not select implementation workflow " + JSON.stringify(implementationTicket.runtimeEvidence.workflow) + "; add the workflow assignment label to the ticket template and resume");
+            }
+            runtimeEvidenceHandoff = validateGooflowImplementationTicketRuntimeEvidence(
+              implementationTicket.runtimeEvidence,
+              routed.workflow,
+              dispositionResult.runtimeEvidence,
+            );
+          }
+          renderedImplementationTicket = renderGooflowImplementationTicket(implementationTicket, {
+            issueNumber: issue.number,
+            issueTitle: issue.title,
+            workflow: WORKFLOW_NAME,
+            epoch: journal.epoch ?? 1,
+            disposition: dispositionResult.disposition,
+            finding: dispositionResult.finding,
+          }, runtimeEvidenceHandoff);
+        }
         capturedDisposition = {
           disposition: {
             disposition: dispositionResult.disposition,
             finding: dispositionResult.finding,
             labelsToAdd: gooflowDispositionLabels(dispositionPolicy, dispositionResult.disposition),
-            ...(implementationTicket === undefined ? {} : {
+            ...(renderedImplementationTicket === undefined ? {} : {
               implementationTicket: {
-                ...renderGooflowImplementationTicket(implementationTicket, {
-                  issueNumber: issue.number,
-                  issueTitle: issue.title,
-                  workflow: WORKFLOW_NAME,
-                  epoch: journal.epoch ?? 1,
-                  disposition: dispositionResult.disposition,
-                  finding: dispositionResult.finding,
-                }),
+                ...renderedImplementationTicket,
+                ...(runtimeEvidenceHandoff === undefined ? {} : { runtimeEvidence: runtimeEvidenceHandoff }),
                 create: "pending",
+                ...(runtimeEvidenceHandoff === undefined ? {} : { contract: "pending" }),
                 labels: "pending",
               },
             }),
@@ -3098,6 +3304,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       ? new Set(journal.phases.filter((phase) => phase.state === "fresh" && freshAttemptPhaseNames.has(phase.name)).map((phase) => phase.name))
       : new Set([failedPhase.name]);
     const recoveryFailureNames = freshRecoveryNames.size === 0 ? undefined : freshRecoveryNames;
+    const providerRecovery = journal.providerStateRecovery;
+    const providerRecoveryEpoch = providerRecovery?.epochs.at(-1);
+    const providerRecoveryLaunchFailed = failedPhase === undefined &&
+      providerRecovery?.state === "active" &&
+      providerRecoveryEpoch !== undefined &&
+      (providerRecoveryEpoch.state === "scheduled" || providerRecoveryEpoch.state === "running") &&
+      freshRecoveryNames.has(providerRecoveryEpoch.phase);
     // Persist a bounded diagnostic before releasing the sandbox.  A completed
     // agent phase can still fail host-side validation (for example, when a
     // disposition result is absent); without this the recovery journal is
@@ -3134,6 +3347,12 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           }),
         ],
       }),
+      ...(providerRecoveryLaunchFailed ? {
+        providerStateRecovery: {
+          state: "active" as const,
+          epochs: [...providerRecovery!.epochs.slice(0, -1), { ...providerRecoveryEpoch!, state: "failed" as const }],
+        },
+      } : {}),
     }).catch(() => journal);
     const evidenceSandboxRecovery = evidenceSandbox ? await evidenceSandbox.close().catch(() => ({})) : {};
     evidenceSandbox = undefined;
