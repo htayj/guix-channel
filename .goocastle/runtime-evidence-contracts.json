@@ -9,7 +9,9 @@
         "executable": "astx",
         "invocation": {
           "file": "astx",
-          "args": ["--help"]
+          "args": [
+            "--help"
+          ]
         },
         "successMarker": "Commands:"
       }
@@ -24,6 +26,38 @@
         "modulePath": "lib/node_modules/scala-ts",
         "probe": "const scala=require(process.argv[1]);const result=scala.Option.Option(7).map(x=>x+5).toList().toArray();if(result.length!==1||result[0]!==12)throw new Error('scala-ts Option runtime assertion failed');console.log('SCALA_TS_RUNTIME_OK')",
         "successMarker": "SCALA_TS_RUNTIME_OK"
+      }
+    },
+    {
+      "issueNumber": 650,
+      "packageName": "acehack",
+      "artifactPath": ".goocastle/evidence/issue-266.png",
+      "runtime": {
+        "executable": "acehack",
+        "invocation": {
+          "file": "acehack",
+          "args": [
+            "-s",
+            "-v",
+            "all"
+          ]
+        },
+        "successMarker": "Cannot find any entries for all"
+      }
+    },
+    {
+      "issueNumber": 651,
+      "packageName": "bell-labs-rogue7",
+      "artifactPath": ".goocastle/evidence/issue-267.png",
+      "runtime": {
+        "executable": "bell-labs-rogue7",
+        "invocation": {
+          "file": "bell-labs-rogue7",
+          "args": [
+            "-s"
+          ]
+        },
+        "successMarker": "Top 10 Adventurers:"
       }
     }
   ]
