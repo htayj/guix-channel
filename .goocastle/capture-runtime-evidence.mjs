@@ -29,12 +29,19 @@ if (document?.version !== 1 || !Array.isArray(document.contracts)) fail("unsuppo
 const contract = document.contracts.find((candidate) => candidate?.issueNumber === issueNumber);
 if (!contract) fail(`no runtime contract for issue #${issueNumber}`);
 const runtime = contract.runtime;
-if (typeof contract.packageName !== "string" || !/^[a-z0-9][a-z0-9+.-]*$/.test(contract.packageName)
-    || typeof runtime?.executable !== "string" || !/^[a-z0-9][a-z0-9+.-]*$/.test(runtime.executable)
-    || runtime?.invocation?.file !== runtime.executable || !Array.isArray(runtime.invocation.args)
-    || !runtime.invocation.args.every((arg) => typeof arg === "string" && !/[\0\r\n]/.test(arg))
-    || typeof runtime.successMarker !== "string" || runtime.successMarker.trim() !== runtime.successMarker
-    || !runtime.successMarker || /[\r\n]/.test(runtime.successMarker)) {
+const safeName = (value) => typeof value === "string" && /^[a-z0-9][a-z0-9+.-]*$/i.test(value);
+const safeRelativePath = (value) => typeof value === "string" && value.length > 0 && !value.startsWith("/")
+  && !value.includes("\\") && value.split("/").every((part) => part && part !== "." && part !== "..");
+const safeMarker = (value) => typeof value === "string" && value.length > 0 && value.length <= 256
+  && value.trim() === value && !/[\0\r\n]/.test(value);
+const executableContract = runtime?.kind === undefined || runtime?.kind === "executable";
+const nodeLibraryContract = runtime?.kind === "node-library";
+if (!safeName(contract.packageName) || !safeMarker(runtime?.successMarker)
+    || (executableContract && (!(safeName(runtime?.executable)) || runtime?.invocation?.file !== runtime.executable
+      || !Array.isArray(runtime.invocation.args) || !runtime.invocation.args.every((arg) => typeof arg === "string" && !/[\0\r\n]/.test(arg))))
+    || (nodeLibraryContract && (!(safeName(runtime?.interpreterPackage)) || !safeRelativePath(runtime?.modulePath)
+      || typeof runtime?.probe !== "string" || runtime.probe.length === 0 || runtime.probe.length > 4096 || /[\0\r\n]/.test(runtime.probe)))
+    || (!executableContract && !nodeLibraryContract)) {
   fail("runtime contract entry is malformed");
 }
 
@@ -49,11 +56,36 @@ if (build.error || build.status !== 0) {
 }
 const output = build.stdout.trim();
 if (!output.startsWith("/gnu/store/")) fail("Guix did not return a store output");
-const executable = resolve(output, "bin", runtime.executable);
-if (!executable.startsWith(`${output}${sep}`) || !existsSync(executable) || !statSync(executable).isFile()) {
-  fail("declared executable is absent from the realized package output");
+let executable;
+let invocation;
+let packageOutput;
+if (nodeLibraryContract) {
+  const moduleDirectory = resolve(output, runtime.modulePath);
+  if (!moduleDirectory.startsWith(`${output}${sep}`) || !existsSync(moduleDirectory) || !statSync(moduleDirectory).isDirectory()) {
+    fail("declared node-library module directory is absent from the realized package output");
+  }
+  const interpreter = spawnSync(guix, ["build", "-L", ".", "--no-grafts", runtime.interpreterPackage], {
+    encoding: "utf8", maxBuffer: 1024 * 1024,
+  });
+  if (interpreter.error || interpreter.status !== 0) {
+    process.stderr.write(interpreter.stderr || interpreter.stdout || "");
+    fail(`cannot realize Node interpreter package ${runtime.interpreterPackage}`);
+  }
+  const interpreterOutput = interpreter.stdout.trim();
+  executable = resolve(interpreterOutput, "bin", "node");
+  if (!interpreterOutput.startsWith("/gnu/store/") || !existsSync(executable) || !statSync(executable).isFile()) {
+    fail("declared Node interpreter is absent from its realized Guix package output");
+  }
+  invocation = ["-e", runtime.probe, moduleDirectory];
+  packageOutput = output;
+} else {
+  executable = resolve(output, "bin", runtime.executable);
+  if (!executable.startsWith(`${output}${sep}`) || !existsSync(executable) || !statSync(executable).isFile()) {
+    fail("declared executable is absent from the realized package output");
+  }
+  invocation = runtime.invocation.args;
 }
-const run = spawnSync(executable, runtime.invocation.args, {
+const run = spawnSync(executable, invocation, {
   encoding: "utf8",
   maxBuffer: 1024 * 1024,
   env: process.env,
@@ -67,6 +99,7 @@ if (!run.stdout.split(/\r?\n/u).includes(runtime.successMarker)) {
 process.stdout.write(`GOOCASTLE_RUNTIME_ASSERTION_V1 ${JSON.stringify({
   version: 1,
   executable,
-  invocation: [executable, ...runtime.invocation.args],
+  invocation: [executable, ...invocation],
   successMarker: runtime.successMarker,
+  ...(packageOutput === undefined ? {} : { packageOutput }),
 })}\n`);
