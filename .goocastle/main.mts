@@ -7,8 +7,8 @@ import { homedir } from "node:os";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const GENERATED_RUNNER_RUNTIME_API_VERSION = 13;
-const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-13/journal-1";
+const GENERATED_RUNNER_RUNTIME_API_VERSION = 14;
+const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-14/journal-1";
 const GENERATED_RUNNER_JOURNAL_SCHEMA_VERSION = 1;
 // This digest is a secret-free capability identity for the generated runner.
 // It deliberately follows the checked-in runner bytes so a repaired runner
@@ -154,7 +154,7 @@ const runtimeModuleUrl = (() => {
   return moduleUrl;
 })();
 const runtimeModule = await import(runtimeModuleUrl);
-const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialPredecessorWorkReceipt, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, parseGooflowDispositionResult, quarantineManagedStateHome, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runtimeContractIssueDigest, isRuntimeContractResolutionFailure, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isProviderInterruption, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
+const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialPredecessorWorkReceipt, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, materializeRuntimeEvidenceContractEntry, parseGooflowDispositionResult, quarantineManagedStateHome, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runtimeContractIssueDigest, isRuntimeContractResolutionFailure, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isProviderInterruption, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
 const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Object.freeze({
   expectedPacingMs: 5 * 60_000,
   stalledAfterMs: 15 * 60_000,
@@ -1225,6 +1225,21 @@ const applyDisposition = async (journal, issue) => {
         disposition: { ...journal.disposition, implementationTicket: { ...ticket, contract: "complete" } }, status: "active",
       });
       ticket = journal.disposition.implementationTicket;
+    }
+    if (ticket.runtimeEvidence !== undefined) {
+      if (ticket.issueNumber === undefined || runtimeEvidenceHandoff === undefined) {
+        throw new Error("Implementation ticket runtime-evidence contract has no assigned issue number; resume the ticket creation boundary");
+      }
+      // The delivery issue must not become schedulable until the repository
+      // contract contains its assigned number. The materializer revalidates
+      // the complete file and treats an existing exact entry as a successful
+      // replay, so crashes and GitHub retries cannot create a divergent entry.
+      await materializeRuntimeEvidenceContractEntry(
+        hostWorkTree,
+        runtimeEvidenceHandoff.contractPath,
+        runtimeEvidenceHandoff.contract,
+        ticket.issueNumber,
+      );
     }
     if (ticket.labels !== "complete") {
       if (ticket.issueNumber === undefined) throw new Error("Created implementation ticket has no recorded issue number; resume with: " + resumeRecoveryCommand());
