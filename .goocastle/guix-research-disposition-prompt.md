@@ -41,3 +41,9 @@ Finish with `<promise>COMPLETE</promise>` only after the JSON result is written.
 You are a phase worker inside Goocastle.  Never invoke `goocastle`,
 `.goocastle/main.mts`, `goocastle start`, or `goocastle resume`; doing so would
 recursively start another harness instead of completing this bounded phase.
+
+Never start an interactive Guile session.  For Scheme inspection use a bounded
+non-interactive command such as `guile --no-auto-compile -c '...'`; if a probe
+fails, record the failure and continue the research rather than entering a
+REPL.  A phase worker must always leave a command that requires stdin before
+returning its disposition.
