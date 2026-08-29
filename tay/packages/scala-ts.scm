@@ -7,6 +7,7 @@
   #:use-module (guix gexp)
   #:use-module (guix packages)
   #:use-module ((guix licenses) #:prefix license:)
+  #:use-module (gnu packages guile)
   #:use-module (gnu packages node)
   #:use-module (tay packages scala-ts-npm-sources)
   #:use-module (tay packages starred-a-c))
@@ -23,24 +24,96 @@
     (arguments
      (list
       #:phases
-      #~(modify-phases %standard-phases
+      (with-extensions (list guile-json-4)
+        #~(modify-phases %standard-phases
           (replace 'configure
             (lambda _
-              ;; `npm ci' uses the committed v1 lockfile verbatim.  Its cache
-              ;; is populated solely from fixed Guix source inputs before the
-              ;; offline install, so dependency ranges cannot be resolved.
-              (let ((cache (string-append (getcwd) "/.npm-cache"))
-                    (npm #$(file-append node-lts "/bin/npm")))
-                (setenv "npm_config_cache" cache)
-                (setenv "npm_config_offline" "true")
-                (setenv "npm_config_audit" "false")
-                (setenv "npm_config_fund" "false")
-                (for-each
-                 (lambda (archive)
-                   (invoke npm "cache" "add" "--offline" archive))
-                 (list #$@(map cdr %scala-ts-npm-sources)))
-                (invoke npm "ci" "--offline" "--ignore-scripts"
-                        "--no-audit" "--no-fund"))))
+              ;; npm 10 needs registry packuments to repair a v1 lockfile,
+              ;; even when every tarball is cached.  Extract the fixed
+              ;; archives directly according to that lockfile instead.  This
+              ;; is deterministic, performs no package-manager resolution,
+              ;; and runs no package scripts during installation.
+              (use-modules (json) (srfi srfi-1))
+              (let* ((archives (list #$@(map cdr %scala-ts-npm-sources)))
+                     (sources
+                      (map
+                       (lambda (archive index)
+                         (let ((directory
+                                (string-append ".npm-source-cache/"
+                                               (number->string index))))
+                           (mkdir-p directory)
+                           (invoke "tar" "xzf" archive "-C" directory
+                                   "--strip-components=1")
+                           (let ((metadata
+                                  (call-with-input-file
+                                   (string-append directory "/package.json")
+                                   json->scm)))
+                             (cons (string-append (assoc-ref metadata "name")
+                                                  "@"
+                                                  (assoc-ref metadata "version"))
+                                   directory))))
+                       archives
+                       (iota (length archives))))
+                     (lockfile
+                      (call-with-input-file "package-lock.json" json->scm)))
+                (define (source-for name version)
+                  (or (assoc-ref sources (string-append name "@" version))
+                      (error "locked npm source was not supplied"
+                             name version)))
+                (define (install-dependencies dependencies parent)
+                  (for-each
+                   (lambda (entry)
+                     (let* ((name (car entry))
+                            (metadata (cdr entry))
+                            (version (assoc-ref metadata "version"))
+                            (target (string-append parent "/node_modules/"
+                                                    name)))
+                       (unless (and version
+                                    (assoc-ref metadata "resolved")
+                                    (assoc-ref metadata "integrity"))
+                         (error "lockfile dependency is not fixed" name))
+                       (mkdir-p (dirname target))
+                       (copy-recursively (source-for name version) target)
+                       (install-dependencies
+                        (or (assoc-ref metadata "dependencies") '())
+                        target)))
+                   (or dependencies '())))
+                (define (bin-entries bin name)
+                  (cond ((string? bin) (list (cons name bin)))
+                        ((pair? bin) bin)
+                        (else '())))
+                (define (install-root-binaries dependencies)
+                  (let ((bin-directory "node_modules/.bin"))
+                    (mkdir-p bin-directory)
+                    (for-each
+                     (lambda (entry)
+                       (let* ((name (car entry))
+                              (package-directory
+                               (string-append "node_modules/" name))
+                              (metadata
+                               (call-with-input-file
+                                (string-append package-directory
+                                               "/package.json")
+                                json->scm))
+                              (bin (assoc-ref metadata "bin")))
+                         (for-each
+                          (lambda (bin-entry)
+                            (let ((link (string-append bin-directory "/"
+                                                        (car bin-entry)))
+                                  (target (string-append "../" name "/"
+                                                         (cdr bin-entry))))
+                              (chmod (string-append package-directory "/"
+                                                     (cdr bin-entry))
+                                     #o755)
+                              (mkdir-p (dirname link))
+                              (unless (file-exists? link)
+                                (symlink target link))))
+                          (bin-entries bin name))))
+                     (or dependencies '()))))
+                (let ((dependencies (assoc-ref lockfile "dependencies")))
+                  (install-dependencies dependencies ".")
+                  (install-root-binaries dependencies)
+                  (delete-file-recursively ".npm-source-cache")))))
           (replace 'build
             (lambda _
               (invoke #$(file-append node-lts "/bin/npm") "run" "build")))
@@ -75,7 +148,7 @@
                                                  "/node_modules/immutable")))
                   (mkdir-p immutable)
                   (invoke "tar" "xzf" #$scala-ts-immutable "-C" immutable
-                          "--strip-components=1"))))))))
+                          "--strip-components=1")))))))))
     ;; Every archive here is a registry source selected by package-lock.json;
     ;; none is an npm-generated binary or a build-time network dependency.
     (native-inputs

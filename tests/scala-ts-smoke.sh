@@ -5,7 +5,7 @@ set -eu
 guix_bin=${GUIX:-guix}
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 out=${1:-$($guix_bin build -L "$channel_dir" --no-grafts scala-ts)}
-node_out=${NODE_OUT:-$($guix_bin build -L "$channel_dir" --no-grafts node-lts)}
+node_out=${NODE_OUT:-$($guix_bin build -L "$channel_dir" --no-grafts node)}
 module=$out/lib/node_modules/scala-ts
 
 test -s "$module/dist/scala-ts.js"
