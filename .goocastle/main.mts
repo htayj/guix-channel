@@ -2534,7 +2534,12 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
               name: record.name,
               state: "fresh",
               attempt,
-              startSha: hostGit(["rev-parse", branch], { encoding: "utf8" }).trim(),
+              // Preserve the original boundary when an operator has repaired
+              // a failed phase on its task branch.  The completion callback
+              // can then verify and account for those signed commits.
+              startSha: record.failureHistory !== undefined && record.startSha !== undefined
+                ? record.startSha
+                : hostGit(["rev-parse", branch], { encoding: "utf8" }).trim(),
               liveness: {
                 executorId: EXECUTOR_ID,
                 startedAt: freshStartedAt,
@@ -2631,7 +2636,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           // setup failures can identify every recovery phase. Refresh the
           // execution boundary here: later phases must not claim commits or
           // liveness from an earlier phase in that batch.
-          const startSha = existingRecord?.state === "fresh"
+          // A recovered phase can have a signed operator repair after its
+          // original execution boundary.  Preserve that boundary so the
+          // completion gate can account for the repair rather than replaying
+          // an implementation agent solely to manufacture another commit.
+          // Newly staged phases have no failure history and still receive a
+          // fresh boundary, which keeps ordinary multi-phase batches isolated.
+          const startSha = existingRecord?.state === "fresh" && existingRecord.failureHistory === undefined
             ? hostGit(["rev-parse", branch], { encoding: "utf8" }).trim()
             : existingRecord?.startSha ?? hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
           const liveness = existingRecord?.state === "fresh" && existingRecord.liveness !== undefined
@@ -2702,7 +2713,6 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             ? { command: configuredPhase.command, exitCode: 0 }
             : undefined;
           const stopReason = phaseResult.type === "agent" ? phaseResult.result.stopReason : undefined;
-          const stoppedEarly = stopReason !== undefined || (configuredPhase?.type === "agent" && configuredPhase.stopOnNoCommits === true && commitCount === 0);
           if (phaseStartSha !== undefined && phaseHead !== undefined) {
             const signed = await ensureSignedPhaseCommits(journal, signingBoundary("phase", phaseResult.name), phaseStartSha, phaseHead);
             journal = signed.journal;
@@ -2711,6 +2721,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           const observedCommitCount = phaseStartSha === undefined || phaseHead === undefined
             ? undefined
             : Number(hostGit(["rev-list", "--count", phaseStartSha + ".." + phaseHead], { encoding: "utf8" }).trim());
+          const stoppedEarly = stopReason !== undefined ||
+            (configuredPhase?.type === "agent" && configuredPhase.stopOnNoCommits === true &&
+              (observedCommitCount ?? commitCount ?? 0) === 0);
           journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
             phases: [...journal.phases.filter((item) => item.name !== phaseResult.name), {
               name: phaseResult.name,
