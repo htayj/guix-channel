@@ -42,6 +42,11 @@ const repairSemanticFingerprintFor = (workflow, phaseName) => createHash("sha256
   .digest("hex");
 const SELF_HOSTED_RUNTIME_ROOT_ENVIRONMENT = "GOOCASTLE_SELF_HOSTED_RUNTIME_ROOT";
 const hostWorkTree = process.cwd();
+if (process.env.GOOCASTLE_PHASE_WORKER === "1") {
+  throw new Error(
+    "Refusing to run a generated Goocastle runner from an active phase worker; return to the parent harness instead of recursively starting Goocastle.",
+  );
+}
 // Display-only POSIX renderer for operator recovery text.  Launches below
 // continue to use structured argv and never feed this string to a shell.
 const shellDisplayQuote = (value) => /^(?!-)[A-Za-z0-9_@%+=:,./-]+$/.test(value)
