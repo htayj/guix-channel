@@ -2598,6 +2598,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             ...sandboxAccess.environment,
             ...commitSigningEnvironment,
             GOOCASTLE_ISSUE_NUMBER: String(issue.number),
+            GOOCASTLE_PHASE_WORKER: "1",
           },
         }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
       }
@@ -2838,7 +2839,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         evidenceSandbox = await retrySequential(() => taskWorktree.createSandbox({
           sandbox: evidenceProvider(phase),
           name: WORKFLOW_NAME + "-runtime-evidence-" + phase.name,
-          env: { GOOCASTLE_ISSUE_NUMBER: String(issue.number) },
+          env: { GOOCASTLE_ISSUE_NUMBER: String(issue.number), GOOCASTLE_PHASE_WORKER: "1" },
         }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
         try {
           const evidenceResult = await runBatch(evidenceSandbox, [phase]);
