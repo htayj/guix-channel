@@ -24,7 +24,8 @@
                 "Implement the viable package change identified in the host-validated research finding.",
                 "Preserve Guix source provenance, licensing, and deterministic build requirements recorded in the finding.",
                 "Add and pass a package-specific safe smoke proof using isolated HOME/XDG state before closure."
-              ]
+              ],
+              "runtimeEvidence": { "workflow": "guix-package-quality-gates" }
             }
           }
         ]
