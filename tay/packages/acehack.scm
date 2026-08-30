@@ -80,11 +80,22 @@
               (setenv "CHOWN" "true")
               (setenv "CHGRP" "true")
               (setenv "CHMOD" "true")
+              ;; makedefs embeds this date in date.h, which is compiled into
+              ;; both the executable and nhdat.  The fixed source revision
+              ;; supplies the reproducible build timestamp below.
+              (setenv "TZ" "UTC0")
               ;; This 2015 source retains K&R definitions which GCC's modern
               ;; default language mode rejects as errors.
               (setenv "CFLAGS"
                       (string-append (or (getenv "CFLAGS") "") " -std=gnu89"))
               (setenv "LIBS" "-ltinfo")))
+          (add-before 'build 'make-build-date-reproducible
+            (lambda _
+              ;; The final master commit was made at 2015-03-11 12:27:57 UTC.
+              ;; Do not let makedefs use the build machine's wall clock.
+              (substitute* "util/makedefs.c"
+                (("\\(void\\) time\\(\\(time_t \\*\\)&clocktim\\);")
+                 "clocktim = 1426076877L;"))))
           (add-after 'configure 'fix-internal-compression-build
             (lambda _
               ;; This version's --with-compression=no branch correctly uses
@@ -95,35 +106,29 @@
               (substitute* "include/autoconf.h"
                 (("#undef COMPRESS_EXTENSION")
                  "#define COMPRESS_EXTENSION \"\""))))
+          (replace 'build
+            (lambda _
+              ;; The generated top-level Makefile's default target is the
+              ;; executable; the documented `all' target also creates nhdat.
+              ;; The installer additionally expects Guidebook.txt.
+              (invoke "make" "all" "Guidebook.txt" "LIBS=-lm -ltinfo")))
           (delete 'install-license-files)
           (replace 'install
             (lambda _
-              ;; Use the upstream installation recipe solely to enumerate and
-              ;; produce its compiled tty data; discard its /usr-oriented
-              ;; wrapper and split mutable files out of the store afterwards.
-              (invoke "make" "install" "CHOWN=true" "CHGRP=true" "CHMOD=true")
-              (let* ((staging (string-append #$output "/acehackdir"))
-                     (data (string-append #$output "/share/acehack"))
+              ;; The upstream installer recursively removes its target and
+              ;; installs a /usr-oriented shell script.  Its tty build needs
+              ;; only the compiled game and nhdat, so install precisely those
+              ;; immutable files and let the launcher create player state.
+              (let* ((data (string-append #$output "/share/acehack"))
                      (libexec (string-append #$output "/libexec"))
                      (doc (string-append #$output "/share/doc/acehack"))
                      (program (string-append libexec "/acehack"))
                      (launcher (string-append #$output "/bin/acehack")))
                 (mkdir-p data)
-                (copy-recursively staging data)
                 (mkdir-p libexec)
-                (rename-file (string-append data "/acehack") program)
-                ;; recover and these files are stateful administration or
-                ;; player data, not immutable packaged game assets.
-                (for-each
-                 (lambda (name)
-                   (let ((file (string-append data "/" name)))
-                     (when (file-exists? file)
-                       (if (file-is-directory? file)
-                           (delete-file-recursively file)
-                           (delete-file file)))))
-                 '("recover" "license" "Guidebook.txt" "perm" "record"
-                   "logfile" "xlogfile" "livelog" "dumps" "save" "level"
-                   "lock"))
+                (mkdir-p (dirname launcher))
+                (install-file "dat/nhdat" data)
+                (install-file "src/acehack" libexec)
                 (mkdir-p doc)
                 ;; dat/license is the license for the executable and every
                 ;; installed generated map/data asset in this sole origin.
@@ -131,8 +136,6 @@
                 (install-file "doc/Guidebook.txt" doc)
                 (install-file "README" doc)
                 (install-file "doc/fixes36.0" doc)
-                (delete-file-recursively staging)
-                (delete-file launcher)
                 (call-with-output-file launcher
                   (lambda (port)
                     (format port "#!~a~%set -eu~%~
