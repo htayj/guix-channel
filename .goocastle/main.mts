@@ -1760,6 +1760,30 @@ const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => 
       },
     });
   }
+  // A previous delivery or operator recovery can already have moved the task
+  // branch onto the advanced base.  Replaying from its stale journal base in
+  // that state duplicates commits which are now part of the base (and can
+  // produce add/add conflicts).  The ancestry relation is the durable Git
+  // receipt: retain the task tip exactly as it is and record that no rewrite
+  // was needed.
+  try {
+    hostGit(["merge-base", "--is-ancestor", currentBase, taskHead]);
+    const phases = journal.phases.map((phase) => {
+      if (phase.state !== "running" || !phase.startSha) return phase;
+      const commitCount = Number(hostGit(["rev-list", "--count", phase.startSha + ".." + taskHead], { encoding: "utf8" }).trim());
+      return commitCount === 0
+        ? { ...phase, startSha: taskHead }
+        : { ...phase, state: "complete", commitCount, completedAt: new Date().toISOString() };
+    });
+    return await transitionSequentialTaskJournal(gitCommonDir, journal, {
+      phases,
+      reconciliation: {
+        state: "complete", originalBaseSha: journal.baseSha, reconciledBaseSha: currentBase,
+        sourceBaseSha: recordedBase, taskHead, rewrittenHead: taskHead,
+        backupBranch: journal.reconciliation?.state === "started" ? journal.reconciliation.backupBranch : journal.branch + "-before-reconcile-" + taskHead.slice(0, 12),
+      },
+    });
+  } catch { /* The task needs an ordinary replay onto the advanced base. */ }
   if (journal.reconciliation?.state === "started" &&
       journal.reconciliation.reconciledBaseSha === currentBase &&
       taskHead !== journal.reconciliation.taskHead) {
