@@ -141,7 +141,7 @@ matching = [entry for entry in contract["contracts"] if entry["issueNumber"] == 
 assert matching == [{
     "issueNumber": 650,
     "packageName": "acehack",
-    "artifactPath": ".goocastle/evidence/issue-266.png",
+    "artifactPath": ".goocastle/evidence/issue-650.png",
     "runtime": {
         "executable": "acehack",
         "invocation": {"file": "acehack", "args": ["-s", "-v", "all"]},
