@@ -66,7 +66,7 @@ contract=.goocastle/runtime-evidence-contracts.json
 test -s "$contract"
 "$grep_out/bin/grep" -F '"issueNumber": 651' "$contract" >/dev/null
 "$grep_out/bin/grep" -F '"packageName": "bell-labs-rogue7"' "$contract" >/dev/null
-"$grep_out/bin/grep" -F '"artifactPath": ".goocastle/evidence/issue-267.png"' \
+"$grep_out/bin/grep" -F '"artifactPath": ".goocastle/evidence/issue-651.png"' \
     "$contract" >/dev/null
 "$grep_out/bin/grep" -F '"successMarker": "Top 10 Adventurers:"' \
     "$contract" >/dev/null
