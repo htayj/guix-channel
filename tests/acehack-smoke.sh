@@ -54,8 +54,11 @@ test -x "$acehack_out/bin/acehack"
 test -x "$acehack_out/libexec/acehack"
 test -s "$acehack_out/share/acehack/nhdat"
 test -s "$acehack_out/share/doc/acehack/license"
+test -s "$acehack_out/share/doc/acehack/README"
 test -s "$acehack_out/share/doc/acehack/Guidebook.txt"
+test -s "$acehack_out/share/doc/acehack/fixes36.0"
 grep -F 'NETHACK GENERAL PUBLIC LICENSE' "$acehack_out/share/doc/acehack/license" >/dev/null
+grep -F 'AceHack 3.6.0' "$acehack_out/share/doc/acehack/README" >/dev/null
 
 "$python_out/bin/python3" - "$channel_dir" "$acehack_out" <<'PY'
 import fcntl

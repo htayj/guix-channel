@@ -182,6 +182,23 @@ exit $status~%"
                             program
                             #$(file-append coreutils-minimal "/bin/cp"))))
                 (chmod launcher #o555))))
+          (add-after 'install 'verify-license-notices
+            (lambda _
+              ;; The executable and nhdat are both produced solely from this
+              ;; origin and are covered by dat/license.  Retain that notice
+              ;; together with every installed upstream document, so the
+              ;; resulting package does not separate code or data from its
+              ;; applicable license and notices.
+              (let ((doc (string-append #$output "/share/doc/acehack/")))
+                (for-each
+                 (lambda (file)
+                   (unless (file-exists? (string-append doc file))
+                     (error "missing installed AceHack notice" file)))
+                 '("license" "README" "Guidebook.txt" "fixes36.0"))
+                (invoke "grep" "-F" "NETHACK GENERAL PUBLIC LICENSE"
+                        (string-append doc "license"))
+                (invoke "grep" "-F" "AceHack 3.6.0"
+                        (string-append doc "README")))))
           ;; Keep this last: the standard phases still strip binaries and
           ;; create a linker cache after patching shebangs.
           (add-after 'make-dynamic-linker-cache 'make-output-immutable
