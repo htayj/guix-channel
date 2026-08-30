@@ -78,7 +78,7 @@
     {
       "issueNumber": 653,
       "packageName": "allure",
-      "artifactPath": ".goocastle/evidence/issue-271.png",
+      "artifactPath": ".goocastle/evidence/issue-653.png",
       "runtime": {
         "executable": "Allure",
         "invocation": {
