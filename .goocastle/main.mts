@@ -882,7 +882,7 @@ const requestedGooflowOverride = process.env.GOOCASTLE_GOOFLOW_OVERRIDE;
 if (requestedGooflowOverride && process.env.GOOCASTLE_GOOFLOW_BYPASS === "1") {
   throw new Error("GOOCASTLE_GOOFLOW_OVERRIDE conflicts with GOOCASTLE_GOOFLOW_BYPASS; choose one explicit workflow selection");
 }
-const resolveForIssue = async (issue, { reportSelection = true } = {}) => {
+const resolveForIssue = async (issue, { reportSelection = true, validateRuntimeContract = true } = {}) => {
   const resolved = await resolveIssueGooflow({
     directory: hostWorkTree,
     config: projectConfig,
@@ -902,7 +902,7 @@ const resolveForIssue = async (issue, { reportSelection = true } = {}) => {
   // Resolve it while routing candidates so a missing or malformed entry cannot
   // create a journal or sandbox, and resolve it again after materialization
   // immediately before the phases run.
-  if (resolved.workflow?.evidence?.runtimeContractPath !== undefined) {
+  if (validateRuntimeContract && resolved.workflow?.evidence?.runtimeContractPath !== undefined) {
     await resolveGooflowEvidence(resolved.workflow.evidence, hostWorkTree, issue.number);
   }
   return resolved;
@@ -2361,6 +2361,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     break;
   }
   let journal = await incompleteJournal();
+  const resumingJournal = journal !== undefined;
   if (journal && !RESUME_ONLY && journal.phases.some((phase) => phase.failureReceipt?.kind === "stalled")) {
     // A terminal issue label is authoritative even when the retained journal
     // has an intentionally manual stalled-worktree receipt.  Preserve that
@@ -2489,7 +2490,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       // Resolve the current Gooflow before honoring a terminal repair state.
       // The old ordering made a repaired proof command invisible to resume.
       try {
-        resolvedGooflow = await resolveForIssue(issue);
+        resolvedGooflow = await resolveForIssue(issue, { validateRuntimeContract: journal === undefined });
       } catch (error) {
         if (await reconcileInvalidRuntimeContract(issue, error)) {
           deferredJournalIssues.add(issue.number);
@@ -2624,7 +2625,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // specification policy, so validating before routing rejects a valid
     // journal solely because it was interrupted.
     try {
-      resolvedGooflow = await resolveForIssue(issue);
+      resolvedGooflow = await resolveForIssue(issue, { validateRuntimeContract: journal === undefined });
     } catch (error) {
       if (await reconcileInvalidRuntimeContract(issue, error)) {
         deferredJournalIssues.add(issue.number);
@@ -2802,10 +2803,36 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       FAILURE_EVIDENCE: failureEvidenceFor(journal),
       PREDECESSOR_WORK: predecessorWorkFor(journal),
     };
+    const resolveRuntimeEvidenceForTask = async () => {
+      const renderedEvidence = materializeGooflowEvidence(materializedGooflow.evidence, promptArgs);
+      if (!resumingJournal) return await resolveGooflowEvidence(renderedEvidence, hostWorkTree, issue.number);
+      const preservedWorktree = branchWorktreePath(branch);
+      if (preservedWorktree !== undefined) {
+        return await resolveGooflowEvidence(renderedEvidence, preservedWorktree, issue.number);
+      }
+      // A legacy resume may retain only the branch ref. Open that exact ref
+      // before classifying its contract so main cannot override a reviewed
+      // correction that is already preserved with the task.
+      const inspection = await retrySequential(() => createWorktree({
+        cwd: hostWorkTree,
+        branchStrategy: { type: "branch", branch, base: baseHead },
+      }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+      try {
+        return await resolveGooflowEvidence(renderedEvidence, inspection.worktreePath, issue.number);
+      } finally {
+        const closed = await inspection.close();
+        if (closed.preservedWorktreePath) {
+          throw new Error(
+            "Could not release the temporary runtime-contract inspection worktree at " +
+            closed.preservedWorktreePath + "; inspect it and resume with: " + resumeRecoveryCommand(),
+          );
+        }
+      }
+    };
     let evidenceConfig;
     if (materializedGooflow?.evidence !== undefined) {
       try {
-        evidenceConfig = await resolveGooflowEvidence(materializeGooflowEvidence(materializedGooflow.evidence, promptArgs), hostWorkTree, issue.number);
+        evidenceConfig = await resolveRuntimeEvidenceForTask();
       } catch (error) {
         if (await reconcileInvalidRuntimeContract(issue, error)) {
           console.error("Task #" + issue.number + " is blocked because its runtime contract is no longer valid; continuing to unrelated eligible work.");
@@ -2943,27 +2970,41 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     }
     if (evidenceConfig !== undefined) {
       const priorEvidence = journal.runtimeEvidence;
-      if (priorEvidence !== undefined && !priorEvidence.legacy && (
-        priorEvidence.packageName !== evidenceConfig.packageName ||
+      // A legacy runner may have journaled a pending contract-derived receipt
+      // before the canonical artifact-path check existed. On resume, a
+      // validated contract read from the preserved branch is the repair being
+      // resumed; refresh the pending receipt and rerun capture. Keep the
+      // workflow-owned phase and adapter identity immutable, and never relax
+      // this boundary after an artifact has been completed.
+      const branchContractRepair = resumingJournal && priorEvidence !== undefined && !priorEvidence.legacy &&
+        priorEvidence.artifact === "pending" && evidenceConfig.runtimeContract !== undefined &&
+        (priorEvidence.runtimeContract === undefined ||
+          (priorEvidence.runtimeContract.path === evidenceConfig.runtimeContract.path &&
+            priorEvidence.runtimeContract.sha256 !== evidenceConfig.runtimeContract.sha256));
+      const staticEvidenceChanged = priorEvidence !== undefined && !priorEvidence.legacy && (
         priorEvidence.proofPhase !== evidenceConfig.proofPhase ||
         priorEvidence.capturePhase !== evidenceConfig.capturePhase ||
+        priorEvidence.adapter !== evidenceConfig.adapter
+      );
+      const contractEvidenceChanged = priorEvidence !== undefined && !priorEvidence.legacy && (
+        priorEvidence.packageName !== evidenceConfig.packageName ||
         priorEvidence.artifactPath !== evidenceConfig.artifactPath ||
         JSON.stringify(priorEvidence.runtime) !== JSON.stringify(evidenceConfig.runtime) ||
-        JSON.stringify(priorEvidence.runtimeContract) !== JSON.stringify(evidenceConfig.runtimeContract) ||
-        priorEvidence.adapter !== evidenceConfig.adapter
-      )) {
+        JSON.stringify(priorEvidence.runtimeContract) !== JSON.stringify(evidenceConfig.runtimeContract)
+      );
+      if (staticEvidenceChanged || (contractEvidenceChanged && !branchContractRepair)) {
         throw new Error("Runtime evidence configuration changed after journaling for #" + issue.number + "; inspect the preserved journal and restore the original package proof/capture configuration before resuming");
       }
-      if (priorEvidence === undefined || priorEvidence.legacy) {
+      if (priorEvidence === undefined || priorEvidence.legacy || branchContractRepair) {
         // Pre-assertion journals can be read for recovery but their screenshot
         // is intentionally not trusted as packaged-program proof.  Replace
         // the receipt from the reviewed current contract and replay capture.
-        const legacyCapturePhase = priorEvidence?.legacy
+        const refreshedCapturePhase = priorEvidence?.legacy || branchContractRepair
           ? phases.find((phase) => phase.name === evidenceConfig.capturePhase)
           : undefined;
         journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
-          ...(legacyCapturePhase === undefined ? {} : {
-            phases: journal.phases.map((record) => record.name !== legacyCapturePhase.name ? record : {
+          ...(refreshedCapturePhase === undefined ? {} : {
+            phases: journal.phases.map((record) => record.name !== refreshedCapturePhase.name ? record : {
               name: record.name,
               state: "fresh",
               attempt: (record.attempt ?? 0) + 1,
