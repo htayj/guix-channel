@@ -41,7 +41,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	kbredir potato pycat rune secretpathway tinyfugue trebuchet tapeutils heroic-gogdl \
 	vt05 weidu blincolnlights pdp10-its-disassembler itstar pdp11 pdp6 uc-explorer \
 	azurra-gtk-theme pdp10-xpl-pdp-10 faugus-launcher react-blessed wanderers \
-	clojure-roguelike astx
+	clojure-roguelike astx acehack
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -59,6 +59,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-react-blessed check-shadow-over-darkmoor \
 	check-clojure-roguelike \
 	check-astx \
+	check-acehack \
 	check-wanderers \
 	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs build build-sources
 
@@ -207,6 +208,9 @@ check-clojure-roguelike:
 
 check-astx:
 	GUIX="$(GUIX)" tests/astx-smoke.sh
+
+check-acehack:
+	GUIX="$(GUIX)" tests/acehack-smoke.sh
 
 check-wanderers:
 	GUIX="$(GUIX)" tests/wanderers-smoke.sh
