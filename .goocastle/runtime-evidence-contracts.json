@@ -109,6 +109,21 @@
         },
         "successMarker": "--setDungeonRng \"SMGen 131 141\" --setMainRng \"SMGen 131 141\""
       }
+    },
+    {
+      "issueNumber": 654,
+      "packageName": "alone-rl",
+      "artifactPath": ".goocastle/evidence/issue-272.png",
+      "runtime": {
+        "executable": "alone-rl",
+        "invocation": {
+          "file": "alone-rl",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "ALONERL_RUNTIME_OK"
+      }
     }
   ]
 }
