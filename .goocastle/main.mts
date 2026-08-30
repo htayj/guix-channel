@@ -154,7 +154,7 @@ const runtimeModuleUrl = (() => {
   return moduleUrl;
 })();
 const runtimeModule = await import(runtimeModuleUrl);
-const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialPredecessorWorkReceipt, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, materializeRuntimeEvidenceContractEntry, parseGooflowDispositionResult, quarantineManagedStateHome, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runtimeContractIssueDigest, isRuntimeContractResolutionFailure, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isProviderInterruption, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
+const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialManualRepairReceipt, createSequentialPredecessorWorkReceipt, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, materializeRuntimeEvidenceContractEntry, parseGooflowDispositionResult, quarantineManagedStateHome, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runtimeContractIssueDigest, isRuntimeContractResolutionFailure, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isProviderInterruption, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
 const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Object.freeze({
   expectedPacingMs: 5 * 60_000,
   stalledAfterMs: 15 * 60_000,
@@ -166,6 +166,7 @@ const runtimeHandshake = typeof generatedRunnerRuntimeHandshake === "function"
   : undefined;
 if (
   runtimeApiVersion !== GENERATED_RUNNER_RUNTIME_API_VERSION ||
+  typeof createSequentialManualRepairReceipt !== "function" ||
   runtimeHandshake?.identity !== GENERATED_RUNNER_RUNTIME_IDENTITY ||
   runtimeHandshake?.apiVersion !== GENERATED_RUNNER_RUNTIME_API_VERSION ||
   runtimeHandshake.journalSchemaVersion !== GENERATED_RUNNER_JOURNAL_SCHEMA_VERSION
@@ -648,7 +649,8 @@ const configuredAgent = () => createConfiguredAgent({
 // boundary, and only into host-owned implementation-ticket templates. Keep
 // the configured order stable so the same source snapshot always produces
 // the same ticket labels.
-const materializeIssueWorkflowBase = (workflow, issue) => {
+const materializeIssueWorkflowBase = (workflow, issue) => materializeIssueWorkflowBaseWithPrefix(workflow, issue, "gooflow:");
+const materializeIssueWorkflowBaseWithPrefix = (workflow, issue, assignmentPrefix) => {
   if (workflow?.disposition === undefined) return workflow;
   const scheduling = {
     priorityLabels: projectConfig.taskLimits.priorityLabels ?? [],
@@ -660,10 +662,17 @@ const materializeIssueWorkflowBase = (workflow, issue) => {
       ...workflow.disposition,
       allowed: workflow.disposition.allowed.map((option) => {
         if (option.implementationTicket === undefined) return option;
+        const runtimeEvidence = option.implementationTicket.runtimeEvidence;
+        const assignmentLabel = runtimeEvidence === undefined
+          ? undefined
+          : assignmentPrefix + runtimeEvidence.workflow;
         const labels = materializeGooflowImplementationTicketLabels(
           issue.labels ?? [],
           scheduling,
-          option.implementationTicket.labels ?? [],
+          [
+            ...(option.implementationTicket.labels ?? []),
+            ...(assignmentLabel === undefined ? [] : [assignmentLabel]),
+          ],
         );
         return {
           ...option,
@@ -673,7 +682,7 @@ const materializeIssueWorkflowBase = (workflow, issue) => {
     },
   };
 };
-const materializeIssueWorkflow = (workflow, issue) => materializeIssueWorkflowBase(workflow, issue);
+const materializeIssueWorkflow = (workflow, issue, assignmentPrefix = "gooflow:") => materializeIssueWorkflowBaseWithPrefix(workflow, issue, assignmentPrefix);
 const agentProvenance = (workflow) => workflow?.phases
   .filter((phase) => phase.type === "agent")
   .map((phase) => ({
@@ -1496,6 +1505,110 @@ const exactRefSha = (ref) => {
     if ((error as { readonly status?: unknown }).status === 1) return undefined;
     throw error;
   }
+};
+const acceptManualProviderRepair = async (journal, phase) => {
+  const providerRecovery = journal.providerStateRecovery;
+  const latestRecovery = providerRecovery?.epochs.at(-1);
+  if (providerRecovery?.state !== "blocked" || latestRecovery === undefined) return journal;
+  if (!RESUME_ONLY) {
+    throw new Error("Provider-state recovery is exhausted for agent phase " + JSON.stringify(latestRecovery.phase) + ". Run " + resumeRecoveryCommand() + " after committing and reviewing a qualifying signed repair on the preserved branch.");
+  }
+  if (latestRecovery.state !== "blocked" || phase === undefined || phase.type !== "agent" || phase.name !== latestRecovery.phase) {
+    throw new Error("Cannot accept manual provider repair: the exhausted provider recovery does not identify a failed agent phase. Inspect the preserved journal and branch, then resume with: " + resumeRecoveryCommand());
+  }
+  const phaseJournal = phaseRecord(journal, phase.name);
+  if (phaseJournal?.state !== "failed" || phaseJournal.failureReceipt?.kind !== "provider-interruption") {
+    throw new Error("Cannot accept manual provider repair for " + JSON.stringify(phase.name) + ": its journal receipt is not a failed provider interruption. Inspect the preserved branch and resume with: " + resumeRecoveryCommand());
+  }
+  if (phase.stopOnNoCommits !== true) {
+    throw new Error("Cannot accept manual provider repair for " + JSON.stringify(phase.name) + ": the phase does not declare the required commit completion gate. Restore the reviewed Gooflow or start a new task.");
+  }
+  if (latestRecovery.headSha === undefined) {
+    throw new Error("Cannot accept manual provider repair for " + JSON.stringify(phase.name) + ": the exhausted provider receipt has no recorded branch tip. No repair is accepted; inspect the preserved journal and resume with: " + resumeRecoveryCommand());
+  }
+  const startSha = latestRecovery.headSha;
+  const branchHead = exactRefSha("refs/heads/" + journal.branch);
+  if (branchHead === undefined) {
+    throw new Error("Cannot accept manual provider repair: preserved branch " + JSON.stringify(journal.branch) + " is missing. Recover it manually, then resume with: " + resumeRecoveryCommand());
+  }
+  try {
+    hostGit(["merge-base", "--is-ancestor", startSha, branchHead]);
+  } catch (error) {
+    throw new Error("Cannot accept manual provider repair: preserved branch " + JSON.stringify(journal.branch) + " is not a descendant of the exhausted provider tip. Inspect the branch before resuming.", { cause: error });
+  }
+  const worktree = branchWorktreePath(journal.branch);
+  if (worktree === undefined) {
+    throw new Error("Cannot accept manual provider repair: the preserved task worktree for " + JSON.stringify(journal.branch) + " is missing. Restore the worktree, then resume with: " + resumeRecoveryCommand());
+  }
+  const worktreeHead = gitAt(worktree, ["rev-parse", "HEAD"], { encoding: "utf8", maxBuffer: 64 * 1024 }).trim();
+  if (worktreeHead !== branchHead) {
+    throw new Error("Cannot accept manual provider repair: preserved worktree HEAD does not match branch " + JSON.stringify(journal.branch) + ". Reconcile the worktree and resume with: " + resumeRecoveryCommand());
+  }
+  const commitLines = hostGit(["rev-list", "--reverse", "--parents", startSha + ".." + branchHead], { encoding: "utf8", maxBuffer: 512 * 1024 }).trim().split("\n").filter(Boolean);
+  if (commitLines.length === 0) {
+    throw new Error("No qualifying manual repair commit exists after the exhausted provider tip. Make the reviewed repair on " + JSON.stringify(journal.branch) + ", sign it, and resume with: " + resumeRecoveryCommand());
+  }
+  const dirty = gitAt(worktree, ["status", "--porcelain=v1", "--untracked-files=all", "-z"], { encoding: "utf8", maxBuffer: 512 * 1024 });
+  if (dirty.length > 0) {
+    throw new Error("Cannot accept manual provider repair: the preserved task worktree is not clean. Review or commit its changes, then resume with: " + resumeRecoveryCommand());
+  }
+  const commits = [];
+  let previous = startSha;
+  for (const line of commitLines) {
+    const parts = line.split(/\s+/u);
+    const commit = parts[0];
+    const parents = parts.slice(1);
+    if (parents.length !== 1 || parents[0] !== previous) {
+      throw new Error("Cannot accept manual provider repair: commits after the exhausted provider tip must form one linear signed repair sequence. Inspect " + JSON.stringify(journal.branch) + " and resume with: " + resumeRecoveryCommand());
+    }
+    const changedPaths = gitAt(worktree, ["diff-tree", "--no-commit-id", "--name-only", "-r", "-z", commit], { encoding: "utf8", maxBuffer: 512 * 1024 }).split("\0").filter(Boolean);
+    if (changedPaths.length === 0) {
+      throw new Error("Cannot accept manual provider repair commit " + commit + ": it has no changed paths. Add the reviewed repair, sign it, and resume with: " + resumeRecoveryCommand());
+    }
+    if (!commitSignatureIsValid(commit)) {
+      throw new Error("Cannot accept manual provider repair commit " + commit + ": its cryptographic signature is missing or unverifiable. Sign or replace it, then resume with: " + resumeRecoveryCommand());
+    }
+    commits.push({ sha: commit, changedPaths, signed: true });
+    previous = commit;
+  }
+  if (previous !== branchHead) {
+    throw new Error("Cannot accept manual provider repair: the reviewed repair sequence does not end at the preserved branch tip. Inspect the branch and resume with: " + resumeRecoveryCommand());
+  }
+  const receipt = createSequentialManualRepairReceipt({
+    phase: phase.name,
+    startSha,
+    endSha: branchHead,
+    commits,
+    acceptedAt: new Date().toISOString(),
+  });
+  const history = [
+    ...(phaseJournal.failureHistory ?? []),
+    ...(phaseJournal.failureReceipt === undefined ? [] : [phaseJournal.failureReceipt]),
+  ].slice(-sequentialPhaseFailureHistoryLimit);
+  const completedPhase = {
+    name: phase.name,
+    state: "complete",
+    ...(phaseJournal.attempt === undefined ? {} : { attempt: phaseJournal.attempt }),
+    startSha: phaseJournal.startSha ?? startSha,
+    commitCount: commits.length,
+    ...(phaseJournal.liveness === undefined ? {} : {
+      liveness: { ...phaseJournal.liveness, activityAt: new Date().toISOString(), supervisorHeartbeatAt: new Date().toISOString() },
+    }),
+    ...(history.length === 0 ? {} : { failureHistory: history }),
+    completedAt: new Date().toISOString(),
+  };
+  const completedRecovery = {
+    state: "complete",
+    epochs: [...providerRecovery.epochs.slice(0, -1), { ...latestRecovery, state: "complete", headSha: branchHead }],
+  };
+  console.log("Accepted verified manual provider repair for phase " + JSON.stringify(phase.name) + " on " + JSON.stringify(journal.branch) + ". Recorded " + String(receipt.commits.length) + " signed commit(s) and " + String(receipt.changedPaths.length) + " changed path(s).");
+  return await transitionSequentialTaskJournal(gitCommonDir, journal, {
+    status: "active",
+    failure: undefined,
+    manualRepair: receipt,
+    providerStateRecovery: completedRecovery,
+    phases: [...journal.phases.filter((item) => item.name !== phase.name), completedPhase],
+  });
 };
 const cleanupOutcome = async (journal, outcome) => await transitionSequentialTaskJournal(gitCommonDir, journal, {
   cleanup: "complete",
@@ -2405,7 +2518,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       const latestRepair = journal.repair.epochs.at(-1);
       const currentRepairWorkflow = resolvedGooflow.workflow === undefined
         ? undefined
-        : materializeIssueWorkflow(resolvedGooflow.workflow, issue);
+        : materializeIssueWorkflow(resolvedGooflow.workflow, issue, resolvedGooflow.issueLabelPrefix ?? "gooflow:");
       const selectedGooflow = resolvedGooflow.workflow?.name ?? "template";
       const selectedAgents = currentRepairWorkflow === undefined ? [] : agentProvenance(currentRepairWorkflow);
       const gooflowChanged = journal.gooflow && (
@@ -2656,7 +2769,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // whether a failed sandbox result is a disposable handoff or user work.
     // Delivered cleanup journals intentionally have no routed workflow here.
     materializedGooflow = resolvedGooflow.workflow
-      ? materializeIssueWorkflow(resolvedGooflow.workflow, issue)
+      ? materializeIssueWorkflow(resolvedGooflow.workflow, issue, resolvedGooflow.issueLabelPrefix ?? "gooflow:")
       : undefined;
     dispositionPolicy = materializedGooflow?.disposition;
     journal = await reconcileBaseAdvance(journal, issue.number, dispositionPolicy);
@@ -2824,6 +2937,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       ? issueGooflowSetup(materializedGooflow, projectConfig, { signal: runnerCancellation.signal })
       : [];
     const requiredGooflowPhases = new Set(materializedGooflow?.requiredPhases ?? []);
+    if (journal.providerStateRecovery?.state === "blocked" && RESUME_ONLY) {
+      const exhaustedPhase = phases.find((phase) => phase.name === journal.providerStateRecovery?.epochs.at(-1)?.phase);
+      journal = await acceptManualProviderRepair(journal, exhaustedPhase);
+    }
     if (evidenceConfig !== undefined) {
       const priorEvidence = journal.runtimeEvidence;
       if (priorEvidence !== undefined && !priorEvidence.legacy && (
@@ -3620,6 +3737,15 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       providerRecoveryEpoch !== undefined &&
       (providerRecoveryEpoch.state === "scheduled" || providerRecoveryEpoch.state === "running") &&
       failedPhase?.name === providerRecoveryEpoch.phase;
+    const providerRecoveryHeadSha = providerRecoveryPhaseFailed || providerRecoveryLaunchFailed
+      ? (() => {
+          try {
+            return exactRefSha("refs/heads/" + branch);
+          } catch {
+            return undefined;
+          }
+        })()
+      : undefined;
     // Persist a bounded diagnostic before releasing the sandbox.  A completed
     // agent phase can still fail host-side validation (for example, when a
     // disposition result is absent); without this the recovery journal is
@@ -3659,7 +3785,11 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       ...(providerRecoveryPhaseFailed || providerRecoveryLaunchFailed ? {
         providerStateRecovery: {
           state: "active" as const,
-          epochs: [...providerRecovery!.epochs.slice(0, -1), { ...providerRecoveryEpoch!, state: "failed" as const }],
+          epochs: [...providerRecovery!.epochs.slice(0, -1), {
+            ...providerRecoveryEpoch!,
+            state: "failed" as const,
+            ...(providerRecoveryHeadSha === undefined ? {} : { headSha: providerRecoveryHeadSha }),
+          }],
         },
       } : {}),
       ...(predecessorWork === undefined ? {} : { predecessorWork }),
