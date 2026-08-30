@@ -74,6 +74,41 @@
         },
         "successMarker": "Agduria 0.0.1"
       }
+    },
+    {
+      "issueNumber": 653,
+      "packageName": "allure",
+      "artifactPath": ".goocastle/evidence/issue-271.png",
+      "runtime": {
+        "executable": "Allure",
+        "invocation": {
+          "file": "Allure",
+          "args": [
+            "--dbgMsgSer",
+            "--logPriority",
+            "4",
+            "--newGame",
+            "1",
+            "--noAnim",
+            "--maxFps",
+            "100000",
+            "--frontendNull",
+            "--benchmark",
+            "--stopAfterFrames",
+            "5",
+            "--automateAll",
+            "--keepAutomated",
+            "--gameMode",
+            "crawl",
+            "--setDungeonRng",
+            "SMGen 131 141",
+            "--setMainRng",
+            "SMGen 131 141",
+            "--dumpInitRngs"
+          ]
+        },
+        "successMarker": "--setDungeonRng \"SMGen 131 141\" --setMainRng \"SMGen 131 141\""
+      }
     }
   ]
 }
