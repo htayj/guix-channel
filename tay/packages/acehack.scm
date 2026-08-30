@@ -198,6 +198,13 @@ exit $status~%"
                 (invoke "grep" "-F" "NETHACK GENERAL PUBLIC LICENSE"
                         (string-append doc "license"))
                 (invoke "grep" "-F" "AceHack 3.6.0"
+                        (string-append doc "README"))
+                ;; README explicitly directs AceHack recipients to this
+                ;; license, covering the compiled game and generated nhdat
+                ;; as well as the retained upstream documentation.
+                (invoke "grep" "-F" "contributors to AceHack"
+                        (string-append doc "README"))
+                (invoke "grep" "-F" "also expect that you will follow it"
                         (string-append doc "README")))))
           ;; Keep this last: the standard phases still strip binaries and
           ;; create a linker cache after patching shebangs.

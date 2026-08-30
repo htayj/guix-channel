@@ -59,6 +59,8 @@ test -s "$acehack_out/share/doc/acehack/Guidebook.txt"
 test -s "$acehack_out/share/doc/acehack/fixes36.0"
 grep -F 'NETHACK GENERAL PUBLIC LICENSE' "$acehack_out/share/doc/acehack/license" >/dev/null
 grep -F 'AceHack 3.6.0' "$acehack_out/share/doc/acehack/README" >/dev/null
+grep -F 'contributors to AceHack' "$acehack_out/share/doc/acehack/README" >/dev/null
+grep -F 'also expect that you will follow it' "$acehack_out/share/doc/acehack/README" >/dev/null
 
 "$python_out/bin/python3" - "$channel_dir" "$acehack_out" <<'PY'
 import fcntl
