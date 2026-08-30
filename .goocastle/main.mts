@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { access, constants, lstat, mkdtemp, readFile, realpath, stat, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const GENERATED_RUNNER_RUNTIME_API_VERSION = 14;
@@ -153,6 +153,37 @@ const runtimeModuleUrl = (() => {
   process.env.GOOCASTLE_GUIX_MODULE_URL = guixModuleUrl;
   return moduleUrl;
 })();
+// Agent phases receive only the compiled external-validation runtime and its
+// fixed entry point.  In particular, do not expose the host checkout: it may
+// be dirty, contain unrelated local material, and must not be writable by an
+// agent merely to obtain a bounded runtime validator.
+const boundedValidationRuntimeRoot = (() => {
+  if (selfHostedRuntimeRoot) return selfHostedRuntimeRoot;
+  const configuredRoot = process.env.GOOCASTLE_BOUNDED_VALIDATION_RUNTIME_ROOT;
+  if (configuredRoot !== undefined) {
+    if (!isAbsolute(configuredRoot)) {
+      throw new Error("GOOCASTLE_BOUNDED_VALIDATION_RUNTIME_ROOT must be an absolute host path");
+    }
+    return resolve(configuredRoot);
+  }
+  const configured = process.env.GOOCASTLE_MODULE_URL;
+  const modulePath = configured?.startsWith("file:")
+    ? fileURLToPath(configured)
+    : fileURLToPath(import.meta.resolve(configured ?? "goocastle"));
+  return resolve(dirname(modulePath), "..");
+})();
+const boundedValidationScript = join(boundedValidationRuntimeRoot, "scripts", "bounded-validation.mjs");
+const boundedValidationDist = join(boundedValidationRuntimeRoot, "dist");
+if (!existsSync(boundedValidationScript) || !statSync(boundedValidationScript).isFile() ||
+    !existsSync(boundedValidationDist) || !statSync(boundedValidationDist).isDirectory()) {
+  throw new Error(
+    "Goocastle's immutable bounded-validation runtime is unavailable; install a current Goocastle package or rebuild the self-hosted checkout before starting agent phases.",
+  );
+}
+const boundedValidationExposes = [
+  { hostPath: boundedValidationScript, sandboxPath: "/opt/goocastle/bin/bounded-validation.mjs" },
+  { hostPath: boundedValidationDist, sandboxPath: "/opt/goocastle/dist" },
+];
 const runtimeModule = await import(runtimeModuleUrl);
 const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialManualRepairReceipt, createSequentialPredecessorWorkReceipt, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, materializeRuntimeEvidenceContractEntry, parseGooflowDispositionResult, quarantineManagedStateHome, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runtimeContractIssueDigest, isRuntimeContractResolutionFailure, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isProviderInterruption, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
 const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Object.freeze({
@@ -346,6 +377,22 @@ const runnerCancellation = new AbortController();
 const cancelRunner = () => runnerCancellation.abort(new Error("Goocastle runner interrupted; provider cleanup is being completed"));
 process.once("SIGINT", cancelRunner);
 process.once("SIGTERM", cancelRunner);
+// The persisted inter-ticket gate must not turn an otherwise idle scheduler
+// into an uninterruptible process.  Resolve (rather than reject) on signal so
+// the normal loop can retain its journal and exit through one checked path.
+const waitForRunnerGate = async (milliseconds) => await new Promise((resolvePromise) => {
+  if (runnerCancellation.signal.aborted || milliseconds <= 0) {
+    resolvePromise();
+    return;
+  }
+  const timer = setTimeout(finish, milliseconds);
+  function finish() {
+    clearTimeout(timer);
+    runnerCancellation.signal.removeEventListener("abort", finish);
+    resolvePromise();
+  }
+  runnerCancellation.signal.addEventListener("abort", finish, { once: true });
+});
 // A terminal bounded-repair receipt is never reopened by ordinary scheduling.
 // This opt-in is only meaningful for the explicit resume command and is kept
 // separate from the normal resume path so branch repair is deliberate.
@@ -1094,6 +1141,55 @@ const dispositionResultFromSandbox = async (sandbox, policy, stopReason) => {
   await unlink(path);
   return result;
 };
+const publishDispositionRuntimeEvidenceContract = async (journal, ticket, handoff) => {
+  if (ticket.issueNumber === undefined) {
+    throw new Error("Implementation ticket runtime-evidence contract has no assigned issue number; resume the ticket creation boundary");
+  }
+  const contractPath = handoff.contractPath;
+  const boundary = signingBoundary("disposition-contract", String(ticket.issueNumber));
+  const subject = "chore(goocastle): record runtime contract for #" + String(ticket.issueNumber);
+  const pathBefore = hostGit(["diff", "--name-only", "--", contractPath], { encoding: "utf8" }).trim();
+  if (pathBefore !== "") {
+    throw new Error("Runtime-evidence contract path is already modified before disposition materialization; inspect and commit or restore " + contractPath + " before resuming");
+  }
+  // The materializer revalidates the whole file and is idempotent.  No delivery
+  // labels may be published until its one permitted repository mutation is a
+  // signed, remotely verified commit.
+  await materializeRuntimeEvidenceContractEntry(hostWorkTree, contractPath, handoff.contract, ticket.issueNumber);
+  const changedPaths = hostGit(["diff", "--name-only"], { encoding: "utf8" }).trim().split("\n").filter(Boolean);
+  if (changedPaths.length > 0 && (changedPaths.length !== 1 || changedPaths[0] !== contractPath)) {
+    throw new Error("Runtime-evidence contract materialization changed files outside its declared path; left all changes uncommitted for inspection");
+  }
+  if (changedPaths.length > 0) {
+    journal = await prepareCommitSigning(journal, boundary);
+    hostGit(["add", "--", contractPath]);
+    const stagedPaths = hostGit(["diff", "--cached", "--name-only"], { encoding: "utf8" }).trim().split("\n").filter(Boolean);
+    if (stagedPaths.length !== 1 || stagedPaths[0] !== contractPath) {
+      throw new Error("Runtime-evidence contract commit did not stage exactly its declared path; left the index unchanged for inspection");
+    }
+    hostGit(["commit", "--no-verify", "-m", subject], { stdio: "inherit" });
+    const commit = hostGit(["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+    journal = await requireSignedCommit(journal, boundary, commit);
+    journal = await recordUnsignedCommit(journal, boundary);
+  }
+  const localHead = hostGit(["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+  const remoteHead = await remoteSha();
+  if (remoteHead !== localHead) {
+    // A clean replay can arrive after a crash between the local contract
+    // commit and push.  Only publish a direct descendant with the expected
+    // receipt subject; never push an unrelated local commit merely because
+    // the contract file is already current.
+    if (hostGit(["show", "-s", "--format=%s", localHead], { encoding: "utf8" }).trim() !== subject) {
+      throw new Error("Runtime-evidence contract is clean but origin is behind an unrecognized local commit; inspect and push or reset it manually before resuming");
+    }
+    if (remoteHead !== undefined) hostGit(["merge-base", "--is-ancestor", remoteHead, localHead]);
+    await pushAndReconcile(localHead);
+  }
+  if ((await remoteSha()) !== localHead) {
+    throw new Error("Runtime-evidence contract commit was not remotely verified; do not label the delivery ticket ready until origin/" + baseBranch + " reaches " + localHead);
+  }
+  return journal;
+};
 const applyDisposition = async (journal, issue) => {
   const selected = journal.disposition;
   if (!selected) throw new Error("Non-delivery Gooflow has no recorded disposition; rerun its pending phases to produce one");
@@ -1239,16 +1335,7 @@ const applyDisposition = async (journal, issue) => {
       if (ticket.issueNumber === undefined || runtimeEvidenceHandoff === undefined) {
         throw new Error("Implementation ticket runtime-evidence contract has no assigned issue number; resume the ticket creation boundary");
       }
-      // The delivery issue must not become schedulable until the repository
-      // contract contains its assigned number. The materializer revalidates
-      // the complete file and treats an existing exact entry as a successful
-      // replay, so crashes and GitHub retries cannot create a divergent entry.
-      await materializeRuntimeEvidenceContractEntry(
-        hostWorkTree,
-        runtimeEvidenceHandoff.contractPath,
-        runtimeEvidenceHandoff.contract,
-        ticket.issueNumber,
-      );
+      journal = await publishDispositionRuntimeEvidenceContract(journal, ticket, runtimeEvidenceHandoff);
     }
     if (ticket.labels !== "complete") {
       if (ticket.issueNumber === undefined) throw new Error("Created implementation ticket has no recorded issue number; resume with: " + resumeRecoveryCommand());
@@ -2469,7 +2556,11 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       // was available, including a manually reconciled delivery boundary.
       await persistInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs, { now: () => completedAt });
     }
-    await reconcileInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs, { log: console.log });
+    await reconcileInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs, { log: console.log, sleep: waitForRunnerGate });
+    if (runnerCancellation.signal.aborted) {
+      console.log("Goocastle runner interrupted while idle; no new ticket was selected.");
+      break;
+    }
   }
   let issue;
   let issueContext;
@@ -3242,7 +3333,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             preserveEnv: sandboxAccess.preserveEnv,
             homeFiles,
             ...(sandboxAccess.requestsGuixDaemon ? { allowGuixDaemonSocket: true } : {}),
-            exposes: codexBinDirectory ? [{ hostPath: codexBinDirectory, sandboxPath: "/opt/goocastle-codex" }] : [],
+            exposes: [...boundedValidationExposes, ...(codexBinDirectory ? [{ hostPath: codexBinDirectory, sandboxPath: "/opt/goocastle-codex" }] : [])],
           }),
           env: {
             ...sandboxAccess.environment,
@@ -3502,7 +3593,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         preserveEnv: [],
         homeFiles: [],
         ...(phaseRequestsGuixDaemon(phase) ? { allowGuixDaemonSocket: true } : {}),
-        exposes: codexBinDirectory ? [{ hostPath: codexBinDirectory, sandboxPath: "/opt/goocastle-codex" }] : [],
+        exposes: [...boundedValidationExposes, ...(codexBinDirectory ? [{ hostPath: codexBinDirectory, sandboxPath: "/opt/goocastle-codex" }] : [])],
       });
       const runEvidencePhase = async (phase) => {
         if (pendingFor([phase]).length === 0) return;
