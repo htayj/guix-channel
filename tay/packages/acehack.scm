@@ -16,8 +16,8 @@
   #:use-module (gnu packages linux)
   #:use-module (gnu packages ncurses))
 
-;; AceHack has no release tags.  This is the final master tip of the
-;; authoritative public git mirror, dated 2015-03-11.
+;; AceHack has no release tags.  This is the final master tip of the public
+;; git mirror, dated 2015-03-11.
 (define %acehack-commit
   "9a4c7671a8d8de6c0a7ab4718382b49cf5ec61f5")
 
