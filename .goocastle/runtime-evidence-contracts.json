@@ -59,6 +59,21 @@
         },
         "successMarker": "Top 10 Adventurers:"
       }
+    },
+    {
+      "issueNumber": 652,
+      "packageName": "agduria",
+      "artifactPath": ".goocastle/evidence/issue-269.png",
+      "runtime": {
+        "executable": "agduria",
+        "invocation": {
+          "file": "agduria",
+          "args": [
+            "--version"
+          ]
+        },
+        "successMarker": "Agduria 0.0.1"
+      }
     }
   ]
 }
