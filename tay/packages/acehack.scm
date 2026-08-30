@@ -94,6 +94,12 @@
               ;; The final master commit was made at 2015-03-11 12:27:57 UTC.
               ;; Do not let makedefs use the build machine's wall clock.
               (substitute* "util/makedefs.c"
+                ;; Configuring this historical source defines KR1ED, whereas
+                ;; other ports use the time_t branch below.  Patch both so a
+                ;; future supported port cannot reintroduce a wall-clock
+                ;; timestamp into date.h, nhdat, or the executable.
+                (("\\(void\\) time\\(&clocktim\\);")
+                 "clocktim = 1426076877L;")
                 (("\\(void\\) time\\(\\(time_t \\*\\)&clocktim\\);")
                  "clocktim = 1426076877L;"))))
           (add-after 'configure 'fix-internal-compression-build
