@@ -2603,6 +2603,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // A retained journal is recovery state, not authority to resume an issue
     // whose current terminal disposition says it must remain blocked. Check the
     // live issue before any branch, journal, or sandbox recovery action.
+    // An explicit recovery has already validated and reopened this exact
+    // preserved repair journal above.  Do not let its stale external label
+    // override that audited recovery between the journal transition and the
+    // idempotent label reconciliation.
     if (issue.state === "OPEN" && hasTerminalBlockedLabel(issue) && !reopenedBlockedRepair) {
       deferredJournalIssues.add(issue.number);
       terminallyBlockedJournalIssues.add(issue.number);
