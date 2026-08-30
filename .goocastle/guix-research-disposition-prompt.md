@@ -10,13 +10,15 @@ or branches.  Inspect the local channel and authoritative upstream/project
 material as needed.  Determine whether the request has a concrete, legal,
 source-buildable, technically viable Guix package outcome.
 
-When a direct upstream feasibility build is useful, run it in an explicit,
-bounded Guix toolchain environment that supplies the project's declared build
-tools and libraries (for example, `guix shell gcc-toolchain make ncurses
-pkg-config -- make`).  A missing host compiler or development library is not
-source-build evidence and must never be reported as an upstream build failure.
-Record the actual command and result; do not claim a package proof from this
-research-only phase.
+The research sandbox intentionally need not have a Guix daemon.  Attempt a
+direct upstream feasibility build only if it can invoke a complete declared
+toolchain through `guix shell` (for example, `guix shell gcc-toolchain make
+ncurses pkg-config -- make`).  If the daemon is unavailable, record that
+environment limitation and assess source-buildability from authoritative build
+metadata instead; do not assemble a toolchain from host store paths or treat a
+missing compiler, assembler, or development library as an upstream build
+failure.  Record any actual command and result, but do not claim a package
+proof from this research-only phase.
 
 Write exactly one JSON object to `.goocastle/research-disposition.json` and do
 not commit it.  It must use this shape:
