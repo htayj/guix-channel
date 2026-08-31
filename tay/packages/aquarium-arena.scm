@@ -171,7 +171,12 @@
                   "    else:\n"
                   "        raise SystemExit('usage: aquarium-arena [--guix-smoke]')")))
               (substitute* "gameEngine.py"
-                (("def __init__\\(self\\):") "def __init__(self, smoke=False):")
+                (("def __init__\\(self\\):")
+                 (string-append
+                  "def __init__(self, smoke=False):\n"
+                  "        if smoke:\n"
+                  "            import random\n"
+                  "            random.seed(656)"))
                 (("        self.cursorcoord = \\(1, 1\\)")
                  "        self.smoke = smoke\n        self.cursorcoord = (1, 1)")
                 (("        self.mapfield.generatelevel\\(self.MAPMAXX, self.MAPMAXY\\)")
@@ -190,8 +195,6 @@
                   "        else:\n"
                   "            self.loop()\n\n"
                   "    def run_smoke(self):\n"
-                  "        import random\n"
-                  "        random.seed(656)\n"
                   "        player = self.initgame()\n"
                   "        self.deepblue = 0\n"
                   "        self.draw()\n"
