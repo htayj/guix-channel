@@ -20,8 +20,6 @@ capture_root=$(mktemp -d -t goocastle-guix-runtime-screenshot.XXXXXX)
 trap 'rm -rf "$capture_root"' EXIT HUP INT TERM
 proof_transcript="$capture_root/proof.txt"
 runtime_transcript="$capture_root/runtime.txt"
-transcript="$capture_root/screenshot.txt"
-candidate_artifact="$capture_root/runtime-evidence.png"
 
 # The required tools are pinned in manifest.scm.  A nested `guix shell` would
 # attempt to create a profile under the container's read-only /var/guix/profiles.
@@ -37,20 +35,15 @@ if ! node .goocastle/capture-runtime-evidence.mjs \
   tail -c 12000 "$runtime_transcript" >&2 || true
   exit 1
 fi
-tail -c 8000 "$proof_transcript" >"$transcript"
-printf '\n\n=== packaged program runtime ===\n\n' >>"$transcript"
-cat "$runtime_transcript" >>"$transcript"
-convert -size 1280x -background "#101418" -fill "#e8eaed" \
-  -font DejaVu-Sans-Mono -pointsize 16 -gravity northwest \
-  "caption:@$transcript" "$candidate_artifact"
-
-test -s "$candidate_artifact"
-# Runtime-evidence capture is a retryable Goocastle boundary.  A previous
-# completed audit may already have committed the canonical artifact, so create
-# the replacement in a private temporary directory and publish it atomically
-# only after the declared packaged-program invocation has succeeded.
-mv -f "$candidate_artifact" "$artifact"
-test -s "$artifact"
+# A terminal transcript is not visual evidence of an end-user application.
+# The implementation/audit phase must commit the canonical PNG produced by the
+# running program itself.  This retryable gate verifies that artifact together
+# with a fresh, host-checked packaged-program invocation; it never overwrites
+# a genuine visual receipt with a caption of command output.
+test -s "$artifact" || {
+  echo "runtime-screenshot: missing program-produced artifact $artifact" >&2
+  exit 1
+}
 # The host requires the last line to be a matching assertion.  Keep the
 # program's stdout and this assertion out of the screenshot-only proof log.
 cat "$runtime_transcript"
