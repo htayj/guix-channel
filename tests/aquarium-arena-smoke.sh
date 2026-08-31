@@ -10,6 +10,17 @@ if test "$#" -gt 1; then
     exit 64
 fi
 
+# The game has no networking feature.  Make outbound networking impossible,
+# rather than merely depending on a static inspection of its imports.
+if test "${AQUARIUM_ARENA_SMOKE_NAMESPACED:-}" != 1; then
+    command -v unshare >/dev/null || {
+        echo "aquarium-arena-smoke: unshare is required" >&2
+        exit 125
+    }
+    export AQUARIUM_ARENA_SMOKE_NAMESPACED=1
+    exec unshare --user --map-root-user --net "$0" "$@"
+fi
+
 if test "$#" -eq 1; then
     aquarium_out=$1
 else
@@ -36,9 +47,7 @@ grep -F '"packageName": "aquarium-arena"' \
 grep -F 'aquarium-arena isolated smoke passed' \
     "$channel_dir/.goocastle/runtime-evidence-contracts.json" >/dev/null
 
-# A package that has no networking code needs no network fixture.  Rejecting
-# socket/URL client imports from every installed Python module ensures the
-# isolated pygame run below cannot initiate a network request.
+# Keep the static audit in addition to the empty network namespace below.
 if rg -n '(^|[[:space:]])(import|from)[[:space:]]+(socket|urllib|http|requests)' \
         "$aquarium_out/share/aquarium-arena" --glob '*.py'; then
     echo "unexpected networking import in installed Aquarium Arena" >&2
