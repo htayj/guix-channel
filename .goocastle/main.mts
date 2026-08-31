@@ -2659,6 +2659,22 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       task -= 1;
       continue;
     }
+    // A live terminal label is an authoritative scheduler exclusion.  Check
+    // it before inspecting a blocked repair epoch: a stale specification in
+    // work that is already excluded must not prevent a later eligible journal
+    // from resuming.  The --recover-blocked flag remains the explicit path that may
+    // inspect the repair epoch and reopen it.
+    if (issue.state === "OPEN" && hasTerminalBlockedLabel(issue) && !RECOVER_BLOCKED) {
+      deferredJournalIssues.add(issue.number);
+      terminallyBlockedJournalIssues.add(issue.number);
+      attemptedIssues.add(issue.number);
+      console.log(
+        "Skipping open terminally blocked issue #" + issue.number +
+          " (state:blocked); its preserved journal and worktree remain unchanged.",
+      );
+      task -= 1;
+      continue;
+    }
     if (issue.state === "OPEN" && journal.repair?.state === "blocked") {
       // Resolve the current Gooflow before honoring a terminal repair state.
       // The old ordering made a repaired proof command invisible to resume.
