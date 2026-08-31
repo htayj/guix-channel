@@ -20,6 +20,14 @@ capture_root=$(mktemp -d -t goocastle-guix-runtime-screenshot.XXXXXX)
 trap 'rm -rf "$capture_root"' EXIT HUP INT TERM
 proof_transcript="$capture_root/proof.txt"
 runtime_transcript="$capture_root/runtime.txt"
+runtime_home="$capture_root/home"
+runtime_config="$capture_root/config"
+runtime_data="$capture_root/data"
+runtime_cache="$capture_root/cache"
+runtime_state="$capture_root/state"
+runtime_tmp="$capture_root/tmp"
+mkdir "$runtime_home" "$runtime_config" "$runtime_data" "$runtime_cache" \
+  "$runtime_state" "$runtime_tmp"
 
 # The required tools are pinned in manifest.scm.  A nested `guix shell` would
 # attempt to create a profile under the container's read-only /var/guix/profiles.
@@ -30,7 +38,19 @@ if ! sh .goocastle/prove-guix-package.sh >"$proof_transcript" 2>&1; then
   tail -c 12000 "$proof_transcript" >&2 || true
   exit 1
 fi
-if ! node .goocastle/capture-runtime-evidence.mjs \
+if ! env -i \
+  HOME="$runtime_home" \
+  XDG_CONFIG_HOME="$runtime_config" \
+  XDG_DATA_HOME="$runtime_data" \
+  XDG_CACHE_HOME="$runtime_cache" \
+  XDG_STATE_HOME="$runtime_state" \
+  TMPDIR="$runtime_tmp" \
+  SDL_VIDEODRIVER=dummy \
+  SDL_AUDIODRIVER=dummy \
+  LC_ALL=C.UTF-8 \
+  PATH="$PATH" \
+  GUIX="${GUIX:-guix}" \
+  node .goocastle/capture-runtime-evidence.mjs \
   .goocastle/runtime-evidence-contracts.json "$issue_number" >"$runtime_transcript" 2>&1; then
   tail -c 12000 "$runtime_transcript" >&2 || true
   exit 1
