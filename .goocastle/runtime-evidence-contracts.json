@@ -139,6 +139,21 @@
         },
         "successMarker": "herdr — terminal workspace manager for AI coding agents"
       }
+    },
+    {
+      "issueNumber": 656,
+      "packageName": "aquarium-arena",
+      "artifactPath": ".goocastle/evidence/issue-656.png",
+      "runtime": {
+        "executable": "aquarium-arena",
+        "invocation": {
+          "file": "aquarium-arena",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "aquarium-arena isolated smoke passed"
+      }
     }
   ]
 }
