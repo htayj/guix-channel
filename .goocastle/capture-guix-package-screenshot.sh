@@ -15,16 +15,13 @@ esac
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$channel_dir"
 mkdir -p "$(dirname -- "$artifact")"
-test ! -e "$artifact" || {
-  echo "runtime-screenshot: refusing to overwrite existing artifact $artifact" >&2
-  exit 1
-}
 
 capture_root=$(mktemp -d -t goocastle-guix-runtime-screenshot.XXXXXX)
 trap 'rm -rf "$capture_root"' EXIT HUP INT TERM
 proof_transcript="$capture_root/proof.txt"
 runtime_transcript="$capture_root/runtime.txt"
 transcript="$capture_root/screenshot.txt"
+candidate_artifact="$capture_root/runtime-evidence.png"
 
 # The required tools are pinned in manifest.scm.  A nested `guix shell` would
 # attempt to create a profile under the container's read-only /var/guix/profiles.
@@ -45,8 +42,14 @@ printf '\n\n=== packaged program runtime ===\n\n' >>"$transcript"
 cat "$runtime_transcript" >>"$transcript"
 convert -size 1280x -background "#101418" -fill "#e8eaed" \
   -font DejaVu-Sans-Mono -pointsize 16 -gravity northwest \
-  "caption:@$transcript" "$artifact"
+  "caption:@$transcript" "$candidate_artifact"
 
+test -s "$candidate_artifact"
+# Runtime-evidence capture is a retryable Goocastle boundary.  A previous
+# completed audit may already have committed the canonical artifact, so create
+# the replacement in a private temporary directory and publish it atomically
+# only after the declared packaged-program invocation has succeeded.
+mv -f "$candidate_artifact" "$artifact"
 test -s "$artifact"
 # The host requires the last line to be a matching assertion.  Keep the
 # program's stdout and this assertion out of the screenshot-only proof log.
