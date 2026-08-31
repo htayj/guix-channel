@@ -1,0 +1,463 @@
+;;; GNU Guix package for herdrdev/herdr.
+;;;
+;;; Herdr's build script compiles the vendored libghostty-vt library with Zig.
+;;; The two non-lazy Zig dependencies are fetched into a fixed system cache;
+;;; Cargo receives every registry archive recorded in Cargo.lock below.
+
+(define-module (tay packages herdr)
+  #:use-module (guix base16)
+  #:use-module (guix base32)
+  #:use-module (guix build-system cargo)
+  #:use-module (guix download)
+  #:use-module (guix gexp)
+  #:use-module (guix packages)
+  #:use-module ((guix licenses) #:prefix license:)
+  #:use-module (gnu packages compression)
+  #:use-module (gnu packages pkg-config)
+  #:use-module (gnu packages rust)
+  #:use-module (gnu packages version-control)
+  #:use-module (gnu packages zig))
+
+(define %herdr-commit
+  "d76657f2c7fc18dcce3b9af43842c8afaba1646b")
+
+(define (herdr-crate-source name version checksum)
+  ;; Cargo.lock checksums are SHA-256 digest bytes written in hexadecimal.
+  ;; Decode those bytes before encoding them in Guix's nix-base32 format.
+  (crate-source name version
+                (bytevector->nix-base32-string
+                 (base16-string->bytevector checksum))))
+
+(define herdr-uucode-source
+  (origin
+    (method url-fetch)
+    (uri "https://deps.files.ghostty.org/uucode-0.2.0-ZZjBPqZVVABQepOqZHR7vV_NcaN-wats0IB6o-Exj6m9.tar.gz")
+    (file-name "uucode-0.2.0.tar.gz")
+    (sha256
+     (base32 "15az8qzp0rg5qj8ma0dam9j8jbf4wwb7wxsiq3iymmlb9w7yxayh"))))
+
+(define herdr-highway-source
+  (origin
+    (method url-fetch)
+    (uri "https://deps.files.ghostty.org/highway-66486a10623fa0d72fe91260f96c892e41aceb06.tar.gz")
+    (file-name "highway-66486a10623fa0d72fe91260f96c892e41aceb06.tar.gz")
+    (sha256
+     (base32 "04m21b46h6c4x099r9qb720ql9llpzz8yq3k94i8zq7l7s4zim47"))))
+
+(define %herdr-cargo-records
+  (list
+   (list "adler2" "2.0.1" "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa")
+   (list "aho-corasick" "1.1.4" "ddd31a130427c27518df266943a5308ed92d4b226cc639f5a8f1002816174301")
+   (list "allocator-api2" "0.2.21" "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923")
+   (list "anstyle" "1.0.14" "940b3a0ca603d1eade50a4846a2afffd5ef57a9feac2c0e2ec2e14f9ead76000")
+   (list "anyhow" "1.0.102" "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c")
+   (list "atomic" "0.6.1" "a89cbf775b137e9b968e67227ef7f775587cde3fd31b0d8599dbd0f598a48340")
+   (list "autocfg" "1.5.0" "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8")
+   (list "base64" "0.22.1" "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6")
+   (list "bincode" "2.0.1" "36eaf5d7b090263e8150820482d5d93cd964a81e4019913c972f4edcc6edb740")
+   (list "bincode_derive" "2.0.1" "bf95709a440f45e986983918d0e8a1f30a9b1df04918fc828670606804ac3c09")
+   (list "bit-set" "0.5.3" "0700ddab506f33b20a03b13996eccd309a48e5ff77d0d95926aa0210fb4e95f1")
+   (list "bit-vec" "0.6.3" "349f9b6a179ed607305526ca489b34ad0a41aed5f7980fa90eb03160b69598fb")
+   (list "bitflags" "1.3.2" "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a")
+   (list "bitflags" "2.11.0" "843867be96c8daad0d758b57df9392b6d8d271134fce549de6ce169ff98a92af")
+   (list "block-buffer" "0.10.4" "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71")
+   (list "block2" "0.6.2" "cdeb9d870516001442e364c5220d3574d2da8dc765554b4a617230d33fa58ef5")
+   (list "bumpalo" "3.20.2" "5d20789868f4b01b2f2caec9f5c4e0213b41e3e5702a50157d699ae31ced2fcb")
+   (list "bytemuck" "1.25.0" "c8efb64bd706a16a1bdde310ae86b351e4d21550d98d056f22f8a7f7a2183fec")
+   (list "bytes" "1.11.1" "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33")
+   (list "castaway" "0.2.4" "dec551ab6e7578819132c713a93c022a05d60159dc86e7a7050223577484c55a")
+   (list "cfg-if" "1.0.4" "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801")
+   (list "cfg_aliases" "0.1.1" "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e")
+   (list "cfg_aliases" "0.2.1" "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724")
+   (list "clap" "4.6.1" "1ddb117e43bbf7dacf0a4190fef4d345b9bad68dfc649cb349e7d17d28428e51")
+   (list "clap_builder" "4.6.0" "714a53001bf66416adb0e2ef5ac857140e7dc3a0c48fb28b2f10762fc4b5069f")
+   (list "clap_complete" "4.6.5" "e0a7a9bfdb35811f9e59832f0f05975114d2251b415fb534108e6f34060fd772")
+   (list "clap_lex" "1.1.0" "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9")
+   (list "compact_str" "0.9.0" "3fdb1325a1cece981e8a296ab8f0f9b63ae357bd0784a9faaf548cc7b480707a")
+   (list "convert_case" "0.10.0" "633458d4ef8c78b72454de2d54fd6ab2e60f9e02be22f3c6104cdc8a4e0fceb9")
+   (list "cpufeatures" "0.2.17" "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280")
+   (list "crc32fast" "1.5.0" "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511")
+   (list "crossterm" "0.29.0" "d8b9f2e4c67f833b660cdb0a3523065869fb35570177239812ed4c905aeff87b")
+   (list "crossterm_winapi" "0.9.1" "acdd7c62a3665c7f6830a51635d9ac9b23ed385797f70a83bb8bafe9c572ab2b")
+   (list "crypto-common" "0.1.7" "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a")
+   (list "csscolorparser" "0.6.2" "eb2a7d3066da2de787b7f032c736763eb7ae5d355f81a68bab2675a96008b0bf")
+   (list "ctrlc" "3.5.2" "e0b1fab2ae45819af2d0731d60f2afe17227ebb1a1538a236da84c93e9a60162")
+   (list "darling" "0.23.0" "25ae13da2f202d56bd7f91c25fba009e7717a1e4a1cc98a76d844b65ae912e9d")
+   (list "darling_core" "0.23.0" "9865a50f7c335f53564bb694ef660825eb8610e0a53d3e11bf1b0d3df31e03b0")
+   (list "darling_macro" "0.23.0" "ac3984ec7bd6cfa798e62b4a642426a5be0e68f9401cfc2a01e3fa9ea2fcdb8d")
+   (list "deltae" "0.3.2" "5729f5117e208430e437df2f4843f5e5952997175992d1414f94c57d61e270b4")
+   (list "deranged" "0.5.8" "7cd812cc2bc1d69d4764bd80df88b4317eaef9e773c75226407d9bc0876b211c")
+   (list "derive_more" "2.1.1" "d751e9e49156b02b44f9c1815bcb94b984cdcc4396ecc32521c739452808b134")
+   (list "derive_more-impl" "2.1.1" "799a97264921d8623a957f6c3b9011f3b5492f557bbb7a5a19b7fa6d06ba8dcb")
+   (list "digest" "0.10.7" "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292")
+   (list "dispatch2" "0.3.1" "1e0e367e4e7da84520dedcac1901e4da967309406d1e51017ae1abfb97adbd38")
+   (list "doctest-file" "1.1.1" "c2db04e74f0a9a93103b50e90b96024c9b2bdca8bce6a632ec71b88736d3d359")
+   (list "document-features" "0.2.12" "d4b8a88685455ed29a21542a33abd9cb6510b6b129abadabdcef0f4c55bc8f61")
+   (list "downcast-rs" "1.2.1" "75b325c5dbd37f80359721ad39aca5a29fb04c89279657cffdda8736d0c0b9d2")
+   (list "dyn-clone" "1.0.20" "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555")
+   (list "either" "1.15.0" "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719")
+   (list "equivalent" "1.0.2" "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f")
+   (list "errno" "0.3.14" "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb")
+   (list "euclid" "0.22.14" "f1a05365e3b1c6d1650318537c7460c6923f1abdd272ad6842baa2b509957a06")
+   (list "fancy-regex" "0.11.0" "b95f7c0680e4142284cf8b22c14a476e87d61b004a3a0861872b32ef7ead40a2")
+   (list "fdeflate" "0.3.7" "1e6853b52649d4ac5c0bd02320cddc5ba956bdb407c4b75a2c6b75bf51500f8c")
+   (list "filedescriptor" "0.8.3" "e40758ed24c9b2eeb76c35fb0aebc66c626084edd827e07e1552279814c6682d")
+   (list "finl_unicode" "1.4.0" "9844ddc3a6e533d62bba727eb6c28b5d360921d5175e9ff0f1e621a5c590a4d5")
+   (list "fixedbitset" "0.4.2" "0ce7134b9999ecaf8bcd65542e436736ef32ddca1b3e06094cb6ec5755203b80")
+   (list "flate2" "1.1.9" "843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c")
+   (list "fnv" "1.0.7" "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1")
+   (list "foldhash" "0.1.5" "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2")
+   (list "foldhash" "0.2.0" "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb")
+   (list "futures" "0.3.33" "a88cf1f829d945f548cf8fec32c61b1f202b6d93b45848602fc02af4b12ad218")
+   (list "futures-channel" "0.3.33" "262590f4fe6afeb0bc83be1daa64e52657fe185690a958af7f3ad0e92085c5ae")
+   (list "futures-core" "0.3.33" "2cd50c473c80f6d7c3670a752354b8e569b1a7cbfdc0419ec88e5edad85e0dc7")
+   (list "futures-executor" "0.3.33" "6754879cc9f2c66f88c6e5c35344bb0bdb0708b0352b1201815667c7eabc7458")
+   (list "futures-io" "0.3.33" "4577ecaa3c4f96589d473f679a71b596316f6641bc350038b962a5daf0085d7a")
+   (list "futures-macro" "0.3.33" "2d6d3cde68c518367be28956066ddfef33813991b77a55005a69dae04bf3b10b")
+   (list "futures-sink" "0.3.33" "e34418ac499d6305c2fb5ad0ed2f6ac998c5f8ca209b4510f7f94242c647e307")
+   (list "futures-task" "0.3.33" "b231ed28831efb4a61a08580c4bc233ec56bc009f4cd8f52da2c3cb97df0c109")
+   (list "futures-util" "0.3.33" "a77a90a256fce34da66415271e30f94ee91c57b04b8a2c042d9cf3220179deaa")
+   (list "generic-array" "0.14.7" "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a")
+   (list "getrandom" "0.3.4" "899def5c37c4fd7b2664648c28120ecec138e4d395b459e5ca34f9cce2dd77fd")
+   (list "getrandom" "0.4.2" "0de51e6874e94e7bf76d726fc5d13ba782deca734ff60d5bb2fb2607c7406555")
+   (list "hashbrown" "0.15.5" "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1")
+   (list "hashbrown" "0.16.1" "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100")
+   (list "heck" "0.5.0" "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea")
+   (list "hex" "0.4.3" "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70")
+   (list "id-arena" "2.3.0" "3d3067d79b975e8844ca9eb072e16b31c3c1c36928edf9c6789548c524d0d954")
+   (list "ident_case" "1.0.1" "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39")
+   (list "indexmap" "2.13.0" "7714e70437a7dc3ac8eb7e6f8df75fd8eb422675fc7678aff7364301092b1017")
+   (list "indoc" "2.0.7" "79cf5c93f93228cf8efb3ba362535fb11199ac548a09ce117c9b1adc3030d706")
+   (list "instability" "0.3.12" "5eb2d60ef19920a3a9193c3e371f726ec1dafc045dac788d0fb3704272458971")
+   (list "interprocess" "2.4.2" "069323743400cb7ab06a8fe5c1ed911d36b6919ec531661d034c89083629595b")
+   (list "itertools" "0.14.0" "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285")
+   (list "itoa" "1.0.18" "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682")
+   (list "js-sys" "0.3.91" "b49715b7073f385ba4bc528e5747d02e66cb39c6146efb66b781f131f0fb399c")
+   (list "jsonc-parser" "0.33.1" "a0560e3f9a9a03ea6b6e90b41138c5db9e21526c99eb192c1a26c68176593285")
+   (list "kasuari" "0.4.12" "bde5057d6143cc94e861d90f591b9303d6716c6b9602309150bd068853c10899")
+   (list "lab" "0.11.0" "bf36173d4167ed999940f804952e6b08197cae5ad5d572eb4db150ce8ad5d58f")
+   (list "lazy_static" "1.5.0" "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe")
+   (list "leb128fmt" "0.1.0" "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2")
+   (list "libc" "0.2.183" "b5b646652bf6661599e1da8901b3b9522896f01e736bad5f723fe7a3a27f899d")
+   (list "line-clipping" "0.3.5" "5f4de44e98ddbf09375cbf4d17714d18f39195f4f4894e8524501726fd9a8a4a")
+   (list "linux-raw-sys" "0.12.1" "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53")
+   (list "litrs" "1.0.0" "11d3d7f243d5c5a8b9bb5d6dd2b1602c0cb0b9db1621bafc7ed66e35ff9fe092")
+   (list "lock_api" "0.4.14" "224399e74b87b5f3557511d98dff8b14089b3dadafcab6bb93eab67d3aace965")
+   (list "log" "0.4.29" "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897")
+   (list "lru" "0.16.3" "a1dc47f592c06f33f8e3aea9591776ec7c9f9e4124778ff8a3c3b87159f7e593")
+   (list "mac_address" "1.1.8" "c0aeb26bf5e836cc1c341c8106051b573f1766dfa05aa87f0b98be5e51b02303")
+   (list "matchers" "0.2.0" "d1525a2a28c7f4fa0fc98bb91ae755d1e2d1505079e05539e35bc876b5d65ae9")
+   (list "memchr" "2.8.0" "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79")
+   (list "memmem" "0.1.1" "a64a92489e2744ce060c349162be1c5f33c6969234104dbd99ddb5feb08b8c15")
+   (list "memoffset" "0.9.1" "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a")
+   (list "minimal-lexical" "0.2.1" "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a")
+   (list "miniz_oxide" "0.8.9" "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316")
+   (list "mio" "1.1.1" "a69bcab0ad47271a0234d9422b131806bf3968021e5dc9328caf2d4cd58557fc")
+   (list "nix" "0.28.0" "ab2156c4fce2f8df6c499cc1c763e4394b7482525bf2a9701c9d79d215f519e4")
+   (list "nix" "0.29.0" "71e2746dc3a24dd78b3cfcb7be93368c6de9963d30f43a6a73998a9cf4b17b46")
+   (list "nix" "0.31.2" "5d6d0705320c1e6ba1d912b5e37cf18071b6c2e9b7fa8215a1e8a7651966f5d3")
+   (list "nom" "7.1.3" "d273983c5a657a70a3e8f2a01329822f3b8c8172b73826411a55751e404a0a4a")
+   (list "nu-ansi-term" "0.50.3" "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5")
+   (list "num-conv" "0.2.1" "c6673768db2d862beb9b39a78fdcb1a69439615d5794a1be50caa9bc92c81967")
+   (list "num-derive" "0.4.2" "ed3955f1a9c7c0c15e092f9c887db08b1fc683305fdf6eb6684f22555355e202")
+   (list "num-traits" "0.2.19" "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841")
+   (list "num_threads" "0.1.7" "5c7398b9c8b70908f6371f47ed36737907c87c52af34c268fed0bf0ceb92ead9")
+   (list "objc2" "0.6.4" "3a12a8ed07aefc768292f076dc3ac8c48f3781c8f2d5851dd3d98950e8c5a89f")
+   (list "objc2-encode" "4.1.0" "ef25abbcd74fb2609453eb695bd2f860d389e457f67dc17cafc8b8cbc89d0c33")
+   (list "once_cell" "1.21.4" "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50")
+   (list "ordered-float" "4.6.0" "7bb71e1b3fa6ca1c61f383464aaf2bb0e2f8e772a1f01d486832464de363b951")
+   (list "parking_lot" "0.12.5" "93857453250e3077bd71ff98b6a65ea6621a19bb0f559a85248955ac12c45a1a")
+   (list "parking_lot_core" "0.9.12" "2621685985a2ebf1c516881c026032ac7deafcda1a2c9b7850dc81e3dfcb64c1")
+   (list "pest" "2.8.6" "e0848c601009d37dfa3430c4666e147e49cdcf1b92ecd3e63657d8a5f19da662")
+   (list "pest_derive" "2.8.6" "11f486f1ea21e6c10ed15d5a7c77165d0ee443402f0780849d1768e7d9d6fe77")
+   (list "pest_generator" "2.8.6" "8040c4647b13b210a963c1ed407c1ff4fdfa01c31d6d2a098218702e6664f94f")
+   (list "pest_meta" "2.8.6" "89815c69d36021a140146f26659a81d6c2afa33d216d736dd4be5381a7362220")
+   (list "phf" "0.11.3" "1fd6780a80ae0c52cc120a26a1a42c1ae51b247a253e4e06113d23d2c2edd078")
+   (list "phf_codegen" "0.11.3" "aef8048c789fa5e851558d709946d6d79a8ff88c0440c587967f8e94bfb1216a")
+   (list "phf_generator" "0.11.3" "3c80231409c20246a13fddb31776fb942c38553c51e871f8cbd687a4cfb5843d")
+   (list "phf_macros" "0.11.3" "f84ac04429c13a7ff43785d75ad27569f2951ce0ffd30a3321230db2fc727216")
+   (list "phf_shared" "0.11.3" "67eabc2ef2a60eb7faa00097bd1ffdb5bd28e62bf39990626a582201b7a754e5")
+   (list "pin-project-lite" "0.2.17" "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd")
+   (list "png" "0.17.16" "82151a2fc869e011c153adc57cf2789ccb8d9906ce52c0b39a6b5697749d7526")
+   (list "portable-atomic" "1.13.1" "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49")
+   (list "powerfmt" "0.2.0" "439ee305def115ba05938db6eb1644ff94165c5ab5e9420d1c1bcedbba909391")
+   (list "prettyplease" "0.2.37" "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b")
+   (list "proc-macro2" "1.0.106" "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934")
+   (list "quote" "1.0.45" "41f2619966050689382d2b44f664f4bc593e129785a36d6ee376ddf37259b924")
+   (list "r-efi" "5.3.0" "69cdb34c158ceb288df11e18b4bd39de994f6657d83847bdffdbd7f346754b0f")
+   (list "r-efi" "6.0.0" "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf")
+   (list "rand" "0.8.5" "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404")
+   (list "rand_core" "0.6.4" "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c")
+   (list "ratatui" "0.30.0" "d1ce67fb8ba4446454d1c8dbaeda0557ff5e94d39d5e5ed7f10a65eb4c8266bc")
+   (list "ratatui-core" "0.1.0" "5ef8dea09a92caaf73bff7adb70b76162e5937524058a7e5bff37869cbbec293")
+   (list "ratatui-crossterm" "0.1.0" "577c9b9f652b4c121fb25c6a391dd06406d3b092ba68827e6d2f09550edc54b3")
+   (list "ratatui-macros" "0.7.0" "a7f1342a13e83e4bb9d0b793d0ea762be633f9582048c892ae9041ef39c936f4")
+   (list "ratatui-termwiz" "0.1.0" "0f76fe0bd0ed4295f0321b1676732e2454024c15a35d01904ddb315afd3d545c")
+   (list "ratatui-widgets" "0.3.0" "d7dbfa023cd4e604c2553483820c5fe8aa9d71a42eea5aa77c6e7f35756612db")
+   (list "recvmsg" "1.0.0" "d3edd4d5d42c92f0a659926464d4cce56b562761267ecf0f469d85b7de384175")
+   (list "redox_syscall" "0.5.18" "ed2bf2547551a7053d6fdfafda3f938979645c44812fbfcda098faae3f1a362d")
+   (list "ref-cast" "1.0.25" "f354300ae66f76f1c85c5f84693f0ce81d747e2c3f21a45fef496d89c960bf7d")
+   (list "ref-cast-impl" "1.0.25" "b7186006dcb21920990093f30e3dea63b7d6e977bf1256be20c3563a5db070da")
+   (list "regex" "1.12.3" "e10754a14b9137dd7b1e3e5b0493cc9171fdd105e0ab477f51b72e7f3ac0e276")
+   (list "regex-automata" "0.4.14" "6e1dd4122fc1595e8162618945476892eefca7b88c52820e74af6262213cae8f")
+   (list "regex-syntax" "0.8.10" "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a")
+   (list "rustc_version" "0.4.1" "cfcb3a22ef46e85b45de6ee7e79d063319ebb6594faafcf1c225ea92ab6e9b92")
+   (list "rustix" "1.1.4" "b6fe4565b9518b83ef4f91bb47ce29620ca828bd32cb7e408f0062e9930ba190")
+   (list "rustversion" "1.0.22" "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d")
+   (list "ryu" "1.0.23" "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f")
+   (list "schemars" "1.2.1" "a2b42f36aa1cd011945615b92222f6bf73c599a102a300334cd7f8dbeec726cc")
+   (list "schemars_derive" "1.2.1" "7d115b50f4aaeea07e79c1912f645c7513d81715d0420f8bc77a18c6260b307f")
+   (list "scopeguard" "1.2.0" "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49")
+   (list "semver" "1.0.27" "d767eb0aabc880b29956c35734170f26ed551a859dbd361d140cdbeca61ab1e2")
+   (list "serde" "1.0.228" "9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e")
+   (list "serde_core" "1.0.228" "41d385c7d4ca58e59fc732af25c3983b67ac852c1a25000afe1175de458b67ad")
+   (list "serde_derive" "1.0.228" "d540f220d3187173da220f885ab66608367b6574e925011a9353e4badda91d79")
+   (list "serde_derive_internals" "0.29.1" "18d26a20a969b9e3fdf2fc2d9f21eda6c40e2de84c9408bb5d3b05d499aae711")
+   (list "serde_ignored" "0.1.14" "115dffd5f3853e06e746965a20dcbae6ee747ae30b543d91b0e089668bb07798")
+   (list "serde_json" "1.0.149" "83fc039473c5595ace860d8c4fafa220ff474b3fc6bfdb4293327f1a37e94d86")
+   (list "serde_spanned" "0.6.9" "bf41e0cfaf7226dca15e8197172c295a782857fcb97fad1808a166870dee75a3")
+   (list "serial2" "0.2.34" "9e1401f562d358cdfdbdf8946e51a7871ede1db68bd0fd99bedc79e400241550")
+   (list "sha2" "0.10.9" "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283")
+   (list "sharded-slab" "0.1.7" "f40ca3c46823713e0d4209592e8d6e826aa57e928f09752619fc696c499637f6")
+   (list "shell-words" "1.1.1" "dc6fe69c597f9c37bfeeeeeb33da3530379845f10be461a66d16d03eca2ded77")
+   (list "signal-hook" "0.3.18" "d881a16cf4426aa584979d30bd82cb33429027e42122b169753d6ef1085ed6e2")
+   (list "signal-hook-mio" "0.2.5" "b75a19a7a740b25bc7944bdee6172368f988763b744e3d4dfe753f6b4ece40cc")
+   (list "signal-hook-registry" "1.4.8" "c4db69cba1110affc0e9f7bcd48bbf87b3f4fc7c61fc9155afd4c469eb3d6c1b")
+   (list "simd-adler32" "0.3.9" "703d5c7ef118737c72f1af64ad2f6f8c5e1921f818cdcb97b8fe6fc69bf66214")
+   (list "siphasher" "1.0.2" "b2aa850e253778c88a04c3d7323b043aeda9d3e30d5971937c1855769763678e")
+   (list "slab" "0.4.12" "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5")
+   (list "smallvec" "1.15.1" "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03")
+   (list "static_assertions" "1.1.0" "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f")
+   (list "strsim" "0.11.1" "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f")
+   (list "strum" "0.27.2" "af23d6f6c1a224baef9d3f61e287d2761385a5b88fdab4eb4c6f11aeb54c4bcf")
+   (list "strum_macros" "0.27.2" "7695ce3845ea4b33927c055a39dc438a45b059f7c1b3d91d38d10355fb8cbca7")
+   (list "syn" "1.0.109" "72b64191b275b66ffe2469e8af2c1cfe3bafa67b529ead792a6d0160888b4237")
+   (list "syn" "2.0.117" "e665b8803e7b1d2a727f4023456bbbbe74da67099c585258af0ad9c5013b9b99")
+   (list "terminfo" "0.9.0" "d4ea810f0692f9f51b382fff5893887bb4580f5fa246fde546e0b13e7fcee662")
+   (list "termios" "0.3.3" "411c5bf740737c7918b8b1fe232dca4dc9f8e754b8ad5e20966814001ed0ac6b")
+   (list "termwiz" "0.23.3" "4676b37242ccbd1aabf56edb093a4827dc49086c0ffd764a5705899e0f35f8f7")
+   (list "thiserror" "1.0.69" "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52")
+   (list "thiserror" "2.0.18" "4288b5bcbc7920c07a1149a35cf9590a2aa808e0bc1eafaade0b80947865fbc4")
+   (list "thiserror-impl" "1.0.69" "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1")
+   (list "thiserror-impl" "2.0.18" "ebc4ee7f67670e9b64d05fa4253e753e016c6c95ff35b89b7941d6b856dec1d5")
+   (list "thread_local" "1.1.9" "f60246a4944f24f6e018aa17cdeffb7818b76356965d03b07d6a9886e8962185")
+   (list "time" "0.3.47" "743bd48c283afc0388f9b8827b976905fb217ad9e647fae3a379a9283c4def2c")
+   (list "time-core" "0.1.8" "7694e1cfe791f8d31026952abf09c69ca6f6fa4e1a1229e18988f06a04a12dca")
+   (list "time-macros" "0.2.27" "2e70e4c5a0e0a8a4823ad65dfe1a6930e4f4d756dcd9dd7939022b5e8c501215")
+   (list "tokio" "1.50.0" "27ad5e34374e03cfffefc301becb44e9dc3c17584f414349ebe29ed26661822d")
+   (list "tokio-macros" "2.6.1" "5c55a2eff8b69ce66c84f85e1da1c233edc36ceb85a2058d11b0d6a3c7e7569c")
+   (list "toml" "0.8.23" "dc1beb996b9d83529a9e75c17a1686767d148d70663143c7854d8b4a09ced362")
+   (list "toml_datetime" "0.6.11" "22cddaf88f4fbc13c51aebbf5f8eceb5c7c5a9da2ac40a13519eb5b0a0e8f11c")
+   (list "toml_edit" "0.22.27" "41fe8c660ae4257887cf66394862d21dbca4a6ddd26f04a3560410406a2f819a")
+   (list "toml_write" "0.1.2" "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801")
+   (list "tracing" "0.1.44" "63e71662fa4b2a2c3a26f570f037eb95bb1f85397f3cd8076caed2f026a6d100")
+   (list "tracing-attributes" "0.1.31" "7490cfa5ec963746568740651ac6781f701c9c5ea257c58e057f3ba8cf69e8da")
+   (list "tracing-core" "0.1.36" "db97caf9d906fbde555dd62fa95ddba9eecfd14cb388e4f491a66d74cd5fb79a")
+   (list "tracing-log" "0.2.0" "ee855f1f400bd0e5c02d150ae5de3840039a3f54b025156404e34c23c03f47c3")
+   (list "tracing-subscriber" "0.3.23" "cb7f578e5945fb242538965c2d0b04418d38ec25c79d160cd279bf0731c8d319")
+   (list "typenum" "1.19.0" "562d481066bde0658276a35467c4af00bdc6ee726305698a55b86e61d7ad82bb")
+   (list "ucd-trie" "0.1.7" "2896d95c02a80c6d6a5d6e953d479f5ddf2dfdb6a244441010e373ac0fb88971")
+   (list "unicode-ident" "1.0.24" "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75")
+   (list "unicode-segmentation" "1.13.1" "da36089a805484bcccfffe0739803392c8298778a2d2f09febf76fac5ad9025b")
+   (list "unicode-truncate" "2.0.1" "16b380a1238663e5f8a691f9039c73e1cdae598a30e9855f541d29b08b53e9a5")
+   (list "unicode-width" "0.2.2" "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254")
+   (list "unicode-xid" "0.2.6" "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853")
+   (list "unty" "0.0.4" "6d49784317cd0d1ee7ec5c716dd598ec5b4483ea832a2dced265471cc0f690ae")
+   (list "utf8parse" "0.2.2" "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821")
+   (list "uuid" "1.22.0" "a68d3c8f01c0cfa54a75291d83601161799e4a89a39e0929f4b0354d88757a37")
+   (list "valuable" "0.1.1" "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65")
+   (list "version_check" "0.9.5" "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a")
+   (list "virtue" "0.0.18" "051eb1abcf10076295e815102942cc58f9d5e3b4560e46e53c21e8ff6f3af7b1")
+   (list "vtparse" "0.6.2" "6d9b2acfb050df409c972a37d3b8e08cdea3bddb0c09db9d53137e504cfabed0")
+   (list "wasi" "0.11.1+wasi-snapshot-preview1" "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b")
+   (list "wasip2" "1.0.2+wasi-0.2.9" "9517f9239f02c069db75e65f174b3da828fe5f5b945c4dd26bd25d89c03ebcf5")
+   (list "wasip3" "0.4.0+wasi-0.3.0-rc-2026-01-06" "5428f8bf88ea5ddc08faddef2ac4a67e390b88186c703ce6dbd955e1c145aca5")
+   (list "wasm-bindgen" "0.2.114" "6532f9a5c1ece3798cb1c2cfdba640b9b3ba884f5db45973a6f442510a87d38e")
+   (list "wasm-bindgen-macro" "0.2.114" "18a2d50fcf105fb33bb15f00e7a77b772945a2ee45dcf454961fd843e74c18e6")
+   (list "wasm-bindgen-macro-support" "0.2.114" "03ce4caeaac547cdf713d280eda22a730824dd11e6b8c3ca9e42247b25c631e3")
+   (list "wasm-bindgen-shared" "0.2.114" "75a326b8c223ee17883a4251907455a2431acc2791c98c26279376490c378c16")
+   (list "wasm-encoder" "0.244.0" "990065f2fe63003fe337b932cfb5e3b80e0b4d0f5ff650e6985b1048f62c8319")
+   (list "wasm-metadata" "0.244.0" "bb0e353e6a2fbdc176932bbaab493762eb1255a7900fe0fea1a2f96c296cc909")
+   (list "wasmparser" "0.244.0" "47b807c72e1bac69382b3a6fb3dbe8ea4c0ed87ff5629b8685ae6b9a611028fe")
+   (list "wezterm-bidi" "0.2.3" "0c0a6e355560527dd2d1cf7890652f4f09bb3433b6aadade4c9b5ed76de5f3ec")
+   (list "wezterm-blob-leases" "0.1.1" "692daff6d93d94e29e4114544ef6d5c942a7ed998b37abdc19b17136ea428eb7")
+   (list "wezterm-color-types" "0.3.0" "7de81ef35c9010270d63772bebef2f2d6d1f2d20a983d27505ac850b8c4b4296")
+   (list "wezterm-dynamic" "0.2.1" "5f2ab60e120fd6eaa68d9567f3226e876684639d22a4219b313ff69ec0ccd5ac")
+   (list "wezterm-dynamic-derive" "0.1.1" "46c0cf2d539c645b448eaffec9ec494b8b19bd5077d9e58cb1ae7efece8d575b")
+   (list "wezterm-input-types" "0.1.0" "7012add459f951456ec9d6c7e6fc340b1ce15d6fc9629f8c42853412c029e57e")
+   (list "widestring" "1.2.1" "72069c3113ab32ab29e5584db3c6ec55d416895e60715417b5b883a357c3e471")
+   (list "winapi" "0.3.9" "5c839a674fcd7a98952e593242ea400abe93992746761e38641405d28b00f419")
+   (list "winapi-i686-pc-windows-gnu" "0.4.0" "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6")
+   (list "winapi-x86_64-pc-windows-gnu" "0.4.0" "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f")
+   (list "windows" "0.62.2" "527fadee13e0c05939a6a05d5bd6eec6cd2e3dbd648b9f8e447c6518133d8580")
+   (list "windows-collections" "0.3.2" "23b2d95af1a8a14a3c7367e1ed4fc9c20e0a26e79551b1454d72583c97cc6610")
+   (list "windows-core" "0.62.2" "b8e83a14d34d0623b51dce9581199302a221863196a1dde71a7663a4c2be9deb")
+   (list "windows-future" "0.3.2" "e1d6f90251fe18a279739e78025bd6ddc52a7e22f921070ccdc67dde84c605cb")
+   (list "windows-implement" "0.60.2" "053e2e040ab57b9dc951b72c264860db7eb3b0200ba345b4e4c3b14f67855ddf")
+   (list "windows-interface" "0.59.3" "3f316c4a2570ba26bbec722032c4099d8c8bc095efccdc15688708623367e358")
+   (list "windows-link" "0.2.1" "f0805222e57f7521d6a62e36fa9163bc891acd422f971defe97d64e70d0a4fe5")
+   (list "windows-numerics" "0.3.1" "6e2e40844ac143cdb44aead537bbf727de9b044e107a0f1220392177d15b0f26")
+   (list "windows-result" "0.4.1" "7781fa89eaf60850ac3d2da7af8e5242a5ea78d1a11c49bf2910bb5a73853eb5")
+   (list "windows-strings" "0.5.1" "7837d08f69c77cf6b07689544538e017c1bfcf57e34b4c0ff58e6c2cd3b37091")
+   (list "windows-sys" "0.61.2" "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc")
+   (list "windows-threading" "0.2.1" "3949bd5b99cafdf1c7ca86b43ca564028dfe27d66958f2470940f73d86d75b37")
+   (list "winnow" "0.7.15" "df79d97927682d2fd8adb29682d1140b343be4ac0f08fd68b7765d9c059d3945")
+   (list "winreg" "0.10.1" "80d0f4e272c85def139476380b12f9ac60926689dd2e01d4923222f40580869d")
+   (list "wit-bindgen" "0.51.0" "d7249219f66ced02969388cf2bb044a09756a083d0fab1e566056b04d9fbcaa5")
+   (list "wit-bindgen-core" "0.51.0" "ea61de684c3ea68cb082b7a88508a8b27fcc8b797d738bfc99a82facf1d752dc")
+   (list "wit-bindgen-rust" "0.51.0" "b7c566e0f4b284dd6561c786d9cb0142da491f46a9fbed79ea69cdad5db17f21")
+   (list "wit-bindgen-rust-macro" "0.51.0" "0c0f9bfd77e6a48eccf51359e3ae77140a7f50b1e2ebfe62422d8afdaffab17a")
+   (list "wit-component" "0.244.0" "9d66ea20e9553b30172b5e831994e35fbde2d165325bec84fc43dbf6f4eb9cb2")
+   (list "wit-parser" "0.244.0" "ecc8ac4bc1dc3381b7f59c34f00b67e18f910c2c0f50015669dde7def656a736")
+   (list "wmi" "0.18.4" "7c81b85c57a57500e56669586496bf2abd5cf082b9d32995251185d105208b64")
+   (list "zmij" "1.0.21" "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa")))
+
+(define herdr-cargo-inputs
+  (map (lambda (record) (apply herdr-crate-source record))
+       %herdr-cargo-records))
+
+(define-public herdr
+  (package
+    (name "herdr")
+    (version "0.8.0")
+    (source
+     (origin
+       (method url-fetch)
+       (uri (string-append "https://codeload.github.com/herdrdev/herdr/tar.gz/"
+                           %herdr-commit))
+       (file-name (string-append name "-" version ".tar.gz"))
+       (sha256
+        (base32 "0by1xr385nxwlipsn5d7sicg77fmx1w5j8cqfvwf1jhkgdgbmy9l"))))
+    (build-system cargo-build-system)
+    (arguments
+     (list
+     #:install-source? #f
+      ;; The upstream suite assumes FHS paths such as /bin/sh and /usr/bin/true
+      ;; plus writable user directories.  Those assumptions are unavailable in
+      ;; the pure build environment; tests/herdr-smoke.sh exercises the
+      ;; packaged local server and workspace lifecycle after installation.
+      #:tests? #f
+      #:cargo-build-flags ''("--release" "--locked")
+      #:cargo-test-flags ''("--locked")
+      #:phases
+      #~(modify-phases %standard-phases
+          (add-after 'unpack 'save-reviewed-cargo-lock
+            (lambda _
+              (copy-file "Cargo.lock" ".guix-Cargo.lock")))
+          ;; cargo-build-system otherwise probes every archive input as though
+          ;; it might be a crate.  The two Zig dependency archives are not
+          ;; Cargo sources, so restrict this phase to the locked Rust inputs.
+          (replace 'unpack-rust-crates
+            (lambda* (#:key source inputs #:allow-other-keys)
+              ((@@ (guix build cargo-build-system) unpack-rust-crates)
+               #:source source
+               #:inputs (filter (lambda (input)
+                                  (string-prefix? "rust-" (car input)))
+                                inputs))))
+          (add-after 'check-for-pregenerated-files
+              'restore-locked-offline-cargo-graph
+            (lambda _
+              (setenv "CARGO_NET_OFFLINE" "true")
+              (copy-file ".guix-Cargo.lock" "Cargo.lock")
+              ;; The vendor directory contains the immutable Guix archives,
+              ;; not crates.io archives, so their old registry checksums are
+              ;; deliberately inapplicable.
+              (substitute* "Cargo.lock" (("^checksum = .*$") ""))))
+          (add-before 'build 'configure-offline-zig
+            (lambda _
+              (let ((zig #$(file-append zig-0.15 "/bin/zig"))
+                    (cache "guix-zig-system-cache"))
+                (mkdir-p cache)
+                (for-each (lambda (entry)
+                            (let ((archive (car entry))
+                                  (hash (cdr entry)))
+                              (invoke zig "fetch" "--global-cache-dir" cache
+                                      archive)
+                              (rename-file (string-append cache "/p/" hash)
+                                           (string-append cache "/" hash))))
+                          (list (cons #$herdr-uucode-source
+                                      "uucode-0.2.0-ZZjBPqZVVABQepOqZHR7vV_NcaN-wats0IB6o-Exj6m9")
+                                (cons #$herdr-highway-source
+                                      "N-V-__8AAGmZhABbsPJLfbqrh6JTHsXhY6qCaLAQyx25e0XE")))
+                (for-each (lambda (hash)
+                            (mkdir-p (string-append cache "/" hash)))
+                          '("N-V-__8AAAYpBACKY0n8sQbPfzY47xFRRtjXiF766UVF5ZyD"
+                            "N-V-__8AABzkUgISeKGgXAzgtutgJsZc0-kkeqBBscJgMkvy"
+                            "N-V-__8AANb6pwD7O1WG6L5nvD_rNMvnSc9Cpg1ijSlTYywv"
+                            "vaxis-0.5.1-BWNV_LosCQAGmCCNOLljCIw6j6-yt53tji6n6rwJ2BhS"
+                            "N-V-__8AAAzZywE3s51XfsLbP9eyEw57ae9swYB9aGB6fCMs"
+                            "N-V-__8AADYiAAB_80AWnH1AxXC0tql9thT-R-DYO1gBqTLc"
+                            "libxev-0.0.0-86vtc4IcEwCqEYxEYoN_3KXmc6A9VLcm22aVImfvecYs"
+                            "z2d-0.10.0-j5P_Hu-6FgBsZNgwphIqh17jDnj8_yPtD8yzjO6PpHRQ"
+                            "zf-0.10.3-OIRy8RuJAACKA3Lohoumrt85nRbHwbpMcUaLES8vxDnh"
+                            "N-V-__8AAEbOfQBnvcFcCX2W5z7tDaN8vaNZGamEQtNOe0UI"
+                            "N-V-__8AANT61wB--nJ95Gj_ctmzAtcjloZ__hRqNw5lC1Kr"
+                            "N-V-__8AAIC5lwAVPJJzxnCAahSvZTIlG-HhtOvnM1uh-66x"
+                            "N-V-__8AAMVLTABmYkLqhZPLXnMl-KyN38R8UVYqGrxqO26s"
+                            "gobject-0.3.0-Skun7ANLnwDvEfIpVmohcppXgOvg_I6YOJFmPIsKfXk-"))
+                ;; Avoid constructing Ghostty's benchmark graph in a lib-vt
+                ;; build.  Constructing it eagerly imports the optional vaxis
+                ;; package even though -Demit-bench is false.
+                (substitute* "vendor/libghostty-vt/build.zig"
+                  (("    const bench = try buildpkg[.]GhosttyBench[.]init[(]b, &deps[)];")
+                   "    if (config.emit_bench) {\n        const bench = try buildpkg.GhosttyBench.init(b, &deps);")
+                  (("    if [(]config[.]emit_bench[)] bench[.]install[(][)];")
+                   "        bench.install();\n    }"))
+                ;; Zig otherwise gives each build graph a fresh random seed,
+                ;; which makes the linked static terminal library differ
+                ;; between otherwise identical Guix rebuilds.
+                (substitute* "build.rs"
+                  (("        [. ]arg[(]\"-Demit-xcframework=false\"[)];")
+                   "        .arg(\"-Demit-xcframework=false\")\n        .arg(\"--seed\")\n        .arg(\"0\");"))
+                (setenv "ZIG" zig)
+                (setenv "ZIG_GLOBAL_CACHE_DIR" "guix-zig-global-cache")
+                (setenv "ZIG_LOCAL_CACHE_DIR" "guix-zig-local-cache")
+                (setenv "LIBGHOSTTY_VT_ZIG_SYSTEM_DIR"
+                        (canonicalize-path cache)))
+              (setenv "LIBGHOSTTY_VT_OPTIMIZE" "ReleaseFast")
+              (setenv "LIBGHOSTTY_VT_SIMD" "true")))
+          (delete 'install)
+          (add-after 'check 'install-herdr
+            (lambda* (#:key outputs #:allow-other-keys)
+              (invoke "cargo" "install" "--offline" "--locked" "--no-track"
+                      "--path" "." "--bin" "herdr"
+                      "--root" (assoc-ref outputs "out"))))
+          (add-after 'install-herdr 'install-license-notices
+            (lambda* (#:key outputs #:allow-other-keys)
+              (let ((doc (string-append (assoc-ref outputs "out")
+                                        "/share/doc/herdr")))
+                (mkdir-p doc)
+                (copy-file "LICENSE" (string-append doc "/herdr-APACHE-2.0"))
+                (copy-file "vendor/libghostty-vt/LICENSE"
+                           (string-append doc "/libghostty-vt-MIT"))
+                (copy-file "vendor/portable-pty/LICENSE.md"
+                           (string-append doc "/portable-pty-MIT"))
+                (copy-file "vendor/libghostty-vt/pkg/afl++/LICENSE"
+                           (string-append doc "/afl++-MIT"))
+                ;; simdutf's complete Apache/MIT and third-party notices are
+                ;; embedded in these amalgamated source files.
+                (install-file "vendor/libghostty-vt/pkg/simdutf/vendor/simdutf.h" doc)
+                (install-file "vendor/libghostty-vt/pkg/simdutf/vendor/simdutf.cpp" doc)
+                ;; Keep the complete source archives containing the uucode
+                ;; Unicode notices and Highway Apache/BSD notice material.
+                (copy-file #$herdr-uucode-source
+                           (string-append doc "/uucode-0.2.0.tar.gz"))
+                (copy-file #$herdr-highway-source
+                           (string-append doc "/highway-66486a.tar.gz"))))))))
+    (native-inputs
+     (list zig-0.15 pkg-config git-minimal zstd
+           herdr-uucode-source herdr-highway-source))
+    (inputs herdr-cargo-inputs)
+    (supported-systems '("x86_64-linux"))
+    (synopsis "Terminal workspace manager for AI coding agents")
+    (description
+     "Herdr is a terminal workspace manager for AI coding agents.  It builds
+the pinned upstream source with Cargo's locked registry closure and a fixed,
+offline Zig 0.15.2 cache for its vendored Ghostty terminal library.  The
+installed executable starts only user-owned local sessions; configuration,
+state, logs, and Unix sockets remain in the user's XDG directories.")
+    (home-page "https://github.com/herdrdev/herdr")
+    ;; The executable combines Apache-2.0 Herdr and Highway with MIT Ghostty,
+    ;; portable-pty, uucode, and simdutf material; Highway's BSD notice is
+    ;; retained with its immutable source archive in the documentation.
+    (license (list license:asl2.0 license:expat license:bsd-3))))
