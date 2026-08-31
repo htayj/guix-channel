@@ -1529,7 +1529,30 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
   } else {
     const artifactStartSha = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
     if (journal.runtimeEvidence?.artifactStartSha !== undefined && journal.runtimeEvidence.artifactStartSha !== artifactStartSha) {
-      throw new Error("Runtime screenshot artifact branch changed before its host commit; inspect the preserved branch before resuming");
+      // A capture repair may be followed by a previously interrupted audit
+      // before this host boundary runs.  The capture output is still safe to
+      // commit when it is the sole untracked path and the intervening branch
+      // advance is accounted for by a completed journaled phase.  New runs
+      // commit immediately after capture below, so this is recovery-only.
+      const priorArtifactStartSha = journal.runtimeEvidence.artifactStartSha;
+      let priorStartIsAncestor = false;
+      try {
+        hostGit(["merge-base", "--is-ancestor", priorArtifactStartSha, artifactStartSha], { stdio: "ignore" });
+        priorStartIsAncestor = true;
+      } catch {
+        // The explicit rejection below remains the safe default.
+      }
+      const captureCompletedAt = phaseRecord(journal, capturePhase)?.completedAt;
+      const journaledLaterPhase = captureCompletedAt !== undefined && journal.phases.some((phase) =>
+        phase.name !== capturePhase && phase.state === "complete" &&
+        phase.completedAt !== undefined && phase.completedAt > captureCompletedAt,
+      );
+      if (!priorStartIsAncestor || !journaledLaterPhase) {
+        throw new Error("Runtime screenshot artifact branch changed before its host commit; inspect the preserved branch before resuming");
+      }
+      journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+        runtimeEvidence: { ...journal.runtimeEvidence, artifactStartSha },
+      });
     }
     if (journal.runtimeEvidence?.artifactStartSha === undefined) {
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
@@ -3720,6 +3743,17 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             : phase;
           const evidenceResult = await runBatch(evidenceSandbox, [executionPhase]);
           if (evidenceResult !== undefined) workflowResults.push(evidenceResult);
+          // This is a host-owned durable boundary.  Commit the sole declared
+          // image as soon as the capture receipt and assertion exist, before
+          // a later resumed agent phase can legitimately advance the branch.
+          if (evidenceConfig?.capturePhase === phase.name && journal.runtimeEvidence?.artifact !== "complete") {
+            const proofRecord = phaseRecord(journal, evidenceConfig.proofPhase);
+            const captureRecord = phaseRecord(journal, evidenceConfig.capturePhase);
+            if (proofRecord?.state !== "complete" || captureRecord?.state !== "complete" || !proofRecord.commandReceipt || !captureRecord.commandReceipt) {
+              throw new Error("Runtime screenshot evidence requires host-recorded successful proof and capture command receipts before artifact inspection; inspect the preserved branch and resume");
+            }
+            journal = await runtimeEvidenceArtifactCommit(journal, evidenceConfig, evidenceConfig.capturePhase, taskWorktree, branch, issue.number);
+          }
         } finally {
           const closed = await evidenceSandbox.close();
           evidenceSandbox = undefined;
