@@ -124,6 +124,21 @@
         },
         "successMarker": "ALONERL_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 655,
+      "packageName": "herdr",
+      "artifactPath": ".goocastle/evidence/issue-655.png",
+      "runtime": {
+        "executable": "herdr",
+        "invocation": {
+          "file": "herdr",
+          "args": [
+            "--help"
+          ]
+        },
+        "successMarker": "herdr — terminal workspace manager for AI coding agents"
+      }
     }
   ]
 }
