@@ -968,6 +968,16 @@ const reportDeferredJournal = (issue) => console.log(
   "Skipping open deferred journal #" + issue.number + " (state:deferred); its preserved journal and worktree remain unchanged. " +
   "Remove state:deferred to reactivate it.",
 );
+const specificationChangedSinceJournal = (journal, explanation) => journal.specification !== undefined && (
+  journal.specification.policyVersion !== explanation.policyVersion ||
+  journal.specification.policyDigest !== explanation.policyDigest ||
+  journal.specification.specificationDigest !== explanation.specificationDigest ||
+  journal.specification.mode !== explanation.policy.mode
+);
+const reportStaleSpecificationJournal = (issue) => console.error(
+  "Skipping stale-specification journal #" + issue.number + "; its preserved journal, branch, and worktree remain unchanged. " +
+  "Review it with goocastle status, then resume explicitly with GOOCASTLE_SPECIFICATION_OVERRIDE=1 for an audited decision.",
+);
 
 // Keep generated runners compatible with test/runtime facades that predate
 // the exported predicate while making the current runtime's terminal-state
@@ -2668,12 +2678,14 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       // boundaries before publishing any external reopening label. A changed
       // issue contract or workflow selection must still fail closed.
       const repairExplanation = validateIssueForWorkflow(issue, resolvedGooflow.workflow, { reportWarnings: false });
-      if (journal.specification && (
-        journal.specification.policyVersion !== repairExplanation.policyVersion ||
-        journal.specification.policyDigest !== repairExplanation.policyDigest ||
-        journal.specification.specificationDigest !== repairExplanation.specificationDigest ||
-        journal.specification.mode !== repairExplanation.policy.mode
-      ) && !SPECIFICATION_OVERRIDE) {
+      if (specificationChangedSinceJournal(journal, repairExplanation) && !SPECIFICATION_OVERRIDE) {
+        if (!RESUME_ONLY) {
+          deferredJournalIssues.add(issue.number);
+          attemptedIssues.add(issue.number);
+          reportStaleSpecificationJournal(issue);
+          task -= 1;
+          continue;
+        }
         throw new Error(
           "Issue #" + issue.number + " specification changed since the task was journaled (body or policy digest differs). " +
             "Review the preserved branch and journal with goocastle status, then rerun with GOOCASTLE_SPECIFICATION_OVERRIDE=1 for an explicit audited decision.",
@@ -2803,23 +2815,17 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       }
       throw error;
     }
-    journal = await recoverMissingTaskBranch(journal);
-    if (journal.branchRecovery?.state === "manual") {
-      manuallyRecoverableJournalIssues.add(journal.issueNumber);
-      missingBranchManualJournalIssues.add(journal.issueNumber);
-      deferredJournalIssues.add(journal.issueNumber);
-      task -= 1;
-      continue;
-    }
     const explanation = validateIssueForWorkflow(issue, resolvedGooflow.workflow);
     let decision = "initial";
-    if (journal.specification && (
-      journal.specification.policyVersion !== explanation.policyVersion ||
-      journal.specification.policyDigest !== explanation.policyDigest ||
-      journal.specification.specificationDigest !== explanation.specificationDigest ||
-      journal.specification.mode !== explanation.policy.mode
-    )) {
+    if (specificationChangedSinceJournal(journal, explanation)) {
       if (!SPECIFICATION_OVERRIDE) {
+        if (!RESUME_ONLY) {
+          deferredJournalIssues.add(issue.number);
+          attemptedIssues.add(issue.number);
+          reportStaleSpecificationJournal(issue);
+          task -= 1;
+          continue;
+        }
         throw new Error(
           "Issue #" + issue.number + " specification changed since the task was journaled (body or policy digest differs). " +
           "Review the preserved branch and journal with goocastle status, then rerun with GOOCASTLE_SPECIFICATION_OVERRIDE=1 for an explicit audited decision.",
@@ -2827,6 +2833,14 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       }
       decision = "audited-change";
       console.error("WARNING: accepting the changed specification for #" + issue.number + " because GOOCASTLE_SPECIFICATION_OVERRIDE=1 was explicitly set; review the preserved branch and criteria.");
+    }
+    journal = await recoverMissingTaskBranch(journal);
+    if (journal.branchRecovery?.state === "manual") {
+      manuallyRecoverableJournalIssues.add(journal.issueNumber);
+      missingBranchManualJournalIssues.add(journal.issueNumber);
+      deferredJournalIssues.add(journal.issueNumber);
+      task -= 1;
+      continue;
     }
     specification = specificationProvenance(explanation, decision);
     attemptedIssues.add(issue.number);
