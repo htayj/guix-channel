@@ -2759,7 +2759,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           console.log(
             "Reopened bounded repair epoch for #" + issue.number + " after " +
               (RECOVER_BLOCKED ? "the explicit maintainer recovery request for " : "the runner or Gooflow semantics changed for ") +
-              JSON.stringify(latestRepair.phase) + "; implementation and audit will run before the proof is retried.",
+              JSON.stringify(latestRepair.phase) +
+              (currentRepairWorkflow?.evidence?.capturePhase === latestRepair.phase
+                ? "; the durable implementation and audit receipts are retained before the capture is retried."
+                : "; implementation and audit will run before the proof is retried."),
           );
         } else {
           await reconcileBlockedRequiredCommandRepair(journal, issue.number);
@@ -3262,11 +3265,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       ?? materializedGooflow?.phases.find((phase) => phase.type === "agent")?.name
       ?? "implement";
     const repairPhases = activeRepair
-      ? [
+      ? (evidenceConfig?.capturePhase === repairPhaseName
+        ? [phases.find((phase) => phase.name === repairPhaseName)]
+        : [
           phases.find((phase) => phase.name === implementationPhaseName && phase.type === "agent"),
           phases.find((phase) => phase.name === "edge-case-audit" && phase.type === "agent") ?? phases.find((phase) => phase.type === "agent" && /audit|review/iu.test(phase.name) && phase.name !== implementationPhaseName),
           phases.find((phase) => phase.name === repairPhaseName),
-        ].filter((phase, index, candidates) => phase !== undefined && candidates.indexOf(phase) === index)
+        ]).filter((phase, index, candidates) => phase !== undefined && candidates.indexOf(phase) === index)
       : [];
     const defaultProviderStateHomeName = WORKFLOW_NAME + "-issue-" + issue.number;
     let providerStateHomeName = journal.providerStateRecovery?.epochs.at(-1)?.stateHomeName ?? defaultProviderStateHomeName;
