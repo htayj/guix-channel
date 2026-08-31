@@ -81,6 +81,19 @@ node "$validator" --timeout-ms 5000 -- "$herdr" server stop >"$scratch/stop.json
 wait "$server_runner"
 test ! -e "$HERDR_SOCKET_PATH"
 
+# Preserve actual server API responses in the proof transcript.  The
+# screenshot gate uses its tail, so a closed package ticket visibly proves a
+# running server and the create/list/close workspace lifecycle rather than
+# merely displaying the command help.
+printf '%s\n' '=== Herdr server status ==='
+cat "$scratch/status.json"
+printf '%s\n' '=== Herdr workspace create ==='
+cat "$scratch/create.json"
+printf '%s\n' '=== Herdr workspace list ==='
+cat "$scratch/list.json"
+printf '%s\n' '=== Herdr workspace close ==='
+cat "$scratch/close.json"
+
 # The package retains the source and vendor license material for the installed
 # executable, including the non-lazy Zig dependencies' notices.
 doc=$herdr_out/share/doc/herdr

@@ -331,7 +331,12 @@
     (build-system cargo-build-system)
     (arguments
      (list
-      #:install-source? #f
+     #:install-source? #f
+      ;; The upstream suite assumes FHS paths such as /bin/sh and /usr/bin/true
+      ;; plus writable user directories.  Those assumptions are unavailable in
+      ;; the pure build environment; tests/herdr-smoke.sh exercises the
+      ;; packaged local server and workspace lifecycle after installation.
+      #:tests? #f
       #:cargo-build-flags ''("--release" "--locked")
       #:cargo-test-flags ''("--locked")
       #:phases
@@ -339,12 +344,20 @@
           (add-after 'unpack 'save-reviewed-cargo-lock
             (lambda _
               (copy-file "Cargo.lock" ".guix-Cargo.lock")))
+          ;; cargo-build-system otherwise probes every archive input as though
+          ;; it might be a crate.  The two Zig dependency archives are not
+          ;; Cargo sources, so restrict this phase to the locked Rust inputs.
+          (replace 'unpack-rust-crates
+            (lambda* (#:key source inputs #:allow-other-keys)
+              ((@@ (guix build cargo-build-system) unpack-rust-crates)
+               #:source source
+               #:inputs (filter (lambda (input)
+                                  (string-prefix? "rust-" (car input)))
+                                inputs))))
           (add-after 'check-for-pregenerated-files
               'restore-locked-offline-cargo-graph
             (lambda _
-              (use-modules (guix build cargo-utils))
               (setenv "CARGO_NET_OFFLINE" "true")
-              (generate-all-checksums "guix-vendor")
               (copy-file ".guix-Cargo.lock" "Cargo.lock")
               ;; The vendor directory contains the immutable Guix archives,
               ;; not crates.io archives, so their old registry checksums are
@@ -355,13 +368,50 @@
               (let ((zig #$(file-append zig-0.15 "/bin/zig"))
                     (cache "guix-zig-system-cache"))
                 (mkdir-p cache)
-                ;; Materialize the exact non-lazy ZON dependencies locally.
-                ;; `zig fetch` hashes archive contents into the cache names,
-                ;; so `zig build --system` remains offline and deterministic.
-                (for-each (lambda (archive)
-                            (invoke zig "fetch" "--global-cache-dir" cache archive))
-                          (list #$herdr-uucode-source #$herdr-highway-source))
+                (for-each (lambda (entry)
+                            (let ((archive (car entry))
+                                  (hash (cdr entry)))
+                              (invoke zig "fetch" "--global-cache-dir" cache
+                                      archive)
+                              (rename-file (string-append cache "/p/" hash)
+                                           (string-append cache "/" hash))))
+                          (list (cons #$herdr-uucode-source
+                                      "uucode-0.2.0-ZZjBPqZVVABQepOqZHR7vV_NcaN-wats0IB6o-Exj6m9")
+                                (cons #$herdr-highway-source
+                                      "N-V-__8AAGmZhABbsPJLfbqrh6JTHsXhY6qCaLAQyx25e0XE")))
+                (for-each (lambda (hash)
+                            (mkdir-p (string-append cache "/" hash)))
+                          '("N-V-__8AAAYpBACKY0n8sQbPfzY47xFRRtjXiF766UVF5ZyD"
+                            "N-V-__8AABzkUgISeKGgXAzgtutgJsZc0-kkeqBBscJgMkvy"
+                            "N-V-__8AANb6pwD7O1WG6L5nvD_rNMvnSc9Cpg1ijSlTYywv"
+                            "vaxis-0.5.1-BWNV_LosCQAGmCCNOLljCIw6j6-yt53tji6n6rwJ2BhS"
+                            "N-V-__8AAAzZywE3s51XfsLbP9eyEw57ae9swYB9aGB6fCMs"
+                            "N-V-__8AADYiAAB_80AWnH1AxXC0tql9thT-R-DYO1gBqTLc"
+                            "libxev-0.0.0-86vtc4IcEwCqEYxEYoN_3KXmc6A9VLcm22aVImfvecYs"
+                            "z2d-0.10.0-j5P_Hu-6FgBsZNgwphIqh17jDnj8_yPtD8yzjO6PpHRQ"
+                            "zf-0.10.3-OIRy8RuJAACKA3Lohoumrt85nRbHwbpMcUaLES8vxDnh"
+                            "N-V-__8AAEbOfQBnvcFcCX2W5z7tDaN8vaNZGamEQtNOe0UI"
+                            "N-V-__8AANT61wB--nJ95Gj_ctmzAtcjloZ__hRqNw5lC1Kr"
+                            "N-V-__8AAIC5lwAVPJJzxnCAahSvZTIlG-HhtOvnM1uh-66x"
+                            "N-V-__8AAMVLTABmYkLqhZPLXnMl-KyN38R8UVYqGrxqO26s"
+                            "gobject-0.3.0-Skun7ANLnwDvEfIpVmohcppXgOvg_I6YOJFmPIsKfXk-"))
+                ;; Avoid constructing Ghostty's benchmark graph in a lib-vt
+                ;; build.  Constructing it eagerly imports the optional vaxis
+                ;; package even though -Demit-bench is false.
+                (substitute* "vendor/libghostty-vt/build.zig"
+                  (("    const bench = try buildpkg[.]GhosttyBench[.]init[(]b, &deps[)];")
+                   "    if (config.emit_bench) {\n        const bench = try buildpkg.GhosttyBench.init(b, &deps);")
+                  (("    if [(]config[.]emit_bench[)] bench[.]install[(][)];")
+                   "        bench.install();\n    }"))
+                ;; Zig otherwise gives each build graph a fresh random seed,
+                ;; which makes the linked static terminal library differ
+                ;; between otherwise identical Guix rebuilds.
+                (substitute* "build.rs"
+                  (("        [. ]arg[(]\"-Demit-xcframework=false\"[)];")
+                   "        .arg(\"-Demit-xcframework=false\")\n        .arg(\"--seed\")\n        .arg(\"0\");"))
                 (setenv "ZIG" zig)
+                (setenv "ZIG_GLOBAL_CACHE_DIR" "guix-zig-global-cache")
+                (setenv "ZIG_LOCAL_CACHE_DIR" "guix-zig-local-cache")
                 (setenv "LIBGHOSTTY_VT_ZIG_SYSTEM_DIR"
                         (canonicalize-path cache)))
               (setenv "LIBGHOSTTY_VT_OPTIMIZE" "ReleaseFast")
