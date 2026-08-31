@@ -398,6 +398,18 @@ const waitForRunnerGate = async (milliseconds) => await new Promise((resolveProm
 // This opt-in is only meaningful for the explicit resume command and is kept
 // separate from the normal resume path so branch repair is deliberate.
 const RECOVER_BLOCKED = RESUME_ONLY && process.env.GOOCASTLE_RECOVER_BLOCKED === "1";
+const RESUME_TARGET_ISSUE = (() => {
+  const value = process.env.GOOCASTLE_RESUME_ISSUE;
+  if (value === undefined) return undefined;
+  if (!/^[1-9][0-9]*$/u.test(value)) {
+    throw new Error("GOOCASTLE_RESUME_ISSUE must be a positive safe issue number");
+  }
+  const issueNumber = Number(value);
+  if (!Number.isSafeInteger(issueNumber)) {
+    throw new Error("GOOCASTLE_RESUME_ISSUE must be a positive safe issue number");
+  }
+  return issueNumber;
+})();
 const SPECIFICATION_OVERRIDE = process.env.GOOCASTLE_SPECIFICATION_OVERRIDE === "1";
 // This identity is intentionally opaque and secret-free. It proves which
 // runner last owned a phase without retaining a PID, command line, or session.
@@ -2014,6 +2026,7 @@ const incompleteJournal = async () => {
   const journals = await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME);
   const candidates = journals
     .filter((journal) => (!deliveryComplete(journal) || journal.cleanup !== "complete") &&
+      (RESUME_TARGET_ISSUE === undefined || journal.issueNumber === RESUME_TARGET_ISSUE) &&
       (journal.status !== "complete" || journal.branchRecovery !== undefined) &&
       !terminalDispositionFor(journal) &&
       !(journal.status === "complete" && journal.branchRecovery?.state === "fresh-worktree" &&
