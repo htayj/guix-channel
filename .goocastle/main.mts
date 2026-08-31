@@ -3601,6 +3601,20 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             journal = signed.journal;
             phaseHead = signed.head;
           }
+          // Runtime evidence is a host-owned boundary: the capture command
+          // emits the image, then Goocastle validates and commits that sole
+          // artifact.  An agent committing it early would bypass the
+          // assertion/receipt ordering and make later recovery ambiguous.
+          if (configuredPhase?.type === "agent" && evidenceConfig !== undefined &&
+              phaseStartSha !== undefined && phaseHead !== undefined) {
+            const changedPaths = hostGit(["diff", "--name-only", phaseStartSha + ".." + phaseHead], { encoding: "utf8" })
+              .split("\n").filter(Boolean);
+            if (changedPaths.includes(evidenceConfig.artifactPath)) {
+              throw new Error("Agent phase " + JSON.stringify(phaseResult.name) +
+                " committed the declared runtime evidence artifact " + JSON.stringify(evidenceConfig.artifactPath) +
+                "; only the host runtime-screenshot boundary may record it");
+            }
+          }
           const observedCommitCount = phaseStartSha === undefined || phaseHead === undefined
             ? undefined
             : Number(hostGit(["rev-list", "--count", phaseStartSha + ".." + phaseHead], { encoding: "utf8" }).trim());
