@@ -7,8 +7,8 @@ import { homedir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const GENERATED_RUNNER_RUNTIME_API_VERSION = 14;
-const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-14/journal-1";
+const GENERATED_RUNNER_RUNTIME_API_VERSION = 15;
+const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-15/journal-1";
 const GENERATED_RUNNER_JOURNAL_SCHEMA_VERSION = 1;
 // This digest is a secret-free capability identity for the generated runner.
 // It deliberately follows the checked-in runner bytes so a repaired runner
@@ -185,7 +185,7 @@ const boundedValidationExposes = [
   { hostPath: boundedValidationDist, sandboxPath: "/opt/goocastle/dist" },
 ];
 const runtimeModule = await import(runtimeModuleUrl);
-const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialManualRepairReceipt, createSequentialPredecessorWorkReceipt, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, materializeRuntimeEvidenceContractEntry, parseGooflowDispositionResult, quarantineManagedStateHome, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runtimeContractIssueDigest, isRuntimeContractResolutionFailure, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isProviderInterruption, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
+const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialManualRepairReceipt, createSequentialPredecessorWorkReceipt, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, materializeRuntimeEvidenceContractEntry, parseGooflowDispositionResult, quarantineManagedStateHome, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runtimeContractIssueDigest, runtimeEvidenceCaptureCommand, isRuntimeContractResolutionFailure, sequentialJournalActivity, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isCodexAuthenticationExpiry, isProviderInterruption, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
 const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Object.freeze({
   expectedPacingMs: 5 * 60_000,
   stalledAfterMs: 15 * 60_000,
@@ -198,6 +198,7 @@ const runtimeHandshake = typeof generatedRunnerRuntimeHandshake === "function"
 if (
   runtimeApiVersion !== GENERATED_RUNNER_RUNTIME_API_VERSION ||
   typeof createSequentialManualRepairReceipt !== "function" ||
+  typeof runtimeEvidenceCaptureCommand !== "function" ||
   runtimeHandshake?.identity !== GENERATED_RUNNER_RUNTIME_IDENTITY ||
   runtimeHandshake?.apiVersion !== GENERATED_RUNNER_RUNTIME_API_VERSION ||
   runtimeHandshake.journalSchemaVersion !== GENERATED_RUNNER_JOURNAL_SCHEMA_VERSION
@@ -1101,6 +1102,39 @@ const remoteSha = async () => await retrySequential(() => {
   const output = hostGit(["ls-remote", "--heads", "origin", baseBranch], { encoding: "utf8" }).trim();
   return output === "" ? undefined : output.split(/\s+/)[0];
 }, projectConfig.retryPolicy, { retryable: isTransientSequentialError });
+// The journal's base is durable replay provenance, not delivery provenance.
+// An operator can rebase the preserved task branch onto a base advance that
+// this host worktree has not checked out yet. In that case the remote tip is
+// the only acceptable delivery base, but only after Git proves that the task
+// branch actually contains it. This keeps the merge/push compare-and-swap
+// guards tied to the rebased branch rather than an obsolete journal SHA.
+const deliveryBaseSha = async (branch, branchHead) => {
+  const remoteBase = await remoteSha();
+  if (remoteBase !== undefined) {
+    try {
+      hostGit(["merge-base", "--is-ancestor", remoteBase, branchHead]);
+      return remoteBase;
+    } catch (error) {
+      throw new Error(
+        "Cannot deliver " + branch + ": origin/" + baseBranch + " at " + remoteBase +
+        " is not an ancestor of the task branch tip " + branchHead +
+        ". Rebase the preserved task branch onto origin/" + baseBranch + " and resume.",
+        { cause: error },
+      );
+    }
+  }
+  const localBase = hostGit(["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+  try {
+    hostGit(["merge-base", "--is-ancestor", localBase, branchHead]);
+  } catch (error) {
+    throw new Error(
+      "Cannot deliver " + branch + ": local " + baseBranch + " at " + localBase +
+      " is not an ancestor of the task branch tip " + branchHead + ". Rebase the preserved task branch and resume.",
+      { cause: error },
+    );
+  }
+  return localBase;
+};
 // A transport error after the remote accepted a push is ambiguous.  Observe
 // the remote before retrying so a resumable delivery never needlessly repeats
 // the mutation (and never force-pushes).
@@ -2187,8 +2221,21 @@ const providerInterruptionFor = (error) => {
   }
   return messages.some((message) =>
     /\bAgent\b[\s\S]{0,256}\b(?:exited with code 137|SIGKILL)\b/iu.test(message) ||
-    /\bfailed\s+to\s+record\s+rollout\s+items\b[\s\S]{0,512}\bthread\b[\s\S]{0,256}\bnot\s+found\b/iu.test(message));
+    /\bfailed\s+to\s+record\s+rollout\s+items\b[\s\S]{0,512}\bthread\b[\s\S]{0,256}\bnot\s+found\b/iu.test(message) ||
+    /\binvalid_refresh_token\b/iu.test(message));
 };
+const providerAuthenticationExpiryFor = (error) =>
+  projectConfig.agent === "codex" && typeof isCodexAuthenticationExpiry === "function"
+    ? isCodexAuthenticationExpiry(error)
+    : projectConfig.agent === "codex" ? (() => {
+        const messages = [];
+        let current = error;
+        while (current instanceof Error && messages.length < 4) {
+          messages.push(current.message);
+          current = current.cause;
+        }
+        return messages.some((message) => /\binvalid_refresh_token\b/iu.test(message));
+      })() : false;
 const providerStateLossFor = (error) =>
   typeof isCodexRolloutThreadStateLoss === "function"
     ? isCodexRolloutThreadStateLoss(error)
@@ -2202,6 +2249,7 @@ const providerStateLossFor = (error) =>
         return messages.some((message) => /\bfailed\s+to\s+record\s+rollout\s+items\b[\s\S]{0,512}\bthread\b[\s\S]{0,256}\bnot\s+found\b/iu.test(message));
       })();
 const boundedFailureKind = (error, providerPhase = false) => {
+  if (providerPhase && providerAuthenticationExpiryFor(error)) return "provider-auth-expired";
   if (providerPhase && providerInterruptionFor(error)) return "provider-interruption";
   const messages = [];
   let current = error;
@@ -2786,12 +2834,20 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     const failedPhaseNames = journal.phases
       .filter((phase) => phase.state === "failed")
       .map((phase) => phase.name);
-    if (failedPhaseNames.length > 0) {
+    const activity = typeof sequentialJournalActivity === "function"
+      ? sequentialJournalActivity(journal)
+      : journal.status === "failed" ? "terminal-failed" : "active";
+    if (activity === "retrying") {
+      console.log(
+        "Retrying recoverable attempt(s) for #" + issue.number +
+          "; prior failure diagnostics remain in bounded attempt history and are not current terminal state.",
+      );
+    } else if (failedPhaseNames.length > 0) {
       console.log(
         "Retrying failed sequential phase(s) " + failedPhaseNames.map((name) => JSON.stringify(name)).join(", ") +
           " for #" + issue.number + "; completed phase receipts and issue identity are preserved.",
       );
-    } else if (journal.status === "failed") {
+    } else if (activity === "terminal-failed") {
       console.log(
         "Resuming manually recoverable journal state for #" + issue.number +
           "; delivery and recovery boundaries are preserved.",
@@ -3174,7 +3230,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     const repeatedAgentPhase = phases.find((phase) => {
       const record = phaseRecord(journal, phase.name);
       return phase.type === "agent" && record?.state === "failed" && record.failureReceipt !== undefined &&
-        ((record.failureHistory?.length ?? 0) >= 1 || record.failureReceipt.kind === "provider-interruption");
+        ((record.failureHistory?.length ?? 0) >= 1 || record.failureReceipt.kind === "provider-interruption" || record.failureReceipt.kind === "provider-auth-expired");
     });
     if (journal.providerStateRecovery?.state === "blocked") {
       throw new Error(journal.providerStateRecovery.recovery ??
@@ -3183,16 +3239,20 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     if (repeatedAgentPhase !== undefined) {
       const priorRecovery = journal.providerStateRecovery;
       const latestRecovery = priorRecovery?.epochs.at(-1);
+      const authenticationExpiry = phaseRecord(journal, repeatedAgentPhase.name)?.failureReceipt?.kind === "provider-auth-expired";
+      const recoveryEpochLimit = authenticationExpiry ? 1 : providerStateRecoveryMaxEpochs;
       // A crash after quarantine but before the phase starts leaves a
       // scheduled epoch. Reuse that already-isolated home rather than moving
       // it again or consuming another automatic retry.
       if (priorRecovery?.state === "active" && latestRecovery?.phase === repeatedAgentPhase.name && latestRecovery.state === "scheduled") {
         providerStateHomeName = latestRecovery.stateHomeName;
-      } else if ((priorRecovery?.epochs.length ?? 0) >= providerStateRecoveryMaxEpochs) {
-        const recovery = "Fresh provider-state recovery exhausted after " + providerStateRecoveryMaxEpochs +
+      } else if ((priorRecovery?.epochs.length ?? 0) >= recoveryEpochLimit) {
+        const recovery = "Fresh provider-state recovery exhausted after " + recoveryEpochLimit +
           " isolated retry attempts for agent phase " + JSON.stringify(repeatedAgentPhase.name) +
           ". Preserved state homes: " + JSON.stringify((priorRecovery?.epochs ?? []).map((entry) => entry.quarantinePath ?? entry.stateHomeName)) +
-          ". Inspect the preserved branch and state homes, then resume with: " + resumeRecoveryCommand();
+          (authenticationExpiry
+            ? ". Refresh the host Codex login with: codex login. Then inspect the preserved branch and state homes before resuming with: "
+            : ". Inspect the preserved branch and state homes, then resume with: ") + resumeRecoveryCommand();
         const epochs = (priorRecovery?.epochs ?? []).map((entry, index, entries) =>
           index === entries.length - 1 ? { ...entry, state: "blocked" } : entry);
         journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
@@ -3518,7 +3578,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           // credentials or unbounded output.
           const kind = boundedFailureKind(failure.error, failure.phase.type === "agent");
           const recovery = "Inspect the preserved branch, correct the phase, then resume with: " + resumeRecoveryCommand();
-          const failureSummary = failureSummaryFor(failure.error);
+          const authenticationExpiry = failure.phase.type === "agent" && providerAuthenticationExpiryFor(failure.error);
+          const failureSummary = authenticationExpiry ? undefined : failureSummaryFor(failure.error);
           const phaseBeforeFailure = phaseRecord(journal, failure.phase.name);
           journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
             phases: [...journal.phases.filter((item) => item.name !== failure.phase.name), {
@@ -3603,7 +3664,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           env: { GOOCASTLE_ISSUE_NUMBER: String(issue.number), GOOCASTLE_PHASE_WORKER: "1" },
         }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
         try {
-          const evidenceResult = await runBatch(evidenceSandbox, [phase]);
+          // The capture command remains exact for receipts and journal
+          // identity.  Only the launched argv is wrapped, and only when the
+          // reviewed runtime contract declares its isolated Xvfb display.
+          const executionPhase = evidenceConfig?.capturePhase === phase.name && phase.type === "command"
+            ? { ...phase, command: runtimeEvidenceCaptureCommand(phase.command, evidenceConfig.runtime) }
+            : phase;
+          const evidenceResult = await runBatch(evidenceSandbox, [executionPhase]);
           if (evidenceResult !== undefined) workflowResults.push(evidenceResult);
         } finally {
           const closed = await evidenceSandbox.close();
@@ -3790,20 +3857,23 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       throw new Error("Runtime screenshot evidence artifact is still pending; inspect the preserved worktree and resume after its host commit succeeds");
     }
     const branchHead = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
-    if (branchHead === baseHead) {
-      throw new Error("Workflow produced no commits to integrate for #" + issue.number);
-    }
-    journal = await requireSignedPhaseCommits(
-      journal,
-      signingBoundary("integration", String(issue.number)),
-      baseHead,
-      branchHead,
-    );
-    await restoreHostGitConfig();
+    const deliveryBase = await deliveryBaseSha(branch, branchHead);
     const integrationSha = journal.integrationSha ?? branchHead;
     if (journal.integrationSha && journal.integrationSha !== branchHead) {
       throw new Error("Cannot resume #" + issue.number + ": branch " + branch + " changed from expected SHA " + journal.integrationSha + " to " + branchHead);
     }
+    if (branchHead === deliveryBase && journal.integrationSha === undefined) {
+      throw new Error("Workflow produced no commits to integrate for #" + issue.number);
+    }
+    if (branchHead !== deliveryBase) {
+      journal = await requireSignedPhaseCommits(
+        journal,
+        signingBoundary("integration", String(issue.number)),
+        deliveryBase,
+        branchHead,
+      );
+    }
+    await restoreHostGitConfig();
     // Runtime evidence is a delivery prerequisite. Post its exact receipt
     // before merge/push so a pending comment cannot leave a partially
     // delivered issue with no resumable evidence boundary. A legacy journal
@@ -3818,11 +3888,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     if (journal.merge !== "complete") {
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, { integrationSha, merge: "started", status: "active" });
       const currentHead = hostGit(["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
-      if (currentHead === baseHead) {
-        hostGit(["merge-base", "--is-ancestor", baseHead, integrationSha]);
+      if (currentHead !== integrationSha) {
+        hostGit(["merge-base", "--is-ancestor", currentHead, deliveryBase]);
         hostGit(["merge", "--ff-only", branch], { stdio: "inherit" });
-      } else if (currentHead !== integrationSha) {
-        throw new Error("Cannot resume #" + issue.number + ": expected HEAD " + baseHead + " or " + integrationSha + ", found " + currentHead + ". Inspect " + branch);
       }
       if (hostGit(["rev-parse", "HEAD"], { encoding: "utf8" }).trim() !== integrationSha) throw new Error("Merge did not produce expected SHA " + integrationSha);
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, { merge: "complete" });
@@ -3833,7 +3901,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, { push: "started" });
       const beforePush = await remoteSha();
       if (beforePush !== integrationSha) {
-        if (beforePush !== baseHead) throw new Error("Refusing to push #" + issue.number + ": origin/" + baseBranch + " is " + beforePush + ", expected " + baseHead + " or " + integrationSha);
+        if (beforePush !== deliveryBase) throw new Error("Refusing to push #" + issue.number + ": origin/" + baseBranch + " is " + beforePush + ", expected " + deliveryBase + " or " + integrationSha);
         await pushAndReconcile(integrationSha);
       }
     }
@@ -3869,15 +3937,22 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     const predecessorWork = providerInterruption && failedPhase !== undefined
       ? predecessorWorkReceiptFor(failedPhase.name, taskWorktree?.worktreePath ?? sandbox?.worktreePath)
       : undefined;
+    const providerAuthenticationExpiry = failedPhase?.type === "agent" && providerAuthenticationExpiryFor(error);
     const providerStateLoss = failedPhase?.type === "agent" && providerStateLossFor(error);
-    const providerRecoveryLabel = providerStateLoss ? "Codex rollout/thread state loss" : "provider interruption";
+    const providerRecoveryLabel = providerAuthenticationExpiry
+      ? "expired Codex authentication"
+      : providerStateLoss ? "Codex rollout/thread state loss" : "provider interruption";
+    const providerRecoveryEpochLimit = providerAuthenticationExpiry ? 1 : providerStateRecoveryMaxEpochs;
     const kind = boundedFailureKind(error, failedPhase?.type === "agent");
     const recoveryCommand = resumeRecoveryCommand();
-    const failureSummary = failureSummaryFor(error);
+    // OAuth error payloads can include credential material. The classifier
+    // consumes them transiently, but the durable receipt records only the
+    // host-owned provider-auth-expired marker and recovery command.
+    const failureSummary = providerAuthenticationExpiry ? undefined : failureSummaryFor(error);
     // Setup failures (before an agent command exists) have no command
     // failure summary. Preserve one bounded diagnostic so recovery does not
     // collapse a concrete sandbox/worktree error into an opaque "error".
-    const exceptionDiagnostic = failureSummary === undefined && error instanceof Error
+    const exceptionDiagnostic = !providerAuthenticationExpiry && failureSummary === undefined && error instanceof Error
       ? error.message.replace(/[\r\n\0]+/gu, " ").slice(0, 1_000)
       : "";
     const daemonOperation = daemonOperationFor(error);
@@ -3991,7 +4066,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     const providerRecoveryCanRetry = providerInterruption &&
       providerBranchIsValid &&
       currentProviderRecovery?.state !== "blocked" &&
-      providerRecoveryAttempts < providerStateRecoveryMaxEpochs &&
+      providerRecoveryAttempts < providerRecoveryEpochLimit &&
       journal.merge === "pending" && journal.push === "pending" && journal.remoteVerification === "pending" && journal.issueClose === "pending";
     if (providerRecoveryCanRetry) {
       const recoveryAttempt = providerRecoveryAttempts + 1;
@@ -4000,7 +4075,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         "Recoverable " + providerRecoveryLabel + " in agent phase " + JSON.stringify(failedPhase.name) + " for #" + issue.number +
         "; preserved worktree and journal are valid. Re-entering with a fresh provider session after " +
         String(waitMs) + "ms backoff (automatic recovery attempt " + String(recoveryAttempt) + "/" +
-        String(providerStateRecoveryMaxEpochs) + ").",
+        String(providerRecoveryEpochLimit) + ").",
       );
       if (waitMs > 0) await sleep(waitMs);
       // The same incomplete journal is selected on the next scheduler turn;
@@ -4009,11 +4084,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       task -= 1;
       continue;
     }
-    if (providerInterruption && currentProviderRecovery?.state === "active" && providerRecoveryAttempts >= providerStateRecoveryMaxEpochs) {
+    if (providerInterruption && currentProviderRecovery?.state === "active" && providerRecoveryAttempts >= providerRecoveryEpochLimit) {
       providerRecoveryEscalation =
-        "Automatic " + providerRecoveryLabel + " recovery exhausted after " + String(providerStateRecoveryMaxEpochs) +
+        "Automatic " + providerRecoveryLabel + " recovery exhausted after " + String(providerRecoveryEpochLimit) +
         " fresh provider-state attempts for agent phase " + JSON.stringify(failedPhase.name) +
-        ". Preserved branch and provider state homes remain in the durable journal. Inspect them, then resume with: " + resumeRecoveryCommand();
+        (providerAuthenticationExpiry
+          ? ". Refresh the host Codex login with: codex login. Preserved branch and provider state homes remain in the durable journal; inspect them before resuming with: "
+          : ". Preserved branch and provider state homes remain in the durable journal. Inspect them, then resume with: ") + resumeRecoveryCommand();
       const epochs = currentProviderRecovery.epochs.map((entry, index, entries) =>
         index === entries.length - 1 ? { ...entry, state: "blocked" } : entry);
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
@@ -4023,7 +4100,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         phases: journal.phases.map((record) => record.name !== failedPhase.name ? record : {
           ...record,
           state: "failed",
-          failureReceipt: { ...record.failureReceipt, kind: "provider-interruption", recovery: providerRecoveryEscalation },
+          failureReceipt: { ...record.failureReceipt, kind, recovery: providerRecoveryEscalation },
         }),
       });
     }
