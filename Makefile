@@ -41,7 +41,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	kbredir potato pycat rune secretpathway tinyfugue trebuchet tapeutils heroic-gogdl \
 	vt05 weidu blincolnlights pdp10-its-disassembler itstar pdp11 pdp6 uc-explorer \
 	azurra-gtk-theme pdp10-xpl-pdp-10 faugus-launcher react-blessed wanderers \
-	clojure-roguelike astx acehack bell-labs-rogue7
+	clojure-roguelike astx acehack bell-labs-rogue7 aquarium-arena
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -58,6 +58,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-itstar check-pdp11 check-azurra-gtk-theme check-pdp6 check-pdp10-xpl-pdp-10 check-faugus-launcher \
 	check-react-blessed check-shadow-over-darkmoor \
 	check-clojure-roguelike \
+	check-aquarium-arena \
 	check-bell-labs-rogue7 \
 	check-astx \
 	check-acehack \
@@ -216,6 +217,9 @@ check-astx:
 check-acehack:
 	GUIX="$(GUIX)" tests/acehack-smoke.sh
 
+check-aquarium-arena:
+	GUIX="$(GUIX)" tests/aquarium-arena-smoke.sh
+
 check-wanderers:
 	GUIX="$(GUIX)" tests/wanderers-smoke.sh
 
@@ -237,7 +241,7 @@ check: check-source-count check-sentinelone check-datamosh-security \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
 	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-bell-labs-rogue7 check-astx check-acehack check-wanderers check-emacs-org-popup-posframe \
-	check-emacs-forth-mode check-emacs-aidermacs
+	check-emacs-forth-mode check-emacs-aidermacs check-aquarium-arena
 	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
