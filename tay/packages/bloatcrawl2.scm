@@ -58,10 +58,8 @@
               ;; Python 3.11 removed the old collections.MutableMapping
               ;; alias used by this release's YAML generator.
               (substitute* "util/species-gen.py"
-                (("import collections\\n")
-                 "import collections\nfrom collections.abc import MutableMapping\n")
                 (("class Species\\(collections\\.MutableMapping\\):")
-                 "class Species(MutableMapping):"))))
+                 "from collections.abc import MutableMapping\n\nclass Species(MutableMapping):"))))
           (replace 'build
             (lambda _
               ;; An empty TILES value selects the console build and avoids
