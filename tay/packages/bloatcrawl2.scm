@@ -251,6 +251,12 @@ deadline = time.monotonic() + 20
                      port)
                     (display "  \"$mkdir\" -p \"$state\"\n" port)
                     (display "  export CRAWL_DIR=\"$state\"\n" port)
+                    ;; Bloatcrawl 2 also creates its legacy .crawl directory
+                    ;; below HOME for macros and cache data, even when
+                    ;; CRAWL_DIR is set.  Keep that data in the same XDG-owned
+                    ;; state root rather than leaking it into the caller's
+                    ;; home directory.
+                    (display "  export HOME=\"$state\"\n" port)
                     (display "  export TERMINFO_DIRS=\"$terminfo" port)
                     (display "${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"\n" port)
                     (display "}\nrun_game() {\n  prepare_environment\n" port)
