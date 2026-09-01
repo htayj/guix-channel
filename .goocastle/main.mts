@@ -1517,6 +1517,11 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
   const entries = status.split("\0").filter(Boolean);
   const expected = "?? " + evidenceConfig.artifactPath;
   const expectedStaged = "A  " + evidenceConfig.artifactPath;
+  // A preceding implementation or audit may have committed a preliminary
+  // image at the declared path.  The final host capture is still safe when it
+  // is the sole modification of that same artifact.
+  const expectedModified = " M " + evidenceConfig.artifactPath;
+  const expectedModifiedStaged = "M  " + evidenceConfig.artifactPath;
   const artifactCommitSubject = "test(runtime): record package screenshot for #" + String(issueNumber);
   let artifactCommitSha;
   if (entries.length === 0) {
@@ -1550,8 +1555,8 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
     journal = signed.journal;
     artifactCommitSha = signed.head;
     journal = await recordUnsignedCommit(journal, signingBoundary("runtime-evidence", capturePhase));
-  } else if (entries.length !== 1 || (entries[0] !== expected && entries[0] !== expectedStaged)) {
-    throw new Error("Runtime screenshot capture must produce exactly the declared untracked artifact " + JSON.stringify(evidenceConfig.artifactPath) + "; inspect the preserved branch and remove unrelated changes before resuming");
+  } else if (entries.length !== 1 || ![expected, expectedStaged, expectedModified, expectedModifiedStaged].includes(entries[0]!)) {
+    throw new Error("Runtime screenshot capture must produce exactly the declared artifact " + JSON.stringify(evidenceConfig.artifactPath) + "; inspect the preserved branch and remove unrelated changes before resuming");
   } else {
     const artifactStartSha = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
     if (journal.runtimeEvidence?.artifactStartSha !== undefined && journal.runtimeEvidence.artifactStartSha !== artifactStartSha) {
@@ -1586,10 +1591,15 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
       });
     }
     journal = await prepareCommitSigning(journal, signingBoundary("runtime-evidence", capturePhase));
-    if (entries[0] === expected) gitAt(taskWorktree.worktreePath, ["add", "--", evidenceConfig.artifactPath], { stdio: "inherit" });
+    if (entries[0] === expected || entries[0] === expectedModified) {
+      gitAt(taskWorktree.worktreePath, ["add", "--", evidenceConfig.artifactPath], { stdio: "inherit" });
+    }
     const staged = gitAt(taskWorktree.worktreePath, ["status", "--porcelain=v1", "-z"], { encoding: "utf8" }).split("\0").filter(Boolean);
-    if (staged.length !== 1 || staged[0] !== expectedStaged) {
-      throw new Error("Runtime screenshot artifact did not stage as a new file; inspect the preserved branch and resume after correcting the capture adapter");
+    const expectedFinalStaged = entries[0] === expected || entries[0] === expectedStaged
+      ? expectedStaged
+      : expectedModifiedStaged;
+    if (staged.length !== 1 || staged[0] !== expectedFinalStaged) {
+      throw new Error("Runtime screenshot artifact did not stage as the sole declared file; inspect the preserved branch and resume after correcting the capture adapter");
     }
     gitAt(taskWorktree.worktreePath, ["commit", "--no-verify", "-m", artifactCommitSubject], { stdio: "inherit" });
     const unsignedArtifactCommitSha = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
