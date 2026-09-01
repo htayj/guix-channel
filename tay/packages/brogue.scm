@@ -68,7 +68,10 @@
                 (mkdir-p bin)
                 ;; Keep the binary immutable and private to the wrapper.  The
                 ;; program receives the immutable data directory explicitly.
-                (install-file "bin/brogue" program)
+                ;; install-file takes a destination directory, so place the
+                ;; executable directly in libexec rather than creating a
+                ;; directory named after it.
+                (install-file "bin/brogue" libexec)
                 (for-each (lambda (file)
                             (install-file file assets))
                           '("bin/assets/tiles.png" "bin/assets/tiles.bin"))

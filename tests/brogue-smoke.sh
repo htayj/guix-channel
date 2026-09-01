@@ -31,9 +31,10 @@ find_program_output ()
     return 1
 }
 
-test -x "$brogue_out/bin/brogue"
-test -x "$brogue_out/libexec/brogue"
-test -x "$brogue_out/libexec/brogue-smoke-runner.py"
+test -f "$brogue_out/bin/brogue" && test -x "$brogue_out/bin/brogue"
+test -f "$brogue_out/libexec/brogue" && test -x "$brogue_out/libexec/brogue"
+test -f "$brogue_out/libexec/brogue-smoke-runner.py" && \
+    test -x "$brogue_out/libexec/brogue-smoke-runner.py"
 test -s "$brogue_out/share/brogue/assets/tiles.png"
 test -s "$brogue_out/share/brogue/assets/tiles.bin"
 test -s "$brogue_out/share/brogue/keymap.txt"
