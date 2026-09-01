@@ -101,7 +101,7 @@
                     (display "if pid == 0:\n    os.execv(program," port)
                     (display " [program, *args])\n\n" port)
                     (display "seen = b''\nsent_continue = False\n" port)
-                    (display "deadline = time.monotonic() + 15\nwhile True:\n" port)
+                    (display "deadline = time.monotonic() + 25\nwhile True:\n" port)
                     (display "    remaining = deadline - time.monotonic()\n" port)
                     (display "    if remaining <= 0:\n" port)
                     (display "        os.kill(pid, signal.SIGTERM)\n" port)
