@@ -160,13 +160,13 @@
                     (display " XDG_RUNTIME_DIR=\"$scratch/runtime\"" port)
                     (display " TERM=xterm-256color LC_ALL=C\n" port)
                     ;; The upstream arena is a deterministic, non-network
-                    ;; gameplay stress route; script supplies its PTY.
+                    ;; gameplay stress route; the runner supplies its PTY.
                     (display "  cd \"$scratch\"\n" port)
                     ;; The PTY runner waits for the result screen, then sends
                     ;; its one deterministic keypress so the game can exit.
                     (display "  \"$python\" \"$runner\" \"$program\" -seed 285" port)
                     (display " -no-save -name goocastle-smoke -arena" port)
-                    (display " 'rat v rat arena:small_deep_pool delay:0 t:1'\"" port)
+                    (display " 'rat v rat arena:small_deep_pool delay:0 t:1'" port)
                     (display " /dev/null >\"$scratch/arena.raw\"\n" port)
                     (display "  test -s \"$scratch/arena.raw\"" port)
                     (display " && test -s \"$scratch/arena.result\"\n" port)
