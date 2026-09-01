@@ -71,6 +71,7 @@
                 ;; Keep the executable private to the wrapper so every normal
                 ;; invocation receives the immutable data directory explicitly.
                 (install-file "bin/brogue" libexec)
+                (rename-file (string-append libexec "/brogue") program)
                 (install-file "bin/keymap.txt" data)
                 (for-each (lambda (file)
                             (install-file file doc))
