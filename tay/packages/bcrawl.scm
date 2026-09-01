@@ -139,6 +139,15 @@
                     (display " /dev/null >\"$scratch/arena.raw\"\n" port)
                     (display "  test -s \"$scratch/arena.raw\"" port)
                     (display " && test -s \"$scratch/arena.result\"\n" port)
+                    ;; arena.result is written by the upstream arena only
+                    ;; after it has completed its trials.  Its first line is
+                    ;; the deterministic win-loss[-tie] score.
+                    (display "  IFS= read -r arena_result" port)
+                    (display " <\"$scratch/arena.result\"\n" port)
+                    (display "  case \"$arena_result\" in *-*) ;; *)" port)
+                    (display " exit 1;; esac\n" port)
+                    (display "  case \"$arena_result\" in" port)
+                    (display " *[!0-9-]* | -* | *- | *--* | '') exit 1;; esac\n" port)
                     (display "  test -z \"$(\"$find\" \"$scratch/home\"" port)
                     (display " \"$scratch/config\" \"$scratch/cache\"" port)
                     (display " \"$scratch/state\" \"$scratch/runtime\"" port)
@@ -163,5 +172,11 @@ mutable saves and scores in @file{$XDG_DATA_HOME/bcrawl}, falling back to
 @file{$HOME/.local/share/bcrawl}.  It has no updater, telemetry, runtime
 download, or webtiles component.")
     ;; The root GPL-2-or-later license applies to the combined program.  The
-    ;; copied notices record CC0, LGPL-2.1, libpng, MIT, BSD, zlib, and Worley.
-    (license license:gpl2+)))
+    ;; terminal binary includes CC0 data plus BSD, MIT, Apache-2.0 and zlib
+    ;; components; the copied notices also record LGPL-2.1 and the
+    ;; FSDG-compatible libpng terms.
+    (license (list license:gpl2+ license:cc0 license:bsd-2 license:bsd-3
+                   license:expat license:asl2.0 license:zlib
+                   (license:fsdg-compatible
+                    "https://www.libpng.org/pub/png/src/libpng-LICENSE.txt")
+                   license:lgpl2.1+))))
