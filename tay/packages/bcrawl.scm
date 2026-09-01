@@ -1,0 +1,162 @@
+;;; GNU Guix package for the bcrawl terminal roguelike.
+
+(define-module (tay packages bcrawl)
+  #:use-module (guix build-system gnu)
+  #:use-module (guix gexp)
+  #:use-module (guix git-download)
+  #:use-module (guix packages)
+  #:use-module ((guix licenses) #:prefix license:)
+  #:use-module (gnu packages base)
+  #:use-module (gnu packages bash)
+  #:use-module (gnu packages bison)
+  #:use-module (gnu packages compression)
+  #:use-module (gnu packages compiler-tools)
+  #:use-module (gnu packages linux)
+  #:use-module (gnu packages lua)
+  #:use-module (gnu packages ncurses)
+  #:use-module (gnu packages perl)
+  #:use-module (gnu packages pkg-config)
+  #:use-module (gnu packages python)
+  #:use-module (gnu packages python-xyz)
+  #:use-module (gnu packages sqlite))
+
+(define-public bcrawl
+  (package
+    (name "bcrawl")
+    ;; The bcrawl-1.42.1 tag, published on 2025-01-13.
+    (version "1.42.1")
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/b-crawl/bcrawl")
+             (commit "d9800d219b5e0ab840c8065e44f875fa19dd63ff")))
+       (file-name (git-file-name name version))
+       ;; Recursive hash of the tracked tag tree.  Git metadata and gitlink
+       ;; contents are absent: the terminal build uses Guix libraries.
+       (sha256
+        (base32 "1jn7qf3pjzq0rvzggdknnzc6krkj0d8fqppgfggfq975mkxlnnvx"))))
+    (build-system gnu-build-system)
+    (arguments
+     (list
+      ;; The source suite requires fake_pty and diagnostic options.  The
+      ;; installed game is exercised by tests/bcrawl-smoke.sh instead.
+      #:tests? #f
+      #:phases
+      #~(modify-phases %standard-phases
+          (delete 'configure)
+          (add-after 'unpack 'enter-source-directory
+            (lambda _
+              (chdir "crawl-ref/source")
+              ;; git-fetch supplies no .git directory, so give Makefile's
+              ;; documented version fallback the fixed upstream tag.
+              (call-with-output-file "util/release_ver"
+                (lambda (port) (display "bcrawl-1.42.1\n" port)))))
+          (replace 'build
+            (lambda _
+              ;; TILES is empty: no SDL, font, or tile source/asset is used.
+              ;; The old SQLite probe assumes /usr/include, so set its input.
+              (invoke "make" "crawl"
+                      (string-append "DATADIR=" #$output "/share/bcrawl")
+                      (string-append "SQLITE_INCLUDE_DIR=" #$sqlite "/include")
+                      "FORCE_CC=gcc" "FORCE_CXX=g++"
+                      "LUA_PACKAGE=lua5.1" "TILES="
+                      "NO_TRY_LLD=YesPlease" "NO_TRY_GOLD=YesPlease")))
+          (replace 'install
+            (lambda _
+              (let* ((data (string-append #$output "/share/bcrawl"))
+                     (doc (string-append #$output "/share/doc/bcrawl"))
+                     (libexec (string-append #$output "/libexec"))
+                     (bin (string-append #$output "/bin"))
+                     (program (string-append libexec "/bcrawl"))
+                     (launcher (string-append bin "/bcrawl")))
+                ;; Upstream install also manages mutable paths.  install-data
+                ;; only copies immutable console assets and documentation.
+                (invoke "make" "install-data"
+                        (string-append "DATADIR=" data)
+                        (string-append "SQLITE_INCLUDE_DIR=" #$sqlite "/include")
+                        "FORCE_CC=gcc" "FORCE_CXX=g++"
+                        "LUA_PACKAGE=lua5.1" "TILES="
+                        "NO_TRY_LLD=YesPlease" "NO_TRY_GOLD=YesPlease")
+                (mkdir-p libexec)
+                (mkdir-p bin)
+                (mkdir-p doc)
+                (install-file "crawl" libexec)
+                ;; LICENSE applies to the program as a whole.  CREDITS and
+                ;; the compatible component notices cover installed assets.
+                (install-file "../../LICENSE" doc)
+                (install-file "../CREDITS.txt" doc)
+                (copy-recursively "../docs/license"
+                                  (string-append doc "/license"))
+                (call-with-output-file launcher
+                  (lambda (port)
+                    (format port "#!~a/bin/sh~%" #$bash-minimal)
+                    (format port "program=~s~%output=~s~%" program #$output)
+                    (format port "mkdir=~s~%mktemp=~s~%rm=~s~%find=~s~%script=~s~%"
+                            #$(file-append coreutils-minimal "/bin/mkdir")
+                            #$(file-append coreutils-minimal "/bin/mktemp")
+                            #$(file-append coreutils-minimal "/bin/rm")
+                            #$(file-append findutils "/bin/find")
+                            #$(file-append util-linux "/bin/script"))
+                    (format port "terminfo=~s~%"
+                            #$(file-append ncurses "/share/terminfo"))
+                    (display "set -eu\nrun_game() {\n" port)
+                    (display "  state=\"${XDG_DATA_HOME:-${HOME:?HOME or " port)
+                    (display "XDG_DATA_HOME must be set}/.local/share}/bcrawl\"\n"
+                             port)
+                    (display "  \"$mkdir\" -p \"$state\"\n" port)
+                    (display "  export CRAWL_DIR=\"$state\"\n" port)
+                    (display "  export TERMINFO_DIRS=\"$terminfo" port)
+                    (display "${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"\n" port)
+                    (display "  exec \"$program\" \"$@\"\n}\n" port)
+                    (display "if test \"${1:-}\" = --smoke" port)
+                    (display " && test \"$#\" -eq 1; then\n" port)
+                    (display "  scratch=$(\"$mktemp\" -d" port)
+                    (display " \"${TMPDIR:-/tmp}/bcrawl-smoke.XXXXXXXX\")\n" port)
+                    (display "  trap '\"$rm\" -rf \"$scratch\"' EXIT HUP INT TERM\n" port)
+                    (display "  \"$mkdir\" -p \"$scratch/home\" \"$scratch/config\"" port)
+                    (display " \"$scratch/cache\" \"$scratch/data\"" port)
+                    (display " \"$scratch/state\"" port)
+                    (display " \"$scratch/runtime\"\n" port)
+                    (display "  export HOME=\"$scratch/home\"" port)
+                    (display " XDG_CONFIG_HOME=\"$scratch/config\"" port)
+                    (display " XDG_CACHE_HOME=\"$scratch/cache\"" port)
+                    (display " XDG_DATA_HOME=\"$scratch/data\"" port)
+                    (display " XDG_STATE_HOME=\"$scratch/state\"" port)
+                    (display " XDG_RUNTIME_DIR=\"$scratch/runtime\"" port)
+                    (display " TERM=xterm-256color LC_ALL=C\n" port)
+                    ;; The upstream arena is a deterministic, non-network
+                    ;; gameplay stress route; script supplies its PTY.
+                    (display "  cd \"$scratch\"\n" port)
+                    (display "  \"$script\" -qefc \"exec $program -seed 285" port)
+                    (display " -no-save -name goocastle-smoke -arena" port)
+                    (display " 'rat v rat arena:small_deep_pool delay:0 t:1'\"" port)
+                    (display " /dev/null >\"$scratch/arena.raw\"\n" port)
+                    (display "  test -s \"$scratch/arena.raw\"" port)
+                    (display " && test -s \"$scratch/arena.result\"\n" port)
+                    (display "  test -z \"$(\"$find\" \"$scratch/home\"" port)
+                    (display " \"$scratch/config\" \"$scratch/cache\"" port)
+                    (display " \"$scratch/state\" \"$scratch/runtime\"" port)
+                    (display " -mindepth 1 -print -quit)\"\n" port)
+                    (display "  test -d \"$scratch/data/bcrawl\"" port)
+                    (display " && test ! -w \"$output\"\n" port)
+                    (display "  printf '%s\\n'" port)
+                    (display " 'bcrawl smoke: arena gameplay OK; no store writes'\n" port)
+                    (display "  exit 0\nfi\n" port)
+                    (display "run_game \"$@\"\n" port)))
+                (chmod launcher #o555)))))))
+    (native-inputs (list bison flex perl pkg-config python python-pyyaml which))
+    (inputs (list bash-minimal coreutils-minimal findutils lua-5.1 ncurses
+                  sqlite util-linux zlib))
+    (home-page "https://github.com/b-crawl/bcrawl")
+    (synopsis "Terminal fork of Dungeon Crawl Stone Soup")
+    (description
+     "Bcrawl is an independently playable fork of Dungeon Crawl Stone Soup.
+This package builds and installs only its terminal frontend; it does not fetch,
+build, or install tile, sound, SDL, or font submodules.  The launcher keeps
+mutable saves and scores in @file{$XDG_DATA_HOME/bcrawl}, falling back to
+@file{$HOME/.local/share/bcrawl}.  It has no updater, telemetry, runtime
+download, or webtiles component.")
+    ;; The root GPL-2-or-later license applies to the combined program.  The
+    ;; copied notices record CC0, LGPL-2.1, libpng, MIT, BSD, zlib, and Worley.
+    (license license:gpl2+)))
