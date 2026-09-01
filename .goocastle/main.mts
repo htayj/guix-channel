@@ -1550,8 +1550,12 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
     // Recover that artifact only when it remains the sole commit which added
     // the declared path and no descendant has changed the image again.
     const laterArtifactRecovery = (() => {
-      const start = journal.runtimeEvidence?.artifactStartSha;
-      if (start === undefined) return undefined;
+      // Older journals began the evidence boundary after capture and therefore
+      // lack artifactStartSha.  Their merge base is still a bounded, branch
+      // local lower limit for locating the sole deterministic artifact commit.
+      const start = journal.runtimeEvidence?.artifactStartSha ?? hostGit(
+        ["merge-base", candidate, "origin/master"], { encoding: "utf8" },
+      ).trim();
       let commits: string[];
       try {
         commits = hostGit(["rev-list", "--ancestry-path", start + ".." + candidate], { encoding: "utf8" })
