@@ -11,22 +11,20 @@
   (specifications->manifest
    (list "bash"
          "coreutils"
-         "curl"
+         "file"
          "findutils"
-         "gawk"
          "glibc-locales"
          "git"
+         "guix"
          "gnupg"
          "github-cli"
          "gzip"
          "grep"
-         "jq"
-         "guix"
-         "make"
          "node"
          "nss-certs"
+         "python"
          "ripgrep"
          "sed"
-         "tar"
+         "unzip"
          "xxd"))
-  (packages->manifest (list goocastle-gitleaks))))
+  (packages->manifest (list goocastle-gitleaks goocastle-xvfb-run))))
