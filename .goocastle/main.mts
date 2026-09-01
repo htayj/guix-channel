@@ -3086,10 +3086,6 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       ? materializeIssueWorkflow(resolvedGooflow.workflow, issue, resolvedGooflow.issueLabelPrefix ?? "gooflow:")
       : undefined;
     dispositionPolicy = materializedGooflow?.disposition;
-    journal = await reconcileBaseAdvance(journal, issue.number, dispositionPolicy);
-    baseHead = journal.reconciliation?.state === "complete"
-      ? journal.reconciliation.reconciledBaseSha
-      : journal.baseSha;
     const failureEvidenceFor = (candidateJournal) => {
       const failed = [...candidateJournal.phases].reverse().find((phase) => phase.state === "failed" && phase.failureReceipt?.failureSummary);
       return failed?.failureReceipt?.failureSummary === undefined ? "" : failureDiagnosticFor(failed.failureReceipt.failureSummary);
@@ -3160,6 +3156,32 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       (journal.runtimeEvidence.artifact !== "complete" || journal.runtimeEvidence.comment !== "complete")) {
       throw new Error("Runtime evidence receipt for #" + issue.number + " is pending but the selected Gooflow no longer declares it; restore the original evidence configuration before resuming");
     }
+    // A host capture can be complete while its commit boundary is pending (for
+    // example, when delivery was interrupted after a review refreshed the
+    // same evidence file).  Finalize that verified, sole artifact before
+    // reconciliation: a rebase cannot safely reset a task worktree with that
+    // intentional uncommitted capture.
+    const pendingEvidenceWorktree = evidenceConfig !== undefined &&
+      journal.runtimeEvidence?.artifact === "started" &&
+      journal.runtimeEvidence.runtimeAssertion !== undefined &&
+      phaseRecord(journal, evidenceConfig.proofPhase)?.state === "complete" &&
+      phaseRecord(journal, evidenceConfig.capturePhase)?.state === "complete"
+      ? branchWorktreePath(branch)
+      : undefined;
+    if (pendingEvidenceWorktree !== undefined) {
+      journal = await runtimeEvidenceArtifactCommit(
+        journal,
+        evidenceConfig!,
+        evidenceConfig!.capturePhase,
+        { worktreePath: pendingEvidenceWorktree },
+        branch,
+        issue.number,
+      );
+    }
+    journal = await reconcileBaseAdvance(journal, issue.number, dispositionPolicy);
+    baseHead = journal.reconciliation?.state === "complete"
+      ? journal.reconciliation.reconciledBaseSha
+      : journal.baseSha;
     // The generated template fallback has the same hard phase wall-time
     // contract as a materialized Gooflow. Keep the legacy resource wall cap
     // out of the phase invocation so timeout receipts remain distinct from
