@@ -128,7 +128,9 @@ class Species(MutableMapping):"))))
                     (display " [program, *args])\n\n" port)
                     (display "sent_weapon = False\nsent_begin = False\n" port)
                     (display "sent_play = False\n" port)
-                    (display "sent_quit = False\nseen = b''\n" port)
+                    (display "sent_quit = False\nsent_more = False\n" port)
+                    (display "sent_inventory = False\nsent_goodbye = False\n" port)
+                    (display "seen = b''\n" port)
                     (display "quit_after = None
 deadline = time.monotonic() + 20
 " port)
@@ -184,12 +186,27 @@ deadline = time.monotonic() + 20
                     ;; release asks for the literal word "yes" before Enter.
                     (display "        os.write(master, b'\\x11yes\\r')\n" port)
                     (display "        sent_quit = True\n\n" port)
+                    ;; Quitting shows the end-game pager, inventory summary,
+                    ;; and final goodbye screen in this release.
+                    (display "    if (sent_quit and not sent_more and " port)
+                    (display "b'--more--' in seen):\n" port)
+                    (display "        os.write(master, b' ')\n" port)
+                    (display "        sent_more = True\n" port)
+                    (display "    if (sent_more and not sent_inventory and " port)
+                    (display "b'Inventory:' in seen):\n" port)
+                    (display "        os.write(master, b'\\x1b')\n" port)
+                    (display "        sent_inventory = True\n" port)
+                    (display "    if (sent_inventory and not sent_goodbye and " port)
+                    (display "b'Goodbye, Goocastle.' in seen):\n" port)
+                    (display "        os.write(master, b'\\r')\n" port)
+                    (display "        sent_goodbye = True\n\n" port)
                     (display "_, status = os.waitpid(pid, 0)\n" port)
                     (display
                      "if (not sent_weapon or not sent_begin or not sent_play
 "
                      port)
-                    (display "        or not sent_quit\n" port)
+                    (display "        or not sent_quit or not sent_more\n" port)
+                    (display "        or not sent_inventory or not sent_goodbye\n" port)
                     (display "        or b'choice of weapons' not in seen " port)
                     (display "or b'Health:' not in seen\n" port)
                     (display
