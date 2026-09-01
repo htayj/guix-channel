@@ -261,6 +261,21 @@
         },
         "successMarker": "bcrawl smoke: terminal UI OK; no store writes"
       }
+    },
+    {
+      "issueNumber": 661,
+      "packageName": "bloatcrawl2",
+      "artifactPath": ".goocastle/evidence/issue-661.png",
+      "runtime": {
+        "executable": "bloatcrawl2",
+        "invocation": {
+          "file": "bloatcrawl2",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "bloatcrawl2 smoke: terminal UI OK; no store writes"
+      }
     }
   ]
 }
