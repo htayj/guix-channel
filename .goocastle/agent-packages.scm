@@ -27,8 +27,10 @@
               (lambda* (#:key outputs #:allow-other-keys)
                 (let* ((bin (string-append (assoc-ref outputs "out") "/bin"))
                        (program (string-append bin "/xvfb-run")))
-                  (substitute* program
-                    ((""[$]@" 2>&1") ""$@""))
+                  ;; Avoid substitute* here: its pattern-binding syntax treats
+                  ;; shell's dollar-at argument expansion as a Scheme match variable.  Sed's bracket
+                  ;; expression keeps the literal dollar sign intact.
+                  (invoke "sed" "-i" "s/\"[$]@\" 2>&1/\"[$]@\"/" program)
                   (rename-file program (string-append bin "/goocastle-xvfb-run")))))))))
     (synopsis "Run X11 commands in Xvfb without merging their output streams")))
 
