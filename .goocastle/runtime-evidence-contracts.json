@@ -29,6 +29,68 @@
       }
     },
     {
+      "issueNumber": 646,
+      "packageName": "talmudifier",
+      "artifactPath": ".goocastle/evidence/issue-646.png",
+      "runtime": {
+        "executable": "talmudifier",
+        "invocation": {
+          "file": "talmudifier",
+          "args": []
+        },
+        "successMarker": "TALMUDIFIER_RUNTIME_OK"
+      }
+    },
+    {
+      "issueNumber": 647,
+      "packageName": "ai-code-interface-el",
+      "artifactPath": ".goocastle/evidence/issue-647.png",
+      "runtime": {
+        "executable": "ai-code-interface-el",
+        "invocation": {
+          "file": "ai-code-interface-el",
+          "args": [
+            "--batch",
+            "-Q",
+            "--eval",
+            "(let ((exec-path nil) (process-environment (cons \"PATH=\" process-environment))) (require 'ai-code) (unless (and (featurep 'ai-code) (commandp 'ai-code-menu) (string= (ai-code-current-backend-label) \"Claude Code\")) (error \"ai-code no-provider load assertion failed\")) (princ \"AI_CODE_RUNTIME_OK\\n\"))"
+          ]
+        },
+        "successMarker": "AI_CODE_RUNTIME_OK"
+      }
+    },
+    {
+      "issueNumber": 648,
+      "packageName": "wenyan",
+      "artifactPath": ".goocastle/evidence/issue-648.png",
+      "runtime": {
+        "executable": "wenyan",
+        "invocation": {
+          "file": "wenyan",
+          "args": [
+            "--no-outputHanzi",
+            "examples/helloworld.wy"
+          ]
+        },
+        "successMarker": "問天地好在。"
+      }
+    },
+    {
+      "issueNumber": 649,
+      "packageName": "aquesttoofar",
+      "artifactPath": ".goocastle/evidence/issue-649.png",
+      "runtime": {
+        "executable": "aquesttoofar",
+        "invocation": {
+          "file": "aquesttoofar",
+          "args": [
+            "--goocastle-runtime-check"
+          ]
+        },
+        "successMarker": "AQUESTTOOFAR_RUNTIME_OK"
+      }
+    },
+    {
       "issueNumber": 650,
       "packageName": "acehack",
       "artifactPath": ".goocastle/evidence/issue-650.png",
