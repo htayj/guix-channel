@@ -102,7 +102,7 @@ proof=$(cd "$scratch/work" && \
     "$brogue_out/bin/brogue" --guix-smoke)
 test "$proof" = 'brogue isolated smoke passed'
 test -s "$raw"
-grep -aF 'Brogue' "$raw" >/dev/null
+grep -aF 'Dungeons of Doom' "$raw" >/dev/null
 grep -aE 'HP|Health' "$raw" >/dev/null
 grep -aE 'Depth|Level' "$raw" >/dev/null
 grep -aF '@' "$raw" >/dev/null
