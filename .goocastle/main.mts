@@ -1545,8 +1545,48 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
     const reviewedArtifactRecovery = journal.runtimeEvidence?.artifactStartSha === undefined &&
       parents.length === 2 && changes.length === 2 && changes[0] === "A" &&
       changes[1] === evidenceConfig.artifactPath;
-    if (!normalArtifactRecovery && !reviewedArtifactRecovery) {
+    // A completed later phase may legitimately advance the branch after the
+    // screenshot was committed (for example, an audit-only formatting fix).
+    // Recover that artifact only when it remains the sole commit which added
+    // the declared path and no descendant has changed the image again.
+    const laterArtifactRecovery = (() => {
+      const start = journal.runtimeEvidence?.artifactStartSha;
+      if (start === undefined) return undefined;
+      let commits: string[];
+      try {
+        commits = hostGit(["rev-list", "--ancestry-path", start + ".." + candidate], { encoding: "utf8" })
+          .trim().split(/?
+/u).filter(Boolean).reverse();
+      } catch {
+        return undefined;
+      }
+      const matches = commits.filter((commit) => {
+        const commitParents = hostGit(["rev-list", "--parents", "-n", "1", commit], { encoding: "utf8" }).trim().split(" ").filter(Boolean);
+        const commitChanges = gitAt(taskWorktree.worktreePath, ["diff-tree", "--no-commit-id", "--name-status", "-r", "-z", commitParents[1] ?? commit, commit], { encoding: "utf8" }).split(" ").filter(Boolean);
+        return commitParents.length === 2 &&
+          hostGit(["show", "-s", "--format=%s", commit], { encoding: "utf8" }).trim() === artifactCommitSubject &&
+          commitChanges.length === 2 && commitChanges[0] === "A" && commitChanges[1] === evidenceConfig.artifactPath;
+      });
+      if (matches.length !== 1) return undefined;
+      const artifactCommit = matches[0]!;
+      const laterChanges = gitAt(taskWorktree.worktreePath, ["diff", "--name-only", artifactCommit + ".." + candidate, "--", evidenceConfig.artifactPath], { encoding: "utf8" }).trim();
+      return laterChanges === "" ? artifactCommit : undefined;
+    })();
+    if (!normalArtifactRecovery && !reviewedArtifactRecovery && laterArtifactRecovery === undefined) {
       throw new Error("Runtime screenshot artifact boundary is neither the declared untracked image nor an exact committed artifact; inspect the preserved branch before resuming");
+    }
+    if (laterArtifactRecovery !== undefined) {
+      artifactCommitSha = laterArtifactRecovery;
+      return await transitionSequentialTaskJournal(gitCommonDir, journal, {
+        runtimeEvidence: {
+          ...journal.runtimeEvidence,
+          artifact: "complete",
+          artifactSha256: artifact.sha256,
+          artifactBytes: artifact.bytes,
+          artifactFormat: artifact.format,
+          artifactCommitSha,
+        },
+      });
     }
     const artifactStartSha = normalArtifactRecovery
       ? journal.runtimeEvidence!.artifactStartSha!
