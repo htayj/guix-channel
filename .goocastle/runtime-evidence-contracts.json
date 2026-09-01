@@ -321,6 +321,21 @@
         },
         "successMarker": "brogue isolated smoke passed"
       }
+    },
+    {
+      "issueNumber": 665,
+      "packageName": "brogue-lite",
+      "artifactPath": ".goocastle/evidence/issue-665.png",
+      "runtime": {
+        "executable": "brogue-lite",
+        "invocation": {
+          "file": "brogue-lite",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "brogue lite isolated smoke passed"
+      }
     }
   ]
 }
