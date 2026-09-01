@@ -276,6 +276,21 @@
         },
         "successMarker": "bloatcrawl2 smoke: terminal UI OK; no store writes"
       }
+    },
+    {
+      "issueNumber": 662,
+      "packageName": "bootrogue",
+      "artifactPath": ".goocastle/evidence/issue-662.png",
+      "runtime": {
+        "executable": "bootrogue",
+        "invocation": {
+          "file": "bootrogue",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "BOOTROGUE_RUNTIME_OK"
+      }
     }
   ]
 }
