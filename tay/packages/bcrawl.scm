@@ -86,6 +86,7 @@
                 (mkdir-p bin)
                 (mkdir-p doc)
                 (install-file "crawl" libexec)
+                (rename-file (string-append libexec "/crawl") program)
                 ;; LICENSE applies to the program as a whole.  CREDITS and
                 ;; the compatible component notices cover installed assets.
                 (install-file "../../LICENSE" doc)
