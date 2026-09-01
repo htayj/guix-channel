@@ -2330,6 +2330,23 @@ const failureDiagnosticFor = (summary, maximum = 8_000) => {
     (summary.truncated === true ? "\n  [earlier or oversized output omitted]" : "");
   return diagnostic.length <= maximum ? diagnostic : diagnostic.slice(0, Math.max(0, maximum - 1)) + "…";
 };
+const exceptionDiagnosticFor = (error, maximum = 1_000) => {
+  const visited = new Set();
+  const messages = [];
+  let current = error;
+  for (let depth = 0; depth < 8 && current && typeof current === "object"; depth += 1) {
+    if (visited.has(current)) break;
+    visited.add(current);
+    if (current instanceof Error && current.message) {
+      const message = current.message.replace(/[\r\n\0]+/gu, " ")
+        .replace(/\b(?:gh[pours]_|github_pat_|sk-|xox[abprs]-|npm_)[A-Za-z0-9_.-]{12,}/giu, "[REDACTED]");
+      if (message && !messages.includes(message)) messages.push(message);
+    }
+    current = current.cause;
+  }
+  const diagnostic = messages.join(" Caused by: ");
+  return diagnostic.length <= maximum ? diagnostic : diagnostic.slice(0, Math.max(0, maximum - 1)) + "…";
+};
 
 // A required command defect is different from an unavailable host
 // prerequisite: the task branch can be repaired by re-entering the agent and
@@ -4048,8 +4065,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // Setup failures (before an agent command exists) have no command
     // failure summary. Preserve one bounded diagnostic so recovery does not
     // collapse a concrete sandbox/worktree error into an opaque "error".
-    const exceptionDiagnostic = !providerAuthenticationExpiry && failureSummary === undefined && error instanceof Error
-      ? error.message.replace(/[\r\n\0]+/gu, " ").slice(0, 1_000)
+    const exceptionDiagnostic = !providerAuthenticationExpiry && failureSummary === undefined
+      ? exceptionDiagnosticFor(error)
       : "";
     const daemonOperation = daemonOperationFor(error);
     const freshRecoveryNames = failedPhase === undefined
