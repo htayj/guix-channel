@@ -216,7 +216,8 @@
                 (chmod launcher #o555)))))))
     ;; Upstream's generated-source scripts use the unversioned `python'
     ;; interpreter name; python-wrapper supplies that name in the build PATH.
-    (native-inputs (list bison flex perl pkg-config python-wrapper which))
+    (native-inputs (list bison flex perl pkg-config python-pyyaml
+                         python-wrapper which))
     (inputs (list bash-minimal coreutils-minimal findutils lua-5.1 ncurses
                   python sqlite zlib))
     (home-page "https://github.com/Hellmonk/bloatcrawl2")
