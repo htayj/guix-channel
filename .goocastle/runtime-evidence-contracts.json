@@ -291,6 +291,21 @@
         },
         "successMarker": "BOOTROGUE_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 663,
+      "packageName": "brogue",
+      "artifactPath": ".goocastle/evidence/issue-663.png",
+      "runtime": {
+        "executable": "brogue",
+        "invocation": {
+          "file": "brogue",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "brogue isolated smoke passed"
+      }
     }
   ]
 }
