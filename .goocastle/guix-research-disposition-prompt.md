@@ -56,6 +56,14 @@ single-line stdout marker the proof will assert.  Use no `runtimeEvidence` for
 ticket's runtime-proof contract, so prose descriptions or an artifact path
 outside the repository do not substitute for it.
 
+Never use a version, help, or metadata-only invocation such as `--version` or
+`--help` as that runtime contract.  It must drive a meaningful, safe observable
+program state: for example an application-provided noninteractive smoke mode,
+a deterministic subcommand that exercises normal behavior, or a documented
+headless mode.  If upstream provides no such invocation and you cannot specify
+one as part of the package wrapper, choose `blocked` and name that missing
+runtime contract as the blocker.
+
 For every independently fetched source origin, including each Git submodule,
 record explicit license evidence at its exact fixed revision.  A parent
 repository's license never proves the license of a separately fetched submodule.
