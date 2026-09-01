@@ -246,6 +246,21 @@
         },
         "successMarker": "AVANOR_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 660,
+      "packageName": "bcrawl",
+      "artifactPath": ".goocastle/evidence/issue-660.png",
+      "runtime": {
+        "executable": "bcrawl",
+        "invocation": {
+          "file": "bcrawl",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "bcrawl smoke: arena gameplay OK; no store writes"
+      }
     }
   ]
 }
