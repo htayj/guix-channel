@@ -32,10 +32,11 @@
              (commit "ff89137ce52d26b891517517c0aec9013ed8bea5")))
        (file-name (git-file-name name version))
        ;; Recursive hash of the tracked tag tree.  Git metadata and gitlink
-       ;; contents are absent: the terminal build uses Guix libraries.
+       ;; contents are absent: the terminal build uses Guix libraries.  The
+       ;; corresponding `guix hash --format=base32' value is
+       ;; i3qwtrvxsipm7ojrexgkoias6i2fgxj4s7pahzefaelwrekfrwsa; this is its
+       ;; Nix-base32 representation required by the origin field.
        (sha256
-        ;; Guix's origin base32 field uses nix-base32; this is the same
-        ;; recursive tag checkout as the researched base32 digest.
         (base32 "194d8n8nh5q1hpj07plp7ifm6d7j28hagk1566wwy7ljnz36kqa6"))))
     (build-system gnu-build-system)
     (arguments
@@ -52,14 +53,17 @@
               ;; git-fetch supplies no .git directory, so give Makefile's
               ;; documented version fallback the fixed upstream release.
               (call-with-output-file "util/release_ver"
-                (lambda (port) (display "2.2.0\n" port)))))
+                (lambda (port)
+                  (display "2.2.0\n" port)))))
           (add-after 'enter-source-directory 'patch-python-compat
             (lambda _
               ;; Python 3.11 removed the old collections.MutableMapping
               ;; alias used by this release's YAML generator.
               (substitute* "util/species-gen.py"
                 (("class Species\\(collections\\.MutableMapping\\):")
-                 "from collections.abc import MutableMapping\n\nclass Species(MutableMapping):"))))
+                 "from collections.abc import MutableMapping
+
+class Species(MutableMapping):"))))
           (add-after 'patch-python-compat 'patch-cxx-header
             (lambda _
               ;; Current libstdc++ no longer exposes iswalnum through the
@@ -71,11 +75,16 @@
             (lambda _
               ;; An empty TILES value selects the console build and avoids
               ;; SDL, fonts, sound, and the tile source tree.
-              (invoke "make" "crawl"
-                      (string-append "DATADIR=" #$output "/share/bloatcrawl2")
-                      (string-append "SQLITE_INCLUDE_DIR=" #$sqlite "/include")
-                      "FORCE_CC=gcc" "FORCE_CXX=g++"
-                      "LUA_PACKAGE=lua-5.1" "TILES=")))
+              (invoke "make"
+                      "crawl"
+                      (string-append "DATADIR="
+                                     #$output "/share/bloatcrawl2")
+                      (string-append "SQLITE_INCLUDE_DIR="
+                                     #$sqlite "/include")
+                      "FORCE_CC=gcc"
+                      "FORCE_CXX=g++"
+                      "LUA_PACKAGE=lua-5.1"
+                      "TILES=")))
           (replace 'install
             (lambda _
               (let* ((data (string-append #$output "/share/bloatcrawl2"))
@@ -83,19 +92,24 @@
                      (libexec (string-append #$output "/libexec"))
                      (bin (string-append #$output "/bin"))
                      (program (string-append libexec "/bloatcrawl2"))
-                     (smoke-runner
-                      (string-append libexec "/bloatcrawl2-smoke-runner.py"))
+                     (smoke-runner (string-append libexec
+                                    "/bloatcrawl2-smoke-runner.py"))
                      (launcher (string-append bin "/bloatcrawl2")))
                 ;; Upstream install also manages mutable paths.  install-data
                 ;; only copies the immutable console assets and documentation.
-                (invoke "make" "install-data"
+                (invoke "make"
+                        "install-data"
                         ;; Upstream refuses install-data without a staging
                         ;; prefix, even though DATADIR is absolute.
-                        (string-append "prefix=" #$output)
+                        (string-append "prefix="
+                                       #$output)
                         (string-append "DATADIR=" data)
-                        (string-append "SQLITE_INCLUDE_DIR=" #$sqlite "/include")
-                        "FORCE_CC=gcc" "FORCE_CXX=g++"
-                        "LUA_PACKAGE=lua-5.1" "TILES=")
+                        (string-append "SQLITE_INCLUDE_DIR="
+                                       #$sqlite "/include")
+                        "FORCE_CC=gcc"
+                        "FORCE_CXX=g++"
+                        "LUA_PACKAGE=lua-5.1"
+                        "TILES=")
                 (mkdir-p libexec)
                 (mkdir-p bin)
                 (mkdir-p doc)
@@ -115,18 +129,29 @@
                     (display "sent_weapon = False\nsent_begin = False\n" port)
                     (display "sent_play = False\n" port)
                     (display "sent_quit = False\nseen = b''\n" port)
-                    (display "quit_after = None\ndeadline = time.monotonic() + 20\n" port)
+                    (display "quit_after = None
+deadline = time.monotonic() + 20
+" port)
                     (display "while True:\n" port)
-                    (display "    remaining = deadline - time.monotonic()\n" port)
+                    (display "    remaining = deadline - time.monotonic()
+" port)
                     (display "    if remaining <= 0:\n" port)
                     (display "        os.kill(pid, signal.SIGTERM)\n" port)
-                    (display "        os.waitpid(pid, 0)\n        sys.exit(1)\n" port)
+                    (display "        os.waitpid(pid, 0)
+        sys.exit(1)
+" port)
                     (display "    timeout = min(remaining, 0.25)\n" port)
-                    (display "    ready, _, _ = select.select([master], [], [], timeout)\n" port)
+                    (display
+                     "    ready, _, _ = select.select([master], [], [], timeout)
+"
+                     port)
                     (display "    if ready:\n" port)
-                    (display "        try:\n            data = os.read(master, 4096)\n" port)
+                    (display "        try:
+            data = os.read(master, 4096)
+" port)
                     (display "        except OSError as error:\n" port)
-                    (display "            if error.errno == errno.EIO:\n" port)
+                    (display "            if error.errno == errno.EIO:
+" port)
                     (display "                break\n            raise\n" port)
                     (display "        if not data:\n            break\n" port)
                     (display "        os.write(1, data)\n" port)
@@ -135,28 +160,44 @@
                     (display "b'choice of weapons' in seen):\n" port)
                     (display "            os.write(master, b'a')\n" port)
                     (display "            sent_weapon = True\n" port)
-                    (display "        if (sent_weapon and not sent_begin and " port)
+                    (display "        if (sent_weapon and not sent_begin and "
+                     port)
                     (display "b'[Enter] Begin!' in seen):\n" port)
                     (display "            os.write(master, b'\\r')\n" port)
                     (display "            sent_begin = True\n" port)
-                    (display "        if (sent_begin and not sent_play and " port)
+                    (display "        if (sent_begin and not sent_play and "
+                             port)
                     (display "b'HP:' in seen):\n" port)
                     ;; A rest and a movement command prove that the new
                     ;; character has entered the playable dungeon state.
                     (display "            os.write(master, b'.l')\n" port)
                     (display "            sent_play = True\n" port)
-                    (display "            quit_after = time.monotonic() + 0.25\n" port)
+                    (display "            quit_after = time.monotonic() + 0.25
+"
+                     port)
                     (display "    if (sent_play and not sent_quit and " port)
-                    (display "quit_after is not None and time.monotonic() >= quit_after):\n" port)
+                    (display
+                     "quit_after is not None and time.monotonic() >= quit_after):
+"
+                     port)
                     ;; Ctrl-Q is the documented no-save quit command.  The
                     ;; trailing y handles a confirmation prompt if displayed.
                     (display "        os.write(master, b'\\x11y')\n" port)
                     (display "        sent_quit = True\n\n" port)
                     (display "_, status = os.waitpid(pid, 0)\n" port)
-                    (display "if (not sent_weapon or not sent_begin or not sent_play\n" port)
+                    (display
+                     "if (not sent_weapon or not sent_begin or not sent_play
+"
+                     port)
                     (display "        or not sent_quit\n" port)
-                    (display "        or b'choice of weapons' not in seen or b'HP:' not in seen\n" port)
-                    (display "        or not os.WIFEXITED(status) or os.WEXITSTATUS(status)):\n" port)
+                    (display
+                     "        or b'choice of weapons' not in seen or b'HP:' not in seen
+"
+                     port)
+                    (display
+                     "        or not os.WIFEXITED(status) or os.WEXITSTATUS(status)):
+"
+                     port)
                     (display "    sys.exit(1)\n" port)))
                 (chmod smoke-runner #o555)
                 ;; LICENSE applies to the program as a whole.  CREDITS and
@@ -172,9 +213,12 @@
                               (string-append doc "/license"))
                 (call-with-output-file launcher
                   (lambda (port)
-                    (format port "#!~a/bin/sh~%" #$bash-minimal)
-                    (format port "program=~s~%output=~s~%" program #$output)
-                    (format port "cp=~s~%mkdir=~s~%mktemp=~s~%find=~s~%"
+                    (format port "#!~a/bin/sh~%"
+                            #$bash-minimal)
+                    (format port "program=~s~%output=~s~%" program
+                            #$output)
+                    (format port
+                            "cp=~s~%mkdir=~s~%mktemp=~s~%find=~s~%"
                             #$(file-append coreutils-minimal "/bin/cp")
                             #$(file-append coreutils-minimal "/bin/mkdir")
                             #$(file-append coreutils-minimal "/bin/mktemp")
@@ -184,9 +228,12 @@
                     (format port "terminfo=~s~%"
                             #$(file-append ncurses "/share/terminfo"))
                     (display "set -eu\nprepare_environment() {\n" port)
-                    (display "  state=\"${XDG_DATA_HOME:-${HOME:?HOME or " port)
-                    (display "XDG_DATA_HOME must be set}/.local/share}/bloatcrawl2\"\n"
+                    (display "  state=\"${XDG_DATA_HOME:-${HOME:?HOME or "
                              port)
+                    (display
+                     "XDG_DATA_HOME must be set}/.local/share}/bloatcrawl2\"
+"
+                     port)
                     (display "  \"$mkdir\" -p \"$state\"\n" port)
                     (display "  export CRAWL_DIR=\"$state\"\n" port)
                     (display "  export TERMINFO_DIRS=\"$terminfo" port)
@@ -196,28 +243,41 @@
                     (display "if test \"${1:-}\" = --smoke" port)
                     (display " && test \"$#\" -eq 1; then\n" port)
                     (display "  scratch=$(\"$mktemp\" -d" port)
-                    (display " \"${TMPDIR:-/tmp}/bloatcrawl2-smoke.XXXXXXXX\")\n" port)
-                    (display "  \"$mkdir\" -p \"$scratch/home\" \"$scratch/config\"" port)
+                    (display " \"${TMPDIR:-/tmp}/bloatcrawl2-smoke.XXXXXXXX\")
+"
+                             port)
+                    (display
+                     "  \"$mkdir\" -p \"$scratch/home\" \"$scratch/config\""
+                     port)
                     (display " \"$scratch/cache\" \"$scratch/data\"\n" port)
-                    (display "  \"$mkdir\" -p \"$scratch/state\" \"$scratch/runtime\"\n" port)
+                    (display
+                     "  \"$mkdir\" -p \"$scratch/state\" \"$scratch/runtime\"
+"
+                     port)
                     (display "  export HOME=\"$scratch/home\"\n" port)
                     (display "  XDG_CONFIG_HOME=\"$scratch/config\"\n" port)
                     (display "  XDG_CACHE_HOME=\"$scratch/cache\"\n" port)
                     (display "  XDG_DATA_HOME=\"$scratch/data\"\n" port)
                     (display "  XDG_STATE_HOME=\"$scratch/state\"\n" port)
                     (display "  XDG_RUNTIME_DIR=\"$scratch/runtime\"\n" port)
-                    (display "  export XDG_CONFIG_HOME XDG_CACHE_HOME XDG_DATA_HOME" port)
+                    (display
+                     "  export XDG_CONFIG_HOME XDG_CACHE_HOME XDG_DATA_HOME"
+                     port)
                     (display " XDG_STATE_HOME XDG_RUNTIME_DIR\n" port)
                     (display "  export TERM=xterm-256color LC_ALL=C\n" port)
                     (display "  prepare_environment\n" port)
                     ;; Capture the actual PTY stream for the runtime screenshot
                     ;; adapter while retaining the isolated tree for inspection.
                     (display "  cd \"$scratch\"\n" port)
-                    (display "  \"$python\" \"$runner\" \"$program\" -seed 285" port)
+                    (display
+                             "  \"$python\" \"$runner\" \"$program\" -seed 285"
+                             port)
                     (display " -no-save -name Goocastle -species Hu" port)
                     (display " -background Fi >\"$scratch/ui.raw\"\n" port)
                     (display "  test -s \"$scratch/ui.raw\"\n" port)
-                    (display "  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}\";" port)
+                    (display
+                     "  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}\";"
+                     port)
                     (display " then\n" port)
                     (display "    \"$cp\" \"$scratch/ui.raw\"" port)
                     (display " \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n" port)
@@ -229,16 +289,30 @@
                     (display "  test -d \"$scratch/data/bloatcrawl2\"\n" port)
                     (display "  test ! -w \"$output\"\n" port)
                     (display "  printf '%s\\n'" port)
-                    (display " 'bloatcrawl2 smoke: terminal UI OK; no store writes'\n" port)
+                    (display
+                     " 'bloatcrawl2 smoke: terminal UI OK; no store writes'
+"
+                     port)
                     (display "  exit 0\nfi\n" port)
                     (display "run_game \"$@\"\n" port)))
                 (chmod launcher #o555)))))))
     ;; Upstream's generated-source scripts use the unversioned `python'
     ;; interpreter name; python-wrapper supplies that name in the build PATH.
-    (native-inputs (list bison flex perl pkg-config python-pyyaml
-                         python-wrapper which))
-    (inputs (list bash-minimal coreutils-minimal findutils lua-5.1 ncurses
-                  python sqlite zlib))
+    (native-inputs (list bison
+                         flex
+                         perl
+                         pkg-config
+                         python-pyyaml
+                         python-wrapper
+                         which))
+    (inputs (list bash-minimal
+                  coreutils-minimal
+                  findutils
+                  lua-5.1
+                  ncurses
+                  python
+                  sqlite
+                  zlib))
     (home-page "https://github.com/Hellmonk/bloatcrawl2")
     (synopsis "Terminal fork of Dungeon Crawl Stone Soup")
     (description
@@ -252,9 +326,16 @@ runtime download in the console path.")
     ;; The root license applies to the combined program.  The release also
     ;; includes compatible BSD, MIT, Apache-2.0, zlib, CC0/public-domain,
     ;; LGPL, and Boost-licensed components; their notices are installed.
-    (license (list license:gpl2+ license:cc0 license:public-domain
-                   license:bsd-2 license:bsd-3 license:expat license:asl2.0
-                   license:zlib license:lgpl2.1+ license:boost1.0
+    (license (list license:gpl2+
+                   license:cc0
+                   license:public-domain
+                   license:bsd-2
+                   license:bsd-3
+                   license:expat
+                   license:asl2.0
+                   license:zlib
+                   license:lgpl2.1+
+                   license:boost1.0
                    (license:fsdg-compatible
                     "https://www.libpng.org/pub/png/src/libpng-LICENSE.txt")
                    (license:fsdg-compatible
