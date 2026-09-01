@@ -112,8 +112,10 @@ test "$($coreutils_out/bin/head -c 2 "$BOOTROGUE_SMOKE_SCREENSHOT")" = P6
 pixel_values=$($coreutils_out/bin/od -An -v -tu1 -j 15 \
     "$BOOTROGUE_SMOKE_SCREENSHOT" | \
     $coreutils_out/bin/tr -s ' ' '\n' | \
-    $coreutils_out/bin/sort -u | $coreutils_out/bin/wc -l)
-test "$pixel_values" -ge 2
+    $coreutils_out/bin/sort -nu | $coreutils_out/bin/wc -l)
+# Numeric sorting collapses od's empty field with zero, so a uniformly black
+# frame has one unique value.
+test "$pixel_values" -gt 1
 
 # This is an actual frame derived from QEMU's PPM screendump.  The screenshot
 # runner sets this variable during its proof replay; ordinary package smoke

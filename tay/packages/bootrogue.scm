@@ -127,8 +127,10 @@ mktemp=~s~%rm=~s~%sleep=~s~%printf=~s~%od=~s~%tr=~s~%sort=~s~%wc=~s~%head=~s~%"
                     (display "  report_failure\nfi\n" port)
                     (display "pixel_values=$(\"$od\" -An -v -tu1 -j 15 " port)
                     (display "\"$screenshot\" | \"$tr\" -s ' ' '\\n' | " port)
-                    (display "\"$sort\" -u | \"$wc\" -l)\n" port)
-                    (display "if test \"$pixel_values\" -lt 2; then\n" port)
+                    (display "\"$sort\" -nu | \"$wc\" -l)\n" port)
+                    ;; Numeric sorting collapses od's empty field with zero,
+                    ;; so a uniformly black frame has one unique value.
+                    (display "if test \"$pixel_values\" -le 1; then\n" port)
                     (display "  report_failure\nfi\n" port)
                     (display "printf '%s\\n' BOOTROGUE_RUNTIME_OK\n" port)))
                 (chmod launcher #o555)))))))
