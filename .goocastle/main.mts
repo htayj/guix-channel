@@ -1555,8 +1555,8 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
       let commits: string[];
       try {
         commits = hostGit(["rev-list", "--ancestry-path", start + ".." + candidate], { encoding: "utf8" })
-          .trim().split(/?
-/u).filter(Boolean).reverse();
+          .replaceAll("", "").trim().split("
+").filter(Boolean).reverse();
       } catch {
         return undefined;
       }
