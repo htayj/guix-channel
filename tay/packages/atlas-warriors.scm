@@ -149,10 +149,7 @@
               ;; Do not leave menu choices that spawn a browser or contact a URL.
               (substitute* "mainmenu.py"
                 (("import webbrowser\n") "")
-                (("webbrowser\\.open_new_tab\\(\"http://www\\.\
-                  nerdygentleman\\.com\"\\)") "pass")
-                (("webbrowser\\.open_new_tab\\(\"https://pledgie\\.\
-                  com/campaigns/27179\"\\)") "pass"))))
+                (("webbrowser\\.open_new_tab[^\n]*\n") "pass\n"))))
           (add-after 'prepare-runtime 'check
             (lambda* (#:key tests? #:allow-other-keys)
               (when tests?

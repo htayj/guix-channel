@@ -49,9 +49,9 @@ grep -F '"--guix-smoke"' \
 grep -F 'atlas-warriors isolated smoke passed' \
     "$channel_dir/.goocastle/runtime-evidence-contracts.json" >/dev/null
 
-if rg -n '^(import|from)[[:space:]]+(socket|urllib|http|requests|webbrowser)' \
+if rg -n 'webbrowser|(^import|^from)[[:space:]]+(socket|urllib|http|requests)' \
         "$atlas_out/share/atlas-warriors" --glob '*.py'; then
-    echo "unexpected network or browser import in installed Atlas Warriors" >&2
+    echo "unexpected network or browser reference in installed Atlas Warriors" >&2
     exit 1
 fi
 
