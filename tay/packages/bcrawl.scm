@@ -133,7 +133,10 @@
                     ;; The upstream arena is a deterministic, non-network
                     ;; gameplay stress route; script supplies its PTY.
                     (display "  cd \"$scratch\"\n" port)
-                    (display "  \"$script\" -qefc \"exec $program -seed 285" port)
+                    ;; The arena displays its result before asking for one
+                    ;; final keypress.  Supply that deterministic newline via
+                    ;; the PTY so the game can exit normally.
+                    (display "  printf '\\n' | \"$script\" -qefc \"exec $program -seed 285" port)
                     (display " -no-save -name goocastle-smoke -arena" port)
                     (display " 'rat v rat arena:small_deep_pool delay:0 t:1'\"" port)
                     (display " /dev/null >\"$scratch/arena.raw\"\n" port)
