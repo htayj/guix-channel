@@ -20,6 +20,7 @@
          "github-cli"
          "gzip"
          "grep"
+         "make"
          "node"
          "nss-certs"
          "python"
