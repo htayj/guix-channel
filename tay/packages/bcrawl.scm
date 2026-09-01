@@ -112,8 +112,9 @@
                     (display "        os.write(master, b'\\n')\n" port)
                     (display "        sent_key = True\n\n" port)
                     (display "_, status = os.waitpid(pid, 0)\n" port)
-                    (display "if not sent_key or not os.WIFEXITED(status)" port)
-                    (display " or os.WEXITSTATUS(status):\n    sys.exit(1)\n" port)))
+                    (display "if not os.WIFEXITED(status) or os.WEXITSTATUS(status):\n"
+                             port)
+                    (display "    sys.exit(1)\n" port)))
                 (chmod smoke-runner #o555)
                 ;; LICENSE applies to the program as a whole.  CREDITS and
                 ;; the compatible component notices cover installed assets.
@@ -134,7 +135,7 @@
                             #$(file-append python "/bin/python3") smoke-runner)
                     (format port "terminfo=~s~%"
                             #$(file-append ncurses "/share/terminfo"))
-                    (display "set -eu\nrun_game() {\n" port)
+                    (display "set -eu\nprepare_environment() {\n" port)
                     (display "  state=\"${XDG_DATA_HOME:-${HOME:?HOME or " port)
                     (display "XDG_DATA_HOME must be set}/.local/share}/bcrawl\"\n"
                              port)
@@ -142,6 +143,7 @@
                     (display "  export CRAWL_DIR=\"$state\"\n" port)
                     (display "  export TERMINFO_DIRS=\"$terminfo" port)
                     (display "${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"\n" port)
+                    (display "}\nrun_game() {\n  prepare_environment\n" port)
                     (display "  exec \"$program\" \"$@\"\n}\n" port)
                     (display "if test \"${1:-}\" = --smoke" port)
                     (display " && test \"$#\" -eq 1; then\n" port)
@@ -159,11 +161,12 @@
                     (display " XDG_STATE_HOME=\"$scratch/state\"" port)
                     (display " XDG_RUNTIME_DIR=\"$scratch/runtime\"" port)
                     (display " TERM=xterm-256color LC_ALL=C\n" port)
+                    (display "  prepare_environment\n" port)
                     ;; The upstream arena is a deterministic, non-network
                     ;; gameplay stress route; the runner supplies its PTY.
                     (display "  cd \"$scratch\"\n" port)
-                    ;; The PTY runner waits for the result screen, then sends
-                    ;; its one deterministic keypress so the game can exit.
+                    ;; The PTY runner supplies one key only if a result screen
+                    ;; appears; command-line arenas may exit without a popup.
                     (display "  \"$python\" \"$runner\" \"$program\" -seed 285" port)
                     (display " -no-save -name goocastle-smoke -arena" port)
                     (display " 'rat v rat arena:small_deep_pool delay:0 t:1'" port)
@@ -202,11 +205,11 @@ build, or install tile, sound, SDL, or font submodules.  The launcher keeps
 mutable saves and scores in @file{$XDG_DATA_HOME/bcrawl}, falling back to
 @file{$HOME/.local/share/bcrawl}.  It has no updater, telemetry, runtime
 download, or webtiles component.")
-    ;; The root GPL-2-or-later license applies to the combined program.  The
+    ;; The root GPL-2 license applies to the combined program.  The
     ;; terminal binary includes CC0 data plus BSD, MIT, Apache-2.0 and zlib
     ;; components; the copied notices also record LGPL-2.1 and the
     ;; FSDG-compatible libpng terms.
-    (license (list license:gpl2+ license:cc0 license:bsd-2 license:bsd-3
+    (license (list license:gpl2 license:cc0 license:bsd-2 license:bsd-3
                    license:expat license:asl2.0 license:zlib
                    (license:fsdg-compatible
                     "https://www.libpng.org/pub/png/src/libpng-LICENSE.txt")
