@@ -139,7 +139,8 @@
                   (lambda (port)
                     (format port "#!~a/bin/sh~%" #$bash-minimal)
                     (format port "program=~s~%output=~s~%" program #$output)
-                    (format port "mkdir=~s~%mktemp=~s~%rm=~s~%find=~s~%"
+                    (format port "cp=~s~%mkdir=~s~%mktemp=~s~%rm=~s~%find=~s~%"
+                            #$(file-append coreutils-minimal "/bin/cp")
                             #$(file-append coreutils-minimal "/bin/mkdir")
                             #$(file-append coreutils-minimal "/bin/mktemp")
                             #$(file-append coreutils-minimal "/bin/rm")
@@ -183,6 +184,13 @@
                     (display " -no-save -name Goocastle -species Hu" port)
                     (display " -background Fi >\"$scratch/ui.raw\"\n" port)
                     (display "  test -s \"$scratch/ui.raw\"\n" port)
+                    ;; Evidence capture receives the real PTY stream before
+                    ;; cleanup, so its PNG renders the terminal UI itself.
+                    (display "  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}\";" port)
+                    (display " then\n" port)
+                    (display "    \"$cp\" \"$scratch/ui.raw\"" port)
+                    (display " \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n" port)
+                    (display "  fi\n" port)
                     (display "  test -z \"$(\"$find\" \"$scratch/home\"" port)
                     (display " \"$scratch/config\" \"$scratch/cache\"" port)
                     (display " \"$scratch/state\" \"$scratch/runtime\"" port)
