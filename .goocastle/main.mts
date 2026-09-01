@@ -2585,6 +2585,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
   let journal = await incompleteJournal();
   const resumingJournal = journal !== undefined;
   if (journal?.phases.some((phase) => phase.failureReceipt?.kind === "cancelled")) {
+    // Older runners did not persist a pacing boundary on cancellation.  A
+    // resumed cancelled journal therefore establishes one from its durable
+    // transition timestamp, while a current runner preserves its later
+    // boundary.  Either way recovery cannot immediately relaunch the agent.
     const cancelledAt = Date.parse(journal.updatedAt);
     const existingDelay = await readInterTaskDelayState(gitCommonDir);
     if (existingDelay === undefined || Date.parse(existingDelay.nextTicketEligibleAt) < cancelledAt) {
@@ -3203,8 +3207,8 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     if (gooflowChanged && !cancelledAgentProvenanceRefresh) {
       throw new Error(
         "Gooflow selection for #" + issue.number + " changed from " +
-          JSON.stringify(journal.gooflow.workflow) + " (bypassed=" + String(journal.gooflow.bypassed) + ") to " +
-          JSON.stringify(selectedGooflow) + " (bypassed=" + String(resolvedGooflow.bypassed) + "). Review the journal with goocastle status, then restore the original standard or deliberately start a new task.",
+        JSON.stringify(journal.gooflow.workflow) + " (bypassed=" + String(journal.gooflow.bypassed) + ") to " +
+        JSON.stringify(selectedGooflow) + " (bypassed=" + String(resolvedGooflow.bypassed) + "). Review the journal with goocastle status, then restore the original standard or deliberately start a new task.",
       );
     }
     if (gooflowChanged) {
@@ -4172,6 +4176,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       console.error("Could not restore host Git config: " + restoreError);
     });
     if (runnerCancellation.signal.aborted) {
+      // A started ticket consumes a scheduling slot even when an operator
+      // cancels it.  Persist the ordinary durable gate before exit so a new
+      // runner cannot immediately restart work and defeat the repository's
+      // configured pacing policy.
       await persistInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs);
       console.error("Goocastle runner interrupted after provider cleanup; resume with: " + recoveryCommand);
       process.exitCode = 1;
