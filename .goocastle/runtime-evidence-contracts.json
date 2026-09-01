@@ -154,6 +154,21 @@
         },
         "successMarker": "aquarium-arena isolated smoke passed"
       }
+    },
+    {
+      "issueNumber": 657,
+      "packageName": "atlas-warriors",
+      "artifactPath": ".goocastle/evidence/issue-657.png",
+      "runtime": {
+        "executable": "atlas-warriors",
+        "invocation": {
+          "file": "atlas-warriors",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "atlas-warriors isolated smoke passed"
+      }
     }
   ]
 }
