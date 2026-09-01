@@ -576,12 +576,18 @@ const signRequiredPhaseCommits = async (journal, boundary, startSha, endSha) => 
   if (hostGit(["rev-parse", journal.branch], { encoding: "utf8" }).trim() !== endSha) {
     throw new Error("Required commit signing found a changed task branch " + journal.branch + ". The branch is preserved; inspect it with: " + recoveryCommand(journal.branch) + " before resuming the workflow.");
   }
+  // An agent may amend its first commit in a phase.  In that case the
+  // originally observed start SHA is no longer an ancestor of the phase tip,
+  // even though the task branch itself is sound.  Rebase from the common
+  // ancestor so we replay and sign precisely the commits that remain on the
+  // task branch, rather than asking Git to rebase from an unreachable SHA.
+  const signingBaseSha = hostGit(["merge-base", startSha, endSha], { encoding: "utf8" }).trim();
   try {
     // The sandbox has no private signing material. Replay only this phase's
     // commits in the host worktree and sign each replayed commit, not merely
     // the final tip. The command is static and passed as one argv element to
     // Git's documented --exec hook.
-    gitAt(worktree, ["rebase", "--exec", "git -c core.hooksPath=/dev/null -c commit.gpgSign=true commit --amend --no-edit --no-verify", startSha], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1024 * 1024 });
+    gitAt(worktree, ["rebase", "--exec", "git -c core.hooksPath=/dev/null -c commit.gpgSign=true commit --amend --no-edit --no-verify", signingBaseSha], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1024 * 1024 });
   } catch (error) {
     try { gitAt(worktree, ["rebase", "--abort"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 64 * 1024 }); } catch { /* preserve the conflict for manual recovery */ }
     journal = await blockCommitSigning(journal, boundary);
@@ -591,9 +597,13 @@ const signRequiredPhaseCommits = async (journal, boundary, startSha, endSha) => 
 };
 const ensureSignedPhaseCommits = async (journal, boundary, startSha, endSha) => {
   if (signingMode !== "required" || startSha === endSha) return { journal, head: endSha };
-  if (unsignedPhaseCommits(startSha, endSha).length === 0) return { journal, head: endSha };
-  const signed = await signRequiredPhaseCommits(journal, boundary, startSha, endSha);
-  journal = await requireSignedPhaseCommits(signed.journal, boundary, startSha, signed.head);
+  // See signRequiredPhaseCommits: a phase may replace its first commit.  Use
+  // the common ancestor for both detection and verification so the exact
+  // resulting task range is checked and signed.
+  const signingBaseSha = hostGit(["merge-base", startSha, endSha], { encoding: "utf8" }).trim();
+  if (unsignedPhaseCommits(signingBaseSha, endSha).length === 0) return { journal, head: endSha };
+  const signed = await signRequiredPhaseCommits(journal, boundary, signingBaseSha, endSha);
+  journal = await requireSignedPhaseCommits(signed.journal, boundary, signingBaseSha, signed.head);
   return { journal, head: signed.head };
 };
 const requireSignedCommit = async (journal, boundary, commit) => {
