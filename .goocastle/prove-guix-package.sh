@@ -6,7 +6,11 @@ channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$channel_dir"
 guix_bin=${GUIX:-guix}
 
-base_ref=origin/master
+# Normal Gooflow execution proves the active branch against origin/master.
+# A post-delivery evidence replay instead supplies the persisted pre-delivery
+# commit through GOOCASTLE_PROOF_BASE_REF; this keeps the same package scope
+# after the branch itself has become origin/master.
+base_ref=${GOOCASTLE_PROOF_BASE_REF:-origin/master}
 git rev-parse --verify "$base_ref" >/dev/null 2>&1 || base_ref=master
 base=$(git merge-base HEAD "$base_ref")
 changed_modules=$(git diff --name-only "$base"...HEAD -- tay/packages | sed -n 's|^tay/packages/\(.*\)\.scm$|\1|p' | sort -u)
