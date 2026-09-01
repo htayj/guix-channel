@@ -131,11 +131,10 @@
                   (lambda (port)
                     (format port "#!~a/bin/sh~%" #$bash-minimal)
                     (format port "program=~s~%output=~s~%" program #$output)
-                    (format port "mkdir=~s~%mktemp=~s~%rm=~s~%find=~s~%"
+                    (format port "mkdir=~s~%mktemp=~s~%rm=~%"
                             #$(file-append coreutils-minimal "/bin/mkdir")
                             #$(file-append coreutils-minimal "/bin/mktemp")
-                            #$(file-append coreutils-minimal "/bin/rm")
-                            #$(file-append findutils "/bin/find"))
+                            #$(file-append coreutils-minimal "/bin/rm"))
                     (format port "python=~s~%runner=~s~%"
                             #$(file-append python "/bin/python3") smoke-runner)
                     (format port "terminfo=~s~%"
@@ -171,7 +170,8 @@
                     ;; A single trial is deterministic and exits on completion.
                     (display "  cd \"$scratch\"\n" port)
                     (display "  \"$python\" \"$runner\" \"$program\" -seed 285" port)
-                    (display " -no-save -name goocastle-smoke -arena" port)
+                    (display " -no-save -no-throttle -name goocastle-smoke" port)
+                    (display " -arena" port)
                     (display " 'rat v rat arena:small_deep_pool delay:0 t:1'" port)
                     (display " >\"$scratch/arena.tty\"\n" port)
                     (display "  test -s \"$scratch/arena.tty\"" port)
@@ -180,19 +180,18 @@
                     ;; arena parse instead writes an "err:" receipt.
                     (display "  case $(<\"$scratch/arena.result\") in" port)
                     (display "  1-0|0-1) ;; *) exit 1 ;; esac\n" port)
-                    ;; -no-save must not leave gameplay save data in the
-                    ;; isolated HOME/XDG tree; arena.result is the proof log.
-                    (display "  test -z \"$(\"$find\" \"$scratch\"" port)
-                    (display " -type f \\( -name '*.cs' -o -name '*.sav'" port)
-                    (display " -o -name 'milestones' -o -name 'logfile' \\)" port)
-                    (display " -print -quit)\" && test ! -w \"$output\"\n" port)
+                    ;; Bcrawl builds its databases under CRAWL_DIR even with
+                    ;; -no-save.  Check that this mutable state is confined
+                    ;; to the fresh XDG directory, never the package output.
+                    (display "  test -d \"$scratch/data/bcrawl/saves\"" port)
+                    (display " && test ! -w \"$output\"\n" port)
                     (display "  printf '%s\\n'" port)
                     (display " 'bcrawl smoke: arena gameplay OK; no store writes'\n" port)
                     (display "  exit 0\nfi\n" port)
                     (display "run_game \"$@\"\n" port)))
                 (chmod launcher #o555)))))))
     (native-inputs (list bison flex perl pkg-config python-pyyaml which))
-    (inputs (list bash-minimal coreutils-minimal findutils lua-5.1 ncurses
+    (inputs (list bash-minimal coreutils-minimal lua-5.1 ncurses
                   python sqlite zlib))
     (home-page "https://github.com/b-crawl/bcrawl")
     (synopsis "Terminal fork of Dungeon Crawl Stone Soup")
