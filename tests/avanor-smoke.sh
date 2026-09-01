@@ -131,6 +131,11 @@ export AVANOR_CALLER=$scratch/caller
 "$grep_out/bin/grep" -F 'Storing the game:' "$scratch/work/first.raw" >/dev/null
 "$grep_out/bin/grep" -F 'Restoring game objects, please wait...' \
     "$scratch/work/restore.raw" >/dev/null
+# The Goocastle runtime-evidence gate may request an inspectable rendering of
+# this actual PTY session.  Normal package tests leave no trace.
+if test -n "${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}"; then
+    cp "$scratch/work/first.raw" "$GOOCASTLE_RUNTIME_RAW_CAPTURE"
+fi
 test -s "$scratch/state/.avanor/avanor.svg"
 test -s "$scratch/state/.avanor/recipies.txt"
 test -z "$("$findutils_out/bin/find" "$scratch/home" "$scratch/config" \
