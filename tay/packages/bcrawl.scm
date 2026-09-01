@@ -167,7 +167,7 @@
                     (display "  \"$python\" \"$runner\" \"$program\" -seed 285" port)
                     (display " -no-save -name goocastle-smoke -arena" port)
                     (display " 'rat v rat arena:small_deep_pool delay:0 t:1'" port)
-                    (display " /dev/null >\"$scratch/arena.raw\"\n" port)
+                    (display " >\"$scratch/arena.raw\"\n" port)
                     (display "  test -s \"$scratch/arena.raw\"" port)
                     (display " && test -s \"$scratch/arena.result\"\n" port)
                     ;; arena.result is written by the upstream arena only
