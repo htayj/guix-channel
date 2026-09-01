@@ -42,7 +42,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	vt05 weidu blincolnlights pdp10-its-disassembler itstar pdp11 pdp6 uc-explorer \
 	azurra-gtk-theme pdp10-xpl-pdp-10 faugus-launcher react-blessed wanderers \
 	clojure-roguelike astx acehack bell-labs-rogue7 aquarium-arena atlas-warriors \
-	bcrawl avanor bootrogue
+	bcrawl avanor bootrogue brogue
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -68,6 +68,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-acehack \
 	check-avanor \
 	check-wanderers \
+	check-brogue \
 	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs build build-sources
 
 check-source-count:
@@ -239,6 +240,9 @@ check-bootrogue:
 
 check-wanderers:
 	GUIX="$(GUIX)" tests/wanderers-smoke.sh
+
+check-brogue:
+	GUIX="$(GUIX)" tests/brogue-smoke.sh
 
 check-trebuchet:
 	GUIX="$(GUIX)" tests/trebuchet-smoke.sh
