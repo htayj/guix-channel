@@ -112,7 +112,8 @@
                     (display "pid, master = pty.fork()\n" port)
                     (display "if pid == 0:\n    os.execv(program," port)
                     (display " [program, *args])\n\n" port)
-                    (display "sent_weapon = False\nsent_play = False\n" port)
+                    (display "sent_weapon = False\nsent_begin = False\n" port)
+                    (display "sent_play = False\n" port)
                     (display "sent_quit = False\nseen = b''\n" port)
                     (display "quit_after = None\ndeadline = time.monotonic() + 20\n" port)
                     (display "while True:\n" port)
@@ -134,7 +135,11 @@
                     (display "b'choice of weapons' in seen):\n" port)
                     (display "            os.write(master, b'a')\n" port)
                     (display "            sent_weapon = True\n" port)
-                    (display "        if (sent_weapon and not sent_play and " port)
+                    (display "        if (sent_weapon and not sent_begin and " port)
+                    (display "b'[Enter] Begin!' in seen):\n" port)
+                    (display "            os.write(master, b'\\r')\n" port)
+                    (display "            sent_begin = True\n" port)
+                    (display "        if (sent_begin and not sent_play and " port)
                     (display "b'HP:' in seen):\n" port)
                     ;; A rest and a movement command prove that the new
                     ;; character has entered the playable dungeon state.
@@ -148,7 +153,8 @@
                     (display "        os.write(master, b'\\x11y')\n" port)
                     (display "        sent_quit = True\n\n" port)
                     (display "_, status = os.waitpid(pid, 0)\n" port)
-                    (display "if (not sent_weapon or not sent_play or not sent_quit\n" port)
+                    (display "if (not sent_weapon or not sent_begin or not sent_play\n" port)
+                    (display "        or not sent_quit\n" port)
                     (display "        or b'choice of weapons' not in seen or b'HP:' not in seen\n" port)
                     (display "        or not os.WIFEXITED(status) or os.WEXITSTATUS(status)):\n" port)
                     (display "    sys.exit(1)\n" port)))
@@ -168,11 +174,10 @@
                   (lambda (port)
                     (format port "#!~a/bin/sh~%" #$bash-minimal)
                     (format port "program=~s~%output=~s~%" program #$output)
-                    (format port "cp=~s~%mkdir=~s~%mktemp=~s~%rm=~s~%find=~s~%"
+                    (format port "cp=~s~%mkdir=~s~%mktemp=~s~%find=~s~%"
                             #$(file-append coreutils-minimal "/bin/cp")
                             #$(file-append coreutils-minimal "/bin/mkdir")
                             #$(file-append coreutils-minimal "/bin/mktemp")
-                            #$(file-append coreutils-minimal "/bin/rm")
                             #$(file-append findutils "/bin/find"))
                     (format port "python=~s~%runner=~s~%"
                             #$(file-append python "/bin/python3") smoke-runner)
@@ -192,7 +197,6 @@
                     (display " && test \"$#\" -eq 1; then\n" port)
                     (display "  scratch=$(\"$mktemp\" -d" port)
                     (display " \"${TMPDIR:-/tmp}/bloatcrawl2-smoke.XXXXXXXX\")\n" port)
-                    (display "  trap '\"$rm\" -rf \"$scratch\"' EXIT HUP INT TERM\n" port)
                     (display "  \"$mkdir\" -p \"$scratch/home\" \"$scratch/config\"" port)
                     (display " \"$scratch/cache\" \"$scratch/data\"\n" port)
                     (display "  \"$mkdir\" -p \"$scratch/state\" \"$scratch/runtime\"\n" port)
@@ -207,7 +211,7 @@
                     (display "  export TERM=xterm-256color LC_ALL=C\n" port)
                     (display "  prepare_environment\n" port)
                     ;; Capture the actual PTY stream for the runtime screenshot
-                    ;; adapter before deleting the private smoke tree.
+                    ;; adapter while retaining the isolated tree for inspection.
                     (display "  cd \"$scratch\"\n" port)
                     (display "  \"$python\" \"$runner\" \"$program\" -seed 285" port)
                     (display " -no-save -name Goocastle -species Hu" port)

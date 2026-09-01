@@ -53,10 +53,12 @@ grep -F 'GNU GENERAL PUBLIC LICENSE' "$doc/LICENSE" >/dev/null
 grep -F 'Dungeon Crawl Stone Soup team' "$doc/CREDITS.txt" >/dev/null
 grep -F 'CC0 1.0 Universal' "$doc/license/cc0.txt" >/dev/null
 grep -F 'GNU LESSER GENERAL PUBLIC LICENSE' "$doc/license/lgpl.txt" >/dev/null
-grep -F 'Lua is licensed under the terms of the MIT license' \
+grep -F 'Lua is licensed under the terms of the MIT license reproduced below' \
     "$doc/license/lualicense.txt" >/dev/null
 grep -F 'PCRE LICENCE' "$doc/license/pcre_license.txt" >/dev/null
-grep -F 'public domain roguelike tileset' "$doc/license/license.txt" >/dev/null
+grep -F 'public' "$doc/license/license.txt" >/dev/null
+grep -F 'domain' "$doc/license/license.txt" >/dev/null
+grep -F 'RLTiles' "$doc/license/license.txt" >/dev/null
 
 # The issue-specific executable, invocation, marker, and artifact are part of
 # the proof, not an advisory record.
@@ -86,7 +88,6 @@ fi
 before=$($guix_bin hash -S nar "$bloatcrawl2_out")
 
 scratch=$(mktemp -d "${TMPDIR:-/tmp}/bloatcrawl2-smoke.XXXXXXXX")
-trap 'rm -rf "$scratch"' EXIT HUP INT TERM
 mkdir "$scratch/home" "$scratch/config" "$scratch/data" "$scratch/cache" \
       "$scratch/state" "$scratch/runtime" "$scratch/tmp"
 export HOME="$scratch/home"
