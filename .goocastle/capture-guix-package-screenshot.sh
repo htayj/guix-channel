@@ -67,7 +67,7 @@ if test ! -s "$artifact" && test -s "$terminal_raw"; then
   python3 .goocastle/render-terminal-screenshot.py "$terminal_raw" "$terminal_text"
   convert -size 1280x560 -background '#1e1e1e' -fill '#d4d4d4' \
     -font DejaVu-Sans-Mono -pointsize 16 -gravity northwest \
-    -interline-spacing 2 "caption:@$terminal_text" "$artifact"
+    -interline-spacing 2 "caption:@$terminal_text" "PNG24:$artifact"
 fi
 test -s "$artifact" || {
   echo "runtime-screenshot: missing native PNG or captured terminal UI for $artifact" >&2

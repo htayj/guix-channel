@@ -13,9 +13,19 @@ raw = Path(sys.argv[1]).read_bytes().decode("utf-8", "replace")
 rows, columns = 24, 80
 screen = [[" "] * columns for _ in range(rows)]
 row = column = 0
+best_screen = [[" "] * columns for _ in range(rows)]
+best_score = 0
 
 def param_list(text: str) -> list[int]:
     return [int(part) if part else 0 for part in text.split(";")] if text else []
+
+def retain_populated_screen() -> None:
+    """Keep the last useful ncurses frame before a clear/alternate exit."""
+    global best_screen, best_score
+    score = sum(cell != " " for line in screen for cell in line)
+    if score > best_score:
+        best_score = score
+        best_screen = [line.copy() for line in screen]
 
 index = 0
 while index < len(raw):
@@ -36,19 +46,25 @@ while index < len(raw):
                 elif command == "G": column = min(columns - 1, max(0, amount - 1))
                 elif command == "J":
                     if not params or params[0] in (0, 2, 3):
+                        retain_populated_screen()
                         start = 0 if params and params[0] in (2, 3) else row
                         for clear_row in range(start, rows): screen[clear_row] = [" "] * columns
                 elif command == "K":
                     start = 0 if params and params[0] == 1 else column
                     end = columns if not params or params[0] != 1 else column + 1
                     screen[row][start:end] = [" "] * (end - start)
+                elif command == "X":
+                    end = min(columns, column + amount)
+                    screen[row][column:end] = [" "] * (end - column)
                 index += len(match.group(0))
                 continue
         elif raw[index + 1] == "]":
             end = re.search(r"(?:\x07|\x1b\\)", raw[index + 2:])
             index += 2 + (end.end() if end else 0)
             continue
-        index += 2
+        # ISO-2022 charset designators such as ESC ( B are emitted by
+        # ncurses around ACS drawing characters; they carry no visible cell.
+        index += 3 if raw[index + 1] in "()" and index + 2 < len(raw) else 2
         continue
     if char == "\r": column = 0
     elif char == "\n": row = min(rows - 1, row + 1)
@@ -61,4 +77,5 @@ while index < len(raw):
             row = min(rows - 1, row + 1)
     index += 1
 
-Path(sys.argv[2]).write_text("\n".join("".join(line).rstrip() for line in screen) + "\n", encoding="utf-8")
+retain_populated_screen()
+Path(sys.argv[2]).write_text("\n".join("".join(line).rstrip() for line in best_screen) + "\n", encoding="utf-8")
