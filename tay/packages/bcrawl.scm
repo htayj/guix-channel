@@ -70,6 +70,8 @@
                      (libexec (string-append #$output "/libexec"))
                      (bin (string-append #$output "/bin"))
                      (program (string-append libexec "/bcrawl"))
+                     (smoke-runner
+                      (string-append libexec "/bcrawl-smoke-runner.py"))
                      (launcher (string-append bin "/bcrawl")))
                 ;; Upstream install also manages mutable paths.  install-data
                 ;; only copies immutable console assets and documentation.
@@ -87,6 +89,32 @@
                 (mkdir-p doc)
                 (install-file "crawl" libexec)
                 (rename-file (string-append libexec "/crawl") program)
+                (call-with-output-file smoke-runner
+                  (lambda (port)
+                    (display "#!" port)
+                    (display #$(file-append python "/bin/python3") port)
+                    (display "\nimport errno\nimport os\nimport pty\n" port)
+                    (display "import select\nimport sys\n\n" port)
+                    (display "program, *args = sys.argv[1:]\n" port)
+                    (display "pid, master = pty.fork()\n" port)
+                    (display "if pid == 0:\n    os.execv(program," port)
+                    (display " [program, *args])\n\n" port)
+                    (display "sent_key = False\nseen = b''\nwhile True:\n" port)
+                    (display "    select.select([master], [], [])\n" port)
+                    (display "    try:\n        data = os.read(master, 4096)\n" port)
+                    (display "    except OSError as error:\n" port)
+                    (display "        if error.errno == errno.EIO:\n" port)
+                    (display "            break\n        raise\n" port)
+                    (display "    if not data:\n        break\n" port)
+                    (display "    os.write(1, data)\n" port)
+                    (display "    seen = (seen + data)[-64:]\n" port)
+                    (display "    if not sent_key and b'Arena results:' in seen:\n" port)
+                    (display "        os.write(master, b'\\n')\n" port)
+                    (display "        sent_key = True\n\n" port)
+                    (display "_, status = os.waitpid(pid, 0)\n" port)
+                    (display "if not sent_key or not os.WIFEXITED(status)" port)
+                    (display " or os.WEXITSTATUS(status):\n    sys.exit(1)\n" port)))
+                (chmod smoke-runner #o555)
                 ;; LICENSE applies to the program as a whole.  CREDITS and
                 ;; the compatible component notices cover installed assets.
                 (install-file "../../LICENSE" doc)
@@ -97,12 +125,13 @@
                   (lambda (port)
                     (format port "#!~a/bin/sh~%" #$bash-minimal)
                     (format port "program=~s~%output=~s~%" program #$output)
-                    (format port "mkdir=~s~%mktemp=~s~%rm=~s~%find=~s~%script=~s~%"
+                    (format port "mkdir=~s~%mktemp=~s~%rm=~s~%find=~s~%" port)
+                    (format port "python=~s~%runner=~s~%"
                             #$(file-append coreutils-minimal "/bin/mkdir")
                             #$(file-append coreutils-minimal "/bin/mktemp")
                             #$(file-append coreutils-minimal "/bin/rm")
                             #$(file-append findutils "/bin/find")
-                            #$(file-append util-linux "/bin/script"))
+                            #$(file-append python "/bin/python3") smoke-runner)
                     (format port "terminfo=~s~%"
                             #$(file-append ncurses "/share/terminfo"))
                     (display "set -eu\nrun_game() {\n" port)
@@ -133,11 +162,9 @@
                     ;; The upstream arena is a deterministic, non-network
                     ;; gameplay stress route; script supplies its PTY.
                     (display "  cd \"$scratch\"\n" port)
-                    ;; The arena displays its result before asking for one
-                    ;; final keypress.  Supply that deterministic newline via
-                    ;; the PTY so the game can exit normally.
-                    (display "  printf '\\n' | \"$script\" -qefc" port)
-                    (display " \"exec $program -seed 285" port)
+                    ;; The PTY runner waits for the result screen, then sends
+                    ;; its one deterministic keypress so the game can exit.
+                    (display "  \"$python\" \"$runner\" \"$program\" -seed 285" port)
                     (display " -no-save -name goocastle-smoke -arena" port)
                     (display " 'rat v rat arena:small_deep_pool delay:0 t:1'\"" port)
                     (display " /dev/null >\"$scratch/arena.raw\"\n" port)
@@ -163,9 +190,9 @@
                     (display "  exit 0\nfi\n" port)
                     (display "run_game \"$@\"\n" port)))
                 (chmod launcher #o555)))))))
-    (native-inputs (list bison flex perl pkg-config python python-pyyaml which))
+    (native-inputs (list bison flex perl pkg-config python-pyyaml which))
     (inputs (list bash-minimal coreutils-minimal findutils lua-5.1 ncurses
-                  sqlite util-linux zlib))
+                  python sqlite zlib))
     (home-page "https://github.com/b-crawl/bcrawl")
     (synopsis "Terminal fork of Dungeon Crawl Stone Soup")
     (description
