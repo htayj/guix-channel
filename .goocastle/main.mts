@@ -185,7 +185,7 @@ const boundedValidationExposes = [
   { hostPath: boundedValidationDist, sandboxPath: "/opt/goocastle/dist" },
 ];
 const runtimeModule = await import(runtimeModuleUrl);
-const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialManualRepairReceipt, createSequentialPredecessorWorkReceipt, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, materializeRuntimeEvidenceContractEntry, parseGooflowDispositionResult, quarantineManagedStateHome, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runtimeContractIssueDigest, runtimeEvidenceCaptureCommand, isRuntimeContractResolutionFailure, sequentialJournalActivity, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isCodexAuthenticationExpiry, isProviderInterruption, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
+const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialManualRepairReceipt, createSequentialPredecessorWorkReceipt, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, materializeRuntimeEvidenceContractEntry, parseGooflowDispositionResult, quarantineManagedStateHome, readInterTaskDelayState, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runtimeContractIssueDigest, runtimeEvidenceCaptureCommand, isRuntimeContractResolutionFailure, sequentialJournalActivity, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isCodexAuthenticationExpiry, isProviderInterruption, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
 const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Object.freeze({
   expectedPacingMs: 5 * 60_000,
   stalledAfterMs: 15 * 60_000,
@@ -2584,6 +2584,18 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
   }
   let journal = await incompleteJournal();
   const resumingJournal = journal !== undefined;
+  if (journal?.phases.some((phase) => phase.failureReceipt?.kind === "cancelled")) {
+    const cancelledAt = Date.parse(journal.updatedAt);
+    const existingDelay = await readInterTaskDelayState(gitCommonDir);
+    if (existingDelay === undefined || Date.parse(existingDelay.nextTicketEligibleAt) < cancelledAt) {
+      await persistInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs, { now: () => cancelledAt });
+    }
+    await reconcileInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs, { log: console.log, sleep: waitForRunnerGate });
+    if (runnerCancellation.signal.aborted) {
+      console.log("Goocastle runner interrupted while waiting to resume a cancelled ticket.");
+      break;
+    }
+  }
   if (journal && !RESUME_ONLY && journal.phases.some((phase) => phase.failureReceipt?.kind === "stalled")) {
     // A terminal issue label is authoritative even when the retained journal
     // has an intentionally manual stalled-worktree receipt.  Preserve that
@@ -3181,12 +3193,22 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       (journal.gooflow.override !== undefined && journal.gooflow.override !== resolvedGooflow.selection.override) ||
       (journal.gooflow.agents !== undefined && JSON.stringify(journal.gooflow.agents) !== JSON.stringify(selectedAgents))
     );
-    if (gooflowChanged) {
+    const cancelledAgentProvenanceRefresh = journal.gooflow !== undefined &&
+      journal.phases.some((phase) => phase.failureReceipt?.kind === "cancelled") &&
+      journal.gooflow.workflow === selectedGooflow &&
+      journal.gooflow.bypassed === resolvedGooflow.bypassed &&
+      (journal.gooflow.source === undefined || journal.gooflow.source === resolvedGooflow.selection.source) &&
+      (journal.gooflow.schemaVersion === undefined || journal.gooflow.schemaVersion === resolvedGooflow.selection.schemaVersion) &&
+      (journal.gooflow.override === undefined || journal.gooflow.override === resolvedGooflow.selection.override);
+    if (gooflowChanged && !cancelledAgentProvenanceRefresh) {
       throw new Error(
         "Gooflow selection for #" + issue.number + " changed from " +
           JSON.stringify(journal.gooflow.workflow) + " (bypassed=" + String(journal.gooflow.bypassed) + ") to " +
           JSON.stringify(selectedGooflow) + " (bypassed=" + String(resolvedGooflow.bypassed) + "). Review the journal with goocastle status, then restore the original standard or deliberately start a new task.",
       );
+    }
+    if (gooflowChanged) {
+      console.warn("Refreshing agent provenance for cancelled issue #" + issue.number + " after its unchanged Gooflow route was revalidated.");
     }
     journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
       specification,
@@ -4150,6 +4172,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       console.error("Could not restore host Git config: " + restoreError);
     });
     if (runnerCancellation.signal.aborted) {
+      await persistInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs);
       console.error("Goocastle runner interrupted after provider cleanup; resume with: " + recoveryCommand);
       process.exitCode = 1;
       break;
