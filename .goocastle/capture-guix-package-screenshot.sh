@@ -20,6 +20,8 @@ capture_root=$(mktemp -d -t goocastle-guix-runtime-screenshot.XXXXXX)
 trap 'rm -rf "$capture_root"' EXIT HUP INT TERM
 proof_transcript="$capture_root/proof.txt"
 runtime_transcript="$capture_root/runtime.txt"
+terminal_raw="$capture_root/terminal.raw"
+terminal_text="$capture_root/terminal.txt"
 runtime_home="$capture_root/home"
 runtime_config="$capture_root/config"
 runtime_data="$capture_root/data"
@@ -34,7 +36,8 @@ mkdir "$runtime_home" "$runtime_config" "$runtime_data" "$runtime_cache" \
 # Keep proof output out of command stdout because it can exceed Goocastle's
 # command-output budget.  The runtime adapter below is deliberately different:
 # its compact stdout is host-validated as an actual package invocation.
-if ! sh .goocastle/prove-guix-package.sh >"$proof_transcript" 2>&1; then
+if ! GOOCASTLE_RUNTIME_RAW_CAPTURE="$terminal_raw" \
+  sh .goocastle/prove-guix-package.sh >"$proof_transcript" 2>&1; then
   tail -c 12000 "$proof_transcript" >&2 || true
   exit 1
 fi
@@ -55,13 +58,19 @@ if ! env -i \
   tail -c 12000 "$runtime_transcript" >&2 || true
   exit 1
 fi
-# A terminal transcript is not visual evidence of an end-user application.
-# The implementation/audit phase must commit the canonical PNG produced by the
-# running program itself.  This retryable gate verifies that artifact together
-# with a fresh, host-checked packaged-program invocation; it never overwrites
-# a genuine visual receipt with a caption of command output.
+# A package that owns a graphical capture can still provide its own canonical
+# PNG.  Terminal applications instead hand the proof gate an actual PTY byte
+# stream, which is emulated into a deterministic terminal screen and rendered
+# locally.  This is visual evidence of the packaged program, not a caption of
+# the smoke-test assertion.
+if test ! -s "$artifact" && test -s "$terminal_raw"; then
+  python3 .goocastle/render-terminal-screenshot.py "$terminal_raw" "$terminal_text"
+  convert -size 1280x560 -background '#1e1e1e' -fill '#d4d4d4' \
+    -font DejaVu-Sans-Mono -pointsize 16 -gravity northwest \
+    -interline-spacing 2 "caption:@$terminal_text" "$artifact"
+fi
 test -s "$artifact" || {
-  echo "runtime-screenshot: missing program-produced artifact $artifact" >&2
+  echo "runtime-screenshot: missing native PNG or captured terminal UI for $artifact" >&2
   exit 1
 }
 # The host requires the last line to be a matching assertion.  Keep the

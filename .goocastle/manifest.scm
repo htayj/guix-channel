@@ -21,12 +21,14 @@
          "github-cli"
          "gzip"
          "grep"
+         "imagemagick"
          "make"
          "node"
          "nss-certs"
          "python"
          "ripgrep"
          "sed"
+         "font-dejavu"
          "unzip"
          "xxd"))
   (packages->manifest (list goocastle-gitleaks goocastle-xvfb-run goocastle-codex))))
