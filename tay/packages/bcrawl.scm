@@ -100,7 +100,7 @@
                     (display "pid, master = pty.fork()\n" port)
                     (display "if pid == 0:\n    os.execv(program," port)
                     (display " [program, *args])\n\n" port)
-                    (display "seen = b''\n" port)
+                    (display "seen = b''\nsent_continue = False\n" port)
                     (display "deadline = time.monotonic() + 15\nwhile True:\n" port)
                     (display "    remaining = deadline - time.monotonic()\n" port)
                     (display "    if remaining <= 0:\n" port)
@@ -116,6 +116,13 @@
                     (display "    if not data:\n        break\n" port)
                     (display "    os.write(1, data)\n" port)
                     (display "    seen = (seen + data)[-4096:]\n" port)
+                    ;; The arena exits after a key acknowledges Bcrawl's
+                    ;; final-score popup.  It is sent only after the actual
+                    ;; deterministic combat result is visible.
+                    (display "    if not sent_continue and " port)
+                    (display "b'Final score:' in seen:\n" port)
+                    (display "        os.write(master, b' ')\n" port)
+                    (display "        sent_continue = True\n" port)
                     (display "_, status = os.waitpid(pid, 0)\n" port)
                     (display "if not os.WIFEXITED(status) or " port)
                     (display "os.WEXITSTATUS(status):\n" port)
