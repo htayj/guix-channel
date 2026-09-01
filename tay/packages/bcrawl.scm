@@ -131,7 +131,7 @@
                   (lambda (port)
                     (format port "#!~a/bin/sh~%" #$bash-minimal)
                     (format port "program=~s~%output=~s~%" program #$output)
-                    (format port "mkdir=~s~%mktemp=~s~%rm=~%"
+                    (format port "mkdir=~s~%mktemp=~s~%rm=~s~%"
                             #$(file-append coreutils-minimal "/bin/mkdir")
                             #$(file-append coreutils-minimal "/bin/mktemp")
                             #$(file-append coreutils-minimal "/bin/rm"))
