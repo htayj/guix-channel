@@ -1,5 +1,5 @@
 #!/bin/sh
-# Exercise bcrawl's installed terminal arena in isolated XDG and network state.
+# Exercise Bcrawl's installed terminal UI in isolated XDG and network state.
 set -eu
 
 guix_bin=${GUIX:-guix}
@@ -62,11 +62,13 @@ grep -F '"artifactPath": ".goocastle/evidence/issue-660.png"' "$contract" >/dev/
 grep -F '"executable": "bcrawl"' "$contract" >/dev/null
 grep -F '"args": [' "$contract" >/dev/null
 grep -F '"--smoke"' "$contract" >/dev/null
-marker='bcrawl smoke: arena gameplay OK; no store writes'
+marker='bcrawl smoke: terminal UI OK; no store writes'
 grep -F "\"successMarker\": \"$marker\"" "$contract" >/dev/null
 
 util_linux_out=$(find_output bin/unshare util-linux)
 test -x "$util_linux_out/bin/unshare"
+bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
+test -r "$bounded_validation"
 if ! "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
         true >/dev/null 2>&1; then
     echo 'bcrawl smoke requires an unprivileged network namespace' >&2
@@ -78,10 +80,10 @@ fi
 # state back to the immutable package output.
 before=$($guix_bin hash -S nar "$bcrawl_out")
 
-# The launcher creates a new HOME/XDG tree and uses util-linux script for its
-# PTY.  The outer bounded executor owns the complete process group, while the
-# new user/network namespace gives the game no network interfaces at all.
-proof=$(node /opt/goocastle/bin/bounded-validation.mjs --timeout-ms 30000 -- \
+# The launcher creates a new HOME/XDG tree and drives the actual terminal UI
+# through a PTY.  The outer bounded executor owns the complete process group,
+# while the new user/network namespace gives the game no network interfaces.
+proof=$(node "$bounded_validation" --timeout-ms 30000 -- \
     "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
     "$bcrawl_out/bin/bcrawl" --smoke)
 case "$proof" in
