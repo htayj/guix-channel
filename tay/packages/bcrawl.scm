@@ -74,6 +74,9 @@
                 ;; Upstream install also manages mutable paths.  install-data
                 ;; only copies immutable console assets and documentation.
                 (invoke "make" "install-data"
+                        ;; Upstream refuses install-data without a staging
+                        ;; prefix, even though DATADIR is absolute.
+                        (string-append "prefix=" #$output)
                         (string-append "DATADIR=" data)
                         (string-append "SQLITE_INCLUDE_DIR=" #$sqlite "/include")
                         "FORCE_CC=gcc" "FORCE_CXX=g++"
