@@ -60,7 +60,8 @@
                       (string-append "DATADIR=" #$output "/share/bcrawl")
                       (string-append "SQLITE_INCLUDE_DIR=" #$sqlite "/include")
                       "FORCE_CC=gcc" "FORCE_CXX=g++"
-                      "LUA_PACKAGE=lua5.1" "TILES="
+                      ;; Guix's Lua 5.1 input exports lua-5.1.pc.
+                      "LUA_PACKAGE=lua-5.1" "TILES="
                       "NO_TRY_LLD=YesPlease" "NO_TRY_GOLD=YesPlease")))
           (replace 'install
             (lambda _
@@ -76,7 +77,7 @@
                         (string-append "DATADIR=" data)
                         (string-append "SQLITE_INCLUDE_DIR=" #$sqlite "/include")
                         "FORCE_CC=gcc" "FORCE_CXX=g++"
-                        "LUA_PACKAGE=lua5.1" "TILES="
+                        "LUA_PACKAGE=lua-5.1" "TILES="
                         "NO_TRY_LLD=YesPlease" "NO_TRY_GOLD=YesPlease")
                 (mkdir-p libexec)
                 (mkdir-p bin)
