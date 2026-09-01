@@ -125,12 +125,12 @@
                   (lambda (port)
                     (format port "#!~a/bin/sh~%" #$bash-minimal)
                     (format port "program=~s~%output=~s~%" program #$output)
-                    (format port "mkdir=~s~%mktemp=~s~%rm=~s~%find=~s~%" port)
-                    (format port "python=~s~%runner=~s~%"
+                    (format port "mkdir=~s~%mktemp=~s~%rm=~s~%find=~s~%"
                             #$(file-append coreutils-minimal "/bin/mkdir")
                             #$(file-append coreutils-minimal "/bin/mktemp")
                             #$(file-append coreutils-minimal "/bin/rm")
-                            #$(file-append findutils "/bin/find")
+                            #$(file-append findutils "/bin/find"))
+                    (format port "python=~s~%runner=~s~%"
                             #$(file-append python "/bin/python3") smoke-runner)
                     (format port "terminfo=~s~%"
                             #$(file-append ncurses "/share/terminfo"))
