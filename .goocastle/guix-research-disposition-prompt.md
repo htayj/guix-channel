@@ -27,6 +27,12 @@ not commit it.  It must use this shape:
 {"version":1,"disposition":"blocked-or-implementation-ready","finding":"...","runtimeEvidence":{"packageName":"...","artifactPath":".goocastle/evidence/issue-NNN.png","runtime":{"executable":"...","invocation":{"file":"...","args":["..."]},"successMarker":"..."}}}
 ```
 
+Reserve the final six provider tool commands for this durable handoff.  Once
+you have enough evidence to choose a disposition, write a provisional valid
+JSON result immediately; refine that same file only if further inspection is
+needed.  Do not spend the entire command budget on additional probes while the
+required result file is absent.
+
 Choose `blocked` only when a concrete prerequisite or disqualifying fact makes
 unattended delivery unsafe.  The finding must name the evidence, exact blocker,
 and the condition that would unblock it.
