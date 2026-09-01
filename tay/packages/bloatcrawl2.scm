@@ -60,6 +60,13 @@
               (substitute* "util/species-gen.py"
                 (("class Species\\(collections\\.MutableMapping\\):")
                  "from collections.abc import MutableMapping\n\nclass Species(MutableMapping):"))))
+          (add-after 'patch-python-compat 'patch-cxx-header
+            (lambda _
+              ;; Current libstdc++ no longer exposes iswalnum through the
+              ;; transitive headers used by this old source file.
+              (substitute* "ui.cc"
+                (("#include <chrono>")
+                 "#include <chrono>\n#include <cwctype>"))))
           (replace 'build
             (lambda _
               ;; An empty TILES value selects the console build and avoids
