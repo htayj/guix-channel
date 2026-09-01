@@ -50,6 +50,26 @@
                                      #$(file-append sdl2-image "/include/SDL2"))
                       (string-append "DATADIR=" #$output "/share/brogue")
                       "bin/brogue")))
+          (add-after 'build 'check-seed-catalogs
+            (lambda _
+              ;; The upstream comparison helper writes its generated catalog
+              ;; in the current directory and expects ./brogue.  Run it from
+              ;; a copy so the source checkout remains a clean test input.
+              (let* ((source (getcwd))
+                     (copy (string-append source "-seed-catalog-check")))
+                (copy-recursively source copy)
+                (chdir copy)
+                (copy-file "bin/brogue" "brogue")
+                (chmod "brogue" #o555)
+                (invoke #$(file-append python "/bin/python3")
+                        "test/compare_seed_catalog.py"
+                        "test/seed_catalogs/seed_catalog_brogue.txt"
+                        "40")
+                (invoke #$(file-append python "/bin/python3")
+                        "test/compare_seed_catalog.py"
+                        "test/seed_catalogs/seed_catalog_rapid_brogue.txt"
+                        "10"
+                        "--extra_args=--variant rapid_brogue"))))
           (replace 'install
             (lambda _
               (let* ((out #$output)

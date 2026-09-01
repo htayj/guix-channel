@@ -94,7 +94,7 @@ export LC_ALL=C
 # Run the package's own mode through the bounded argv-only executor.  The
 # network namespace has no interfaces, and the wrapper creates a second fresh
 # HOME/XDG tree below its private TMPDIR before it launches the PTY frontend.
-raw="$scratch/terminal.raw"
+raw=${GOOCASTLE_RUNTIME_RAW_CAPTURE:-$scratch/terminal.raw}
 proof=$(cd "$scratch/work" && \
     GOOCASTLE_RUNTIME_RAW_CAPTURE="$raw" \
     node "$bounded_validation" --timeout-ms 30000 -- \
