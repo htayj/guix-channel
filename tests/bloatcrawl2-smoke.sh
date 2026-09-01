@@ -121,7 +121,7 @@ esac
 # emits the success marker.
 test -s "$raw"
 grep -aF 'choice of weapons' "$raw" >/dev/null
-grep -aF 'HP:' "$raw" >/dev/null
+grep -aF 'Health:' "$raw" >/dev/null
 grep -aF 'Goocastle' "$raw" >/dev/null
 
 after=$($guix_bin hash -S nar "$bloatcrawl2_out")

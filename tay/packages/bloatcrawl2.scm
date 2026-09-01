@@ -167,7 +167,7 @@ deadline = time.monotonic() + 20
                     (display "            sent_begin = True\n" port)
                     (display "        if (sent_begin and not sent_play and "
                              port)
-                    (display "b'HP:' in seen):\n" port)
+                    (display "b'Health:' in seen):\n" port)
                     ;; A rest and a movement command prove that the new
                     ;; character has entered the playable dungeon state.
                     (display "            os.write(master, b'.l')\n" port)
@@ -191,7 +191,7 @@ deadline = time.monotonic() + 20
                      port)
                     (display "        or not sent_quit\n" port)
                     (display
-                     "        or b'choice of weapons' not in seen or b'HP:' not in seen
+                     "        or b'choice of weapons' not in seen or b'Health:' not in seen
 "
                      port)
                     (display
