@@ -1517,10 +1517,26 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
     const parents = hostGit(["rev-list", "--parents", "-n", "1", candidate], { encoding: "utf8" }).trim().split(" ").filter(Boolean);
     const changes = gitAt(taskWorktree.worktreePath, ["diff-tree", "--no-commit-id", "--name-status", "-r", "-z", parents[1] ?? candidate, candidate], { encoding: "utf8" }).split("\0").filter(Boolean);
     const subject = hostGit(["show", "-s", "--format=%s", candidate], { encoding: "utf8" }).trim();
-    if (journal.runtimeEvidence?.artifactStartSha === undefined || parents.length !== 2 || parents[1] !== journal.runtimeEvidence.artifactStartSha || subject !== artifactCommitSubject || changes.length !== 2 || changes[0] !== "A" || changes[1] !== evidenceConfig.artifactPath) {
+    // An explicit blocked-gate recovery may include a maintainer's signed
+    // evidence commit before the screenshot boundary is re-entered.  There is
+    // no recorded artifactStartSha in that case, but it is still safe to
+    // reconcile only a single-parent tip that adds exactly the declared image.
+    // Normal crash recovery retains its stronger exact-subject/start-SHA
+    // identity check.
+    const normalArtifactRecovery = journal.runtimeEvidence?.artifactStartSha !== undefined &&
+      parents.length === 2 && parents[1] === journal.runtimeEvidence.artifactStartSha &&
+      subject === artifactCommitSubject && changes.length === 2 &&
+      changes[0] === "A" && changes[1] === evidenceConfig.artifactPath;
+    const reviewedArtifactRecovery = journal.runtimeEvidence?.artifactStartSha === undefined &&
+      parents.length === 2 && changes.length === 2 && changes[0] === "A" &&
+      changes[1] === evidenceConfig.artifactPath;
+    if (!normalArtifactRecovery && !reviewedArtifactRecovery) {
       throw new Error("Runtime screenshot artifact boundary is neither the declared untracked image nor an exact committed artifact; inspect the preserved branch before resuming");
     }
-    const signed = await ensureSignedPhaseCommits(journal, signingBoundary("runtime-evidence", capturePhase), journal.runtimeEvidence.artifactStartSha, candidate);
+    const artifactStartSha = normalArtifactRecovery
+      ? journal.runtimeEvidence!.artifactStartSha!
+      : parents[1]!;
+    const signed = await ensureSignedPhaseCommits(journal, signingBoundary("runtime-evidence", capturePhase), artifactStartSha, candidate);
     journal = signed.journal;
     artifactCommitSha = signed.head;
     journal = await recordUnsignedCommit(journal, signingBoundary("runtime-evidence", capturePhase));
