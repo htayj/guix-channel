@@ -13,6 +13,7 @@
          "coreutils"
          "file"
          "findutils"
+         "gawk"
          "glibc-locales"
          "git"
          "guix"
