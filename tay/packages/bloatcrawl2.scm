@@ -53,6 +53,15 @@
               ;; documented version fallback the fixed upstream release.
               (call-with-output-file "util/release_ver"
                 (lambda (port) (display "2.2.0\n" port)))))
+          (add-after 'enter-source-directory 'patch-python-compat
+            (lambda _
+              ;; Python 3.11 removed the old collections.MutableMapping
+              ;; alias used by this release's YAML generator.
+              (substitute* "util/species-gen.py"
+                (("import collections\\n")
+                 "import collections\nfrom collections.abc import MutableMapping\n")
+                (("class Species\\(collections\\.MutableMapping\\):")
+                 "class Species(MutableMapping):"))))
           (replace 'build
             (lambda _
               ;; An empty TILES value selects the console build and avoids
