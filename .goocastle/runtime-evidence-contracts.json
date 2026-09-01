@@ -231,6 +231,21 @@
         },
         "successMarker": "atlas-warriors isolated smoke passed"
       }
+    },
+    {
+      "issueNumber": 659,
+      "packageName": "avanor",
+      "artifactPath": ".goocastle/evidence/issue-659.png",
+      "runtime": {
+        "executable": "avanor",
+        "invocation": {
+          "file": "avanor",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "AVANOR_RUNTIME_OK"
+      }
     }
   ]
 }
