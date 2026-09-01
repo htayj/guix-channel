@@ -259,7 +259,7 @@
             "--smoke"
           ]
         },
-        "successMarker": "bcrawl smoke: terminal UI OK; no store writes"
+        "successMarker": "bcrawl smoke: arena gameplay OK; no store writes"
       }
     }
   ]

@@ -94,18 +94,20 @@
                     (display "#!" port)
                     (display #$(file-append python "/bin/python3") port)
                     (display "\nimport errno\nimport os\nimport pty\n" port)
-                    (display "import select\nimport signal\nimport sys\nimport time\n\n" port)
+                    (display "import select\nimport signal\nimport sys\n" port)
+                    (display "import time\n\n" port)
                     (display "program, *args = sys.argv[1:]\n" port)
                     (display "pid, master = pty.fork()\n" port)
                     (display "if pid == 0:\n    os.execv(program," port)
                     (display " [program, *args])\n\n" port)
-                    (display "sent_quit = False\nseen = b''\n" port)
+                    (display "seen = b''\n" port)
                     (display "deadline = time.monotonic() + 15\nwhile True:\n" port)
                     (display "    remaining = deadline - time.monotonic()\n" port)
                     (display "    if remaining <= 0:\n" port)
                     (display "        os.kill(pid, signal.SIGTERM)\n" port)
                     (display "        os.waitpid(pid, 0)\n        sys.exit(1)\n" port)
-                    (display "    ready, _, _ = select.select([master], [], [], remaining)\n" port)
+                    (display "    ready, _, _ = select.select(" port)
+                    (display "[master], [], [], remaining)\n" port)
                     (display "    if not ready:\n        continue\n" port)
                     (display "    try:\n        data = os.read(master, 4096)\n" port)
                     (display "    except OSError as error:\n" port)
@@ -114,16 +116,9 @@
                     (display "    if not data:\n        break\n" port)
                     (display "    os.write(1, data)\n" port)
                     (display "    seen = (seen + data)[-4096:]\n" port)
-                    (display "    if not sent_quit and b'choice of weapons:' in seen:\n" port)
-                    ;; Ctrl-Q is Bcrawl's normal immediate-quit command; y
-                    ;; confirms it if the current UI asks for confirmation.
-                    (display "        os.write(master, b'\\x11y')\n" port)
-                    (display "        sent_quit = True\n\n" port)
                     (display "_, status = os.waitpid(pid, 0)\n" port)
-                    (display "if (not sent_quit or not os.WIFEXITED(status)\n"
-                             port)
-                    (display "        or os.WEXITSTATUS(status)):\n"
-                             port)
+                    (display "if not os.WIFEXITED(status) or " port)
+                    (display "os.WEXITSTATUS(status):\n" port)
                     (display "    sys.exit(1)\n" port)))
                 (chmod smoke-runner #o555)
                 ;; LICENSE applies to the program as a whole.  CREDITS and
@@ -172,22 +167,27 @@
                     (display " XDG_RUNTIME_DIR=\"$scratch/runtime\"" port)
                     (display " TERM=xterm-256color LC_ALL=C\n" port)
                     (display "  prepare_environment\n" port)
-                    ;; Launch the real terminal frontend with a deterministic
-                    ;; character selection.  The PTY runner observes its
-                    ;; interactive weapon page before using normal quit.
+                    ;; The arena is an upstream terminal gameplay/stress mode.
+                    ;; A single trial is deterministic and exits on completion.
                     (display "  cd \"$scratch\"\n" port)
                     (display "  \"$python\" \"$runner\" \"$program\" -seed 285" port)
-                    (display " -no-save -name Goocastle -species Hu" port)
-                    (display " -background Fi >\"$scratch/ui.raw\"\n" port)
-                    (display "  test -s \"$scratch/ui.raw\"\n" port)
-                    (display "  test -z \"$(\"$find\" \"$scratch/home\"" port)
-                    (display " \"$scratch/config\" \"$scratch/cache\"" port)
-                    (display " \"$scratch/state\" \"$scratch/runtime\"" port)
-                    (display " -mindepth 1 -print -quit)\"\n" port)
-                    (display "  test -d \"$scratch/data/bcrawl\"" port)
-                    (display " && test ! -w \"$output\"\n" port)
+                    (display " -no-save -name goocastle-smoke -arena" port)
+                    (display " 'rat v rat arena:small_deep_pool delay:0 t:1'" port)
+                    (display " >\"$scratch/arena.tty\"\n" port)
+                    (display "  test -s \"$scratch/arena.tty\"" port)
+                    (display " && test -s \"$scratch/arena.result\"\n" port)
+                    ;; One completed trial reports a non-tie score.  A failed
+                    ;; arena parse instead writes an "err:" receipt.
+                    (display "  case $(<\"$scratch/arena.result\") in" port)
+                    (display "  1-0|0-1) ;; *) exit 1 ;; esac\n" port)
+                    ;; -no-save must not leave gameplay save data in the
+                    ;; isolated HOME/XDG tree; arena.result is the proof log.
+                    (display "  test -z \"$(\"$find\" \"$scratch\"" port)
+                    (display " -type f \\( -name '*.cs' -o -name '*.sav'" port)
+                    (display " -o -name 'milestones' -o -name 'logfile' \\)" port)
+                    (display " -print -quit)\" && test ! -w \"$output\"\n" port)
                     (display "  printf '%s\\n'" port)
-                    (display " 'bcrawl smoke: terminal UI OK; no store writes'\n" port)
+                    (display " 'bcrawl smoke: arena gameplay OK; no store writes'\n" port)
                     (display "  exit 0\nfi\n" port)
                     (display "run_game \"$@\"\n" port)))
                 (chmod launcher #o555)))))))
