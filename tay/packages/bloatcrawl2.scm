@@ -180,9 +180,9 @@ deadline = time.monotonic() + 20
                      "quit_after is not None and time.monotonic() >= quit_after):
 "
                      port)
-                    ;; Ctrl-Q is the documented no-save quit command.  The
-                    ;; trailing y handles a confirmation prompt if displayed.
-                    (display "        os.write(master, b'\\x11y')\n" port)
+                    ;; Ctrl-Q is the documented no-save quit command.  This
+                    ;; release asks for the literal word "yes" before Enter.
+                    (display "        os.write(master, b'\\x11yes\\r')\n" port)
                     (display "        sent_quit = True\n\n" port)
                     (display "_, status = os.waitpid(pid, 0)\n" port)
                     (display
@@ -190,10 +190,8 @@ deadline = time.monotonic() + 20
 "
                      port)
                     (display "        or not sent_quit\n" port)
-                    (display
-                     "        or b'choice of weapons' not in seen or b'Health:' not in seen
-"
-                     port)
+                    (display "        or b'choice of weapons' not in seen " port)
+                    (display "or b'Health:' not in seen\n" port)
                     (display
                      "        or not os.WIFEXITED(status) or os.WEXITSTATUS(status)):
 "
