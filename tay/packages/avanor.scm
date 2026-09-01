@@ -1,6 +1,6 @@
 ;;; GNU Guix package for the Avanor terminal roguelike.
 ;;;
-;;; SPDX-License-Identifier: AGPL-3.0-or-later
+;;; SPDX-License-Identifier: GPL-3.0-or-later
 
 (define-module (tay packages avanor)
   #:use-module (guix build-system gnu)
