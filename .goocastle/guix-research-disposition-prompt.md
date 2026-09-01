@@ -45,6 +45,14 @@ specific isolated, meaningful smoke-proof plan.  State precise acceptance facts,
 not generic recommendations.  The finding becomes the Context of a new
 host-created implementation issue.
 
+If the local channel already contains the same canonical upstream project under
+the intended package name, inspect its issue/runtime-proof history before
+choosing a disposition.  When that equivalent has already been delivered and
+closed, choose `blocked` rather than creating a second delivery ticket; name
+the existing package module and closed issue as the terminal duplicate
+evidence.  Choose `implementation-ready` only for a materially distinct
+version/update or a separately justified variant, and state that distinction.
+
 An `implementation-ready` result MUST include `runtimeEvidence` as a separate
 top-level object.  `packageName` is the exact intended Guix package name;
 `artifactPath` is the repository-relative PNG screenshot path beginning
