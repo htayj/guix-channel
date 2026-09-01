@@ -29,6 +29,15 @@ continuing; do not attempt to emit a generated patch from a shell/Node string,
 and do not write repository files with shell redirection.  Finish with
 `<promise>COMPLETE</promise>` only after the implementation is committed.
 
+Before an expensive source build, commit the syntactically valid package and
+smoke-test checkpoint so the host can recover useful work.  Run each actual
+build in the foreground under a bounded command and inspect its final result.
+Never background a build, and never poll a build using `guix build --dry-run`,
+`sleep`, or repeated equivalent commands: a dry run neither observes nor joins
+an existing build.  If a foreground build does not finish within the available
+phase time, retain the checkpoint, record the concrete build receipt, and stop
+instead of looping.
+
 You are a phase worker inside Goocastle.  Never invoke `goocastle`,
 `.goocastle/main.mts`, `goocastle start`, or `goocastle resume`; doing so would
 recursively start another harness instead of completing this bounded phase.
