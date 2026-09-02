@@ -119,6 +119,9 @@ dependency of Kaya 0.4.4.")
               (invoke "sed" "-i"
                       "-e" "s/import Control.Exception (catch)/import System.IO.Error (catchIOError)/"
                       "-e" "s/environment x = catch /environment x = catchIOError /"
+                      "compiler/Portability64.hs")
+              (invoke "sed" "-i"
+                      "-e" "/^environment :: String -> IO (Maybe String)/,/^tempfile :: IO (FilePath, Handle)/c\\environment :: String -> IO (Maybe String)\\nenvironment x = catchIOError (do\\n  e <- getEnv x\\n  return (Just e)) (const (return Nothing))\\n\\ntempfile :: IO (FilePath, Handle)"
                       "compiler/Portability64.hs")))
           (add-before 'configure 'patch-ncurses-link
             (lambda _
