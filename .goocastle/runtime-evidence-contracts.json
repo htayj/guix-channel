@@ -366,6 +366,21 @@
         },
         "successMarker": "chessrogue isolated smoke passed"
       }
+    },
+    {
+      "issueNumber": 668,
+      "packageName": "corerl",
+      "artifactPath": ".goocastle/evidence/issue-668.png",
+      "runtime": {
+        "executable": "corerl",
+        "invocation": {
+          "file": "corerl",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "CORERL_RUNTIME_OK"
+      }
     }
   ]
 }
