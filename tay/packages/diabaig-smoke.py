@@ -162,7 +162,12 @@ while True:
           and b"@" in text):
         send(b"l")
         sent_move = True
-        stage.clear()
+        # curses usually redraws only the moved glyph and changed message;
+        # keep the initial dungeon frame so the next state does not wait for
+        # static Floor/HP labels that are not emitted again.
+        if not raw_frame:
+            raw_frame.extend(stage)
+            del raw_frame[:-65536]
         state_name = "moved"
     elif state_name == "moved" and b"floor:" in text and b"hp:" in text:
         send(b"i")
@@ -170,12 +175,10 @@ while True:
         stage.clear()
         state_name = "inventory"
     elif state_name == "inventory" and b"inventory (" in text:
-        send(b"\n")
-        stage.clear()
-        state_name = "after-inventory"
-    elif (state_name == "after-inventory" and b"floor:" in text
-          and b"hp:" in text):
-        send(b"S")
+        # Queue the save command after the inventory screen's exit key.  The
+        # game returns directly to its input loop, and curses may emit no
+        # complete dungeon frame while doing so.
+        send(b"\nS")
         sent_save = True
         stage.clear()
         state_name = "save"
@@ -206,12 +209,9 @@ while True:
         stage.clear()
         state_name = "loaded-inventory"
     elif state_name == "loaded-inventory" and b"inventory (" in text:
-        send(b"\n")
-        stage.clear()
-        state_name = "loaded-after-inventory"
-    elif (state_name == "loaded-after-inventory" and b"floor:" in text
-          and b"hp:" in text):
-        send(b"Q")
+        # As above, return from the loaded inventory and quit from the game
+        # input loop without requiring a full curses redraw.
+        send(b"\nQ")
         sent_quit = True
         stage.clear()
         state_name = "quit-confirm"
