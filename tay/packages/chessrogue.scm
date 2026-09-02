@@ -79,6 +79,7 @@ dependency of Kaya 0.4.4.")
      (origin
        (method url-fetch)
        (uri "https://sourceforge.net/projects/kaya/files/kaya-stable/0.4.4/kaya-0.4.4.tgz/download")
+       (file-name "kaya-0.4.4.tgz")
        (sha256
         (base32 "0j4l6yk3b7znjhgbd27l99k2ry329vim3jc7qhj9283xbb4x4bl9"))))
     (build-system gnu-build-system)
@@ -161,6 +162,7 @@ database, SDL, OpenGL, GD, and wide-curses components are disabled.")
      (origin
        (method url-fetch)
        (uri "https://sourceforge.net/projects/chessrogue/files/chessrogue/0.3.1/chessrogue0.3.1-src.tgz/download")
+       (file-name "chessrogue0.3.1-src.tgz")
        (sha256
         (base32 "15qbvlyamnqjq5lkmbwba68l0n4yl2fxhawxb27xf5djvzfkfyf9"))))
     (build-system gnu-build-system)
