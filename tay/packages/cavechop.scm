@@ -133,8 +133,8 @@ exec \"$real\" \"$@\"~%"
                             smoke-first
                             #$(file-append coreutils-minimal "/bin/cat")
                             smoke-second
-                            #$(file-append coreutils-minimal "/bin/cat")))
-                (chmod launcher #o555))))))))
+                            #$(file-append coreutils-minimal "/bin/cat"))))
+                (chmod launcher #o555)))))))
     ;; gcc-toolchain is explicit because the upstream Makefile compiles the
     ;; complete C source tree directly.  util-linux supplies script for the
     ;; package-owned --smoke PTY path.
