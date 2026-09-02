@@ -100,10 +100,14 @@
                      "if test \"${1-}\" = \"--smoke\"; then\n"
                      port)
                     (display
-                     "  test \"$#\" -eq 1 || { echo 'usage: cutlassrl [--smoke]' >&2; exit 64; }\n"
+                     (string-append
+                      "  test \"$#\" -eq 1 || { echo 'usage: "
+                      "cutlassrl [--smoke]' >&2; exit 64; }\n")
                      port)
                     (display
-                     "  scratch=$(\"$mktemp\" -d \"${TMPDIR:-/tmp}/cutlassrl-smoke.XXXXXXXX\")\n"
+                     (string-append
+                      "  scratch=$(\"$mktemp\" -d \"
+                      "${TMPDIR:-/tmp}/cutlassrl-smoke.XXXXXXXX\")\n")
                      port)
                     (format port "  trap '~a -rf \"$scratch\"' EXIT HUP INT TERM\n"
                             rm)
@@ -131,14 +135,16 @@
                       "  first_error=\"$scratch/work/first.error\"\n"
                       "  second_error=\"$scratch/work/second.error\"\n"
                       "  command=\"$python $program Goocastle\"\n"
-                      "  if ! printf 'ls' | \"$script\" -qefc \"$command\" \"$first\" > /dev/null 2>\"$first_error\"; then\n"
+                      "  if ! printf 'ls' | \"$script\" -qefc \"$command\" "
+                      "\"$first\" > /dev/null 2>\"$first_error\"; then\n"
                       "    \"$cat\" \"$first_error\" >&2 || true\n"
                       "    echo 'cutlassrl smoke: first game failed' >&2\n"
                       "    exit 1\n"
                       "  fi\n"
                       "  test -s \"$first\"\n"
                       "  test -s \"$state/Goocastle.sav\"\n"
-                      "  if ! printf 'q!' | \"$script\" -qefc \"$command\" \"$second\" > /dev/null 2>\"$second_error\"; then\n"
+                      "  if ! printf 'q!' | \"$script\" -qefc \"$command\" "
+                      "\"$second\" > /dev/null 2>\"$second_error\"; then\n"
                       "    \"$cat\" \"$second_error\" >&2 || true\n"
                       "    echo 'cutlassrl smoke: save load game failed' >&2\n"
                       "    exit 1\n"
@@ -147,24 +153,33 @@
                       "  loaded=\"$(\"$cat\" \"$second\")\"\n"
                       "  case \"$loaded\" in\n"
                       "    *Loaded...*) ;;\n"
-                      "    *) echo 'cutlassrl smoke: save was not loaded' >&2; exit 1 ;;\n"
+                      "    *) echo 'cutlassrl smoke: save was not "
+                      "loaded' >&2; exit 1 ;;\n"
                       "  esac\n"
                       "  test ! -e \"$state/Goocastle.sav\"\n"
                       "  test -s \"$state/mainlog.log\"\n"
                       "  log=\"$(\"$cat\" \"$state/mainlog.log\")\"\n"
                       "  case \"$log\" in\n"
                       "    *name=Goocastle*) ;;\n"
-                      "    *) echo 'cutlassrl smoke: mainlog.log has no player name' >&2; exit 1 ;;\n"
+                      "    *) echo 'cutlassrl smoke: mainlog.log has no "
+                      "player name' >&2; exit 1 ;;\n"
                       "  esac\n"
                       "  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}\"; then\n"
-                      "    \"$mkdir\" -p \"$(\"$dirname\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"\n"
+                      "    \"$mkdir\" -p \"$(\"$dirname\" "
+                      "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"\n"
                       "    \"$cp\" \"$second\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n"
                       "  fi\n"
                       "  printf '%s\\n' CUTLASSRL_RUNTIME_OK\n"
                       "  exit 0\n")
                      port)
                     (display
-                     "fi\nstate=\"${XDG_DATA_HOME:-${HOME:?HOME must be set}/.local/share}/cutlassrl\"\n\"$mkdir\" -p \"$state\"\ncd \"$state\"\nexec \"$python\" \"$program\" \"$@\"\n"
+                     (string-append
+                      "fi\n"
+                      "state=\"${XDG_DATA_HOME:-${HOME:?HOME must be set}"
+                      "/.local/share}/cutlassrl\"\n"
+                      "\"$mkdir\" -p \"$state\"\n"
+                      "cd \"$state\"\n"
+                      "exec \"$python\" \"$program\" \"$@\"\n")
                      port)))
                 (chmod launcher #o555)))))))
     ;; Python 2.7 is exposed as python-2 by the current Guix channel.
