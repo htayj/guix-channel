@@ -253,6 +253,14 @@ database, SDL, OpenGL, GD, and wide-curses components are disabled.")
           (delete 'configure)
           (add-before 'build 'build-curses
             (lambda _
+              ;; Kaya otherwise embeds fresh /dev/urandom-derived secrets in
+              ;; each generated executable.  Use its documented deterministic
+              ;; seed mode so this source build is reproducible and byte-safe
+              ;; under the builder's UTF-8 locale.
+              (setenv "LC_ALL" "C")
+              (substitute* "buildCurses.sh"
+                (("kayac -force -nortchecks")
+                 "kayac -force -nortchecks -seedkey chessrogue-0.3.1"))
               (invoke "sh" "buildCurses.sh")))
           (delete 'install-license-files)
           (replace 'install
