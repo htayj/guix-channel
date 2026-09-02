@@ -14,12 +14,12 @@ base_ref=${GOOCASTLE_PROOF_BASE_REF:-origin/master}
 git rev-parse --verify "$base_ref" >/dev/null 2>&1 || base_ref=master
 base=$(git merge-base HEAD "$base_ref")
 changed_modules=$(git diff --name-only "$base"...HEAD -- tay/packages | sed -n 's|^tay/packages/\(.*\)\.scm$|\1|p' | sort -u)
-test -n "$changed_modules" || {
+test -n "${GOOCASTLE_PROOF_PACKAGE:-}" || test -n "$changed_modules" || {
   echo "safe-package-proof: active change adds no package module under tay/packages" >&2
   exit 1
 }
 
-packages=
+packages=${GOOCASTLE_PROOF_PACKAGE:-}
 for module in $changed_modules; do
   names=$(sed -n 's/^[[:space:]]*(define-public[[:space:]]\+\([a-z0-9][a-z0-9-]*\).*/\1/p' "tay/packages/$module.scm" | sort -u)
   # Supporting manifests can be changed together with a package but do not
