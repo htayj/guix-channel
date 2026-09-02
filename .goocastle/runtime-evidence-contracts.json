@@ -441,6 +441,21 @@
         },
         "successMarker": "CUTLASSRL_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 673,
+      "packageName": "dhack",
+      "artifactPath": ".goocastle/evidence/issue-673.png",
+      "runtime": {
+        "executable": "dhack",
+        "invocation": {
+          "file": "dhack",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "DHACK_RUNTIME_OK"
+      }
     }
   ]
 }
