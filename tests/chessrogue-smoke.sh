@@ -100,7 +100,7 @@ test "$proof" = 'chessrogue isolated smoke passed'
 test -s "$raw"
 grep -aF 'level 1' "$raw" >/dev/null
 grep -aF '@' "$raw" >/dev/null
-grep -aF 'Moves' "$raw" >/dev/null
+grep -aF 'Movement' "$raw" >/dev/null
 
 state="$scratch/data/chessrogue/.smoke/home"
 test -s "$state/.crsave"
