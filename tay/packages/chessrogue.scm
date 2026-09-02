@@ -125,7 +125,7 @@ dependency of Kaya 0.4.4.")
                       "compiler/Portability64.hs")
               (invoke "sed" "-i"
                       "-e" "/^import Control.Monad$/a\\import Control.Applicative (Alternative(..))"
-                      "-e" "/^instance Monad Result where/i\\instance Applicative Result where\\n    pure = Success\\n    (Success f) <*> (Success x) = Success (f x)\\n    (Failure err fn line) <*> _ = Failure err fn line\\n    _ <*> (Failure err fn line) = Failure err fn line\\n\\ninstance Alternative Result where\\n    empty = Failure \"Error\" \"(no file)\" 0\\n    Success x <|> _ = Success x\\n    Failure _ _ _ <|> y = y\\n"
+                      "-e" "/^instance Monad Result where/i\\instance Functor Result where\\n    fmap f (Success x) = Success (f x)\\n    fmap _ (Failure err fn line) = Failure err fn line\\n\\ninstance Applicative Result where\\n    pure = Success\\n    (Success f) <*> (Success x) = Success (f x)\\n    (Failure err fn line) <*> _ = Failure err fn line\\n    _ <*> (Failure err fn line) = Failure err fn line\\n\\ninstance Alternative Result where\\n    empty = Failure \"Error\" \"(no file)\" 0\\n    Success x <|> _ = Success x\\n    Failure _ _ _ <|> y = y\\n"
                       "compiler/AbsSyntax.hs")))
           (add-before 'configure 'patch-ncurses-link
             (lambda _
