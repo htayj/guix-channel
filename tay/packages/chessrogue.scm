@@ -409,7 +409,10 @@ database, SDL, OpenGL, GD, and wide-curses components are disabled.")
                     (display "exec \"$program\" \"$@\"\n" port)))
                 (chmod launcher #o555)))))))
     (native-inputs (list kaya-for-chessrogue python gcc-toolchain))
-    (inputs (list bash-minimal coreutils-minimal findutils ncurses))
+    ;; Kaya does not propagate its C-library inputs.  Keep every library used
+    ;; by the generated curses executable explicit in this consumer.
+    (inputs (list bash-minimal coreutils-minimal findutils gmp gnutls
+                  libgcrypt libgc ncurses pcre zlib))
     (home-page "https://chessrogue.sourceforge.net/")
     (synopsis "Terminal chess-themed roguelike game")
     (description
