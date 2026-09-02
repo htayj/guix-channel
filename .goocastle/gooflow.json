@@ -162,6 +162,35 @@
           "timeout": { "completionMs": 14400000 }
         }
       ]
+    },
+    {
+      "name": "guix-runtime-evidence-refresh",
+      "enforcedDefault": false,
+      "issueSpecificationMode": "disabled",
+      "selectorLabels": ["gooflow:guix-runtime-evidence-refresh"],
+      "requiredPhases": ["safe-package-proof", "runtime-screenshot"],
+      "evidence": {
+        "proofPhase": "safe-package-proof",
+        "capturePhase": "runtime-screenshot",
+        "runtimeContractPath": ".goocastle/runtime-evidence-contracts.json",
+        "adapter": "github-issue-comment"
+      },
+      "phases": [
+        {
+          "name": "safe-package-proof",
+          "type": "command",
+          "command": { "file": "sh", "args": [".goocastle/prove-guix-package.sh"] },
+          "capabilities": { "network": false, "guixDaemon": true },
+          "timeout": { "completionMs": 14400000 }
+        },
+        {
+          "name": "runtime-screenshot",
+          "type": "command",
+          "command": { "file": "sh", "args": [".goocastle/capture-guix-package-screenshot.sh"] },
+          "capabilities": { "network": false, "guixDaemon": true },
+          "timeout": { "completionMs": 14400000 }
+        }
+      ]
     }
   ]
 }

@@ -381,6 +381,21 @@
         },
         "successMarker": "CORERL_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 669,
+      "packageName": "corerl",
+      "artifactPath": ".goocastle/evidence/issue-669.png",
+      "runtime": {
+        "executable": "corerl",
+        "invocation": {
+          "file": "corerl",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "CORERL_RUNTIME_OK"
+      }
     }
   ]
 }
