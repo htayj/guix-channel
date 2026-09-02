@@ -39,7 +39,14 @@ grep -F '"--smoke"' "$contract" >/dev/null
 marker=CORERL_RUNTIME_OK
 grep -F '"successMarker": "CORERL_RUNTIME_OK"' "$contract" >/dev/null
 
-util_linux_out=$($guix_bin build -L . --no-grafts --no-substitutes util-linux)
+util_linux_out=
+for candidate in $($guix_bin build -L . --no-grafts --no-substitutes util-linux); do
+    if test -x "$candidate/bin/script"; then
+        util_linux_out=$candidate
+        break
+    fi
+done
+test -n "$util_linux_out"
 test -x "$util_linux_out/bin/script"
 test -x "$util_linux_out/bin/unshare"
 bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
