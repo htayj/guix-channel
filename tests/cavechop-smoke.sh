@@ -83,7 +83,8 @@ export XDG_CACHE_HOME="$scratch/cache"
 export XDG_STATE_HOME="$scratch/state"
 export XDG_RUNTIME_DIR="$scratch/runtime"
 export TMPDIR="$scratch/tmp"
-export TERM=xterm-256color
+# The launcher must provide the terminal type to util-linux/script itself.
+unset TERM
 # The package's smoke mode must normalize this common host locale spelling to
 # C because the minimal runtime does not necessarily ship locale data.
 export LC_ALL=C.UTF-8
