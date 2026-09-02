@@ -264,7 +264,7 @@ database, SDL, OpenGL, GD, and wide-curses components are disabled.")
       #:phases
       #~(modify-phases %standard-phases
           (delete 'configure)
-          (add-before 'build 'build-curses
+          (replace 'build
             (lambda _
               ;; Kaya otherwise embeds fresh /dev/urandom-derived secrets in
               ;; each generated executable.  Use its documented deterministic
@@ -291,9 +291,8 @@ database, SDL, OpenGL, GD, and wide-curses components are disabled.")
                 (mkdir-p libexec)
                 (mkdir-p data)
                 (mkdir-p doc)
-                (install-file "chessrogue" program)
-                (install-file "crkeymap.txt"
-                              (string-append data "/crkeymap.txt"))
+                (install-file "chessrogue" libexec)
+                (install-file "crkeymap.txt" data)
                 (for-each
                  (lambda (file)
                    (install-file file doc))
@@ -409,11 +408,10 @@ database, SDL, OpenGL, GD, and wide-curses components are disabled.")
                     (display "    export TMPDIR=$smoke_root/tmp\n" port)
                     (display "    export TERM=${TERM:-xterm-256color}\n" port)
                     (display "    export LC_ALL=C\n" port)
-                    (display "    mkdir -p \"$XDG_DATA_HOME/chessrogue\"\n" port)
-                    (display "    cp \"$keymap\" \"$XDG_DATA_HOME/chessrogue/crkeymap.txt\"\n" port)
-                    (display "    printf '%s\\n' '0|0|0|0|0|0|0|0|0|0|0|0' '0|0|0|0' '0' '-1|-1|-1' > \"$XDG_DATA_HOME/chessrogue/.crsave\"\n" port)
-                    (display "    cd \"$XDG_DATA_HOME/chessrogue\"\n" port)
-                    (display "    \"$runner\" \"$program\" \"$smoke_root/terminal.raw\" \"$XDG_DATA_HOME/chessrogue\"\n" port)
+                    (display "    cp \"$keymap\" \"$HOME/crkeymap.txt\"\n" port)
+                    (display "    printf '%s\\n' '0|0|0|0|0|0|0|0|0|0|0|0' '0|0|0|0' '0' '-1|-1|-1' > \"$HOME/.crsave\"\n" port)
+                    (display "    cd \"$HOME\"\n" port)
+                    (display "    \"$runner\" \"$program\" \"$smoke_root/terminal.raw\" \"$HOME\"\n" port)
                     (display "    if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}\"; then\n" port)
                     (display "        mkdir -p \"$(dirname \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"\n" port)
                     (display "        cp \"$smoke_root/terminal.raw\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n" port)

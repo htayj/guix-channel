@@ -102,7 +102,7 @@ grep -aF 'level 1' "$raw" >/dev/null
 grep -aF '@' "$raw" >/dev/null
 grep -aF 'Moves' "$raw" >/dev/null
 
-state="$scratch/data/chessrogue/.smoke/data/chessrogue"
+state="$scratch/data/chessrogue/.smoke/home"
 test -s "$state/.crsave"
 test -s "$state/crkeymap.txt"
 test -z "$(find "$scratch" -type f \( -name '.crsave' -o -name '.crscore' \
