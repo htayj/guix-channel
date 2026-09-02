@@ -62,7 +62,7 @@
                  "clocktim = 1779991412L;"))))
           (replace 'build
             (lambda _
-              (invoke "make" "all")))
+              (invoke "make" "all" "CC=gcc")))
           (delete 'install-license-files)
           (replace 'install
             (lambda _
