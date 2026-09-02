@@ -3933,6 +3933,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         return await retrySequential(() => runWorkflow({
           sandbox: batchSandbox,
           recoverProviderInterruptions: dispositionPolicy !== undefined,
+          // A Gooflow's declared phases are delivery gates.  A productive
+          // budget stop is recorded, but cannot silently bypass later gates.
+          ...(materializedGooflow?.requiredPhases?.length ? { continueAfterBudgetStop: true } : {}),
           ...(includeSetup ? { setup } : {}),
           phases: batch,
           ...phaseCallbacks,
