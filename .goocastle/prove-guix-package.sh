@@ -14,12 +14,32 @@ base_ref=${GOOCASTLE_PROOF_BASE_REF:-origin/master}
 git rev-parse --verify "$base_ref" >/dev/null 2>&1 || base_ref=master
 base=$(git merge-base HEAD "$base_ref")
 changed_modules=$(git diff --name-only "$base"...HEAD -- tay/packages | sed -n 's|^tay/packages/\(.*\)\.scm$|\1|p' | sort -u)
-test -n "${GOOCASTLE_PROOF_PACKAGE:-}" || test -n "$changed_modules" || {
+packages=${GOOCASTLE_PROOF_PACKAGE:-}
+
+# An evidence-refresh or audit delivery may intentionally change no package
+# module.  It can still prove one existing package, but only through the
+# active issue's reviewed runtime contract; never infer a package from an
+# artifact or an arbitrary issue number.
+if test -z "$packages" && test -z "$changed_modules" && test -n "${GOOCASTLE_ISSUE_NUMBER:-}"; then
+  packages=$(node -e '
+const fs = require("fs");
+const issueNumber = Number(process.argv[1]);
+if (!Number.isSafeInteger(issueNumber) || issueNumber < 1) process.exit(2);
+const document = JSON.parse(fs.readFileSync(".goocastle/runtime-evidence-contracts.json", "utf8"));
+const contract = document.contracts?.find((entry) => entry?.issueNumber === issueNumber);
+if (!contract || typeof contract.packageName !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(contract.packageName) || contract.artifactPath !== `.goocastle/evidence/issue-${issueNumber}.png`) process.exit(2);
+process.stdout.write(contract.packageName);
+' "$GOOCASTLE_ISSUE_NUMBER") || {
+    echo "safe-package-proof: no reviewed runtime contract for issue #$GOOCASTLE_ISSUE_NUMBER" >&2
+    exit 1
+  }
+fi
+
+test -n "$packages" || test -n "$changed_modules" || {
   echo "safe-package-proof: active change adds no package module under tay/packages" >&2
   exit 1
 }
 
-packages=${GOOCASTLE_PROOF_PACKAGE:-}
 for module in $changed_modules; do
   names=$(sed -n 's/^[[:space:]]*(define-public[[:space:]]\+\([a-z0-9][a-z0-9-]*\).*/\1/p' "tay/packages/$module.scm" | sort -u)
   # Supporting manifests can be changed together with a package but do not
