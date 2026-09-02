@@ -1645,7 +1645,20 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
       // so permit this one subsequent replacement capture without requiring a
       // later Gooflow phase to have advanced the branch.
       const recordedArtifactCommit = journal.runtimeEvidence?.artifactCommitSha === artifactStartSha;
-      if (!priorStartIsAncestor || (!journaledLaterPhase && !recordedArtifactCommit)) {
+      // Reconciliation can rewrite that recorded SHA.  In that case, accept
+      // only the current tip when it is independently recognizable as the
+      // deterministic, single-file artifact commit; no unrelated branch
+      // advance may satisfy this escape hatch.
+      const currentParents = hostGit(["rev-list", "--parents", "-n", "1", artifactStartSha], { encoding: "utf8" })
+        .trim().split(" ").filter(Boolean);
+      const currentChanges = gitAt(taskWorktree.worktreePath, ["diff-tree", "--no-commit-id", "--name-status", "-r", "-z", currentParents[1] ?? artifactStartSha, artifactStartSha], { encoding: "utf8" })
+        .split(" ").filter(Boolean);
+      const rebasedArtifactCommit = currentParents.length === 2 &&
+        hostGit(["show", "-s", "--format=%s", artifactStartSha], { encoding: "utf8" }).trim() === artifactCommitSubject &&
+        currentChanges.length === 2 && ["A", "M"].includes(currentChanges[0]!) &&
+        currentChanges[1] === evidenceConfig.artifactPath;
+      if ((!priorStartIsAncestor && !rebasedArtifactCommit) ||
+          (!journaledLaterPhase && !recordedArtifactCommit && !rebasedArtifactCommit)) {
         throw new Error("Runtime screenshot artifact branch changed before its host commit; inspect the preserved branch before resuming");
       }
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
