@@ -101,11 +101,11 @@ dependency of Kaya 0.4.4.")
               (for-each
                (lambda (file)
                  (invoke "sed" "-i"
-                         "-e" "s/^import List$/import Data.List/"
-                         "-e" "s/^import Char$/import Data.Char/"
-                         "-e" "s/^import Monad$/import Control.Monad/"
-                         "-e" "s/^import IO$/import System.IO/"
-                         "-e" "s/^import System.Cmd$/import System.Process/"
+                         "-e" "s/^import List/import Data.List/"
+                         "-e" "s/^import Char/import Data.Char/"
+                         "-e" "s/^import Monad/import Control.Monad/"
+                         "-e" "s/^import IO/import System.IO/"
+                         "-e" "s/^import System.Cmd/import System.Process/"
                          "-e" "/^import System$/c\\import System.Environment\\nimport System.Exit\\nimport System.Process"
                          file))
                (find-files "compiler" "\\.hs$"))
