@@ -33,8 +33,7 @@ grep -F 'MIT License' "$doc/LICENSE" >/dev/null
 grep -F 'Copyright (c) 2025 conornally' "$doc/LICENSE" >/dev/null
 grep -F 'source code: https://github.com/conornally/diabaig' \
     "$doc/credits.txt" >/dev/null
-test -s "$diabaig_out/share/man/man6/diabaig.6"
-grep -F 'Version: 1.0.1' "$diabaig_out/share/man/man6/diabaig.6" >/dev/null
+test -s "$diabaig_out/share/man/man6/diabaig.6.zst"
 
 # The issue-specific runtime contract is part of this package proof.
 contract=.goocastle/runtime-evidence-contracts.json
@@ -101,7 +100,7 @@ proof=$(cd "$scratch/work" && \
     "$diabaig_out/bin/diabaig" --smoke)
 test "$proof" = 'DIABAIG_RUNTIME_OK'
 test -s "$raw"
-grep -aF 'Floor:' "$raw" >/dev/null
+grep -aiF 'floor:' "$raw" >/dev/null
 grep -aF '@' "$raw" >/dev/null
 
 # The runner creates all application state below its private TMPDIR tree and

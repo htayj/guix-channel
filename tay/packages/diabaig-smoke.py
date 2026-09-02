@@ -91,7 +91,9 @@ if pid == 0:
     os.chdir(state)
     os.execv(program, [program, "-t", "-s", "329"])
 
-fcntl.ioctl(master, termios.TIOCSWINSZ, struct.pack("HHHH", 33, 78, 0, 0))
+# The upstream startup check requires dimensions strictly greater than its
+# NCOLS=78 and NROWS=33 constants, so use a fixed 80x34 PTY.
+fcntl.ioctl(master, termios.TIOCSWINSZ, struct.pack("HHHH", 34, 80, 0, 0))
 deadline = time.monotonic() + 30
 stage = bytearray()
 raw_frame = bytearray()
