@@ -2532,16 +2532,15 @@ const exceptionDiagnosticFor = (error, maximum = 1_000) => {
 const MAX_REQUIRED_COMMAND_REPAIR_EPOCHS = 2;
 const repairFailureFingerprint = (phase, receipt) => JSON.stringify({ phase, receipt });
 const reopenBlockedRequiredCommandRepair = async (journal, phaseName, semanticFingerprint) => {
-  if (journal.repair?.state !== "blocked") return { journal, reopened: false };
+  if (journal.repair?.state !== "blocked") return { journal, reopened: false, operatorAdvancedBranch: false };
   // A normal scheduler launch must preserve terminal exhaustion, even when a
   // generated runner or Gooflow changed. Only an explicit resume may reopen it.
   const latest = journal.repair.epochs.at(-1);
-  if (!RESUME_ONLY) return { journal, reopened: false };
+  if (!RESUME_ONLY) return { journal, reopened: false, operatorAdvancedBranch: false };
   // A missing fingerprint identifies a journal written before this migration.
   // Re-enter it once under the current runner/Gooflow identity; the normal
   // two-attempt bound is then reinstated and future unchanged failures remain
   // terminally blocked.
-  if (latest?.semanticFingerprint === semanticFingerprint && !RECOVER_BLOCKED) return { journal, reopened: false };
   const branchHead = exactRefSha("refs/heads/" + journal.branch);
   if (branchHead === undefined) {
     throw new Error(
@@ -2549,8 +2548,23 @@ const reopenBlockedRequiredCommandRepair = async (journal, phaseName, semanticFi
       "Inspect the journal and run: " + resumeRecoveryCommand(),
     );
   }
+  // A maintainer can repair the preserved branch directly after the bounded
+  // window is exhausted.  Treat that as a new, explicitly acknowledged repair
+  // input only when they have also removed the external blocked disposition.
+  // Either signal alone is insufficient: a label-only edit must not create an
+  // unbounded retry loop, and a branch advance must stay quarantined until the
+  // maintainer deliberately unblocks the issue.
+  const operatorAdvancedBranch = latest !== undefined &&
+    branchHead !== latest.startSha &&
+    await retryGitHub("required command repair operator recovery check", async () => {
+      const current = await selectedIssue(journal.issueNumber);
+      return !current.labels.some((label) => label.name === "state:blocked");
+    });
+  if (latest?.semanticFingerprint === semanticFingerprint && !RECOVER_BLOCKED && !operatorAdvancedBranch) {
+    return { journal, reopened: false, operatorAdvancedBranch: false };
+  }
   const failureReceipt = latest?.failureReceipt;
-  if (failureReceipt === undefined) return { journal, reopened: false };
+  if (failureReceipt === undefined) return { journal, reopened: false, operatorAdvancedBranch: false };
   const reopened = {
     state: "scheduled",
     reopenedFromBlocked: true,
@@ -2567,6 +2581,7 @@ const reopenBlockedRequiredCommandRepair = async (journal, phaseName, semanticFi
   return {
     journal: await transitionSequentialTaskJournal(gitCommonDir, journal, { repair: reopened, status: "active" }),
     reopened: true,
+    operatorAdvancedBranch,
   };
 };
 const reconcileReopenedRequiredCommandRepair = async (journal, issueNumber) => {
@@ -2991,7 +3006,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           if (RECOVER_BLOCKED) explicitlyRecoveredBlockedIssues.add(issue.number);
           console.log(
             "Reopened bounded repair epoch for #" + issue.number + " after " +
-              (RECOVER_BLOCKED ? "the explicit maintainer recovery request for " : "the runner or Gooflow semantics changed for ") +
+              (RECOVER_BLOCKED ? "the explicit maintainer recovery request for "
+                : reopened.operatorAdvancedBranch ? "a maintainer unblocked an advanced preserved branch for "
+                : "the runner or Gooflow semantics changed for ") +
               JSON.stringify(latestRepair.phase) +
               (currentRepairWorkflow?.evidence?.capturePhase === latestRepair.phase
                 ? "; the durable implementation and audit receipts are retained before the capture is retried."
