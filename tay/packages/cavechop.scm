@@ -125,15 +125,15 @@ cd \"$state\"~%
 exec \"$real\" \"$@\"~%"
                             #$(file-append bash-minimal)
                             program
-                            #$(file-append coreutils-minimal "/bin/mkdir")
-                            #$(file-append gzip "/bin")
-                            #$(file-append coreutils-minimal "/bin")
+                            #$(file-append coreutils-minimal)
+                            #$(file-append gzip)
+                            #$(file-append coreutils-minimal)
                             #$(file-append ncurses)
-                            #$(file-append coreutils-minimal "/bin/mkdir")
+                            #$(file-append coreutils-minimal)
                             smoke-first
-                            #$(file-append coreutils-minimal "/bin/cat")
+                            #$(file-append coreutils-minimal)
                             smoke-second
-                            #$(file-append coreutils-minimal "/bin/cat"))))
+                            #$(file-append coreutils-minimal))))
                 (chmod launcher #o555)))))))
     ;; gcc-toolchain is explicit because the upstream Makefile compiles the
     ;; complete C source tree directly.  util-linux supplies script for the
