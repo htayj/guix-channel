@@ -38,9 +38,9 @@ test -s "$diabaig_out/share/man/man6/diabaig.6.zst"
 # The issue-specific runtime contract is part of this package proof.
 contract=.goocastle/runtime-evidence-contracts.json
 test -s "$contract"
-grep -F '"issueNumber": 674' "$contract" >/dev/null
+grep -F '"issueNumber": 677' "$contract" >/dev/null
 grep -F '"packageName": "diabaig"' "$contract" >/dev/null
-grep -F '"artifactPath": ".goocastle/evidence/issue-674.png"' \
+grep -F '"artifactPath": ".goocastle/evidence/issue-677.png"' \
     "$contract" >/dev/null
 grep -F '"executable": "diabaig"' "$contract" >/dev/null
 grep -F '"--smoke"' "$contract" >/dev/null
