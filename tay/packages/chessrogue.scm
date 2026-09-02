@@ -148,7 +148,26 @@ dependency of Kaya 0.4.4.")
               (invoke "sed" "-i"
                       "-e" "s/^    popvals n (a+1) =/    popvals n a | a > 0 =/"
                       "-e" "s/popvals (n+1) a/popvals (n+1) (a-1)/"
-                      "compiler/CodegenCPP.hs")))
+                      "compiler/CodegenCPP.hs")
+              ;; Boehm GC 8.2 changed this setter from returning the old
+              ;; divisor to returning void.  Keep Kaya's historical API by
+              ;; providing a small compatibility wrapper that does return it.
+              (substitute* "stdlib/Prelude.k"
+                (("public Int gcSetFSD\\(Int fsd\\) = GC_set_free_space_divisor;")
+                 "public Int gcSetFSD(Int fsd) = do_GC_set_free_space_divisor;"))
+              (substitute* "rts/stdfuns.h"
+                (("void do_GC_enable_incremental\\(\\);" declaration)
+                 (string-append declaration
+                                "\\nkint do_GC_set_free_space_divisor(kint);")))
+              (substitute* "rts/stdfuns.cc"
+                (("void runFn\\(void\\* obj, void\\* finalizer\\) \\{" run-fn)
+                 (string-append
+                  "kint do_GC_set_free_space_divisor(kint fsd) {\\n"
+                  "    kint old = GC_get_free_space_divisor();\\n"
+                  "    GC_set_free_space_divisor(fsd);\\n"
+                  "    return old;\\n"
+                  "}\\n\\n"
+                  run-fn)))))
           (add-after 'configure 'patch-generated-repl
             (lambda _
               ;; Do not pull an unpinned optional readline Haskell package into
