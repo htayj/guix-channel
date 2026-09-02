@@ -58,11 +58,11 @@
               (substitute* "Makefile"
                 (("@echo \"//Auto generated header\" > \\$@")
                  "@printf '%s\\n' \"//Auto generated header\" > $@")
-                (("@echo \"#ifndef DATAHEADER_H\"> \\$@")
+                (("@echo \"#ifndef DATAHEADER_H\">> \\$@")
                  "@printf '%s\\n' \"#ifndef DATAHEADER_H\" > $@")
-                (("@echo \"#define DATAHEADER_H\\n\" >> \\$@")
+                (("@echo \"#define DATAHEADER_H.* >> \\$@")
                  "@printf '%s\\n' \"#define DATAHEADER_H\" >> $@")
-                (("@echo \"\\n#endif//DATAHEADER_H\\n\" >> \\$@")
+                (("@echo \".*#endif//DATAHEADER_H.* >> \\$@")
                  "@printf '%s\\n' \"#endif//DATAHEADER_H\" >> $@"))))
           (replace 'build
             (lambda _
