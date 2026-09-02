@@ -43,7 +43,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	azurra-gtk-theme pdp10-xpl-pdp-10 faugus-launcher react-blessed wanderers \
 	clojure-roguelike astx acehack bell-labs-rogue7 aquarium-arena atlas-warriors \
 	bcrawl avanor bootrogue brogue brogue-lite chessrogue corerl cryptrover \
-	cutlassrl dhack
+	cutlassrl dhack diabaig
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -75,6 +75,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-corerl \
 	check-cutlassrl \
 	check-cryptrover \
+	check-diabaig \
 	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs build build-sources
 
 check-source-count:
@@ -267,6 +268,9 @@ check-dhack:
 
 check-cryptrover:
 	GUIX="$(GUIX)" tests/cryptrover-smoke.sh
+
+check-diabaig:
+	GUIX="$(GUIX)" tests/diabaig-smoke.sh
 
 check-trebuchet:
 	GUIX="$(GUIX)" tests/trebuchet-smoke.sh
