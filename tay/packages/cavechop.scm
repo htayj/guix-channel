@@ -58,7 +58,11 @@
                 (("fwrite(permobjs, 100, sizeof (struct permobj), fp);")
                  "fwrite(permobjs, NUM_OF_PERMOBJS, sizeof (struct permobj), fp);")
                 (("fread(permobjs, 100, sizeof (struct permobj), fp);")
-                 "fread(permobjs, NUM_OF_PERMOBJS, sizeof (struct permobj), fp);"))))
+                 ;; struct permobj contains process-local description
+                 ;; pointers.  Keep the historical bytes for file-layout
+                 ;; compatibility, but leave the new process's static table
+                 ;; intact instead of loading stale addresses.
+                 "fseek(fp, sizeof permobjs, SEEK_CUR);"))))
           (replace 'build
             (lambda _
               (invoke "make" "all" "CC=gcc")))
