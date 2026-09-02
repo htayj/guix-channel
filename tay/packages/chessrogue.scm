@@ -141,6 +141,14 @@ dependency of Kaya 0.4.4.")
               (invoke "sed" "-i"
                       "-e" "s/^import System.Directory$/import System.Directory hiding (findFile)/"
                       "compiler/Module.hs")
+              ;; Current Boehm GC keeps the C++ bad-allocation helper in
+              ;; libgccpp rather than libgc.  Kaya's historical linker template
+              ;; names only libgc, which breaks allocation-using programs and
+              ;; the upstream compiler regression tests.
+              (substitute* "compiler/Driver.hs"
+                (("-lgc") "-lgc -lgccpp"))
+              (substitute* "rts/Makefile.in"
+                (("-lgc") "-lgc -lgccpp"))
               (invoke "sed" "-i"
                       "-e" "/^import Control.Monad$/a\\import Control.Applicative (Alternative(..))"
                       "-e" "/^instance Monad Result where/i\\instance Functor Result where\\n    fmap f (Success x) = Success (f x)\\n    fmap _ (Failure err fn line) = Failure err fn line\\n\\ninstance Applicative Result where\\n    pure = Success\\n    (Success f) <*> (Success x) = Success (f x)\\n    (Failure err fn line) <*> _ = Failure err fn line\\n    _ <*> (Failure err fn line) = Failure err fn line\\n\\ninstance Alternative Result where\\n    empty = Failure \"Error\" \"(no file)\" 0\\n    Success x <|> _ = Success x\\n    Failure _ _ _ <|> y = y\\n"
