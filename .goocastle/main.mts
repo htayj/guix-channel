@@ -1958,6 +1958,36 @@ const reconciliationRecovery = (journal) =>
   "Resolve the preserved replay with: " + shellDisplayCommand("git", ["-C", journal.reconciliation.recoveryWorktreePath, "rebase", "--continue"]) +
   "; or abandon only the replay with: " + shellDisplayCommand("git", ["-C", journal.reconciliation.recoveryWorktreePath, "rebase", "--abort"]) + ". " +
   "The original work is recoverable with: " + shellDisplayCommand("git", ["-C", hostWorkTree, "branch", "-f", "--", journal.branch, journal.reconciliation.backupBranch]);
+// Reconciliation rewrites only committed task history.  A failed repair agent
+// may also leave its next edit unstaged; preserve that state while moving the
+// checked-out task worktree to the rewritten branch so the following repair
+// phase can complete it.  This mirrors the signing boundary's handling of
+// dirty state and never discards user/agent work.
+const resetCheckedOutWorktreePreservingDirtyState = (worktree, target, context) => {
+  const dirty = gitAt(worktree, ["status", "--porcelain=v1", "--untracked-files=all"], { encoding: "utf8" }).trim() !== "";
+  let stashed = false;
+  if (dirty) {
+    gitAt(worktree, ["stash", "push", "--include-untracked", "--message", "goocastle " + context], {
+      encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1024 * 1024,
+    });
+    stashed = true;
+  }
+  try {
+    gitAt(worktree, ["reset", "--keep", target], { stdio: "inherit" });
+  } catch (error) {
+    if (stashed) {
+      try { gitAt(worktree, ["stash", "pop", "--index"], { stdio: "inherit" }); } catch { /* preserve the stash for manual recovery */ }
+    }
+    throw error;
+  }
+  if (stashed) {
+    try {
+      gitAt(worktree, ["stash", "pop", "--index"], { stdio: "inherit" });
+    } catch (error) {
+      throw new Error("Could not restore dirty task state after " + context + "; the rewritten branch is preserved and Git left the conflicted worktree for recovery", { cause: error });
+    }
+  }
+};
 const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => {
   const currentBase = hostGit(["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
   const recordedBase = journal.reconciliation?.state === "started"
@@ -2013,7 +2043,7 @@ const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => 
       if (dirty === disposableResult) {
         gitAt(checkedOutWorktree, ["clean", "-f", "--", dispositionPolicy.resultPath], { stdio: "inherit" });
       }
-      gitAt(checkedOutWorktree, ["reset", "--keep", currentBase], { stdio: "inherit" });
+      resetCheckedOutWorktreePreservingDirtyState(checkedOutWorktree, currentBase, "base reconciliation");
     }
     return await transitionSequentialTaskJournal(gitCommonDir, journal, {
       reconciliation: {
@@ -2108,14 +2138,7 @@ const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => 
   if (checkedOutWorktree === undefined) {
     hostGit(["branch", "-f", journal.branch, rewrittenHead]);
   } else {
-    const dirty = gitAt(checkedOutWorktree, ["status", "--porcelain=v1", "-z"], { encoding: "utf8" });
-    if (dirty.length > 0) {
-      throw new Error(
-        "Cannot finish reconciliation for #" + issueNumber + ": the checked-out task worktree has uncommitted changes. " +
-          "Preserved worktree: " + checkedOutWorktree + ". Original work remains at " + backupBranch + ".",
-      );
-    }
-    gitAt(checkedOutWorktree, ["reset", "--keep", rewrittenHead], { stdio: "inherit" });
+    resetCheckedOutWorktreePreservingDirtyState(checkedOutWorktree, rewrittenHead, "base reconciliation");
   }
   const phases = journal.phases.map((phase) => {
     if (phase.state !== "running" || !phase.startSha) return phase;
