@@ -147,5 +147,6 @@ libm, without using the upstream platform binaries or any network access at
 build or runtime.  The public launcher keeps the rebuilt program private under
 @file{libexec}, runs it from @file{$XDG_STATE_HOME/diabaig}, and provides a
 package-owned @option{--smoke} mode that drives the real game through an
-isolated PTY to verify movement, inventory, save, restore, and cleanup.")
+isolated PTY to verify movement, inventory, save, restore, cleanup, and the
+fresh post-class dungeon frame used for runtime evidence.")
     (license license:expat)))

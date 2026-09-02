@@ -101,7 +101,9 @@ proof=$(cd "$scratch/work" && \
 test "$proof" = 'DIABAIG_RUNTIME_OK'
 test -s "$raw"
 grep -aiF 'floor:' "$raw" >/dev/null
+grep -aiF 'hp:' "$raw" >/dev/null
 grep -aF '@' "$raw" >/dev/null
+test -z "$(grep -aiF 'choose your starting class' "$raw" || true)"
 
 # The runner creates all application state below its private TMPDIR tree and
 # removes the save files before returning.  Nothing may escape into the outer
