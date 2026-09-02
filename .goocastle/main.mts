@@ -3574,9 +3574,16 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     }
     const pendingPhases = phases.filter((phase) => {
       const record = phaseRecord(journal, phase.name);
+      // A productive resource-bounded agent phase has already supplied the
+      // commit evidence required by its Gooflow.  It must not be replayed on
+      // resume merely because the workflow as a whole stopped early; doing so
+      // discards the completed receipt during a fresh attempt and can turn a
+      // valid delivery into a no-op loop after base reconciliation.
+      const productiveStoppedPhase = record?.stoppedEarly === true && (record.commitCount ?? 0) > 0;
       return activeRepair
         ? repairPhases.some((candidate) => candidate?.name === phase.name)
-        : dispositionResultRequired || record?.state !== "complete" || record?.stoppedEarly === true;
+        : dispositionResultRequired || (record?.state !== "complete" && !productiveStoppedPhase) ||
+          (record?.stoppedEarly === true && !productiveStoppedPhase);
     });
     const freshAttemptPhases = activeRepair
       ? repairPhases
