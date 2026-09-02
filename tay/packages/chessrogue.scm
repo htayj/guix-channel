@@ -135,7 +135,8 @@ dependency of Kaya 0.4.4.")
               (invoke "sed" "-i"
                       "-e" "/^import Control.Monad$/a\\import System.IO.Error (catchIOError)"
                       "-e" "s/catch (do startup <- getStartup prtype libdirs/catchIOError (do { startup <- getStartup prtype libdirs;/"
-                      "-e" "/^                 let pt =/s/[[:space:]]*$/;/"
+                      "-e" "/^                 let pt =/s/let pt =/let { pt =/"
+                      "-e" "/^                 let { pt =/s/;$/ };/"
                       "-e" "s/compile newroot libdirs opts pt extra mainfile)/compile newroot libdirs opts pt extra mainfile })/"
                       "compiler/Driver.hs")
               (invoke "sed" "-i"
