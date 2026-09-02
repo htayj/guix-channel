@@ -50,6 +50,20 @@
           (delete 'configure)
           (delete 'check)
           (delete 'install-license-files)
+          (add-before 'build 'fix-header-generation
+            (lambda _
+              ;; Bash does not interpret backslash escapes in echo's default
+              ;; mode.  The upstream Makefile therefore emits literal "\\n"
+              ;; sequences into this generated header in the Guix builder.
+              (substitute* "Makefile"
+                (("@echo \"//Auto generated header\" > \\$@")
+                 "@printf '%s\\n' \"//Auto generated header\" > $@")
+                (("@echo \"#ifndef DATAHEADER_H\"> \\$@")
+                 "@printf '%s\\n' \"#ifndef DATAHEADER_H\" > $@")
+                (("@echo \"#define DATAHEADER_H\\n\" >> \\$@")
+                 "@printf '%s\\n' \"#define DATAHEADER_H\" >> $@")
+                (("@echo \"\\n#endif//DATAHEADER_H\\n\" >> \\$@")
+                 "@printf '%s\\n' \"#endif//DATAHEADER_H\" >> $@"))))
           (replace 'build
             (lambda _
               ;; The Linux toolchain generates build/data_embedded.h with xxd
@@ -97,19 +111,25 @@
                      "export TERM=\"${TERM:-xterm-256color}\"\n"
                      port)
                     (display
-                     "export TERMINFO_DIRS=\"$terminfo${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"\n"
+                     (string-append
+                      "export TERMINFO_DIRS=\"$terminfo"
+                      "${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"\n")
                      port)
                     (display
                      "if test \"${1-}\" = --smoke; then\n"
                      port)
                     (display
-                     "  test \"$#\" -eq 1 || { echo 'usage: diabaig [--smoke]' >&2; exit 64; }\n"
+                     (string-append
+                      "  test \"$#\" -eq 1 || { echo "
+                      "'usage: diabaig [--smoke]' >&2; exit 64; }\n")
                      port)
                     (display "  exec \"$python\" \"$runner\" \"$real\"\n"
                              port)
                     (display "fi\n" port)
                     (display
-                     "state_root=\"${XDG_STATE_HOME:-${HOME:?HOME or XDG_STATE_HOME must be set}/.local/state}\"\n"
+                     (string-append
+                      "state_root=\"${XDG_STATE_HOME:-${HOME:?"
+                      "HOME or XDG_STATE_HOME must be set}/.local/state}\"\n")
                      port)
                     (display "state=\"$state_root/diabaig\"\n" port)
                     (display "\"$mkdir\" -p \"$state\"\n" port)
