@@ -109,6 +109,7 @@ real=~a~%
 state=\"${XDG_STATE_HOME:-${HOME:?}/.local/state}/cavechop\"~%
 ~a/bin/mkdir -p \"$state\"~%
 export PATH=\"~a/bin:~a/bin${PATH:+:$PATH}\"~%
+export TERM=\"${TERM:-xterm-256color}\"~%
 export TERMINFO_DIRS=\"~a/share/terminfo${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"~%
 if test \"${1-}\" = --smoke; then~%
   test \"$#\" -eq 1~%
