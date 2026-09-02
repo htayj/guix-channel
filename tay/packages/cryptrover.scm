@@ -29,9 +29,8 @@
              "v2/code.google.com/cryptrover/cryptrover_1.1_nosound.tar.gz"))
        (file-name (string-append name "-" version ".tar.gz"))
        ;; SHA-256: 4c8fdb89c21e3302b81afcb7fb974e02533685c461a1e395e869c58e1ea51494
-       ;; The RFC 4648 base32 rendering is
-       ;; jsh5xcocdyzqfoa27s37xf2oajjtnboemgq6hfpinhcy4hvfcska;
-       ;; origin hashes use Guix's Nix-base32 rendering below.
+       ;; Guix's (base32 ...) origin literal uses Nix-base32:
+       ;; 150lllg8xib9x2ay78b1qj2kclq29sbzpdzw3aw04cqyqa4xp3sc.
        (sha256
         (base32 "150lllg8xib9x2ay78b1qj2kclq29sbzpdzw3aw04cqyqa4xp3sc"))))
     (build-system gnu-build-system)
@@ -57,6 +56,18 @@
               (substitute* "src/mdport.c"
                 (("#include \"mdport.h\"")
                  "#include \"mdport.h\"\n#include <ctype.h>"))))
+          (add-after 'fix-ctype-include 'fix-panel-cleanup-order
+            (lambda _
+              ;; ncurses panels retain their WINDOW pointer.  The upstream
+              ;; order frees each window before its panel, which segfaults
+              ;; with current ncurses when the initial help screen closes.
+              (substitute* "src/io.c"
+                (("delwin\\(help_win\\);") "")
+                (("del_panel\\(help_panel\\);")
+                 "del_panel(help_panel);\n\tdelwin(help_win);")
+                (("delwin\\(highscore_win\\);") "")
+                (("del_panel\\(highscore_panel\\);")
+                 "del_panel(highscore_panel);\n\tdelwin(highscore_win);"))))
           (replace 'build
             (lambda _
               ;; Calling make directly avoids configure's wget-based optional
@@ -76,6 +87,7 @@
                      (dirname #$(file-append coreutils-minimal "/bin/dirname"))
                      (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
                      (mktemp #$(file-append coreutils-minimal "/bin/mktemp"))
+                     (sleep #$(file-append coreutils-minimal "/bin/sleep"))
                      (script #$(file-append util-linux "/bin/script"))
                      (terminfo (string-append #$ncurses "/share/terminfo")))
                 (mkdir-p bin)
@@ -109,6 +121,7 @@
                             program script cp dirname)
                     (format port "mkdir=~s\nmktemp=~s\nterminfo=~s\n"
                             mkdir mktemp terminfo)
+                    (format port "sleep=~s\n" sleep)
                     (format port "shell=~s\n" shell)
                     (display
                      (string-append
@@ -158,9 +171,17 @@
                     (display "  \"$mkdir\" -p \"$state\"\n" port)
                     (display "  cd \"$state\"\n" port)
                     (display "  raw=\"$scratch/work/terminal.raw\"\n" port)
-                    (display
-                     "  printf '?.\\033  ' | \"$script\" -qefc \"$program\""
-                     port)
+                    ;; md_readchar waits briefly after ESC to distinguish it
+                    ;; from a cursor sequence, so keep ESC separate from the
+                    ;; two space keys that dismiss the loss screens.
+                    (display "  {\n" port)
+                    (display "    printf '?.'\n" port)
+                    (display "    \"$sleep\" 1\n" port)
+                    (display "    printf '\\033'\n" port)
+                    (display "    \"$sleep\" 2\n" port)
+                    (display "    printf '  '\n" port)
+                    (display "    \"$sleep\" 1\n" port)
+                    (display "  } | \"$script\" -qefc \"$program\"" port)
                     (display
                      " \"$raw\" >\"$scratch/work/script.stdout\"\n" port)
                     (display "  test -s \"$raw\"\n" port)

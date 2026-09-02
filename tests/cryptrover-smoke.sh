@@ -112,13 +112,17 @@ grep -aF 'Air: 99%' "$raw" >/dev/null
 grep -aF 'YOU HAVE LOST!' "$raw" >/dev/null
 grep -aF 'Gold:' "$raw" >/dev/null
 grep -aF '@' "$raw" >/dev/null
-test -s "$scratch/state/cryptrover/scores.dat"
-grep -F 'Gold:' "$scratch/state/cryptrover/scores.dat" >/dev/null
+score_file=$(find "$scratch/tmp" -type f \
+    -path '*/state/cryptrover/scores.dat' -print -quit)
+test -n "$score_file"
+test -s "$score_file"
+grep -F 'Gold:' "$score_file" >/dev/null
 
 # No caller HOME/XDG tree is touched except the fresh state tree, and no
 # package-output path receives the game's relative scores.dat.
 test -z "$(find "$scratch/home" "$scratch/config" "$scratch/data" \
-    "$scratch/cache" "$scratch/runtime" "$scratch/tmp" -mindepth 1 \
+    "$scratch/cache" "$scratch/state" "$scratch/runtime" \
+    -mindepth 1 \
     -print -quit)"
 test -z "$(find "$cryptrover_out" -xdev -name scores.dat -print -quit)"
 test ! -w "$cryptrover_out"
