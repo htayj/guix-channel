@@ -154,7 +154,7 @@ dependency of Kaya 0.4.4.")
                       "-e" "s/^import Ptr$/import Foreign.Ptr/"
                       "-e" "s/^import IO$/import System.IO/"
                       "-e" "/^import System.Console.*Readline$/d"
-                      "-e" "/^import System.IO$/a\\readline :: String -> IO (Maybe String)\\nreadline prompt = do\\n  putStr prompt\\n  hFlush stdout\\n  atEnd <- isEOF\\n  if atEnd then return Nothing else fmap Just getLine\\n\\naddHistory :: String -> IO ()\\naddHistory _ = return ()"
+                      "-e" "/^import System.Directory$/a\\readline :: String -> IO (Maybe String)\\nreadline prompt = do\\n  putStr prompt\\n  hFlush stdout\\n  atEnd <- isEOF\\n  if atEnd then return Nothing else fmap Just getLine\\n\\naddHistory :: String -> IO ()\\naddHistory _ = return ()"
                       "compiler/REPL.hs")))
           (add-before 'configure 'patch-ncurses-link
             (lambda _
