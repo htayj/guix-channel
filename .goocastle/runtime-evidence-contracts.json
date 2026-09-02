@@ -426,6 +426,21 @@
         },
         "successMarker": "CRYPTROVER_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 672,
+      "packageName": "cutlassrl",
+      "artifactPath": ".goocastle/evidence/issue-672.png",
+      "runtime": {
+        "executable": "cutlassrl",
+        "invocation": {
+          "file": "cutlassrl",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "CUTLASSRL_RUNTIME_OK"
+      }
     }
   ]
 }
