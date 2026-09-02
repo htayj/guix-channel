@@ -134,7 +134,11 @@ dependency of Kaya 0.4.4.")
               (invoke "sed" "-i"
                       "-e" "/^import Control.Monad$/a\\import Control.Applicative (Alternative(..))"
                       "-e" "/^instance Monad Result where/i\\instance Functor Result where\\n    fmap f (Success x) = Success (f x)\\n    fmap _ (Failure err fn line) = Failure err fn line\\n\\ninstance Applicative Result where\\n    pure = Success\\n    (Success f) <*> (Success x) = Success (f x)\\n    (Failure err fn line) <*> _ = Failure err fn line\\n    _ <*> (Failure err fn line) = Failure err fn line\\n\\ninstance Alternative Result where\\n    empty = Failure \"Error\" \"(no file)\" 0\\n    Success x <|> _ = Success x\\n    Failure _ _ _ <|> y = y\\n"
-                      "compiler/AbsSyntax.hs")))
+                      "compiler/AbsSyntax.hs")
+              (invoke "sed" "-i"
+                      "-e" "s/^    popvals n (a+1) =/    popvals n a | a > 0 =/"
+                      "-e" "s/popvals (n+1) a/popvals (n+1) (a-1)/"
+                      "compiler/CodegenCPP.hs")))
           (add-before 'configure 'patch-ncurses-link
             (lambda _
               ;; Kaya's probe and Curses library metadata use the historical
