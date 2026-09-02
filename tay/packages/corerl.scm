@@ -37,6 +37,11 @@
       #~(modify-phases %standard-phases
           (delete 'configure)
           (delete 'check)
+          (add-after 'unpack 'restore-upstream-source-name
+            (lambda _
+              ;; url-fetch uses the provenance-preserving package filename;
+              ;; the documented upstream command names the file 1kcore.c.
+              (rename-file "corerl-1kib-20131024.c" "1kcore.c")))
           (replace 'build
             (lambda _
               ;; Keep the upstream build command and select GNU89 for its
