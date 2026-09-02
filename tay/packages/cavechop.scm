@@ -52,7 +52,13 @@
                 ;; The upstream load call omits the .gz suffix, which makes
                 ;; gzip reject the save and leaves load_game with no file.
                 (("\"gunzip cavechop.sav\"" )
-                 (string-append "\"" #$gzip "/bin/gunzip cavechop.sav.gz\"")))))
+                 (string-append "\"" #$gzip "/bin/gunzip cavechop.sav.gz\""))
+                ;; permobjs has NUM_OF_PERMOBJS entries, not 100.  The
+                ;; upstream count corrupts memory when a save is loaded.
+                (("fwrite(permobjs, 100, sizeof (struct permobj), fp);")
+                 "fwrite(permobjs, NUM_OF_PERMOBJS, sizeof (struct permobj), fp);")
+                (("fread(permobjs, 100, sizeof (struct permobj), fp);")
+                 "fread(permobjs, NUM_OF_PERMOBJS, sizeof (struct permobj), fp);"))))
           (replace 'build
             (lambda _
               (invoke "make" "all" "CC=gcc")))
