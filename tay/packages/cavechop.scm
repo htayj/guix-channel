@@ -65,7 +65,10 @@
                      (launcher (string-append bin "/cavechop"))
                      (smoke-first
                       (string-append
-                       "  printf 'Matilda\\n...Sx' | "
+                       ;; The reviewed sequence ends in x; upstream's
+                       ;; shutdown prompt ignores x, so append its accepted
+                       ;; space key to let the PTY session terminate.
+                       "  printf 'Matilda\\n...Sx ' | "
                        #$(file-append util-linux "/bin/script")
                        " -qefc \""
                        #$(file-append coreutils-minimal "/bin/stty")
@@ -73,7 +76,7 @@
                        ">\"$work/first.raw\"\n"))
                      (smoke-second
                       (string-append
-                       "  printf 'i.XYx' | "
+                       "  printf 'i.XYx ' | "
                        #$(file-append util-linux "/bin/script")
                        " -qefc \""
                        #$(file-append coreutils-minimal "/bin/stty")
