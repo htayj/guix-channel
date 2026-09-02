@@ -149,6 +149,12 @@ dependency of Kaya 0.4.4.")
                       "-e" "s/^    popvals n (a+1) =/    popvals n a | a > 0 =/"
                       "-e" "s/popvals (n+1) a/popvals (n+1) (a-1)/"
                       "compiler/CodegenCPP.hs")
+              ;; GnuTLS 3.8 removed the obsolete certificate-type priority
+              ;; setter.  The preceding default priority setup retains the
+              ;; supported certificate policy and is sufficient here.
+              (substitute* "stdlib/tls_glue.cc"
+                (("  const int cert_type_priority\\[3\\] = \\{ GNUTLS_CRT_X509, GNUTLS_CRT_OPENPGP, 0 \\};") "")
+                (("  gnutls_certificate_type_set_priority\\(session,cert_type_priority\\);") ""))
               ;; Boehm GC 8.2 changed this setter from returning the old
               ;; divisor to returning void.  Keep Kaya's historical API by
               ;; providing a small compatibility wrapper that does return it.
@@ -158,15 +164,15 @@ dependency of Kaya 0.4.4.")
               (substitute* "rts/stdfuns.h"
                 (("void do_GC_enable_incremental\\(\\);" declaration)
                  (string-append declaration
-                                "\\nkint do_GC_set_free_space_divisor(kint);")))
+                                "\nkint do_GC_set_free_space_divisor(kint);")))
               (substitute* "rts/stdfuns.cc"
                 (("void runFn\\(void\\* obj, void\\* finalizer\\) \\{" run-fn)
                  (string-append
-                  "kint do_GC_set_free_space_divisor(kint fsd) {\\n"
-                  "    kint old = GC_get_free_space_divisor();\\n"
-                  "    GC_set_free_space_divisor(fsd);\\n"
-                  "    return old;\\n"
-                  "}\\n\\n"
+                  "kint do_GC_set_free_space_divisor(kint fsd) {\n"
+                  "    kint old = GC_get_free_space_divisor();\n"
+                  "    GC_set_free_space_divisor(fsd);\n"
+                  "    return old;\n"
+                  "}\n\n"
                   run-fn)))))
           (add-after 'configure 'patch-generated-repl
             (lambda _
