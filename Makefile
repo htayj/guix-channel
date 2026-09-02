@@ -42,7 +42,8 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	vt05 weidu blincolnlights pdp10-its-disassembler itstar pdp11 pdp6 uc-explorer \
 	azurra-gtk-theme pdp10-xpl-pdp-10 faugus-launcher react-blessed wanderers \
 	clojure-roguelike astx acehack bell-labs-rogue7 aquarium-arena atlas-warriors \
-	bcrawl avanor bootrogue brogue brogue-lite chessrogue corerl cryptrover
+	bcrawl avanor bootrogue brogue brogue-lite chessrogue corerl cryptrover \
+	cutlassrl
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -72,6 +73,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-brogue-lite \
 	check-chessrogue \
 	check-corerl \
+	check-cutlassrl \
 	check-cryptrover \
 	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs build build-sources
 
@@ -257,6 +259,9 @@ check-chessrogue:
 check-corerl:
 	GUIX="$(GUIX)" tests/corerl-smoke.sh
 
+check-cutlassrl:
+	GUIX="$(GUIX)" tests/cutlassrl-smoke.sh
+
 check-cryptrover:
 	GUIX="$(GUIX)" tests/cryptrover-smoke.sh
 
@@ -278,7 +283,7 @@ check: check-source-count check-sentinelone check-datamosh-security \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
 	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-bell-labs-rogue7 check-astx check-acehack check-avanor check-bootrogue check-wanderers check-emacs-org-popup-posframe \
-	check-emacs-forth-mode check-emacs-aidermacs check-aquarium-arena check-atlas-warriors check-bcrawl check-chessrogue check-corerl check-cryptrover
+	check-emacs-forth-mode check-emacs-aidermacs check-aquarium-arena check-atlas-warriors check-bcrawl check-chessrogue check-corerl check-cutlassrl check-cryptrover
 	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
