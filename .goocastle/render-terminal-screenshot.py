@@ -15,6 +15,12 @@ screen = [[" "] * columns for _ in range(rows)]
 row = column = 0
 best_screen = [[" "] * columns for _ in range(rows)]
 best_score = 0
+last_printed = " "
+special_graphics = False
+acs = {
+    "j": "┘", "k": "┐", "l": "┌", "m": "└", "n": "┼",
+    "q": "─", "t": "├", "u": "┤", "v": "┴", "w": "┬", "x": "│",
+}
 
 def param_list(text: str) -> list[int]:
     return [int(part) if part else 0 for part in text.split(";")] if text else []
@@ -56,21 +62,40 @@ while index < len(raw):
                 elif command == "X":
                     end = min(columns, column + amount)
                     screen[row][column:end] = [" "] * (end - column)
+                elif command == "b":
+                    # REP repeats the preceding printable character.  ncurses
+                    # uses it heavily for box borders and blank map cells.
+                    # Ignoring it collapses an otherwise complete frame into
+                    # a thin left-edge strip, which is not usable evidence.
+                    for _ in range(amount):
+                        if column < columns:
+                            screen[row][column] = last_printed
+                        column += 1
+                        if column >= columns:
+                            column = 0
+                            row = min(rows - 1, row + 1)
                 index += len(match.group(0))
                 continue
         elif raw[index + 1] == "]":
             end = re.search(r"(?:\x07|\x1b\\)", raw[index + 2:])
             index += 2 + (end.end() if end else 0)
             continue
-        # ISO-2022 charset designators such as ESC ( B are emitted by
-        # ncurses around ACS drawing characters; they carry no visible cell.
-        index += 3 if raw[index + 1] in "()" and index + 2 < len(raw) else 2
+        # ncurses selects DEC special graphics around ACS box-drawing cells.
+        # Retain that state so the screenshot shows readable borders instead
+        # of the terminal's raw l/q/k/x glyphs.
+        if raw[index + 1] in "()" and index + 2 < len(raw):
+            special_graphics = raw[index + 1] == "(" and raw[index + 2] == "0"
+            index += 3
+        else:
+            index += 2
         continue
     if char == "\r": column = 0
     elif char == "\n": row = min(rows - 1, row + 1)
     elif char == "\b": column = max(0, column - 1)
     elif char >= " ":
-        if column < columns: screen[row][column] = char
+        rendered = acs.get(char, char) if special_graphics else char
+        if column < columns: screen[row][column] = rendered
+        last_printed = rendered
         column += 1
         if column >= columns:
             column = 0
