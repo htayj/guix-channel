@@ -501,6 +501,21 @@
         },
         "successMarker": "DIABAIG_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 678,
+      "packageName": "diabaig",
+      "artifactPath": ".goocastle/evidence/issue-678.png",
+      "runtime": {
+        "executable": "diabaig",
+        "invocation": {
+          "file": "diabaig",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "DIABAIG_RUNTIME_OK"
+      }
     }
   ]
 }
