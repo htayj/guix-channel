@@ -122,7 +122,11 @@ dependency of Kaya 0.4.4.")
                       "compiler/Portability64.hs")
               (invoke "sed" "-i"
                       "-e" "/^environment :: String -> IO (Maybe String)/,/^tempfile :: IO (FilePath, Handle)/c\\environment :: String -> IO (Maybe String)\\nenvironment x = catchIOError (do\\n  e <- getEnv x\\n  return (Just e)) (const (return Nothing))\\n\\ntempfile :: IO (FilePath, Handle)"
-                      "compiler/Portability64.hs")))
+                      "compiler/Portability64.hs")
+              (invoke "sed" "-i"
+                      "-e" "/^import Control.Monad$/a\\import Control.Applicative (Alternative(..))"
+                      "-e" "/^instance Monad Result where/i\\instance Applicative Result where\\n    pure = Success\\n    (Success f) <*> (Success x) = Success (f x)\\n    (Failure err fn line) <*> _ = Failure err fn line\\n    _ <*> (Failure err fn line) = Failure err fn line\\n\\ninstance Alternative Result where\\n    empty = Failure \"Error\" \"(no file)\" 0\\n    Success x <|> _ = Success x\\n    Failure _ _ _ <|> y = y\\n"
+                      "compiler/AbsSyntax.hs")))
           (add-before 'configure 'patch-ncurses-link
             (lambda _
               ;; Kaya's probe and Curses library metadata use the historical
