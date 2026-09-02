@@ -48,10 +48,15 @@ host-created implementation issue.
 If the local channel already contains the same canonical upstream project under
 the intended package name, inspect its issue/runtime-proof history before
 choosing a disposition.  When that equivalent has already been delivered and
-closed, choose `blocked` rather than creating a second delivery ticket; name
-the existing package module and closed issue as the terminal duplicate
-evidence.  Choose `implementation-ready` only for a materially distinct
-version/update or a separately justified variant, and state that distinction.
+closed, choose `blocked` rather than creating a second package-delivery ticket;
+name the existing package module and closed issue as the terminal duplicate
+evidence.  This does not apply to a bounded remediation of an existing
+delivery's failed or inadequate required proof.  For such a remediation, choose
+`implementation-ready`, explicitly identify the closed delivery, retain its
+package identity and runtime contract, and make the acceptance facts limited to
+the demonstrated proof defect.  Choose `implementation-ready` for an ordinary
+package delivery only for a materially distinct version/update or a separately
+justified variant, and state that distinction.
 
 An `implementation-ready` result MUST include `runtimeEvidence` as a separate
 top-level object.  `packageName` is the exact intended Guix package name;

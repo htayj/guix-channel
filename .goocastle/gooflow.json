@@ -179,14 +179,14 @@
         {
           "name": "safe-package-proof",
           "type": "command",
-          "command": { "file": "sh", "args": ["-c", "GOOCASTLE_PROOF_PACKAGE=corerl sh .goocastle/prove-guix-package.sh"] },
+          "command": { "file": "sh", "args": [".goocastle/refresh-runtime-evidence.sh", "proof"] },
           "capabilities": { "network": false, "guixDaemon": true },
           "timeout": { "completionMs": 14400000 }
         },
         {
           "name": "runtime-screenshot",
           "type": "command",
-          "command": { "file": "sh", "args": ["-c", "GOOCASTLE_PROOF_PACKAGE=corerl sh .goocastle/capture-guix-package-screenshot.sh"] },
+          "command": { "file": "sh", "args": [".goocastle/refresh-runtime-evidence.sh", "screenshot"] },
           "capabilities": { "network": false, "guixDaemon": true },
           "timeout": { "completionMs": 14400000 }
         }
