@@ -161,9 +161,13 @@ dependency of Kaya 0.4.4.")
               (substitute* "stdlib/Prelude.k"
                 (("public Int gcSetFSD\\(Int fsd\\) = GC_set_free_space_divisor;")
                  "public Int gcSetFSD(Int fsd) = do_GC_set_free_space_divisor;"))
-              (substitute* "rts/Heap.h"
-                (("#include <gc/gc_cpp.h>" include)
-                 (string-append "#define GC_INCLUDE_NEW\n" include)))
+              (for-each
+               (lambda (file)
+                 (substitute* file
+                   (("#include <gc/gc_cpp.h>" include)
+                    (string-append "#define GC_INCLUDE_NEW\n" include))))
+               '("rts/Heap.h" "rts/VMState.h" "rts/KayaAPI.h"
+                 "rts/Array.h" "rts/Closure.h"))
               (substitute* "rts/stdfuns.h"
                 (("void do_GC_enable_incremental\\(\\);" declaration)
                  (string-append declaration
