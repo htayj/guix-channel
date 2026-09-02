@@ -4,7 +4,7 @@
   #:use-module (guix build-system gnu)
   #:use-module (guix build-system haskell)
   #:use-module (guix gexp)
-  #:use-module (guix licenses)
+  #:use-module ((guix licenses) #:select (bsd-3 gpl2+ lgpl2.1+))
   #:use-module (guix packages)
   #:use-module (guix download)
   #:use-module (gnu packages bash)
@@ -253,7 +253,9 @@ database, SDL, OpenGL, GD, and wide-curses components are disabled.")
     (source
      (origin
        (method url-fetch)
-       (uri "https://sourceforge.net/projects/chessrogue/files/chessrogue/0.3.1/chessrogue0.3.1-src.tgz/download")
+       (uri (string-append
+             "https://sourceforge.net/projects/chessrogue/files/chessrogue/"
+             "0.3.1/chessrogue0.3.1-src.tgz/download"))
        (file-name "chessrogue0.3.1-src.tgz")
        (sha256
         (base32 "15qbvlyamnqjq5lkmbwba68l0n4yl2fxhawxb27xf5djvzfkfyf9"))))
@@ -286,7 +288,11 @@ database, SDL, OpenGL, GD, and wide-curses components are disabled.")
                      (program (string-append libexec "/chessrogue"))
                      (runner (string-append libexec
                                              "/chessrogue-smoke-runner.py"))
-                     (launcher (string-append bin "/chessrogue")))
+                     (launcher (string-append bin "/chessrogue"))
+                     (mkdir-bin (string-append #$coreutils-minimal "/bin/mkdir"))
+                     (cp-bin (string-append #$coreutils-minimal "/bin/cp"))
+                     (find-bin (string-append #$findutils "/bin/find"))
+                     (dirname-bin (string-append #$coreutils-minimal "/bin/dirname")))
                 (mkdir-p bin)
                 (mkdir-p libexec)
                 (mkdir-p data)
@@ -331,12 +337,16 @@ database, SDL, OpenGL, GD, and wide-curses components are disabled.")
                     (display "waited = False\n" port)
                     (display "wait_time = None\n" port)
                     (display "deadline = time.monotonic() + 20\n" port)
-                    (display "ansi = re.compile(rb'\\x1b(?:\\[[0-?]*[ -/]*[@-~]|\\][^\\x07]*(?:\\x07|\\x1b\\\\))')\n" port)
+                    (display (string-append
+                             "ansi = re.compile(rb'\\x1b(?:\\[[0-?]*[ -/]*[@-~]"
+                             "|\\][^\\x07]*(?:\\x07|\\x1b\\\\))')\n") port)
                     (display "def visible(data):\n" port)
                     (display "    return ansi.sub(b'', data).lower()\n\n" port)
                     (display "try:\n" port)
                     (display "    while time.monotonic() < deadline:\n" port)
-                    (display "        ready, _, _ = select.select([master], [], [], 0.2)\n" port)
+                    (display (string-append
+                             "        ready, _, _ = select.select([master], [], "
+                             "[], 0.2)\n") port)
                     (display "        if ready:\n" port)
                     (display "            try:\n" port)
                     (display "                chunk = os.read(master, 65536)\n" port)
@@ -347,22 +357,34 @@ database, SDL, OpenGL, GD, and wide-curses components are disabled.")
                     (display "            captured.extend(chunk)\n" port)
                     (display "        screen = visible(captured)\n" port)
                     (display "        if (not started and\n" port)
-                    (display "                b'press any key to start playing' in screen):\n" port)
+                    (display (string-append
+                             "                b'press any key to start "
+                             "playing' in screen):\n") port)
                     (display "            os.write(master, b' ')\n" port)
                     (display "            started = True\n" port)
                     (display "        if (started and not waited and\n" port)
-                    (display "                b'level 1' in screen and b'movement' in screen\n" port)
+                    (display (string-append
+                             "                b'level 1' in screen and "
+                             "b'movement' in screen\n") port)
                     (display "                and b'@' in screen):\n" port)
                     (display "            os.write(master, b'.')\n" port)
                     (display "            waited = True\n" port)
                     (display "            wait_time = time.monotonic()\n" port)
-                    (display "        if waited and time.monotonic() - wait_time >= 0.5:\n" port)
+                    (display (string-append
+                             "        if waited and time.monotonic() - "
+                             "wait_time >= 0.5:\n") port)
                     (display "            break\n" port)
                     (display "    screen = visible(captured)\n" port)
                     (display "    if not started or not waited:\n" port)
-                    (display "        raise RuntimeError('startup or wait input was not observed')\n" port)
-                    (display "    if b'level 1' not in screen or b'movement' not in screen or b'@' not in screen:\n" port)
-                    (display "        raise RuntimeError('level-one board was not rendered')\n" port)
+                    (display (string-append
+                             "        raise RuntimeError('startup or wait input "
+                             "was not observed')\n") port)
+                    (display (string-append
+                             "    if b'level 1' not in screen or b'movement' "
+                             "not in screen or b'@' not in screen:\n") port)
+                    (display (string-append
+                             "        raise RuntimeError('level-one board was "
+                             "not rendered')\n") port)
                     (display "finally:\n" port)
                     (display "    try:\n" port)
                     (display "        os.kill(pid, signal.SIGTERM)\n" port)
@@ -375,13 +397,19 @@ database, SDL, OpenGL, GD, and wide-curses components are disabled.")
                     (display "    with open(raw_name, 'wb') as raw:\n" port)
                     (display "        raw.write(captured)\n\n" port)
                     (display "save_names = {'.crsave', '.crscore'}\n" port)
-                    (display "save_names.update(p.name for p in state.glob('score.*.txt'))\n" port)
+                    (display (string-append
+                             "save_names.update(p.name for p in state.glob("
+                             "'score.*.txt'))\n") port)
                     (display "for path in Path(state.parent.parent).rglob('*'):\n" port)
                     (display "    if path.is_file() and path.name in save_names:\n" port)
                     (display "        if state not in path.resolve().parents:\n" port)
-                    (display "            raise RuntimeError('save/report escaped state root')\n" port)
+                    (display (string-append
+                             "            raise RuntimeError('save/report escaped "
+                             "state root')\n") port)
                     (display "if not (state / '.crsave').is_file():\n" port)
-                    (display "    raise RuntimeError('practice save was not written')\n" port)))
+                    (display (string-append
+                             "    raise RuntimeError('practice save was not "
+                             "written')\n") port)))
                 (chmod runner #o555)
                 (call-with-output-file launcher
                   (lambda (port)
@@ -393,12 +421,22 @@ database, SDL, OpenGL, GD, and wide-curses components are disabled.")
                     (format port "keymap=~s\n"
                             (string-append data "/crkeymap.txt"))
                     (format port "output=~s\n" out)
-                    (display "data_home=${XDG_DATA_HOME:-${HOME:?HOME is not set}/.local/share}\n" port)
+                    (display (string-append
+                             "data_home=${XDG_DATA_HOME:-${HOME:?HOME is not "
+                             "set}/.local/share}\n") port)
                     (display "state_root=$data_home/chessrogue\n" port)
-                    (display "mkdir -p \"$state_root\"\n" port)
+                    (format port "mkdir=~s\n" mkdir-bin)
+                    (format port "cp=~s\n" cp-bin)
+                    (format port "find=~s\n" find-bin)
+                    (format port "dirname=~s\n" dirname-bin)
+                    (display "\"$mkdir\" -p \"$state_root\"\n" port)
                     (display "if test \"${1-}\" = --smoke; then\n" port)
                     (display "    smoke_root=$state_root/.smoke\n" port)
-                    (display "    mkdir -p \"$smoke_root/home\" \"$smoke_root/data\" \"$smoke_root/config\" \"$smoke_root/cache\" \"$smoke_root/state\" \"$smoke_root/runtime\" \"$smoke_root/tmp\"\n" port)
+                    (display (string-append
+                             "    \"$mkdir\" -p \"$smoke_root/home\" "
+                             "\"$smoke_root/data\" \"$smoke_root/config\" "
+                             "\"$smoke_root/cache\" \"$smoke_root/state\" "
+                             "\"$smoke_root/runtime\" \"$smoke_root/tmp\"\n") port)
                     (display "    export HOME=$smoke_root/home\n" port)
                     (display "    export XDG_CONFIG_HOME=$smoke_root/config\n" port)
                     (display "    export XDG_DATA_HOME=$smoke_root/data\n" port)
@@ -408,21 +446,41 @@ database, SDL, OpenGL, GD, and wide-curses components are disabled.")
                     (display "    export TMPDIR=$smoke_root/tmp\n" port)
                     (display "    export TERM=${TERM:-xterm-256color}\n" port)
                     (display "    export LC_ALL=C\n" port)
-                    (display "    cp \"$keymap\" \"$HOME/crkeymap.txt\"\n" port)
-                    (display "    printf '%s\\n' '0|0|0|0|0|0|0|0|0|0|0|0' '0|0|0|0' '0' '-1|-1|-1' > \"$HOME/.crsave\"\n" port)
+                    (display "    \"$cp\" \"$keymap\" \"$HOME/crkeymap.txt\"\n" port)
+                    (display (string-append
+                             "    printf '%s\\n' '0|0|0|0|0|0|0|0|0|0|0|0' "
+                             "'0|0|0|0' '0' '-1|-1|-1' > \"$HOME/.crsave\"\n") port)
                     (display "    cd \"$HOME\"\n" port)
-                    (display "    \"$runner\" \"$program\" \"$smoke_root/terminal.raw\" \"$HOME\"\n" port)
-                    (display "    if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}\"; then\n" port)
-                    (display "        mkdir -p \"$(dirname \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"\n" port)
-                    (display "        cp \"$smoke_root/terminal.raw\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n" port)
+                    (display (string-append
+                             "    \"$runner\" \"$program\" "
+                             "\"$smoke_root/terminal.raw\" \"$HOME\"\n") port)
+                    (display (string-append
+                             "    if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}\"; "
+                             "then\n") port)
+                    (display (string-append
+                             "        capture_dir=$(\"$dirname\" "
+                             "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\n") port)
+                    (display "        \"$mkdir\" -p \"$capture_dir\"\n" port)
+                    (display (string-append
+                             "        \"$cp\" \"$smoke_root/terminal.raw\" "
+                             "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n") port)
                     (display "    fi\n" port)
-                    (display "    test -z \"$(find \"$output\" -xdev -type f -perm /222 -print -quit)\"\n" port)
-                    (display "    printf '%s\\n' 'chessrogue isolated smoke passed'\n" port)
+                    (display (string-append
+                             "    test -z \"$(\"$find\" \"$output\" "
+                             "-xdev -type f -perm /222 -print -quit)\"\n") port)
+                    (display (string-append
+                             "    printf '%s\\n' 'chessrogue isolated smoke "
+                             "passed'\n") port)
                     (display "    exit 0\n" port)
                     (display "fi\n" port)
-                    (display "if test ! -e \"$state_root/crkeymap.txt\"; then cp \"$keymap\" \"$state_root/crkeymap.txt\"; fi\n" port)
+                    (display (string-append
+                             "if test ! -e \"$state_root/crkeymap.txt\"; then "
+                             "\"$cp\" \"$keymap\" "
+                             "\"$state_root/crkeymap.txt\"; fi\n") port)
                     (display "export HOME=$state_root\n" port)
-                    (format port "export TERMINFO_DIRS=~s/share/terminfo${TERMINFO_DIRS:+:$TERMINFO_DIRS}\n"
+                    (format port (string-append
+                                  "export TERMINFO_DIRS=~s/share/terminfo"
+                                  "${TERMINFO_DIRS:+:$TERMINFO_DIRS}\n")
                             #$ncurses)
                     (display "cd \"$state_root\"\n" port)
                     (display "exec \"$program\" \"$@\"\n" port)))
