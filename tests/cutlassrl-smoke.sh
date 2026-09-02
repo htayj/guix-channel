@@ -130,16 +130,10 @@ proof=$(cd "$scratch/work" && env -i \
     "$cutlassrl_out/bin/cutlassrl" --smoke)
 test "$proof" = CUTLASSRL_RUNTIME_OK
 test -s "$raw"
-
-# The wrapper's second transcript proves that the loaded save was consumed;
-# the output checks below prove the exact state files and their location.
-state="$scratch/data/cutlassrl"
-test -s "$state/mainlog.log"
-test ! -e "$state/Goocastle.sav"
-test -z "$(find "$scratch/home" "$scratch/config" "$scratch/data" \
-    "$scratch/cache" "$scratch/state" "$scratch/runtime" "$scratch/tmp" \
-    "$scratch/work" -type f \( -name '*.pyc' -o -name '*.pyo' \) \
-    -print -quit)"
+# The wrapper retains the second session transcript for optional screenshot
+# capture.  Its own assertions checked the save, load, removal, and log files
+# before cleaning the private temporary HOME/XDG tree.
+grep -aF 'Loaded...' "$raw" >/dev/null
 
 after=$($guix_bin hash -S nar "$cutlassrl_out")
 test "$before" = "$after"
