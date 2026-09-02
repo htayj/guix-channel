@@ -90,10 +90,12 @@ proof=$(cd "$scratch/caller" && env -i \
     "$corerl_out/bin/corerl" --smoke)
 test "$proof" = "$marker"
 test -s "$raw"
-grep -aF '@' "$raw" >/dev/null
-grep -aF 'e' "$raw" >/dev/null
-grep -aF '<' "$raw" >/dev/null
-grep -aF 'Quit on level 1.' "$raw" >/dev/null
+transcript=$(cat "$raw")
+map_text=${transcript%%'Quit on level 1.'*}
+case "$map_text" in *'@'*) ;; *) exit 1 ;; esac
+case "$map_text" in *'e'*) ;; *) exit 1 ;; esac
+case "$map_text" in *'<'*) ;; *) exit 1 ;; esac
+case "$transcript" in *'Quit on level 1.'*) ;; *) exit 1 ;; esac
 
 # CoreRL has no stateful features; its package-owned smoke scratch and all
 # caller HOME/XDG trees must be empty after the transcript is captured.

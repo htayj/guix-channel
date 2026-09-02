@@ -33,6 +33,10 @@
      (list
       ;; The source has no configure script or upstream test target.
       #:tests? #f
+      ;; The default cache would record the compiler's library paths in the
+      ;; runtime output.  CoreRL has no bundled libraries, so RUNPATH is
+      ;; sufficient and keeps native inputs out of the closure.
+      #:make-dynamic-linker-cache? #f
       #:phases
       #~(modify-phases %standard-phases
           (delete 'configure)
@@ -43,12 +47,25 @@
               ;; the documented upstream command names the file 1kcore.c.
               (rename-file "corerl-1kib-20131024.c" "1kcore.c")))
           (replace 'build
-            (lambda _
+            (lambda* (#:key inputs #:allow-other-keys)
               ;; Keep the upstream build command and select GNU89 for its
-              ;; intentionally pre-C99 declarations.
-              (invoke "gcc" "-std=gnu89" "-o" "corerl" "1kcore.c"
-                      (string-append "-L" #$ncurses "/lib")
-                      "-lncurses")))
+              ;; intentionally pre-C99 declarations.  Resolve the compiler's
+              ;; symlinked runtime libraries before embedding RPATHs so the
+              ;; native gcc-toolchain itself does not enter the output.
+              (let* ((libc-lib (dirname
+                                (canonicalize-path
+                                 (search-input-file inputs "/lib/libc.so.6"))))
+                     (libgcc-lib (dirname
+                                  (canonicalize-path
+                                   (search-input-file
+                                    inputs "/lib/libgcc_s.so.1")))))
+                (setenv "GUIX_LD_WRAPPER_DISABLE_RPATH" "1")
+                (invoke "gcc" "-std=gnu89" "-o" "corerl" "1kcore.c"
+                        (string-append "-L" #$ncurses "/lib")
+                        (string-append "-Wl,-rpath," libc-lib)
+                        (string-append "-Wl,-rpath," libgcc-lib)
+                        (string-append "-Wl,-rpath," #$ncurses "/lib")
+                        "-lncurses"))))
           (replace 'install
             (lambda _
               (let* ((bin (string-append #$output "/bin"))
@@ -164,7 +181,12 @@
                     (format port
                             "  transcript_text=$(~a \"$transcript\")~%"
                             cat)
-                    (display "  case \"$transcript_text\" in\n" port)
+                    ;; Check map glyphs before the normal quit message so the
+                    ;; enemy assertion cannot match the word "level".
+                    (display
+                     "  map_text=${transcript_text%%'Quit on level 1.'*}\n"
+                     port)
+                    (display "  case \"$map_text\" in\n" port)
                     (display "    *'@'*) ;;\n" port)
                     (display
                      (string-append
@@ -172,7 +194,7 @@
                       "exit 1 ;;\n")
                      port)
                     (display "  esac\n" port)
-                    (display "  case \"$transcript_text\" in\n" port)
+                    (display "  case \"$map_text\" in\n" port)
                     (display "    *'e'*) ;;\n" port)
                     (display
                      (string-append
@@ -180,7 +202,7 @@
                       "exit 1 ;;\n")
                      port)
                     (display "  esac\n" port)
-                    (display "  case \"$transcript_text\" in\n" port)
+                    (display "  case \"$map_text\" in\n" port)
                     (display "    *'<'*) ;;\n" port)
                     (display
                      (string-append
