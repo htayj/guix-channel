@@ -50,9 +50,11 @@ if ! env -i \
   TMPDIR="$runtime_tmp" \
   SDL_VIDEODRIVER=dummy \
   SDL_AUDIODRIVER=dummy \
+  TERM=xterm-256color \
   LC_ALL=C.UTF-8 \
   PATH="$PATH" \
   GUIX="${GUIX:-guix}" \
+  GOOCASTLE_RUNTIME_RAW_CAPTURE="$terminal_raw" \
   node .goocastle/capture-runtime-evidence.mjs \
   .goocastle/runtime-evidence-contracts.json "$issue_number" >"$runtime_transcript" 2>&1; then
   tail -c 12000 "$runtime_transcript" >&2 || true
