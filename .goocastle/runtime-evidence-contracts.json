@@ -351,6 +351,21 @@
         },
         "successMarker": "CAVECHOP_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 667,
+      "packageName": "chessrogue",
+      "artifactPath": ".goocastle/evidence/issue-667.png",
+      "runtime": {
+        "executable": "chessrogue",
+        "invocation": {
+          "file": "chessrogue",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "chessrogue isolated smoke passed"
+      }
     }
   ]
 }
