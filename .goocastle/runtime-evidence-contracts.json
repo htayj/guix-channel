@@ -396,6 +396,21 @@
         },
         "successMarker": "CORERL_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 670,
+      "packageName": "crashrun",
+      "artifactPath": ".goocastle/evidence/issue-670.png",
+      "runtime": {
+        "executable": "crashrun",
+        "invocation": {
+          "file": "crashrun",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "crashrun smoke passed: new-game, turn, save-load, and isolated-state"
+      }
     }
   ]
 }
