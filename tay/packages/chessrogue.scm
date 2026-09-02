@@ -129,6 +129,10 @@ dependency of Kaya 0.4.4.")
                       "-e" "s/^  = catch$/  = catchIOError/"
                       "compiler/Module.hs")
               (invoke "sed" "-i"
+                      "-e" "s/import Control.Exception (catch)/import System.IO.Error (catchIOError)/"
+                      "-e" "s/^  = catch$/  = catchIOError/"
+                      "compiler/CodegenCPP.hs")
+              (invoke "sed" "-i"
                       "-e" "s/^import System.Directory$/import System.Directory hiding (findFile)/"
                       "compiler/Module.hs")
               (invoke "sed" "-i"
