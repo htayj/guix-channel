@@ -108,7 +108,14 @@ dependency of Kaya 0.4.4.")
                          "-e" "s/^import System.Cmd$/import System.Process/"
                          "-e" "/^import System$/c\\import System.Environment\\nimport System.Exit\\nimport System.Process"
                          file))
-               (find-files "compiler" "\\.hs$"))))
+               (find-files "compiler" "\\.hs$"))
+              (for-each
+               (lambda (file)
+                 (invoke "sed" "-i"
+                         "-e" "/^import System.IO$/a\\import Control.Exception (catch)"
+                         file))
+               '("compiler/Portability64.hs" "compiler/CodegenCPP.hs"
+                 "compiler/Module.hs"))))
           (add-before 'configure 'patch-ncurses-link
             (lambda _
               ;; Kaya's probe and Curses library metadata use the historical
