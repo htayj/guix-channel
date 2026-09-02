@@ -108,7 +108,8 @@ dependency of Kaya 0.4.4.")
                          "-e" "s/^import System.Cmd/import System.Process/"
                          "-e" "/^import System$/c\\import System.Environment\\nimport System.Exit\\nimport System.Process"
                          file))
-               (find-files "compiler" "\\.hs$"))
+               (cons "compiler/Parser.y"
+                     (find-files "compiler" "\\.hs$")))
               (for-each
                (lambda (file)
                  (invoke "sed" "-i"
