@@ -212,6 +212,12 @@ dependency of Kaya 0.4.4.")
                            (string-append "prefix=" out)
                            "DESTDIR="))
                  '("compiler" "rts" "stdlib" "posix" "libs" "contrib"))
+                ;; The game build uses Kaya's -nortchecks mode, which selects
+                ;; the optimized runtime archive rather than the default one.
+                (for-each
+                 (lambda (file)
+                   (install-file file (string-append out "/lib/kaya")))
+                 '("rts_opt/libkayavm-opt.a" "rts_fast/libkayavm-fast.a"))
                 (mkdir-p doc)
                 (install-file "COPYING" doc)
                 (install-file "GPL2" doc)
