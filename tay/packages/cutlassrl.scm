@@ -51,6 +51,7 @@
           ;; Keep the upstream Python 2 shebang and invoke the declared
           ;; interpreter explicitly from the store-safe launcher below.
           (delete 'patch-source-shebangs)
+          (delete 'patch-generated-file-shebangs)
           (add-after 'unpack 'enter-source
             (lambda _
               (chdir "CutlassRL/src")))
@@ -83,7 +84,7 @@
                 ;; The source and UniCurses modules carry GPL notices; keep
                 ;; the complete GPLv3 text next to the installed source.
                 (install-file "COPYING" root)
-                (install-file "../README" doc)
+                (install-file "../../README" doc)
                 (call-with-output-file launcher
                   (lambda (port)
                     (format port "#!~a\nset -eu\n" shell)
