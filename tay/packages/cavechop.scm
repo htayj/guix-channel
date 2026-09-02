@@ -113,6 +113,9 @@ export TERM=\"${TERM:-xterm-256color}\"~%
 export TERMINFO_DIRS=\"~a/share/terminfo${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"~%
 if test \"${1-}\" = --smoke; then~%
   test \"$#\" -eq 1~%
+  # The minimal runtime may not ship the host's UTF-8 locale.  Keep the
+  # package-owned PTY transcript free of shell locale diagnostics.
+  export LC_ALL=C~%
   work=\"$state/smoke\"~%
   ~a/bin/mkdir -p \"$work\"~%
   cd \"$state\"~%
