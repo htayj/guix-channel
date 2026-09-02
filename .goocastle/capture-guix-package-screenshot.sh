@@ -65,7 +65,7 @@ fi
 # stream, which is emulated into a deterministic terminal screen and rendered
 # locally.  This is visual evidence of the packaged program, not a caption of
 # the smoke-test assertion.
-if test ! -s "$artifact" && test -s "$terminal_raw"; then
+if test -s "$terminal_raw"; then
   python3 .goocastle/render-terminal-screenshot.py "$terminal_raw" "$terminal_text"
   convert -size 1280x560 -background '#1e1e1e' -fill '#d4d4d4' \
     -font DejaVu-Sans-Mono -pointsize 16 -gravity northwest \
