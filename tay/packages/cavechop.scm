@@ -23,7 +23,10 @@
     (source
      (origin
        (method url-fetch)
-       (uri "http://git.blackswordsonics.com/?p=cavechop-7drl;a=snapshot;h=ecc8bcfd56b96b71a2521f9b2a005f9cc89f0692;sf=tgz")
+       (uri (string-append
+             "http://git.blackswordsonics.com/?p=cavechop-7drl;"
+             "a=snapshot;h=ecc8bcfd56b96b71a2521f9b2a005f9cc89f0692;"
+             "sf=tgz"))
        (file-name (string-append name "-" version ".tar.gz"))
        ;; SHA-256:
        ;; 6c16c18125ebd6b3fd56402c0dd2094abfd716b7515700da2050be4a908aef97
@@ -59,7 +62,23 @@
                      (bin (string-append out "/bin"))
                      (doc (string-append out "/share/doc/cavechop"))
                      (program (string-append libexec "/cavechop"))
-                     (launcher (string-append bin "/cavechop")))
+                     (launcher (string-append bin "/cavechop"))
+                     (smoke-first
+                      (string-append
+                       "  printf 'Matilda\\n...Sx' | "
+                       #$(file-append util-linux "/bin/script")
+                       " -qefc \""
+                       #$(file-append coreutils-minimal "/bin/stty")
+                       " rows 24 cols 80; exec $real\" /dev/null "
+                       ">\"$work/first.raw\"\n"))
+                     (smoke-second
+                      (string-append
+                       "  printf 'i.XYx' | "
+                       #$(file-append util-linux "/bin/script")
+                       " -qefc \""
+                       #$(file-append coreutils-minimal "/bin/stty")
+                       " rows 24 cols 80; exec $real\" /dev/null "
+                       ">\"$work/load.raw\"\n")))
                 ;; Keep the real binary private to the state-isolating
                 ;; launcher.  notes.txt is the complete upstream notice and
                 ;; license for the executable produced from this source tree.
@@ -81,14 +100,14 @@ if test \"${1-}\" = --smoke; then~%
   work=\"$state/smoke\"~%
   ~a/bin/mkdir -p \"$work\"~%
   cd \"$state\"~%
-  printf 'Matilda\\n...Sx' | ~a/bin/script -qefc \"~a/bin/stty rows 24 cols 80; exec $real\" /dev/null >\"$work/first.raw\"~%
+~a
   test -s \"$state/cavechop.sav.gz\"~%
   first=\"$(~a/bin/cat \"$work/first.raw\")\"~%
   case \"$first\" in~%
     *\"Welcome to Cave Chop, Princess Matilda.\"*) ;;~%
     *) echo \"cavechop smoke: first transcript missing welcome\" >&2; exit 1 ;;~%
   esac~%
-  printf 'i.XYx' | ~a/bin/script -qefc \"~a/bin/stty rows 24 cols 80; exec $real\" /dev/null >\"$work/load.raw\"~%
+~a
   test ! -e \"$state/cavechop.sav.gz\"~%
   second=\"$(~a/bin/cat \"$work/load.raw\")\"~%
   case \"$second\" in~%
@@ -111,11 +130,9 @@ exec \"$real\" \"$@\"~%"
                             #$(file-append coreutils-minimal "/bin")
                             #$(file-append ncurses)
                             #$(file-append coreutils-minimal "/bin/mkdir")
-                            #$(file-append util-linux "/bin/script")
-                            #$(file-append coreutils-minimal "/bin/stty")
+                            smoke-first
                             #$(file-append coreutils-minimal "/bin/cat")
-                            #$(file-append util-linux "/bin/script")
-                            #$(file-append coreutils-minimal "/bin/stty")
+                            smoke-second
                             #$(file-append coreutils-minimal "/bin/cat")))
                 (chmod launcher #o555))))))))
     ;; gcc-toolchain is explicit because the upstream Makefile compiles the
