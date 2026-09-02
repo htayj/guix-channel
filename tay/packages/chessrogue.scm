@@ -167,7 +167,7 @@ dependency of Kaya 0.4.4.")
                    (("#include <gc/gc_cpp.h>" include)
                     (string-append "#define GC_INCLUDE_NEW\n" include))))
                '("rts/Heap.h" "rts/VMState.h" "rts/KayaAPI.h"
-                 "rts/Array.h" "rts/Closure.h"))
+                 "rts/Array.h" "rts/Closure.h" "rts/VM.cc"))
               (substitute* "rts/stdfuns.h"
                 (("void do_GC_enable_incremental\\(\\);" declaration)
                  (string-append declaration
