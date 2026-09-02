@@ -100,14 +100,14 @@ dependency of Kaya 0.4.4.")
             (lambda _
               (for-each
                (lambda (file)
-                 (substitute* file
-                   (("import List") "import Data.List")
-                   (("import Char") "import Data.Char")
-                   (("import Monad") "import Control.Monad")
-                   (("import IO") "import System.IO")
-                   (("import System.Cmd") "import System.Process")
-                   (("import System\n")
-                    "import System.Environment\nimport System.Exit\nimport System.Process\n")))
+                 (invoke "sed" "-i"
+                         "-e" "s/^import List$/import Data.List/"
+                         "-e" "s/^import Char$/import Data.Char/"
+                         "-e" "s/^import Monad$/import Control.Monad/"
+                         "-e" "s/^import IO$/import System.IO/"
+                         "-e" "s/^import System.Cmd$/import System.Process/"
+                         "-e" "/^import System$/c\\import System.Environment\\nimport System.Exit\\nimport System.Process"
+                         file))
                (find-files "compiler" "\\.hs$"))))
           (add-before 'configure 'patch-ncurses-link
             (lambda _
