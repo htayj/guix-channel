@@ -134,10 +134,9 @@ dependency of Kaya 0.4.4.")
                       "compiler/CodegenCPP.hs")
               (invoke "sed" "-i"
                       "-e" "/^import Control.Monad$/a\\import System.IO.Error (catchIOError)"
-                      "-e" "s/catch (do startup <- getStartup prtype libdirs/catchIOError (do { startup <- getStartup prtype libdirs;/"
-                      "-e" "/^                 let pt =/s/let pt =/let { pt =/"
-                      "-e" "/^                 let { pt =/s/;$/ };/"
-                      "-e" "s/compile newroot libdirs opts pt extra mainfile)/compile newroot libdirs opts pt extra mainfile })/"
+                      "-e" "s/catch (do startup <- getStartup prtype libdirs/catchIOError (do\\n             startup <- getStartup prtype libdirs/"
+                      "-e" "s/^                 let pt =/             let pt =/"
+                      "-e" "s/^                 compile newroot/             compile newroot/"
                       "compiler/Driver.hs")
               (invoke "sed" "-i"
                       "-e" "s/^import System.Directory$/import System.Directory hiding (findFile)/"
