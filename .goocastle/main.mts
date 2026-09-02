@@ -1639,7 +1639,13 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
         phase.name !== capturePhase && phase.state === "complete" &&
         phase.completedAt !== undefined && phase.completedAt > captureCompletedAt,
       );
-      if (!priorStartIsAncestor || !journaledLaterPhase) {
+      // A crash after recording an artifact commit but before completing its
+      // boundary can leave a freshly replayed capture as the sole worktree
+      // modification.  Its recorded commit is an exact, branch-local anchor,
+      // so permit this one subsequent replacement capture without requiring a
+      // later Gooflow phase to have advanced the branch.
+      const recordedArtifactCommit = journal.runtimeEvidence?.artifactCommitSha === artifactStartSha;
+      if (!priorStartIsAncestor || (!journaledLaterPhase && !recordedArtifactCommit)) {
         throw new Error("Runtime screenshot artifact branch changed before its host commit; inspect the preserved branch before resuming");
       }
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
