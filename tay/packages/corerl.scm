@@ -69,7 +69,7 @@
                 (mkdir-p bin)
                 (mkdir-p libexec)
                 (mkdir-p doc)
-                (install-file "corerl" program)
+                (install-file "corerl" libexec)
                 (call-with-output-file notice
                   (lambda (port)
                     (display "CoreRL 1 KiB (1kib-20131024)\n" port)
