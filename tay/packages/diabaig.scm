@@ -95,9 +95,13 @@
                 (substitute* runner
                   (("^#!.*") (string-append "#!" python "\n")))
                 (chmod runner #o555)
+                (install-file "LICENSE" doc)
+                (install-file "docs/README.md" doc)
+                (substitute* (string-append doc "/README.md")
+                  (("Version: VERSION")
+                   (string-append "Version: " #$version)))
                 (for-each (lambda (file) (install-file file doc))
-                          '("LICENSE" "docs/README.md" "docs/guide.txt"
-                            "res/credits.txt"))
+                          '("docs/guide.txt" "res/credits.txt"))
                 (substitute* "docs/debian/diabaig.6"
                   (("@VERSION@") #$version))
                 (install-file "docs/debian/diabaig.6" man)

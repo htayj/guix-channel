@@ -31,6 +31,8 @@ for file in LICENSE README.md guide.txt credits.txt; do
 done
 grep -F 'MIT License' "$doc/LICENSE" >/dev/null
 grep -F 'Copyright (c) 2025 conornally' "$doc/LICENSE" >/dev/null
+grep -F 'Version: 1.0.1' "$doc/README.md" >/dev/null
+test -z "$(grep -F 'Version: VERSION' "$doc/README.md" || true)"
 grep -F 'source code: https://github.com/conornally/diabaig' \
     "$doc/credits.txt" >/dev/null
 test -s "$diabaig_out/share/man/man6/diabaig.6.zst"
