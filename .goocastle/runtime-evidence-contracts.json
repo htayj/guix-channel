@@ -516,6 +516,21 @@
         },
         "successMarker": "DIABAIG_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 679,
+      "packageName": "dnethack",
+      "artifactPath": ".goocastle/evidence/issue-679.png",
+      "runtime": {
+        "executable": "dnethack",
+        "invocation": {
+          "file": "dnethack",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "dnethack guix smoke passed"
+      }
     }
   ]
 }
