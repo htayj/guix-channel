@@ -72,8 +72,12 @@ fi
 before=$($guix_bin hash -S nar "$chessrogue_out")
 test -z "$(find "$chessrogue_out" -xdev -type f -perm /222 -print -quit)"
 
-scratch=$(mktemp -d "${TMPDIR:-/tmp}/chessrogue-smoke.XXXXXXXX")
-trap 'rm -rf "$scratch"' EXIT HUP INT TERM
+scratch=$(mktemp -d /tmp/goocastle-agent-chessrogue-XXXXXXXX)
+case "$scratch" in
+    /tmp/goocastle-agent-*) ;;
+    *) echo 'refusing an unvalidated disposable workspace' >&2; exit 1 ;;
+esac
+test -d "$scratch"
 mkdir "$scratch/home" "$scratch/config" "$scratch/data" "$scratch/cache" \
       "$scratch/state" "$scratch/runtime" "$scratch/tmp" "$scratch/work"
 export HOME="$scratch/home"

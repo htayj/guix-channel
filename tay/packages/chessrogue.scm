@@ -124,6 +124,10 @@ dependency of Kaya 0.4.4.")
                       "-e" "/^environment :: String -> IO (Maybe String)/,/^tempfile :: IO (FilePath, Handle)/c\\environment :: String -> IO (Maybe String)\\nenvironment x = catchIOError (do\\n  e <- getEnv x\\n  return (Just e)) (const (return Nothing))\\n\\ntempfile :: IO (FilePath, Handle)"
                       "compiler/Portability64.hs")
               (invoke "sed" "-i"
+                      "-e" "s/import Control.Exception (catch)/import System.IO.Error (catchIOError)/"
+                      "-e" "s/^  = catch$/  = catchIOError/"
+                      "compiler/Module.hs")
+              (invoke "sed" "-i"
                       "-e" "s/^import System.Directory$/import System.Directory hiding (findFile)/"
                       "compiler/Module.hs")
               (invoke "sed" "-i"
