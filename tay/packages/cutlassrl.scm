@@ -106,8 +106,8 @@
                      port)
                     (display
                      (string-append
-                      "  scratch=$(\"$mktemp\" -d \"
-                      "${TMPDIR:-/tmp}/cutlassrl-smoke.XXXXXXXX\")\n")
+                      "  scratch=$(\"$mktemp\" -d \"${TMPDIR:-/tmp}"
+                      "/cutlassrl-smoke.XXXXXXXX\")\n")
                      port)
                     (format port "  trap '~a -rf \"$scratch\"' EXIT HUP INT TERM\n"
                             rm)
