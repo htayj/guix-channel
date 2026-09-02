@@ -411,6 +411,21 @@
         },
         "successMarker": "crashrun smoke passed: new-game, turn, save-load, and isolated-state"
       }
+    },
+    {
+      "issueNumber": 671,
+      "packageName": "cryptrover",
+      "artifactPath": ".goocastle/evidence/issue-671.png",
+      "runtime": {
+        "executable": "cryptrover",
+        "invocation": {
+          "file": "cryptrover",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "CRYPTROVER_RUNTIME_OK"
+      }
     }
   ]
 }
