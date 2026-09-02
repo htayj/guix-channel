@@ -456,6 +456,21 @@
         },
         "successMarker": "DHACK_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 674,
+      "packageName": "diabaig",
+      "artifactPath": ".goocastle/evidence/issue-674.png",
+      "runtime": {
+        "executable": "diabaig",
+        "invocation": {
+          "file": "diabaig",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "DIABAIG_RUNTIME_OK"
+      }
     }
   ]
 }
