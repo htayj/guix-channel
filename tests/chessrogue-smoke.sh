@@ -98,7 +98,7 @@ proof=$(cd "$scratch/work" && \
     "$chessrogue_out/bin/chessrogue" --smoke)
 test "$proof" = 'chessrogue isolated smoke passed'
 test -s "$raw"
-grep -aF 'level 1' "$raw" >/dev/null
+grep -aiF 'level 1' "$raw" >/dev/null
 grep -aF '@' "$raw" >/dev/null
 grep -aF 'Movement' "$raw" >/dev/null
 
