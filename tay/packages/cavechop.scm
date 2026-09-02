@@ -55,9 +55,9 @@
                  (string-append "\"" #$gzip "/bin/gunzip cavechop.sav.gz\""))
                 ;; permobjs has NUM_OF_PERMOBJS entries, not 100.  The
                 ;; upstream count corrupts memory when a save is loaded.
-                (("fwrite(permobjs, 100, sizeof (struct permobj), fp);")
+                (("fwrite\\(permobjs, 100, sizeof \\(struct permobj\\), fp\\);")
                  "fwrite(permobjs, NUM_OF_PERMOBJS, sizeof (struct permobj), fp);")
-                (("fread(permobjs, 100, sizeof (struct permobj), fp);")
+                (("fread\\(permobjs, 100, sizeof \\(struct permobj\\), fp\\);")
                  ;; struct permobj contains process-local description
                  ;; pointers.  Keep the historical bytes for file-layout
                  ;; compatibility, but leave the new process's static table
