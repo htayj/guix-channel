@@ -49,7 +49,7 @@ find_program_output ()
 {
     program=$1
     package=$2
-    for output in $($guix_bin build -L . --no-grafts "$package"); do
+    for output in $($guix_bin build -L . --no-grafts --no-substitutes "$package"); do
         if test -x "$output/$program"; then
             printf '%s\n' "$output"
             return 0
