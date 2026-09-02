@@ -1729,7 +1729,7 @@ const postRuntimeEvidence = async (journal, evidenceConfig, integrationSha, phas
     artifactCommitSha: evidence.artifactCommitSha,
     artifactUrl,
   });
-  const marker = "<!-- goocastle-runtime-evidence:" + WORKFLOW_NAME + ":" + String(issueNumber) + ":" + String(journal.epoch ?? 1) + " -->";
+  const marker = "<!-- goocastle-runtime-evidence:" + WORKFLOW_NAME + ":" + String(issueNumber) + ":" + String(journal.epoch ?? 1) + ":" + evidence.artifactSha256.toLowerCase() + " -->";
   const commentAlreadyApplied = async () => {
     const current = await selectedIssue(issueNumber);
     const existing = current.comments.find((entry) => entry.body.includes(marker));
@@ -1754,6 +1754,44 @@ const postRuntimeEvidence = async (journal, evidenceConfig, integrationSha, phas
   }
   return await transitionSequentialTaskJournal(gitCommonDir, journal, {
     runtimeEvidence: { ...evidence, comment: "complete", artifactUrl },
+  });
+};
+// A later audit can make a valid package/runtime correction after the image
+// was captured.  Preserve the old committed image as Git history, but require
+// fresh host proof and a new artifact/comment receipt for the final branch.
+const invalidateStaleRuntimeEvidence = async (journal, evidenceConfig, branch) => {
+  const evidence = journal.runtimeEvidence;
+  if (evidence?.artifact !== "complete" || !evidence.artifactCommitSha) return journal;
+  const branchHead = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
+  if (branchHead === evidence.artifactCommitSha) return journal;
+  try {
+    hostGit(["merge-base", "--is-ancestor", evidence.artifactCommitSha, branchHead], { stdio: "ignore" });
+  } catch (error) {
+    throw new Error("Runtime evidence artifact commit is not an ancestor of the delivery branch; inspect the preserved branch before resuming", { cause: error });
+  }
+  const refresh = new Set([evidenceConfig.proofPhase, evidenceConfig.capturePhase]);
+  const phases = journal.phases.map((phase) => !refresh.has(phase.name) ? phase : {
+    name: phase.name,
+    state: "fresh",
+    attempt: (phase.attempt ?? 0) + 1,
+    startSha: branchHead,
+    ...(phase.failureHistory === undefined ? {} : { failureHistory: phase.failureHistory }),
+  });
+  return await transitionSequentialTaskJournal(gitCommonDir, journal, {
+    status: "active",
+    phases,
+    runtimeEvidence: {
+      version: 1,
+      packageName: evidenceConfig.packageName,
+      proofPhase: evidenceConfig.proofPhase,
+      capturePhase: evidenceConfig.capturePhase,
+      artifactPath: evidenceConfig.artifactPath,
+      runtime: evidenceConfig.runtime,
+      ...(evidenceConfig.runtimeContract === undefined ? {} : { runtimeContract: evidenceConfig.runtimeContract }),
+      adapter: evidenceConfig.adapter,
+      artifact: "pending",
+      comment: "pending",
+    },
   });
 };
 const branchWorktreePath = (branch) => {
@@ -4152,6 +4190,15 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       console.log("Recorded disposition " + JSON.stringify(journal.disposition?.disposition) + " for #" + issue.number + ".");
       await persistInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs);
       continue;
+    }
+    // A completed audit can legitimately change the packaged program after a
+    // screenshot.  Invalidate that stale receipt before delivery; the next
+    // explicit resume replays only the reviewed proof/capture boundaries.
+    if (evidenceConfig !== undefined && journal.runtimeEvidence?.artifact === "complete") {
+      const refreshedEvidence = await invalidateStaleRuntimeEvidence(journal, evidenceConfig, branch);
+      if (refreshedEvidence !== journal) {
+        throw new Error("Runtime evidence was invalidated by later delivery commits; resume to refresh the package proof, screenshot, and evidence comment");
+      }
     }
     // Delivery is forbidden until the host-owned evidence artifact is
     // committed.  A previous crash can leave every executable phase complete
