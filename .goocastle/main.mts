@@ -4128,9 +4128,16 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       }
       if (result.stoppedEarly && dispositionPolicy === undefined) journal = await transitionSequentialTaskJournal(gitCommonDir, journal, { status: "failed" });
     }
-    const stoppedPhase = phases.find((phase) => phaseRecord(journal, phase.name)?.stoppedEarly === true);
-    if (stoppedPhase && dispositionPolicy === undefined) {
-      throw new Error("Required Gooflow phase " + JSON.stringify(stoppedPhase.name) + " made no commits for #" + issue.number + "; inspect the preserved branch and resume after fixing the phase");
+    // A resource boundary can stop an agent after it has produced a valid,
+    // signed commit.  That is a successful, resumable delivery state, not the
+    // "no work was produced" condition guarded by requiresCommits.  Only a
+    // stopped required phase with no observed commits needs recovery.
+    const stoppedWithoutCommits = phases.find((phase) => {
+      const record = phaseRecord(journal, phase.name);
+      return record?.stoppedEarly === true && (record.commitCount ?? 0) === 0;
+    });
+    if (stoppedWithoutCommits && dispositionPolicy === undefined) {
+      throw new Error("Required Gooflow phase " + JSON.stringify(stoppedWithoutCommits.name) + " made no commits for #" + issue.number + "; inspect the preserved branch and resume after fixing the phase");
     }
     if (dispositionPolicy !== undefined) {
       journal = await applyDisposition(journal, issue);
