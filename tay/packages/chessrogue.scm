@@ -115,7 +115,11 @@ dependency of Kaya 0.4.4.")
                          "-e" "/^import System.IO$/a\\import Control.Exception (catch)"
                          file))
                '("compiler/Portability64.hs" "compiler/CodegenCPP.hs"
-                 "compiler/Module.hs"))))
+                 "compiler/Module.hs"))
+              (invoke "sed" "-i"
+                      "-e" "s/import Control.Exception (catch)/import System.IO.Error (catchIOError)/"
+                      "-e" "s/environment x = catch /environment x = catchIOError /"
+                      "compiler/Portability64.hs")))
           (add-before 'configure 'patch-ncurses-link
             (lambda _
               ;; Kaya's probe and Curses library metadata use the historical
