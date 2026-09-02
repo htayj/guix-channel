@@ -49,7 +49,7 @@
               ;; A Guix git checkout has no .git directory.  Keep the
               ;; generated version information tied to the fixed revision.
               (substitute* "GNUmakefile"
-                (("^export COMMIT_DESC :=.*$")
+                (("export COMMIT_DESC := \\$[(]shell git describe --always[)]")
                  "export COMMIT_DESC := a6f0a1c43e66f4fb1bcac34d7d9709706682ec19"))
               ;; Do not inspect a host mailbox while the game is running.
               ;; The Unix source already leaves its shell escape disabled.
@@ -58,7 +58,7 @@
               ;; makedefs otherwise embeds the builder's wall clock in
               ;; include/date.h, verinfo, and the generated data archive.
               (substitute* "util/makedefs.c"
-                ((".*time.*clocktim.*;")
+                (("\\(void\\) time\\(\\(time_t \\*\\)&clocktim\\);")
                  "clocktim = 1779991412L;"))))
           (replace 'build
             (lambda _
