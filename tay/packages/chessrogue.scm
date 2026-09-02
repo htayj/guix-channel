@@ -143,6 +143,19 @@ dependency of Kaya 0.4.4.")
                       "-e" "s/^    popvals n (a+1) =/    popvals n a | a > 0 =/"
                       "-e" "s/popvals (n+1) a/popvals (n+1) (a-1)/"
                       "compiler/CodegenCPP.hs")))
+          (add-after 'configure 'patch-generated-repl
+            (lambda _
+              ;; Do not pull an unpinned optional readline Haskell package into
+              ;; this historical compiler.  A plain line reader is sufficient
+              ;; for kayac and keeps the compiler closure self-contained.
+              (invoke "sed" "-i"
+                      "-e" "s/^import List$/import Data.List/"
+                      "-e" "s/^import CForeign$/import Foreign.C/"
+                      "-e" "s/^import Ptr$/import Foreign.Ptr/"
+                      "-e" "s/^import IO$/import System.IO/"
+                      "-e" "/^import System.Console.*Readline$/d"
+                      "-e" "/^import System.IO$/a\\readline :: String -> IO (Maybe String)\\nreadline prompt = do\\n  putStr prompt\\n  hFlush stdout\\n  atEnd <- isEOF\\n  if atEnd then return Nothing else fmap Just getLine\\n\\naddHistory :: String -> IO ()\\naddHistory _ = return ()"
+                      "compiler/REPL.hs")))
           (add-before 'configure 'patch-ncurses-link
             (lambda _
               ;; Kaya's probe and Curses library metadata use the historical
