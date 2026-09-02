@@ -582,12 +582,30 @@ const signRequiredPhaseCommits = async (journal, boundary, startSha, endSha) => 
   // ancestor so we replay and sign precisely the commits that remain on the
   // task branch, rather than asking Git to rebase from an unreachable SHA.
   const signingBaseSha = hostGit(["merge-base", startSha, endSha], { encoding: "utf8" }).trim();
+  // An incomplete repair phase can leave its next edit unstaged while still
+  // producing earlier commits that need host-side signatures.  Rebase refuses
+  // any dirty worktree, which used to turn that recoverable state into a
+  // terminal scheduler failure.  Preserve *all* local state (including
+  // untracked files) across the signing-only replay so the next repair phase
+  // can inspect and complete it.
+  const dirtyWorktree = gitAt(worktree, ["status", "--porcelain", "--untracked-files=all"], { encoding: "utf8" }).trim() !== "";
+  let stashedWorktree = false;
   try {
+    if (dirtyWorktree) {
+      gitAt(worktree, ["stash", "push", "--include-untracked", "--message", "goocastle signing boundary"], {
+        encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1024 * 1024,
+      });
+      stashedWorktree = true;
+    }
     // The sandbox has no private signing material. Replay only this phase's
     // commits in the host worktree and sign each replayed commit, not merely
     // the final tip. The command is static and passed as one argv element to
     // Git's documented --exec hook.
     gitAt(worktree, ["rebase", "--exec", "git -c core.hooksPath=/dev/null -c commit.gpgSign=true commit --amend --no-edit --no-verify", signingBaseSha], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1024 * 1024 });
+    if (stashedWorktree) {
+      gitAt(worktree, ["stash", "pop", "--index"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1024 * 1024 });
+      stashedWorktree = false;
+    }
   } catch (error) {
     try { gitAt(worktree, ["rebase", "--abort"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 64 * 1024 }); } catch { /* preserve the conflict for manual recovery */ }
     journal = await blockCommitSigning(journal, boundary);
