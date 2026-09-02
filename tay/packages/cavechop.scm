@@ -49,8 +49,10 @@
               (substitute* "main.c"
                 (("\"gzip cavechop.sav\"" )
                  (string-append "\"" #$gzip "/bin/gzip cavechop.sav\""))
+                ;; The upstream load call omits the .gz suffix, which makes
+                ;; gzip reject the save and leaves load_game with no file.
                 (("\"gunzip cavechop.sav\"" )
-                 (string-append "\"" #$gzip "/bin/gunzip cavechop.sav\"")))))
+                 (string-append "\"" #$gzip "/bin/gunzip cavechop.sav.gz\"")))))
           (replace 'build
             (lambda _
               (invoke "make" "all" "CC=gcc")))
