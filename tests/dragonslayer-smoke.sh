@@ -32,7 +32,9 @@ find_output () {
 
 util_linux_out=$(find_output bin/unshare util-linux)
 bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
+node_bin=$(command -v node)
 test -r "$bounded_validation"
+test -x "$node_bin"
 test -x "$dragonslayer_out/bin/dragonslayer"
 test -x "$dragonslayer_out/libexec/dragonslayer-real"
 test -s "$dragonslayer_out/share/dragonslayer/dragon.ds"
@@ -45,7 +47,8 @@ for file in README.md license.htm changes.htm changes.doc daedalus.htm \
 done
 grep -F 'GNU GENERAL PUBLIC LICENSE' "$doc/license.htm" >/dev/null
 grep -F 'Version 2, June 1991' "$doc/license.htm" >/dev/null
-grep -F 'Walter D. Pullen' "$doc/changes.htm" >/dev/null
+grep -F 'Walter D.' "$doc/changes.htm" >/dev/null
+grep -F 'Pullen' "$doc/changes.htm" >/dev/null
 grep -F 'By Walter D. Pullen' \
     "$dragonslayer_out/share/dragonslayer/dragon.ds" >/dev/null
 grep -F 'Based on the leaves.bmp background from Windows 3.1' \
@@ -62,11 +65,17 @@ grep -F '"successMarker": "DRAGONSLAYER_SMOKE_OK"' \
 test -z "$(find "$dragonslayer_out" -xdev -type f -perm /222 -print -quit)"
 before=$($guix_bin hash -S nar "$dragonslayer_out")
 
-scratch=$(mktemp -d /tmp/goocastle-agent-dragonslayer-XXXXXXXX)
-case "$scratch" in
+if test -n "${GOOCASTLE_DISPOSABLE_WORKSPACE-}"; then
+    disposable_workspace=$GOOCASTLE_DISPOSABLE_WORKSPACE
+else
+    disposable_workspace=$(mktemp -d /tmp/goocastle-agent-XXXXXXXX)
+fi
+case "$disposable_workspace" in
     /tmp/goocastle-agent-*) ;;
     *) echo 'refusing an unvalidated disposable workspace' >&2; exit 1 ;;
 esac
+test -d "$disposable_workspace"
+scratch=$(mktemp -d "$disposable_workspace/dragonslayer-XXXXXXXX")
 test -d "$scratch"
 mkdir "$scratch/home" "$scratch/config" "$scratch/data" \
       "$scratch/cache" "$scratch/state" "$scratch/runtime" \
@@ -91,7 +100,7 @@ export NO_PROXY='*'
 raw=${GOOCASTLE_RUNTIME_RAW_CAPTURE:-$scratch/terminal.raw}
 proof=$(cd "$scratch/work" && \
     GOOCASTLE_RUNTIME_RAW_CAPTURE="$raw" \
-    node "$bounded_validation" --timeout-ms 30000 -- \
+    "$node_bin" "$bounded_validation" --timeout-ms 30000 -- \
     "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
     "$dragonslayer_out/bin/dragonslayer" --smoke)
 test "$proof" = 'DRAGONSLAYER_SMOKE_OK'

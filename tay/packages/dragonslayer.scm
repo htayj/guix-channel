@@ -40,37 +40,37 @@
           (delete 'configure)
           (add-before 'build 'patch-unix-command-line
             (lambda _
-              ;; The repository preserves Windows CRLF files.  Normalize only
-              ;; the two files patched below, then select the documented Unix
-              ;; build by disabling the Windows and MSVC feature macros.
-              (substitute* '("util.h" "daedalus.cpp")
-                (("\r") ""))
+              ;; The repository preserves Windows CRLF files.  Match the
+              ;; original line endings explicitly in the two files patched
+              ;; below, then select the documented Unix build by disabling the
+              ;; Windows and MSVC feature macros.
               (substitute* "util.h"
-                (("^#define WIN$") "// #define WIN")
-                (("^#define PC$") "// #define PC"))
-              ;; `--smoke` is recognized after the script path has been opened
-              ;; by the ordinary command-line parser.  This keeps the proof on
-              ;; the same script-loading and movement code as normal use.
+                (("^#define WIN") "// #define WIN")
+                (("^#define PC") "// #define PC"))
+              ;; Remove `--smoke` before the ordinary command-line parser sees
+              ;; the arguments.  This keeps the proof on the same script-
+              ;; loading and movement code as normal use.
               (substitute* "daedalus.cpp"
-                (("#include <memory.h>\n")
+                (("#include <memory.h>")
                  "#include <memory.h>\n#include <string.h>\n")
-                (("  int iarg = 1;\n")
+                (("  int iarg = 1;")
                  "  int iarg = 1;\n  flag fSmoke = fFalse;\n")
-                (("  szLine.0. = chNull;\n")
+                (("  szLine\\[0\\] = chNull;")
                  (string-append
                   "  szLine[0] = chNull;\n"
                   "  for (iarg = 1; iarg < argc; iarg++)\n"
-                  "    if (strcmp(argv[iarg], \"--smoke\") == 0)\n"
-                  "      fSmoke = fTrue;\n"))
-                (("  RunCommandLine\\(szLine, NULL\\);\n\nLLoop:")
+                  "    if (strcmp(argv[iarg], \"--smoke\") == 0) {\n"
+                  "      fSmoke = fTrue;\n"
+                  "      argv[iarg][0] = chNull;\n"
+                  "    }\n"))
+                (("  RunCommandLine\\(szLine, NULL\\);")
                  (string-append
                   "  RunCommandLine(szLine, NULL);\n\n"
                   "  if (fSmoke) {\n"
                   "    DoCommand(cmdMoveU);\n"
                   "    printf(\"DRAGONSLAYER_SMOKE_OK\\n\");\n"
                   "    return 0;\n"
-                  "  }\n\n"
-                  "LLoop:")))))
+                  "  }\n\n")))))
           (replace 'build
             (lambda _
               ;; This is the offline Unix build documented by upstream's
