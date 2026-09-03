@@ -457,7 +457,7 @@
     (native-inputs
      (list `("fpc" ,fpc)
            `("fpcvalkyrie" ,%fpcvalkyrie-source)
-           `("make" ,make)
+           `("make" ,gnu-make)
            `("lua" ,lua-5.1)))
     ;; Lua is dynamically loaded by the console executable.  The launcher
     ;; supplies its library and terminfo paths without consulting host state.
