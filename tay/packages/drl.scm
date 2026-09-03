@@ -355,7 +355,9 @@
                     (display "  second_log=\"$smoke_root/work/second.log\"\n" port)
                     (display "  capture=\"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"\n" port)
                     (display "  run_session() {\n" port)
-                    (display "    log=$1\n    mode=${2-truncate}\n    input=$work/input-$mode\n" port)
+                    (display
+                     "    log=$1\n    mode=${2-truncate}\n    input=$work/input-$mode\n"
+                     port)
                     (display "    \"$mkfifo\" \"$input\"\n" port)
                     (display
                      (string-append
@@ -389,10 +391,12 @@
                       "        text=$(\"$cat\" \"$log\")\n"
                       "        case \"$text\" in *\"$marker\"*) return 0 ;; esac\n"
                       "      fi\n      \"$sleep\" 1\n      tries=$((tries + 1))\n"
-                      "    done\n    echo \"drl smoke: timed out waiting for $marker\" >&2\n"
+                      "    done\n"
+                      "    echo \"drl smoke: timed out waiting for $marker\" >&2\n"
                       "    return 1\n  }\n"
                       "  send() { printf \"$1\" >&3; }\n"
-                      "  finish_session() { exec 3>&-\n    kill -TERM \"$session\" 2>/dev/null || true\n"
+                      "  finish_session() { exec 3>&-\n"
+                      "    kill -TERM \"$session\" 2>/dev/null || true\n"
                       "    wait \"$session\" || true\n"
                       "    \"$rm\" -f \"$input\"\n  }\n")
                      port)
@@ -402,11 +406,15 @@
                       "  wait_for 'continue...' \"$first_log\"; send '\\r'\n"
                       "  \"$sleep\" 2; send '\\r'\n"
                       "  \"$sleep\" 2; wait_for 'New game' \"$first_log\"; send '\\r'\n"
-                      "  \"$sleep\" 1; wait_for 'Regular game' \"$first_log\"; send '\\r'\n"
-                      "  \"$sleep\" 1; wait_for \"I'm Too Young To Die!\" \"$first_log\"; send '\\r'\n"
+                      "  \"$sleep\" 1; wait_for 'Regular game' \"$first_log\"; "
+                      "send '\\r'\n"
+                      "  \"$sleep\" 1; wait_for \"I'm Too Young To Die!\" "
+                      "\"$first_log\"; send '\\r'\n"
                       "  \"$sleep\" 1; wait_for 'Marine' \"$first_log\"; send '\\r'\n"
-                      "  \"$sleep\" 1; wait_for 'Select trait to upgrade' \"$first_log\"; send '\\r'\n"
-                      "  \"$sleep\" 1; wait_for 'Type a name for your character' \"$first_log\"; send 'Smoke\\r'\n"
+                      "  \"$sleep\" 1; wait_for 'Select trait to upgrade' "
+                      "\"$first_log\"; send '\\r'\n"
+                      "  \"$sleep\" 1; wait_for 'Type a name for your character' "
+                      "\"$first_log\"; send 'Smoke\\r'\n"
                       "  wait_for 'Health:' \"$first_log\"; \"$sleep\" 3\n"
                       "  finish_session\n")
                      port)
