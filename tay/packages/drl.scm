@@ -314,20 +314,11 @@
                       "\"$smoke_root/work\" \"$smoke_root/write\" "
                       "\"$smoke_root/score\"\n")
                      port)
-                    ;; DRL writes settings.lua relative to its current
-                    ;; directory. Keep that mutable file in the fresh smoke
-                    ;; tree instead of the caller's directory.
                     (display "  cd \"$smoke_root/work\"\n" port)
-                    ;; Skip the optional plot pager and bind the legacy save
-                    ;; key so the fixed input stream reaches gameplay and
-                    ;; writes a save within the bounded PTY session.
-                    (display
-                     (string-append
-                      "  \"$cat\" > settings.lua <<'EOF'\n"
-                      "configuration = { skip_intro = true, "
-                      "input_legacysave = 115, }\n"
-                      "EOF\n")
-                     port)
+                    ;; Keep the current directory fresh and writable for the
+                    ;; runtime's relative state.  Unix upstream builds do not
+                    ;; load a settings.lua from the current directory, so the
+                    ;; smoke uses the documented in-game menu controls.
                     (display "  chmod 700 \"$smoke_root/runtime\"\n" port)
                     (display "  export HOME=\"$smoke_root/home\"\n" port)
                     (display "  export XDG_CONFIG_HOME=\"$smoke_root/config\"\n" port)
@@ -384,8 +375,19 @@
                       "\"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf 'Smoke'; printf '\\r'; "
+                      ;; The first-run plot pager follows character creation.
+                      "\"$sleep\" 2; printf '\\r'; "
+                      "\"$sleep\" 2; "
                       "\"$sleep\" 2; printf '\\033[C'; "
-                      "\"$sleep\" 2; printf 's'; printf '\\r'; \"$sleep\" 5; } | "
+                      ;; Save & Quit is the last entry in the in-game menu.
+                      "\"$sleep\" 1; printf '\\033'; "
+                      "\"$sleep\" 1; printf '\\033[B'; "
+                      "\"$sleep\" 1; printf '\\033[B'; "
+                      "\"$sleep\" 1; printf '\\033[B'; "
+                      "\"$sleep\" 1; printf '\\033[B'; "
+                      "\"$sleep\" 1; printf '\\033[B'; "
+                      "\"$sleep\" 1; printf '\\033[B'; "
+                      "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; } | "
                       "run_session \"$first_log\"; then\n")
                      port)
                     (display
@@ -410,7 +412,14 @@
                       "  if ! { \"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; "
                       "printf '\\033[C'; \"$sleep\" 2; "
-                      "printf 's'; printf '\\r'; \"$sleep\" 5; } | "
+                      "printf '\\033'; \"$sleep\" 1; "
+                      "printf '\\033[B'; \"$sleep\" 1; "
+                      "printf '\\033[B'; \"$sleep\" 1; "
+                      "printf '\\033[B'; \"$sleep\" 1; "
+                      "printf '\\033[B'; \"$sleep\" 1; "
+                      "printf '\\033[B'; \"$sleep\" 1; "
+                      "printf '\\033[B'; \"$sleep\" 1; "
+                      "printf '\\r'; \"$sleep\" 5; } | "
                       "run_session \"$second_log\" append; then\n")
                      port)
                     (display
