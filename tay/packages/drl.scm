@@ -389,11 +389,11 @@
                       "\"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf 'Smoke'; printf '\\r'; "
                       ;; Skip the plot via settings, move, then use the
-                      ;; configured legacy save key (v).  Saving returns to
-                      ;; the main menu, where the final six downs select Exit.
+                      ;; configured legacy save key, which enters the
+                      ;; save state without relying on terminal escape parsing.
                       "\"$sleep\" 2; printf '\\033[C'; "
                       "\"$sleep\" 1; printf 'v'; \"$sleep\" 2; "
-                      "printf '\\033[B\\033[B\\033[B\\033[B\\033[B\\033[B'; "
+                      "printf '\\033[B\\033[B\\033[B\\033[B\\033[B'; "
                       "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; } | "
                       "run_session \"$first_log\"; then\n")
                      port)
@@ -419,8 +419,7 @@
                       "  if ! { \"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; "
                       "printf '\\033[C'; \"$sleep\" 2; printf 'v'; "
-                      "\"$sleep\" 2; "
-                      "printf '\\033[B\\033[B\\033[B\\033[B\\033[B\\033[B'; "
+                      "\"$sleep\" 2; printf '\\033[B\\033[B\\033[B\\033[B\\033[B'; "
                       "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; } | "
                       "run_session \"$second_log\" append; then\n")
                      port)

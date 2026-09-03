@@ -30,7 +30,17 @@ test -s "$drl_out/share/drl/data/core/main.lua"
 test -s "$drl_out/share/drl/data/drl/main.lua"
 test ! -e "$drl_out/share/drl/data/drl/graphics"
 test ! -e "$drl_out/share/drl/data/drl/fonts"
+test ! -e "$drl_out/share/drl/data/drlhq"
+test ! -e "$drl_out/share/drl/data/drllq"
 test ! -e "$drl_out/ext"
+
+# The launcher owns the reviewed console invocation and keeps all mutable
+# paths outside the immutable package output.
+grep -F -- '-datapath ' "$drl_out/bin/drl" >/dev/null
+grep -F -- '-config ' "$drl_out/bin/drl" >/dev/null
+grep -F -- '-writepath ' "$drl_out/bin/drl" >/dev/null
+grep -F -- '-scorepath ' "$drl_out/bin/drl" >/dev/null
+grep -F -- '-console -nosound -module drl' "$drl_out/bin/drl" >/dev/null
 
 doc=$drl_out/share/doc/drl
 for notice in LICENSE FPCVALKYRIE-LICENSE THIRD-PARTY-NOTICES; do
