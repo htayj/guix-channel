@@ -1043,21 +1043,42 @@ const reportInvalidReadyIssue = (issue, error) => {
   );
 };
 const requestedGooflowOverride = process.env.GOOCASTLE_GOOFLOW_OVERRIDE;
+const requestedGooflowFilter = process.env.GOOCASTLE_GOOFLOW_FILTER;
 if (requestedGooflowOverride && process.env.GOOCASTLE_GOOFLOW_BYPASS === "1") {
   throw new Error("GOOCASTLE_GOOFLOW_OVERRIDE conflicts with GOOCASTLE_GOOFLOW_BYPASS; choose one explicit workflow selection");
 }
+if (requestedGooflowFilter !== undefined && requestedGooflowFilter.trim() === "") {
+  throw new Error("GOOCASTLE_GOOFLOW_FILTER must name a configured workflow");
+}
+if (requestedGooflowFilter !== undefined && requestedGooflowOverride !== undefined) {
+  throw new Error("GOOCASTLE_GOOFLOW_FILTER conflicts with GOOCASTLE_GOOFLOW_OVERRIDE; choose a scheduler filter or an explicit workflow override");
+}
+if (requestedGooflowFilter !== undefined && process.env.GOOCASTLE_GOOFLOW_BYPASS === "1") {
+  throw new Error("GOOCASTLE_GOOFLOW_FILTER conflicts with GOOCASTLE_GOOFLOW_BYPASS; choose a scheduler filter or an explicit template bypass");
+}
+const gooflowSelectionMatchesSchedulerFilter = (selection) =>
+  requestedGooflowFilter === undefined || selection.workflow?.name === requestedGooflowFilter;
+const gooflowMatchesSchedulerFilter = (resolved) =>
+  gooflowSelectionMatchesSchedulerFilter(resolved);
+const reportGooflowFilterSkip = (issue, resolved) => console.log(
+  "Skipping issue #" + issue.number + "; scheduler workflow filter " + JSON.stringify(requestedGooflowFilter) +
+    " excludes its normal Gooflow route " + JSON.stringify(resolved.workflow?.name ?? "template") + ".",
+);
 const resolveForIssue = async (issue, { reportSelection = true, validateRuntimeContract = true } = {}) => {
   const resolved = await resolveIssueGooflow({
     directory: hostWorkTree,
     config: projectConfig,
     issue: { number: issue.number, labels: issue.labels ?? [] },
     ...(requestedGooflowOverride ? { override: requestedGooflowOverride } : process.env.GOOCASTLE_GOOFLOW_BYPASS === "1" ? { override: "template" } : {}),
-    ...(reportSelection ? { onSelection: (selection) => console.log(
+    ...(reportSelection ? { onSelection: (selection) => {
+      if (!gooflowSelectionMatchesSchedulerFilter(selection)) return;
+      console.log(
       "Selected Gooflow " + JSON.stringify(selection.workflow?.name ?? "template") +
         " via " + selection.source +
         (selection.schemaVersion === undefined ? "" : " (schema v" + selection.schemaVersion + ")") +
         (selection.override === undefined ? "" : "; explicit override=" + JSON.stringify(selection.override)),
-    ) } : {}),
+      );
+    } } : {}),
   });
   if (resolved.selection.source === "template-fallback") {
     throw new Error("Missing .goocastle/gooflow.json; create the enforced Gooflow standard or set GOOCASTLE_GOOFLOW_BYPASS=1 for an audited template bypass");
@@ -1066,7 +1087,7 @@ const resolveForIssue = async (issue, { reportSelection = true, validateRuntimeC
   // Resolve it while routing candidates so a missing or malformed entry cannot
   // create a journal or sandbox, and resolve it again after materialization
   // immediately before the phases run.
-  if (validateRuntimeContract && resolved.workflow?.evidence?.runtimeContractPath !== undefined) {
+  if (validateRuntimeContract && gooflowMatchesSchedulerFilter(resolved) && resolved.workflow?.evidence?.runtimeContractPath !== undefined) {
     await resolveGooflowEvidence(resolved.workflow.evidence, hostWorkTree, issue.number);
   }
   return resolved;
@@ -1161,6 +1182,10 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
       // emitting a workflow selection and legacy-policy warning for every
       // open issue; the selected ticket is resolved again and reported below.
       resolved = await resolveForIssue(issue, { reportSelection: false });
+      if (!gooflowMatchesSchedulerFilter(resolved)) {
+        reportGooflowFilterSkip(issue, resolved);
+        continue;
+      }
       explanation = validateIssueForWorkflow(issue, resolved.workflow, { reportWarnings: false });
     } catch (error) {
       if (error instanceof Error && error.message.startsWith("Missing .goocastle/gooflow.json")) throw error;
@@ -1198,6 +1223,10 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
       } catch (error) {
         reportInvalidReadyIssue(selected, error);
         if (await reconcileInvalidRuntimeContract(selected, error)) continue;
+        continue;
+      }
+      if (!gooflowMatchesSchedulerFilter(resolved)) {
+        reportGooflowFilterSkip(selected, resolved);
         continue;
       }
       const selectorLabels = resolved.workflow?.selectorLabels ?? ["ready-for-agent"];
@@ -2485,7 +2514,7 @@ const reportRecovery = (issue, branch, integration, recovery) => {
     console.error("Inspect it with: " + shellDisplayCommand("git", ["-C", hostWorkTree, "log", baseBranch + ".." + branch]));
   }
 };
-const resumeRecoveryCommand = () => shellDisplayCommand("goocastle", ["resume", hostWorkTree]);
+const resumeRecoveryCommand = () => shellDisplayCommand("goocastle", ["resume", hostWorkTree, ...(requestedGooflowFilter === undefined ? [] : ["--workflow-filter", requestedGooflowFilter])]);
 const reconcileAbandonedPhases = async () => {
   // Older compatible test/runtime facades may not expose the optional
   // liveness helper. A real generated runner still receives it from the
@@ -2803,6 +2832,9 @@ const reexecutionRecoveryCommand = (state) => {
     ...(process.env.GOOCASTLE_GUIX_MODULE_URL === undefined
       ? []
       : ["GOOCASTLE_GUIX_MODULE_URL=" + process.env.GOOCASTLE_GUIX_MODULE_URL]),
+    ...(process.env.GOOCASTLE_GOOFLOW_FILTER === undefined
+      ? []
+      : ["GOOCASTLE_GOOFLOW_FILTER=" + process.env.GOOCASTLE_GOOFLOW_FILTER]),
   ];
   return "cd " + shellDisplayQuote(hostWorkTree) + " && env " +
     runtimeEnvironment.map(shellDisplayQuote).join(" ") + " " +
@@ -3031,6 +3063,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       // Preserve both the issue-specification and Gooflow selection
       // boundaries before publishing any external reopening label. A changed
       // issue contract or workflow selection must still fail closed.
+      if (!gooflowMatchesSchedulerFilter(resolvedGooflow)) {
+        deferredJournalIssues.add(issue.number);
+        attemptedIssues.add(issue.number);
+        reportGooflowFilterSkip(issue, resolvedGooflow);
+        task -= 1;
+        continue;
+      }
       const repairExplanation = validateIssueForWorkflow(issue, resolvedGooflow.workflow, { reportWarnings: false });
       if (specificationChangedSinceJournal(journal, repairExplanation) && !SPECIFICATION_OVERRIDE) {
         if (!RESUME_ONLY) {
@@ -3173,6 +3212,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         continue;
       }
       throw error;
+    }
+    if (!gooflowMatchesSchedulerFilter(resolvedGooflow)) {
+      deferredJournalIssues.add(issue.number);
+      attemptedIssues.add(issue.number);
+      reportGooflowFilterSkip(issue, resolvedGooflow);
+      task -= 1;
+      continue;
     }
     const explanation = validateIssueForWorkflow(issue, resolvedGooflow.workflow);
     let decision = "initial";
