@@ -55,6 +55,8 @@ if ! env -i \
   PATH="$PATH" \
   GUIX="${GUIX:-guix}" \
   GOOCASTLE_RUNTIME_RAW_CAPTURE="$terminal_raw" \
+  GOOCASTLE_BOUNDED_VALIDATION="${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}" \
+  node "${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}" --timeout-ms 120000 -- \
   node .goocastle/capture-runtime-evidence.mjs \
   .goocastle/runtime-evidence-contracts.json "$issue_number" >"$runtime_transcript" 2>&1; then
   tail -c 12000 "$runtime_transcript" >&2 || true
