@@ -546,6 +546,21 @@
         },
         "successMarker": "DRL_GOOCASTLE_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 681,
+      "packageName": "dragonslayer",
+      "artifactPath": ".goocastle/evidence/issue-681.png",
+      "runtime": {
+        "executable": "dragonslayer",
+        "invocation": {
+          "file": "dragonslayer",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "DRAGONSLAYER_SMOKE_OK"
+      }
     }
   ]
 }
