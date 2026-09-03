@@ -70,7 +70,7 @@
                   "    printf(\"DRAGONSLAYER_SMOKE_OK\\n\");\n"
                   "    return 0;\n"
                   "  }\n\n"
-                  "LLoop:"))))
+                  "LLoop:")))))
           (replace 'build
             (lambda _
               ;; This is the offline Unix build documented by upstream's
@@ -132,7 +132,7 @@
                     (display "\"$mkdir\" -p \"$state\"\n" port)
                     (display "cd \"$state\"\n" port)
                     (display "exec \"$real\" \"$script\"\n" port)))
-                (chmod launcher #o555))))))))
+                (chmod launcher #o555)))))))
     (native-inputs (list gcc-toolchain))
     (inputs (list bash-minimal coreutils-minimal))
     (home-page "https://github.com/CruiserOne/Daedalus")
