@@ -3795,7 +3795,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             ? hostGit(["rev-parse", branch], { encoding: "utf8" }).trim()
             : existingRecord?.startSha ?? hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
           const liveness = existingRecord?.state === "fresh" && existingRecord.liveness !== undefined
-            ? { ...existingRecord.liveness, startedAt: phaseStartedAt, activityAt: phaseStartedAt, supervisorHeartbeatAt: phaseStartedAt, providerProgressAt: undefined }
+            ? { ...existingRecord.liveness, startedAt: phaseStartedAt, activityAt: phaseStartedAt, supervisorHeartbeatAt: phaseStartedAt, providerProgressAt: undefined, meaningfulProgressAt: undefined }
             : {
                 executorId: EXECUTOR_ID,
                 startedAt: phaseStartedAt,
@@ -3834,13 +3834,17 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
             }),
           });
         },
-        onPhaseProgress: async (phase) => {
+        onPhaseProgress: async (phase, _index, signal) => {
           const record = phaseRecord(journal, phase.name);
           if (record?.state !== "running" || record.liveness?.executorId !== EXECUTOR_ID) return;
           journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
             phases: journal.phases.map((item) => item.name !== phase.name ? item : {
               ...item,
-              liveness: { ...item.liveness, providerProgressAt: new Date().toISOString() },
+              liveness: {
+                ...item.liveness,
+                providerProgressAt: new Date().toISOString(),
+                ...(signal === "provider-event" ? {} : { meaningfulProgressAt: new Date().toISOString() }),
+              },
             }),
           });
         },
