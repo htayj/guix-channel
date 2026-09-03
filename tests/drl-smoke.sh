@@ -40,9 +40,9 @@ grep -F -- '-config ' "$drl_out/bin/drl" >/dev/null
 grep -F -- '-writepath ' "$drl_out/bin/drl" >/dev/null
 grep -F -- '-scorepath ' "$drl_out/bin/drl" >/dev/null
 grep -F -- '-console -nosound -module drl' "$drl_out/bin/drl" >/dev/null
-grep -F -- 'input_legacysave = 118' \
-    "$drl_out/share/drl/smoke-settings.lua" >/dev/null
+grep -F -- 'Save & Quit' "$drl_out/bin/drl" >/dev/null
 grep -F -- 'Game loaded.' "$drl_out/bin/drl" >/dev/null
+grep -F -- 'Abandon Run' "$drl_out/bin/drl" >/dev/null
 
 doc=$drl_out/share/doc/drl
 for notice in LICENSE FPCVALKYRIE-LICENSE THIRD-PARTY-NOTICES; do
