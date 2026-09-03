@@ -3843,7 +3843,11 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
               liveness: {
                 ...item.liveness,
                 providerProgressAt: new Date().toISOString(),
-                ...(signal === "provider-event" ? {} : { meaningfulProgressAt: new Date().toISOString() }),
+                // CPU ticks and provider events only establish transport
+                // liveness.  A workspace change is the sole streaming signal
+                // that can prove forward delivery work; bounded command
+                // receipts and phase completion are recorded separately.
+                ...(signal === "filesystem-change" ? { meaningfulProgressAt: new Date().toISOString() } : {}),
               },
             }),
           });
