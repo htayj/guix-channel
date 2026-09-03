@@ -51,10 +51,11 @@
               (substitute* "GNUmakefile"
                 (("export COMMIT_DESC := \\$[(]shell git describe --always[)]")
                  "export COMMIT_DESC := a6f0a1c43e66f4fb1bcac34d7d9709706682ec19"))
-              ;; Do not inspect a host mailbox while the game is running.
-              ;; The Unix source already leaves its shell escape disabled.
-              (substitute* "include/unixconf.h"
-                (("^#define MAIL.*$") "/* #define MAIL */"))
+              ;; The upstream admin-message hook reads an ambient relative
+              ;; file; it is not part of the ordinary standalone game.
+              (substitute* "include/config.h"
+                (("^#define SERVER_ADMIN_MSG.*$")
+                 "/* #define SERVER_ADMIN_MSG */"))
               ;; makedefs otherwise embeds the builder's wall clock in
               ;; include/date.h, verinfo, and the generated data archive.
               (substitute* "util/makedefs.c"
@@ -112,11 +113,18 @@
                     (display "export TERM=\"${TERM:-xterm-256color}\"\n" port)
                     (display "\"$mkdir\" -p \"$state/save\" \"$state/dumplog\" \"$state/whereis\"\n"
                              port)
+                    (display "test -e \"$state/perm\" || : > \"$state/perm\"\n"
+                             port)
                     (display "for file in record logfile xlogfile livelog paniclog hangup; do\n"
                              port)
                     (display "  test -e \"$state/$file\" || : > \"$state/$file\"\n"
                              port)
                     (display "done\n\n" port)
+                    (display "mailbox=\"$state/mailbox\"\n"
+                             port)
+                    (display "test -e \"$mailbox\" || : > \"$mailbox\"\n"
+                             port)
+                    (display "export MAIL=\"$mailbox\"\n\n" port)
                     (display "new_playground() {\n" port)
                     (display "  playground=$(\"$mktemp\" -d \"$state/playground.XXXXXX\")\n"
                              port)
@@ -124,7 +132,7 @@
                              port)
                     (display "  \"$ln\" -s \"$data/license\" \"$playground/license\"\n"
                              port)
-                    (display "  for file in record logfile xlogfile livelog paniclog hangup; do\n"
+                    (display "  for file in perm record logfile xlogfile livelog paniclog hangup; do\n"
                              port)
                     (display "    \"$ln\" -s \"$state/$file\" \"$playground/$file\"\n"
                              port)
@@ -144,8 +152,12 @@
                     ;; private playgrounds.  The first run saves after a rest;
                     ;; the second restores that save and quits cleanly.
                     (display "  first=$(new_playground)\n" port)
+                    (display "  cd \"$first\"\n"
+                             port)
+                    (display "  export HACKDIR=\"$first\" NETHACKDIR=\"$first\"\n"
+                             port)
                     (display "  first_log=\"$first/smoke-first\"\n" port)
-                    (display "  if ! { \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf '.'; \"$sleep\" 1; printf 'S'; \"$sleep\" 1; printf 'y'; } | \"$script\" -qefc \"$real -X -n -u goocastle-tourist-human-neutral-male\" \"$first_log\"; then\n"
+                    (display "  if ! { \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf '.'; \"$sleep\" 1; printf 'S'; \"$sleep\" 1; printf 'y'; } | \"$script\" -qefc \"$real -X -n -u goocastle-tourist-human-neutral-male\" \"$first_log\"; then\n"
                              port)
                     (display "    echo 'dnethack smoke: first game failed' >&2; exit 1\n  fi\n"
                              port)
@@ -156,8 +168,12 @@
                     (display "  case \"$first_text\" in *dNetHack*|*dNethack*) ;; *) echo 'dnethack smoke: gameplay title missing' >&2; exit 1 ;; esac\n"
                              port)
                     (display "  second=$(new_playground)\n" port)
+                    (display "  cd \"$second\"\n"
+                             port)
+                    (display "  export HACKDIR=\"$second\" NETHACKDIR=\"$second\"\n"
+                             port)
                     (display "  second_log=\"$second/smoke-second\"\n" port)
-                    (display "  if ! { \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf 'q'; \"$sleep\" 1; printf 'y'; } | \"$script\" -qefc \"$real -X -n -u goocastle-tourist-human-neutral-male\" \"$second_log\"; then\n"
+                    (display "  if ! { \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf 'q'; \"$sleep\" 1; printf 'y'; } | \"$script\" -qefc \"$real -X -n -u goocastle-tourist-human-neutral-male\" \"$second_log\"; then\n"
                              port)
                     (display "    echo 'dnethack smoke: restore game failed' >&2; exit 1\n  fi\n"
                              port)
@@ -165,7 +181,7 @@
                              port)
                     (display "  case \"$second_text\" in *[Rr]estor*|*'Welcome back'*) ;; *) echo 'dnethack smoke: restoration missing' >&2; exit 1 ;; esac\n"
                              port)
-                    (display "  for link in nhdat license record logfile xlogfile livelog paniclog hangup save dumplog whereis; do\n"
+                    (display "  for link in nhdat license perm record logfile xlogfile livelog paniclog hangup save dumplog whereis; do\n"
                              port)
                     (display "    test -L \"$second/$link\" || { echo \"dnethack smoke: missing $link link\" >&2; exit 1; }\n"
                              port)
@@ -207,7 +223,7 @@
                   (error "missing installed dNetHack data archive"))
                 (unless (file-exists? (string-append data "/license"))
                   (error "missing installed dNetHack license"))
-                (invoke "grep" "-F" "NetHack General Public License"
+                (invoke "grep" "-F" "NETHACK GENERAL PUBLIC LICENSE"
                         (string-append data "/license"))
                 (invoke "grep" "-F" "dNetHack is free software"
                         (string-append doc "README"))

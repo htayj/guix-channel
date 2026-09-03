@@ -3,6 +3,10 @@
 set -eu
 
 guix_bin=${GUIX:-guix}
+guix_bin=$(command -v "$guix_bin")
+node_bin=$(command -v node)
+find_bin=$(command -v find)
+rm_bin=$(command -v rm)
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 
 if test "$#" -gt 1; then
@@ -27,7 +31,7 @@ doc=$dnethack_out/share/doc/dnethack
 for notice in README README.gray README.menucolor Guidebook.txt README.linux; do
     test -s "$doc/$notice"
 done
-grep -F 'NetHack General Public License' \
+grep -F 'NETHACK GENERAL PUBLIC LICENSE' \
     "$dnethack_out/share/dnethack/license" >/dev/null
 grep -F 'dNetHack is free software' "$doc/README" >/dev/null
 
@@ -72,7 +76,11 @@ fi
 before=$($guix_bin hash -S nar "$dnethack_out")
 
 smoke_root=$(mktemp -d -t dnethack-smoke.XXXXXX)
-trap 'rm -rf "$smoke_root"' EXIT HUP INT TERM
+cleanup ()
+{
+    "$rm_bin" -rf "$smoke_root"
+}
+trap cleanup EXIT HUP INT TERM
 mkdir "$smoke_root/home" "$smoke_root/config" "$smoke_root/data" \
     "$smoke_root/cache" "$smoke_root/state" "$smoke_root/runtime" \
     "$smoke_root/tmp"
@@ -91,7 +99,7 @@ unset HACKDIR NETHACKDIR NETHACKOPTIONS MAIL MAILREADER SIMPLEMAIL || true
 
 # bounded-validation owns the complete process group.  The package wrapper's
 # --guix-smoke branch creates the PTYs for the two real curses sessions.
-proof=$(node "$bounded_validation" --timeout-ms 60000 -- \
+proof=$("$node_bin" "$bounded_validation" --timeout-ms 60000 -- \
     "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
     "$dnethack_out/bin/dnethack" --guix-smoke)
 case "$proof" in
@@ -104,7 +112,7 @@ esac
 
 after=$($guix_bin hash -S nar "$dnethack_out")
 test "$before" = "$after"
-test -z "$(find "$dnethack_out" -xdev -type f -perm /222 \
+test -z "$("$find_bin" "$dnethack_out" -xdev -type f -perm /222 \
     -print -quit)"
 test ! -w "$dnethack_out"
 printf '%s\n' 'dnethack guix smoke passed'
