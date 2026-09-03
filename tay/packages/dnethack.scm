@@ -157,7 +157,11 @@
                     (display "  export HACKDIR=\"$first\" NETHACKDIR=\"$first\"\n"
                              port)
                     (display "  first_log=\"$first/smoke-first\"\n" port)
-                    (display "  if ! { \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf '.'; \"$sleep\" 1; printf 'S'; \"$sleep\" 1; printf 'y'; } | \"$script\" -qefc \"$real -X -n -u goocastle-tourist-human-neutral-male\" \"$first_log\"; then\n"
+                    (display "  capture=\"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"\n"
+                             port)
+                    (display "  run_session() {\n    log=$1\n    mode=${2-truncate}\n    if test -n \"$capture\"; then\n      if test \"$mode\" = append; then\n        \"$script\" -qefc \"$real -X -n -u goocastle-tourist-human-neutral-male\" \"$log\" >> \"$capture\"\n      else\n        \"$script\" -qefc \"$real -X -n -u goocastle-tourist-human-neutral-male\" \"$log\" > \"$capture\"\n      fi\n    else\n      \"$script\" -qefc \"$real -X -n -u goocastle-tourist-human-neutral-male\" \"$log\" >/dev/null\n    fi\n  }\n"
+                             port)
+                    (display "  if ! { \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf '.'; \"$sleep\" 1; printf 'S'; \"$sleep\" 1; printf 'y'; } | run_session \"$first_log\"; then\n"
                              port)
                     (display "    echo 'dnethack smoke: first game failed' >&2; exit 1\n  fi\n"
                              port)
@@ -173,7 +177,7 @@
                     (display "  export HACKDIR=\"$second\" NETHACKDIR=\"$second\"\n"
                              port)
                     (display "  second_log=\"$second/smoke-second\"\n" port)
-                    (display "  if ! { \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf '#quit\\n'; \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf 'n'; \"$sleep\" 1; printf 'n'; \"$sleep\" 1; printf 'n'; } | \"$script\" -qefc \"$real -X -n -u goocastle-tourist-human-neutral-male\" \"$second_log\"; then\n"
+                    (display "  if ! { \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf '#quit\\n'; \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf 'n'; \"$sleep\" 1; printf 'n'; \"$sleep\" 1; printf 'n'; \"$sleep\" 1; printf ' '; } | run_session \"$second_log\" append; then\n"
                              port)
                     (display "    echo 'dnethack smoke: restore game failed' >&2; exit 1\n  fi\n"
                              port)

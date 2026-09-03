@@ -103,7 +103,9 @@ unset HACKDIR NETHACKDIR NETHACKOPTIONS MAIL MAILREADER SIMPLEMAIL || true
 
 # bounded-validation owns the complete process group.  The package wrapper's
 # --guix-smoke branch creates the PTYs for the two real curses sessions.
-proof=$("$node_bin" "$bounded_validation" --timeout-ms 60000 -- \
+raw=${GOOCASTLE_RUNTIME_RAW_CAPTURE:-$smoke_root/terminal.raw}
+proof=$(GOOCASTLE_RUNTIME_RAW_CAPTURE="$raw" \
+    "$node_bin" "$bounded_validation" --timeout-ms 60000 -- \
     "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
     "$dnethack_out/bin/dnethack" --guix-smoke)
 case "$proof" in
@@ -113,6 +115,7 @@ case "$proof" in
         exit 1
         ;;
 esac
+test -s "$raw"
 
 after=$($guix_bin hash -S nar "$dnethack_out")
 test "$before" = "$after"
