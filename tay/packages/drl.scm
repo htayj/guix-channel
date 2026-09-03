@@ -458,7 +458,7 @@
                       "  wait_for 'Smoke' \"$second_log\"\n"
                       "  send 'v'\n"
                       "  wait_for 'Continue game' \"$second_log\"\n"
-                      "  send '\\033[B\\033[B\\033[B\\033[B\\033[B\\033[B'\n"
+                      "  send '\\033[B\\033[B\\033[B\\033[B\\033[B'\n"
                       "  \"$sleep\" 1; send '\\r'\n"
                       "  finish_session\n")
                      port)
