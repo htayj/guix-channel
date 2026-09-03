@@ -173,7 +173,7 @@
                     (display "  export HACKDIR=\"$second\" NETHACKDIR=\"$second\"\n"
                              port)
                     (display "  second_log=\"$second/smoke-second\"\n" port)
-                    (display "  if ! { \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf '#quit\\n'; \"$sleep\" 1; printf 'y'; } | \"$script\" -qefc \"$real -X -n -u goocastle-tourist-human-neutral-male\" \"$second_log\"; then\n"
+                    (display "  if ! { \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf '#quit\\n'; \"$sleep\" 1; printf 'y'; } | \"$script\" -qefc \"$real -X -n -u goocastle-tourist-human-neutral-male\" \"$second_log\"; then\n"
                              port)
                     (display "    echo 'dnethack smoke: restore game failed' >&2; exit 1\n  fi\n"
                              port)
