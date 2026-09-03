@@ -550,6 +550,7 @@
     {
       "issueNumber": 681,
       "packageName": "dragonslayer",
+      "packageModulePath": "tay/packages/dragonslayer.scm",
       "artifactPath": ".goocastle/evidence/issue-681.png",
       "runtime": {
         "executable": "dragonslayer",
