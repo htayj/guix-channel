@@ -355,7 +355,12 @@
                     (display "  second_log=\"$smoke_root/work/second.log\"\n" port)
                     (display "  capture=\"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"\n" port)
                     (display "  run_session() {\n" port)
-                    (display "    log=$1\n    mode=${2-truncate}\n    input=$work/input-$mode\n" port)
+                    (display
+                     (string-append
+                      "    log=$1\n"
+                      "    mode=${2-truncate}\n"
+                      "    input=$work/input-$mode\n")
+                     port)
                     (display "    \"$mkfifo\" \"$input\"\n" port)
                     (display
                      (string-append
@@ -380,45 +385,96 @@
                       "    else\n      \"$script\" -qefc \"$command\" "
                       "\"$log\" < \"$input\" >/dev/null &\n    fi\n")
                      port)
-                    (display "    session=$!\n    exec 3>\"$input\"\n  }\n" port)
+                    (display
+                     "    session=$!\n    exec 3>\"$input\"\n  }\n"
+                     port)
                     (display
                      (string-append
                       "  wait_for() {\n    marker=$1\n    log=$2\n    tries=0\n"
                       "    while test \"$tries\" -lt 60; do\n"
                       "      if test -s \"$log\"; then\n"
                       "        text=$(\"$cat\" \"$log\")\n"
-                      "        case \"$text\" in *\"$marker\"*) return 0 ;; esac\n"
-                      "      fi\n      \"$sleep\" 1\n      tries=$((tries + 1))\n"
-                      "    done\n    echo \"drl smoke: timed out waiting for $marker\" >&2\n"
+                      "        case \"$text\" in *\"$marker\"*) "
+                      "return 0 ;; esac\n"
+                      "      fi\n"
+                      "      \"$sleep\" 1\n"
+                      "      tries=$((tries + 1))\n"
+                      "    done\n"
+                      "    echo \"drl smoke: timed out waiting for $marker\" >&2\n"
                       "    return 1\n  }\n"
                       "  send() { printf \"$1\" >&3; }\n"
-                      "  finish_session() { exec 3>&-\n    kill -TERM \"$session\" 2>/dev/null || true\n"
-                      "    wait \"$session\" || true\n"
-                      "    \"$rm\" -f \"$input\"\n  }\n")
+                      "  finish_session() {\n"
+                      "    exec 3>&-\n"
+                      "    wait \"$session\"\n"
+                      "    \"$rm\" -f \"$input\"\n"
+                      "  }\n")
                      port)
                     (display
                      (string-append
                       "  run_session \"$first_log\"\n"
                       "  wait_for 'continue...' \"$first_log\"; send '\\r'\n"
                       "  \"$sleep\" 2; send '\\r'\n"
-                      "  \"$sleep\" 2; wait_for 'New game' \"$first_log\"; send '\\r'\n"
-                      "  \"$sleep\" 1; wait_for 'Regular game' \"$first_log\"; send '\\r'\n"
-                      "  \"$sleep\" 1; wait_for \"I'm Too Young To Die!\" \"$first_log\"; send '\\r'\n"
-                      "  \"$sleep\" 1; wait_for 'Marine' \"$first_log\"; send '\\r'\n"
-                      "  \"$sleep\" 1; wait_for 'Select trait to upgrade' \"$first_log\"; send '\\r'\n"
-                      "  \"$sleep\" 1; wait_for 'Type a name for your character' \"$first_log\"; send 'Smoke\\r'\n"
-                      "  wait_for 'Health:' \"$first_log\"; \"$sleep\" 3\n"
+                      "  \"$sleep\" 2; wait_for 'New game' \"$first_log\"; "
+                      "send '\\r'\n"
+                      "  \"$sleep\" 1; wait_for 'Regular game' \"$first_log\"; "
+                      "send '\\r'\n"
+                      "  \"$sleep\" 1; wait_for \"I'm Too Young To Die!\" "
+                      "\"$first_log\"; send '\\r'\n"
+                      "  \"$sleep\" 1; wait_for 'Marine' \"$first_log\"; "
+                      "send '\\r'\n"
+                      "  \"$sleep\" 1; wait_for 'Select trait to upgrade' "
+                      "\"$first_log\"; send '\\r'\n"
+                      "  \"$sleep\" 1; wait_for 'Type a name for your character' "
+                      "\"$first_log\"; send 'Smoke\\r'\n"
+                      "  wait_for 'Health:' \"$first_log\"; \"$sleep\" 2\n"
+                      "  send '\\033[C'; \"$sleep\" 1; send '\\033'\n"
+                      "  wait_for 'Save & Quit' \"$first_log\"\n"
+                      "  send '\\033[B\\033[B\\033[B\\033[B\\033[B\\033[B'\n"
+                      "  \"$sleep\" 1; send '\\r'\n"
+                      "  wait_for 'Continue game' \"$first_log\"\n"
+                      "  save=\"$write/user/drl/save\"\n"
+                      "  test -s \"$save\"\n"
+                      "  send '\\033[B\\033[B\\033[B\\033[B\\033[B\\033[B'\n"
+                      "  \"$sleep\" 1; send '\\r'\n"
                       "  finish_session\n")
                      port)
                     (display
-                     "  true\n"
+                     (string-append
+                      "  first_text=$(\"$cat\" \"$first_log\")\n"
+                      "  for marker in 'Health:' 'Smoke' @; do\n"
+                      "    case \"$first_text\" in *\"$marker\"*) ;; *)\n"
+                      "      echo \"drl smoke: missing first-run marker $marker\" >&2\n"
+                      "      exit 1 ;;\n"
+                      "    esac\n"
+                      "  done\n")
                      port)
-                    (display "  first_text=$(\"$cat\" \"$first_log\")\n" port)
                     (display
                      (string-append
-                      "  for marker in 'Health:' 'Smoke'; do case \"$first_text\" in "
-                      "*\"$marker\"*) ;; *) echo \"drl smoke: missing "
-                      "first-run marker $marker\" >&2; exit 1 ;; esac; done\n")
+                      "  run_session \"$second_log\" append\n"
+                      "  wait_for 'Continue game' \"$second_log\"\n"
+                      "  send '\\r'\n"
+                      "  wait_for 'Game loaded.' \"$second_log\"\n"
+                      "  wait_for 'Health:' \"$second_log\"\n"
+                      "  wait_for 'Smoke' \"$second_log\"\n"
+                      "  send '\\033'\n"
+                      "  wait_for 'Abandon Run' \"$second_log\"\n"
+                      "  send '\\033[B\\033[B\\033[B\\033[B\\033[B'\n"
+                      "  \"$sleep\" 1; send '\\r'\n"
+                      "  wait_for 'Abandon run' \"$second_log\"\n"
+                      "  send '\\033[B'; \"$sleep\" 1; send '\\r'\n"
+                      "  finish_session\n")
+                     port)
+                    (display
+                     (string-append
+                      "  test ! -e \"$save\"\n"
+                      "  second_text=$(\"$cat\" \"$second_log\")\n"
+                      "  for marker in 'Continue game' 'Game loaded.' 'Health:' "
+                      "'Smoke'; do\n"
+                      "    case \"$second_text\" in *\"$marker\"*) ;; *)\n"
+                      "      echo \"drl smoke: missing restore marker $marker\" >&2\n"
+                      "      exit 1 ;;\n"
+                      "    esac\n"
+                      "  done\n")
                      port)
                     (display
                      (string-append
