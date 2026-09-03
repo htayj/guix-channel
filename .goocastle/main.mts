@@ -3468,8 +3468,28 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       : [];
     const requiredGooflowPhases = new Set(materializedGooflow?.requiredPhases ?? []);
     if (journal.providerStateRecovery?.state === "blocked" && RESUME_ONLY) {
-      const exhaustedPhase = phases.find((phase) => phase.name === journal.providerStateRecovery?.epochs.at(-1)?.phase);
-      journal = await acceptManualProviderRepair(journal, exhaustedPhase);
+      // A host-enforced progress/wall timeout is not provider-state loss.  It
+      // may occur after an older provider-recovery epoch for another phase;
+      // do not make that historical epoch prevent the explicit fresh retry.
+      const timedOutPhase = phases.find((phase) => {
+        const record = phaseRecord(journal, phase.name);
+        return phase.type === "agent" && record?.state === "failed" && record.failureReceipt?.kind === "timeout";
+      });
+      if (timedOutPhase !== undefined) {
+        const recovery = journal.providerStateRecovery;
+        journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+          status: "active",
+          failure: undefined,
+          providerStateRecovery: {
+            state: "complete",
+            epochs: recovery.epochs.map((entry) => entry.state === "blocked" ? { ...entry, state: "complete" } : entry),
+          },
+        });
+        console.warn("Accepted explicit host-timeout recovery for phase " + JSON.stringify(timedOutPhase.name) + "; preserved provider-state history remains available for inspection.");
+      } else {
+        const exhaustedPhase = phases.find((phase) => phase.name === journal.providerStateRecovery?.epochs.at(-1)?.phase);
+        journal = await acceptManualProviderRepair(journal, exhaustedPhase);
+      }
     }
     if (evidenceConfig !== undefined) {
       const priorEvidence = journal.runtimeEvidence;
