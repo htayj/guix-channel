@@ -318,12 +318,14 @@
                     ;; directory. Keep that mutable file in the fresh smoke
                     ;; tree instead of the caller's directory.
                     (display "  cd \"$smoke_root/work\"\n" port)
-                    ;; Give the smoke run DRL's built-in save key while
-                    ;; retaining all other default settings.
+                    ;; Skip the optional plot pager and bind the legacy save
+                    ;; key so the fixed input stream reaches gameplay and
+                    ;; writes a save within the bounded PTY session.
                     (display
                      (string-append
                       "  \"$cat\" > settings.lua <<'EOF'\n"
-                      "configuration = { input_legacysave = 115, }\n"
+                      "configuration = { skip_intro = true, "
+                      "input_legacysave = 115, }\n"
                       "EOF\n")
                      port)
                     (display "  chmod 700 \"$smoke_root/runtime\"\n" port)
@@ -383,12 +385,7 @@
                       "\"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf 'Smoke'; printf '\\r'; "
                       "\"$sleep\" 2; printf '\\033[C'; "
-                      "\"$sleep\" 1; printf '\\033'; "
-                      "\"$sleep\" 1; printf '\\033[B\\033[B\\033[B"
-                      "\\033[B\\033[B\\033[B'; "
-                      "printf '\\r'; \"$sleep\" 3; "
-                      "printf '\\033[C'; \"$sleep\" 2; "
-                      "printf 's'; \"$sleep\" 3; } | "
+                      "\"$sleep\" 2; printf 's'; \"$sleep\" 5; } | "
                       "run_session \"$first_log\"; then\n")
                      port)
                     (display
@@ -413,7 +410,7 @@
                       "  if ! { \"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; "
                       "printf '\\033[C'; \"$sleep\" 2; "
-                      "printf 's'; \"$sleep\" 3; } | "
+                      "printf 's'; \"$sleep\" 5; } | "
                       "run_session \"$second_log\" append; then\n")
                      port)
                     (display
@@ -424,7 +421,7 @@
                     (display "  second_text=$(\"$cat\" \"$second_log\")\n" port)
                     (display
                      (string-append
-                      "  for marker in 'Continue game' HP: @; do case "
+                      "  for marker in 'Continue game' 'Health:' @; do case "
                       "\"$second_text\" in *\"$marker\"*) ;; *) echo "
                       "\"drl smoke: missing restore marker $marker\" >&2; "
                       "exit 1 ;; esac; done\n")
