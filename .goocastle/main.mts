@@ -1,14 +1,14 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { randomBytes } from "node:crypto";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync, statSync } from "node:fs";
 import { access, constants, lstat, mkdtemp, readFile, realpath, stat, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const GENERATED_RUNNER_RUNTIME_API_VERSION = 15;
-const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-15/journal-1";
+const GENERATED_RUNNER_RUNTIME_API_VERSION = 16;
+const GENERATED_RUNNER_RUNTIME_IDENTITY = "goocastle/generated-runner/api-16/journal-1";
 const GENERATED_RUNNER_JOURNAL_SCHEMA_VERSION = 1;
 // This digest is a secret-free capability identity for the generated runner.
 // It deliberately follows the checked-in runner bytes so a repaired runner
@@ -41,6 +41,8 @@ const repairSemanticFingerprintFor = (workflow, phaseName) => createHash("sha256
   }))
   .digest("hex");
 const SELF_HOSTED_RUNTIME_ROOT_ENVIRONMENT = "GOOCASTLE_SELF_HOSTED_RUNTIME_ROOT";
+const SELF_HOSTED_RUNTIME_TRANSITION_RECEIPT = "goocastle-runtime-transition.json";
+const SELF_HOSTED_RUNTIME_TRANSITION_PATHS = new Set([".goocastle/main.mts", ".goocastle/gooflow.json"]);
 const hostWorkTree = process.cwd();
 if (process.env.GOOCASTLE_PHASE_WORKER === "1") {
   throw new Error(
@@ -57,6 +59,56 @@ const bootstrapGitEnvironment = { ...process.env };
 delete bootstrapGitEnvironment.GIT_COMMON_DIR;
 delete bootstrapGitEnvironment.GIT_DIR;
 delete bootstrapGitEnvironment.GIT_WORK_TREE;
+let selfHostedRuntimeTransitionAuthorized = false;
+const selfHostedRuntimeTransitionIsAuthorized = (gitDirectory, status) => {
+  if (!status) return false;
+  try {
+    const receiptPath = join(gitDirectory, SELF_HOSTED_RUNTIME_TRANSITION_RECEIPT);
+    const receiptInfo = lstatSync(receiptPath);
+    if (receiptInfo.isSymbolicLink() || !receiptInfo.isFile()) return false;
+    const receipt = JSON.parse(readFileSync(receiptPath, "utf8"));
+    if (receipt?.version !== 1 || typeof receipt.baseHead !== "string" || !/^[0-9a-f]{40}$/iu.test(receipt.baseHead) ||
+        !Array.isArray(receipt.files) || receipt.files.length === 0 || receipt.files.length > SELF_HOSTED_RUNTIME_TRANSITION_PATHS.size) return false;
+    const files = receipt.files;
+    const paths = files.map((file) => file?.path);
+    if (paths.some((path) => typeof path !== "string" || !SELF_HOSTED_RUNTIME_TRANSITION_PATHS.has(path)) ||
+        new Set(paths).size !== paths.length ||
+        files.some((file) => typeof file?.sha256 !== "string" || !/^[0-9a-f]{64}$/iu.test(file.sha256))) return false;
+    const currentHead = execFileSync("git", ["-c", "core.hooksPath=/dev/null", "rev-parse", "HEAD"], {
+      cwd: hostWorkTree,
+      encoding: "utf8",
+      env: bootstrapGitEnvironment,
+      stdio: ["ignore", "pipe", "pipe"],
+      maxBuffer: 1024 * 1024,
+    }).trim();
+    if (!/^[0-9a-f]{40}$/iu.test(currentHead)) return false;
+    if (currentHead !== receipt.baseHead) {
+      try {
+        execFileSync("git", ["-c", "core.hooksPath=/dev/null", "merge-base", "--is-ancestor", receipt.baseHead, currentHead], {
+          cwd: hostWorkTree,
+          encoding: "utf8",
+          env: bootstrapGitEnvironment,
+          stdio: ["ignore", "ignore", "ignore"],
+          maxBuffer: 1024 * 1024,
+        });
+        execFileSync("git", ["-c", "core.hooksPath=/dev/null", "diff", "--quiet", "--no-ext-diff", receipt.baseHead, currentHead, "--", ...SELF_HOSTED_RUNTIME_TRANSITION_PATHS], {
+          cwd: hostWorkTree,
+          encoding: "utf8",
+          env: bootstrapGitEnvironment,
+          stdio: ["ignore", "ignore", "ignore"],
+          maxBuffer: 1024 * 1024,
+        });
+      } catch {
+        return false;
+      }
+    }
+    const dirtyPaths = status.split(/\r?\n/).filter(Boolean).map((record) => record.length >= 4 ? record.slice(3) : record);
+    if (dirtyPaths.length !== paths.length || dirtyPaths.some((path) => !paths.includes(path))) return false;
+    return files.every((file) => createHash("sha256").update(readFileSync(join(hostWorkTree, file.path))).digest("hex") === file.sha256);
+  } catch {
+    return false;
+  }
+};
 const selfHostedRuntimeRoot = (() => {
   const configured = process.env[SELF_HOSTED_RUNTIME_ROOT_ENVIRONMENT];
   if (configured !== undefined) {
@@ -116,10 +168,11 @@ const runtimeModuleUrl = (() => {
     env: bootstrapGitEnvironment,
     stdio: ["ignore", "pipe", "pipe"],
     maxBuffer: 1024 * 1024,
-  }).trim();
-  if (status) {
+  }).replace(/\r?\n$/u, "");
+  selfHostedRuntimeTransitionAuthorized = status !== "" && selfHostedRuntimeTransitionIsAuthorized(gitDirectory, status);
+  if (status && !selfHostedRuntimeTransitionAuthorized) {
     throw new Error(
-      "Refusing to refresh the self-hosted runtime from a dirty checkout. Commit or stash changes in " +
+      "Refusing to refresh the self-hosted runtime from a dirty checkout. Only a verified generated-runner transition from upgrade-runner --write is allowed; commit or stash changes in " +
         JSON.stringify(selfHostedRuntimeRoot) + " and restart with: npm run build",
     );
   }
@@ -137,6 +190,21 @@ const runtimeModuleUrl = (() => {
         JSON.stringify(selfHostedRuntimeRoot) + " and restart the runner from that checkout.",
       { cause: error },
     );
+  }
+  if (selfHostedRuntimeTransitionAuthorized) {
+    const refreshedStatus = execFileSync("git", ["-c", "core.hooksPath=/dev/null", "status", "--porcelain"], {
+      cwd: selfHostedRuntimeRoot,
+      encoding: "utf8",
+      env: bootstrapGitEnvironment,
+      stdio: ["ignore", "pipe", "pipe"],
+      maxBuffer: 1024 * 1024,
+    }).replace(/\r?\n$/u, "");
+    if (!selfHostedRuntimeTransitionIsAuthorized(gitDirectory, refreshedStatus)) {
+      throw new Error(
+        "Refusing to continue with a self-hosted runtime transition after the checkout changed. Commit or stash the unrelated changes in " +
+          JSON.stringify(selfHostedRuntimeRoot) + " and restart with: npm run build",
+      );
+    }
   }
   const modulePath = join(selfHostedRuntimeRoot, "dist", "index.js");
   const guixModulePath = join(selfHostedRuntimeRoot, "dist", "sandboxes", "guix.js");
@@ -173,8 +241,10 @@ const boundedValidationRuntimeRoot = (() => {
   return resolve(dirname(modulePath), "..");
 })();
 const boundedValidationScript = join(boundedValidationRuntimeRoot, "scripts", "bounded-validation.mjs");
+const guixPackageProofScript = join(boundedValidationRuntimeRoot, "scripts", "guix-package-proof.mjs");
 const boundedValidationDist = join(boundedValidationRuntimeRoot, "dist");
 if (!existsSync(boundedValidationScript) || !statSync(boundedValidationScript).isFile() ||
+    !existsSync(guixPackageProofScript) || !statSync(guixPackageProofScript).isFile() ||
     !existsSync(boundedValidationDist) || !statSync(boundedValidationDist).isDirectory()) {
   throw new Error(
     "Goocastle's immutable bounded-validation runtime is unavailable; install a current Goocastle package or rebuild the self-hosted checkout before starting agent phases.",
@@ -182,10 +252,11 @@ if (!existsSync(boundedValidationScript) || !statSync(boundedValidationScript).i
 }
 const boundedValidationExposes = [
   { hostPath: boundedValidationScript, sandboxPath: "/opt/goocastle/bin/bounded-validation.mjs" },
+  { hostPath: guixPackageProofScript, sandboxPath: "/opt/goocastle/bin/guix-package-proof.mjs" },
   { hostPath: boundedValidationDist, sandboxPath: "/opt/goocastle/dist" },
 ];
 const runtimeModule = await import(runtimeModuleUrl);
-const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialManualRepairReceipt, createSequentialPredecessorWorkReceipt, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, materializeRuntimeEvidenceContractEntry, parseGooflowDispositionResult, quarantineManagedStateHome, readInterTaskDelayState, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runtimeContractIssueDigest, runtimeEvidenceCaptureCommand, isRuntimeContractResolutionFailure, sequentialJournalActivity, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isCodexAuthenticationExpiry, isProviderInterruption, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
+const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialManualRepairReceipt, createSequentialPredecessorWorkReceipt, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, guixPackageProofCommand, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, materializeRuntimeEvidenceContractEntry, parseGooflowDispositionResult, quarantineManagedStateHome, readInterTaskDelayState, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runtimeContractIssueDigest, runtimeEvidenceCaptureCommand, isRuntimeContractResolutionFailure, sequentialJournalActivity, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isCodexAuthenticationExpiry, isProviderInterruption, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
 const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Object.freeze({
   expectedPacingMs: 5 * 60_000,
   stalledAfterMs: 15 * 60_000,
@@ -199,6 +270,7 @@ if (
   runtimeApiVersion !== GENERATED_RUNNER_RUNTIME_API_VERSION ||
   typeof createSequentialManualRepairReceipt !== "function" ||
   typeof runtimeEvidenceCaptureCommand !== "function" ||
+  typeof guixPackageProofCommand !== "function" ||
   runtimeHandshake?.identity !== GENERATED_RUNNER_RUNTIME_IDENTITY ||
   runtimeHandshake?.apiVersion !== GENERATED_RUNNER_RUNTIME_API_VERSION ||
   runtimeHandshake.journalSchemaVersion !== GENERATED_RUNNER_JOURNAL_SCHEMA_VERSION
@@ -688,8 +760,12 @@ if (!baseBranch) {
 const recoveryCommand = (branch) => shellDisplayCommand("git", ["-C", hostWorkTree, "log", baseBranch + ".." + branch]);
 const hostStatus = hostGit(["status", "--porcelain"], {
   encoding: "utf8",
-}).trim();
-if (hostStatus) {
+}).replace(/\r?\n$/u, "");
+const hostTransitionStillAuthorized = hostStatus !== "" &&
+  selfHostedRuntimeRoot !== undefined &&
+  selfHostedRuntimeTransitionAuthorized &&
+  selfHostedRuntimeTransitionIsAuthorized(hostGitDir, hostStatus);
+if (hostStatus && !hostTransitionStillAuthorized) {
   throw new Error(
     "Host checkout has uncommitted changes; commit or stash them before running " +
       WORKFLOW_NAME +
@@ -1783,6 +1859,7 @@ const invalidateStaleRuntimeEvidence = async (journal, evidenceConfig, branch) =
     runtimeEvidence: {
       version: 1,
       packageName: evidenceConfig.packageName,
+      packageModulePath: evidenceConfig.packageModulePath,
       proofPhase: evidenceConfig.proofPhase,
       capturePhase: evidenceConfig.capturePhase,
       artifactPath: evidenceConfig.artifactPath,
@@ -2090,16 +2167,16 @@ const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => 
       // A non-delivery phase may leave its sandbox result behind when the
       // host rejects it before cleanup.  Its next run is required to replace
       // that exact untracked file, so permit deleting only that disposable
-      // handoff; every other worktree mutation remains recovery evidence.
+      // handoff before preserving the rest of the worktree state.
       const disposableResult = dispositionPolicy === undefined || journal.disposition !== undefined
         ? undefined
         : "?? " + dispositionPolicy.resultPath + " ";
-      if (dirty.length > 0 && dirty !== disposableResult) {
-        throw new Error("Cannot fast-forward #" + issueNumber + ": its task worktree has uncommitted changes at " + checkedOutWorktree);
-      }
       if (dirty === disposableResult) {
         gitAt(checkedOutWorktree, ["clean", "-f", "--", dispositionPolicy.resultPath], { stdio: "inherit" });
       }
+      // The task branch may still be checked out in the preserved worktree
+      // after an interrupted agent.  Move only its committed tip and retain
+      // all other tracked and untracked edits, just as the replay path does.
       resetCheckedOutWorktreePreservingDirtyState(checkedOutWorktree, currentBase, "base reconciliation");
     }
     return await transitionSequentialTaskJournal(gitCommonDir, journal, {
@@ -2528,7 +2605,7 @@ const exceptionDiagnosticFor = (error, maximum = 1_000) => {
 // A required command defect is different from an unavailable host
 // prerequisite: the task branch can be repaired by re-entering the agent and
 // audit phases. Keep the repair receipt in the journal so a restart cannot
-// silently turn the repair into an unbounded proof retry loop.
+// silently turn the repair into an unbounded command retry loop.
 const MAX_REQUIRED_COMMAND_REPAIR_EPOCHS = 2;
 const repairFailureFingerprint = (phase, receipt) => JSON.stringify({ phase, receipt });
 const reopenBlockedRequiredCommandRepair = async (journal, phaseName, semanticFingerprint) => {
@@ -2686,7 +2763,7 @@ const requiredCommandRepairComment = (issueNumber, phaseName, failureReceipt) =>
     "<!-- goocastle-repair-blocked:" + String(issueNumber) + ":" + phaseName + " -->",
     "",
     "Goocastle blocked this ticket after the bounded repair budget was exhausted for the required command gate.",
-    "The failure receipt and task branch provenance remain preserved; inspect the branch and repair the package before retrying.",
+    "The failure receipt and task branch provenance remain preserved; inspect the branch and repair the failing gate before retrying.",
     "",
     "Bounded failure evidence:",
     boundedEvidence,
@@ -2921,11 +2998,11 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       continue;
     }
     // A live terminal label is an authoritative scheduler exclusion.  Check
-    // it before inspecting a blocked repair epoch: a stale specification in
-    // work that is already excluded must not prevent a later eligible journal
-    // from resuming.  The --recover-blocked flag remains the explicit path that may
-    // inspect the repair epoch and reopen it.
-    if (issue.state === "OPEN" && hasTerminalBlockedLabel(issue) && !RECOVER_BLOCKED) {
+    // it before inspecting a blocked repair epoch during a fresh start: a
+    // terminal label must not consume a work slot. Resume mode may inspect a
+    // blocked repair so a changed runner or Gooflow can reopen its bounded
+    // window; an unchanged repair is still skipped below.
+    if (issue.state === "OPEN" && hasTerminalBlockedLabel(issue) && !RECOVER_BLOCKED && !RESUME_ONLY) {
       deferredJournalIssues.add(issue.number);
       terminallyBlockedJournalIssues.add(issue.number);
       attemptedIssues.add(issue.number);
@@ -2992,9 +3069,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       const repairPhase = currentRepairWorkflow?.phases.find((phase) => phase.name === latestRepair?.phase);
       const canReopen = repairPhase?.type === "command" &&
         currentRepairWorkflow?.requiredPhases?.includes(latestRepair?.phase) === true &&
-        (latestRepair.phase === "safe-package-proof" ||
-          currentRepairWorkflow.evidence?.proofPhase === latestRepair.phase ||
-          currentRepairWorkflow.evidence?.capturePhase === latestRepair.phase);
+        (currentRepairWorkflow?.phases.some((phase) => phase.type === "agent") === true ||
+          currentRepairWorkflow?.evidence?.proofPhase === latestRepair?.phase ||
+          currentRepairWorkflow?.evidence?.capturePhase === latestRepair?.phase);
       const explicitRecoveryAlreadyUsed = RECOVER_BLOCKED && explicitlyRecoveredBlockedIssues.has(issue.number);
       if (canReopen && latestRepair !== undefined && !explicitRecoveryAlreadyUsed) {
         const semanticFingerprint = repairSemanticFingerprintFor(currentRepairWorkflow, latestRepair.phase);
@@ -3012,7 +3089,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
               JSON.stringify(latestRepair.phase) +
               (currentRepairWorkflow?.evidence?.capturePhase === latestRepair.phase
                 ? "; the durable implementation and audit receipts are retained before the capture is retried."
-                : "; implementation and audit will run before the proof is retried."),
+                : "; implementation and audit will run before the gate is retried."),
           );
         } else {
           await reconcileBlockedRequiredCommandRepair(journal, issue.number);
@@ -3031,7 +3108,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           throw new Error(
             "Cannot recover terminally blocked journal for #" + issue.number + ": " +
               JSON.stringify(latestRepair?.phase ?? "unknown") +
-              " is not a required package-proof or runtime-evidence command gate. " +
+              " is not a required command gate. " +
               "Review the preserved journal and branch; no phase was replayed.",
           );
         }
@@ -3318,10 +3395,16 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // example, when delivery was interrupted after a review refreshed the
     // same evidence file).  Finalize that verified, sole artifact before
     // reconciliation: a rebase cannot safely reset a task worktree with that
-    // intentional uncommitted capture.
+    // intentional uncommitted capture.  Never finalize it when the reviewed
+    // contract changed while the artifact boundary was incomplete.
     const pendingEvidenceWorktree = evidenceConfig !== undefined &&
       journal.runtimeEvidence?.artifact === "started" &&
       journal.runtimeEvidence.runtimeAssertion !== undefined &&
+      journal.runtimeEvidence.packageName === evidenceConfig.packageName &&
+      journal.runtimeEvidence.packageModulePath === evidenceConfig.packageModulePath &&
+      journal.runtimeEvidence.artifactPath === evidenceConfig.artifactPath &&
+      JSON.stringify(journal.runtimeEvidence.runtime) === JSON.stringify(evidenceConfig.runtime) &&
+      JSON.stringify(journal.runtimeEvidence.runtimeContract) === JSON.stringify(evidenceConfig.runtimeContract) &&
       phaseRecord(journal, evidenceConfig.proofPhase)?.state === "complete" &&
       phaseRecord(journal, evidenceConfig.capturePhase)?.state === "complete"
       ? branchWorktreePath(branch)
@@ -3340,6 +3423,22 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     baseHead = journal.reconciliation?.state === "complete"
       ? journal.reconciliation.reconciledBaseSha
       : journal.baseSha;
+    // Base reconciliation can change the exact task-branch contract after
+    // the earlier preflight read. Resolve it again from that branch before
+    // constructing the proof command or any evidence-phase state.
+    if (evidenceConfig !== undefined) {
+      try {
+        evidenceConfig = await resolveRuntimeEvidenceForTask();
+      } catch (error) {
+        if (await reconcileInvalidRuntimeContract(issue, error)) {
+          console.error("Task #" + issue.number + " is blocked because its runtime contract is no longer valid; continuing to unrelated eligible work.");
+          await restoreHostGitConfig();
+          task -= 1;
+          continue;
+        }
+        throw error;
+      }
+    }
     // The generated template fallback has the same hard phase wall-time
     // contract as a materialized Gooflow. Keep the legacy resource wall cap
     // out of the phase invocation so timeout receipts remain distinct from
@@ -3452,14 +3551,19 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
               JSON.stringify(dispositionPolicy.resultPath) + ". The disposition must be one of " +
               JSON.stringify(dispositionPolicy.allowed.map((option) => option.name)) + ". The JSON object must contain exactly version, disposition, and finding; runtimeEvidence is the only optional fourth key, and only when the selected implementation ticket explicitly declares it. Never write an evidence, labels, comment, or any other key. The finding must be non-empty, at most 10000 characters, and the complete UTF-8 JSON file at most 16384 bytes. Summarize evidence in finding; do not enumerate large dependency lists. Verify its byte length before completing. This host contract overrides any conflicting repository prompt." +
               (dispositionPolicy.allowed.some((option) => option.implementationTicket?.runtimeEvidence !== undefined)
-                ? " If you select a disposition whose implementation ticket declares runtimeEvidence, also include its reviewed runtimeEvidence draft with packageName, artifactPath, runtime.executable, the exact runtime.invocation argv, and runtime.successMarker; without that draft the host refuses to publish the delivery ticket and you must choose an actionable non-delivery disposition instead."
+                ? " If you select a disposition whose implementation ticket declares runtimeEvidence, also include its reviewed runtimeEvidence draft with packageName, packageModulePath, artifactPath, runtime.executable, the exact runtime.invocation argv, and runtime.successMarker; without that draft the host refuses to publish the delivery ticket and you must choose an actionable non-delivery disposition instead."
                 : ""),
           }),
         })
       : templatePhases;
     // Every executable phase gets the bounded default even when a repository
     // does not opt into an explicit Gooflow liveness override.
-    const phases = configuredPhases.map((phase) => ({
+    const proofScopedPhases = evidenceConfig === undefined
+      ? configuredPhases
+      : configuredPhases.map((phase) => phase.type === "command" && phase.name === evidenceConfig.proofPhase
+        ? { ...phase, command: guixPackageProofCommand(evidenceConfig) }
+        : phase);
+    const phases = proofScopedPhases.map((phase) => ({
       ...phase,
       liveness: phase.liveness ?? defaultSequentialPhaseLiveness,
     }));
@@ -3493,14 +3597,14 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     }
     if (evidenceConfig !== undefined) {
       const priorEvidence = journal.runtimeEvidence;
-      // A legacy runner may have journaled a pending contract-derived receipt
-      // before the canonical artifact-path check existed. On resume, a
+      // A legacy runner may have journaled an incomplete contract-derived
+      // receipt before the canonical artifact-path check existed. On resume, a
       // validated contract read from the preserved branch is the repair being
       // resumed; refresh the pending receipt and rerun capture. Keep the
       // workflow-owned phase and adapter identity immutable, and never relax
       // this boundary after an artifact has been completed.
       const branchContractRepair = resumingJournal && priorEvidence !== undefined && !priorEvidence.legacy &&
-        priorEvidence.artifact === "pending" && evidenceConfig.runtimeContract !== undefined &&
+        priorEvidence.artifact !== "complete" && evidenceConfig.runtimeContract !== undefined &&
         (priorEvidence.runtimeContract === undefined ||
           (priorEvidence.runtimeContract.path === evidenceConfig.runtimeContract.path &&
             priorEvidence.runtimeContract.sha256 !== evidenceConfig.runtimeContract.sha256));
@@ -3511,6 +3615,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       );
       const contractEvidenceChanged = priorEvidence !== undefined && !priorEvidence.legacy && (
         priorEvidence.packageName !== evidenceConfig.packageName ||
+        priorEvidence.packageModulePath !== evidenceConfig.packageModulePath ||
         priorEvidence.artifactPath !== evidenceConfig.artifactPath ||
         JSON.stringify(priorEvidence.runtime) !== JSON.stringify(evidenceConfig.runtime) ||
         JSON.stringify(priorEvidence.runtimeContract) !== JSON.stringify(evidenceConfig.runtimeContract)
@@ -3521,13 +3626,20 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       if (priorEvidence === undefined || priorEvidence.legacy || branchContractRepair) {
         // Pre-assertion journals can be read for recovery but their screenshot
         // is intentionally not trusted as packaged-program proof.  Replace
-        // the receipt from the reviewed current contract and replay capture.
-        const refreshedCapturePhase = priorEvidence?.legacy || branchContractRepair
-          ? phases.find((phase) => phase.name === evidenceConfig.capturePhase)
-          : undefined;
+        // the receipt from the reviewed current contract and replay proof and
+        // capture whenever the target module changed.  An older #510 journal
+        // may contain a global module path that is unrelated to this issue's
+        // reviewed contract entry.
+        const refreshedEvidencePhaseNames = priorEvidence?.legacy ||
+          (branchContractRepair && priorEvidence?.packageModulePath !== evidenceConfig.packageModulePath)
+          ? new Set([evidenceConfig.proofPhase, evidenceConfig.capturePhase])
+          : branchContractRepair
+            ? new Set([evidenceConfig.capturePhase])
+            : new Set<string>();
+        const refreshedEvidencePhases = phases.filter((phase) => refreshedEvidencePhaseNames.has(phase.name));
         journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
-          ...(refreshedCapturePhase === undefined ? {} : {
-            phases: journal.phases.map((record) => record.name !== refreshedCapturePhase.name ? record : {
+          ...(refreshedEvidencePhases.length === 0 ? {} : {
+            phases: journal.phases.map((record) => !refreshedEvidencePhaseNames.has(record.name) ? record : {
               name: record.name,
               state: "fresh",
               attempt: (record.attempt ?? 0) + 1,
@@ -3538,6 +3650,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           runtimeEvidence: {
             version: 1,
             packageName: evidenceConfig.packageName,
+            packageModulePath: evidenceConfig.packageModulePath,
             proofPhase: evidenceConfig.proofPhase,
             capturePhase: evidenceConfig.capturePhase,
             artifactPath: evidenceConfig.artifactPath,
@@ -3568,7 +3681,12 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       ?? "implement";
     const repairPhases = activeRepair
       ? (evidenceConfig?.capturePhase === repairPhaseName
-        ? [phases.find((phase) => phase.name === repairPhaseName)]
+        ? [
+          ...(evidenceConfig !== undefined && phaseRecord(journal, evidenceConfig.proofPhase)?.state !== "complete"
+            ? [phases.find((phase) => phase.name === evidenceConfig.proofPhase)]
+            : []),
+          phases.find((phase) => phase.name === repairPhaseName),
+        ]
         : [
           phases.find((phase) => phase.name === implementationPhaseName && phase.type === "agent"),
           phases.find((phase) => phase.name === "edge-case-audit" && phase.type === "agent") ?? phases.find((phase) => phase.type === "agent" && /audit|review/iu.test(phase.name) && phase.name !== implementationPhaseName),
@@ -4035,6 +4153,21 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       });
       const runEvidencePhase = async (phase) => {
         if (pendingFor([phase]).length === 0) return;
+        if (evidenceConfig?.runtimeContract !== undefined) {
+          const currentEvidence = await resolveGooflowEvidence(
+            materializeGooflowEvidence(materializedGooflow.evidence, promptArgs),
+            taskWorktree.worktreePath,
+            issue.number,
+          );
+          const contractChanged = currentEvidence.packageName !== evidenceConfig.packageName ||
+            currentEvidence.packageModulePath !== evidenceConfig.packageModulePath ||
+            currentEvidence.artifactPath !== evidenceConfig.artifactPath ||
+            JSON.stringify(currentEvidence.runtime) !== JSON.stringify(evidenceConfig.runtime) ||
+            JSON.stringify(currentEvidence.runtimeContract) !== JSON.stringify(evidenceConfig.runtimeContract);
+          if (contractChanged) {
+            throw new Error("Runtime evidence contract changed on the task branch before " + JSON.stringify(phase.name) + " for #" + issue.number + "; inspect the preserved branch and resume after restoring the reviewed contract");
+          }
+        }
         evidenceSandbox = await retrySequential(() => taskWorktree.createSandbox({
           sandbox: evidenceProvider(phase),
           name: WORKFLOW_NAME + "-runtime-evidence-" + phase.name,
@@ -4104,9 +4237,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         const evidenceRepair = evidenceConfig !== undefined &&
           (repairPhaseName === evidenceConfig.proofPhase || repairPhaseName === evidenceConfig.capturePhase);
         if (evidenceRepair && failedRepairPhase !== undefined) {
-          const preparation = repairPhases.filter((phase) => phase.name !== repairPhaseName);
+          const replayProofBeforeCapture = repairPhaseName === evidenceConfig.capturePhase &&
+            phaseRecord(journal, evidenceConfig.proofPhase)?.state !== "complete";
+          const preparation = repairPhases.filter((phase) =>
+            phase.name !== repairPhaseName && !(replayProofBeforeCapture && phase.name === evidenceConfig.proofPhase));
           const initial = await runBatch(sandbox, preparation, pendingPhases.length > 0 && setup.length > 0 && !setupIncluded);
           if (initial !== undefined) workflowResults.push(initial);
+          if (replayProofBeforeCapture) await runEvidencePhase(phases[evidencePhaseIndex]);
           await runEvidencePhase(failedRepairPhase);
         } else {
           const repairResult = await runBatch(sandbox, repairPhases, pendingPhases.length > 0 && setup.length > 0 && !setupIncluded);
@@ -4576,9 +4713,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     }
     const requiredCommandGate = failedGooflowPhase?.type === "command" &&
       materializedGooflow?.requiredPhases?.includes(failedGooflowPhase.name) === true &&
-      (failedGooflowPhase.name === "safe-package-proof" ||
-        materializedGooflow.evidence?.proofPhase === failedGooflowPhase.name ||
-        materializedGooflow.evidence?.capturePhase === failedGooflowPhase.name);
+      (materializedGooflow?.phases.some((phase) => phase.type === "agent") === true ||
+        materializedGooflow?.evidence?.proofPhase === failedGooflowPhase.name ||
+        materializedGooflow?.evidence?.capturePhase === failedGooflowPhase.name) &&
+      boundedFailureKind(error, false) === "error";
     if (requiredCommandGate) {
       const semanticFingerprint = repairSemanticFingerprintFor(materializedGooflow, failedGooflowPhase.name);
       const repairResult = await scheduleRequiredCommandRepair(journal, failedGooflowPhase.name, semanticFingerprint);
