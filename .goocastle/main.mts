@@ -1407,13 +1407,36 @@ const applyDisposition = async (journal, issue) => {
     }
     let handoff;
     try {
+      let contract = ticket.runtimeEvidence.contract;
+      if (ticket.runtimeEvidence.legacy) {
+        const configuredEvidence = routed.workflow.evidence;
+        if (configuredEvidence?.runtimeContractPath !== ticket.runtimeEvidence.contractPath) {
+          throw new Error(
+            "the selected workflow contract path is " + JSON.stringify(configuredEvidence?.runtimeContractPath) +
+              ", but the legacy handoff records " + JSON.stringify(ticket.runtimeEvidence.contractPath),
+          );
+        }
+        const resolved = await resolveGooflowEvidence(configuredEvidence, hostWorkTree, issue.number);
+        contract = {
+          packageName: resolved.packageName,
+          packageModulePath: resolved.packageModulePath,
+          artifactPath: resolved.artifactPath,
+          runtime: resolved.runtime,
+        };
+      }
       handoff = validateGooflowImplementationTicketRuntimeEvidence(
         { workflow: ticket.runtimeEvidence.workflow },
         routed.workflow,
-        ticket.runtimeEvidence.contract,
+        contract,
       );
     } catch (error) {
-      throw new Error("Implementation ticket runtime-evidence contract is not valid for the selected workflow: " + (error instanceof Error ? error.message : String(error)) + "; fix the reviewed handoff and resume", { cause: error });
+      throw new Error(
+        (ticket.runtimeEvidence.legacy
+          ? "Legacy implementation ticket runtime-evidence handoff could not be migrated from the selected issue-specific contract: "
+          : "Implementation ticket runtime-evidence contract is not valid for the selected workflow: ") +
+          (error instanceof Error ? error.message : String(error)) + "; fix the reviewed handoff and resume",
+        { cause: error },
+      );
     }
     if (handoff.contractPath !== ticket.runtimeEvidence.contractPath ||
         handoff.proofPhase !== ticket.runtimeEvidence.proofPhase ||
