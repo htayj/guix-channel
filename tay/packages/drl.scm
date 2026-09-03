@@ -88,8 +88,8 @@
               ;; diagnostic values instead of embedding the build clock.
               (substitute*
                   "fpcvalkyrie/src/vlog.pas"
-                (("\\{\\$I %TIME%\\}") "\"00:00:00\"")
-                (("\\{\\$I %DATE%\\}") "\"1970-01-01\""))))
+                (("\\{\\$I %TIME%\\}") "'00:00:00'")
+                (("\\{\\$I %DATE%\\}") "'1970-01-01'"))))
           (replace 'build
             (lambda _
               (setenv "FPCVALKYRIE_ROOT" "fpcvalkyrie/")
