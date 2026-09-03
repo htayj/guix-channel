@@ -314,6 +314,18 @@
                       "\"$smoke_root/work\" \"$smoke_root/write\" "
                       "\"$smoke_root/score\"\n")
                      port)
+                    ;; DRL writes settings.lua relative to its current
+                    ;; directory. Keep that mutable file in the fresh smoke
+                    ;; tree instead of the caller's directory.
+                    (display "  cd \"$smoke_root/work\"\n" port)
+                    ;; Give the smoke run DRL's built-in save key while
+                    ;; retaining all other default settings.
+                    (display
+                     (string-append
+                      "  \"$cat\" > settings.lua <<'EOF'\n"
+                      "configuration = { input_legacysave = 115, }\n"
+                      "EOF\n")
+                     port)
                     (display "  chmod 700 \"$smoke_root/runtime\"\n" port)
                     (display "  export HOME=\"$smoke_root/home\"\n" port)
                     (display "  export XDG_CONFIG_HOME=\"$smoke_root/config\"\n" port)
@@ -374,7 +386,9 @@
                       "\"$sleep\" 1; printf '\\033'; "
                       "\"$sleep\" 1; printf '\\033[B\\033[B\\033[B"
                       "\\033[B\\033[B\\033[B'; "
-                      "printf '\\r'; \"$sleep\" 3; } | "
+                      "printf '\\r'; \"$sleep\" 3; "
+                      "printf '\\033[C'; \"$sleep\" 2; "
+                      "printf 's'; \"$sleep\" 3; } | "
                       "run_session \"$first_log\"; then\n")
                      port)
                     (display
@@ -390,17 +404,16 @@
                     (display "  first_text=$(\"$cat\" \"$first_log\")\n" port)
                     (display
                      (string-append
-                      "  for marker in DRL HP: @; do case \"$first_text\" in "
+                      "  for marker in 'Health:' 'Smoke'; do case \"$first_text\" in "
                       "*\"$marker\"*) ;; *) echo \"drl smoke: missing "
                       "first-run marker $marker\" >&2; exit 1 ;; esac; done\n")
                      port)
                     (display
                      (string-append
                       "  if ! { \"$sleep\" 1; printf '\\r'; "
-                      "\"$sleep\" 1; printf '\\r'; \"$sleep\" 3; "
-                      "printf '\\033'; \"$sleep\" 1; "
-                      "printf '\\033[B\\033[B\\033[B\\033[B\\033[B\\033[B'; "
-                      "printf '\\r'; \"$sleep\" 3; } | "
+                      "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; "
+                      "printf '\\033[C'; \"$sleep\" 2; "
+                      "printf 's'; \"$sleep\" 3; } | "
                       "run_session \"$second_log\" append; then\n")
                      port)
                     (display
