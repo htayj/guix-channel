@@ -385,7 +385,7 @@
                       "\"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf 'Smoke'; printf '\\r'; "
                       "\"$sleep\" 2; printf '\\033[C'; "
-                      "\"$sleep\" 2; printf 's'; \"$sleep\" 5; } | "
+                      "\"$sleep\" 2; printf 's'; printf '\\r'; \"$sleep\" 5; } | "
                       "run_session \"$first_log\"; then\n")
                      port)
                     (display
@@ -410,7 +410,7 @@
                       "  if ! { \"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; "
                       "printf '\\033[C'; \"$sleep\" 2; "
-                      "printf 's'; \"$sleep\" 5; } | "
+                      "printf 's'; printf '\\r'; \"$sleep\" 5; } | "
                       "run_session \"$second_log\" append; then\n")
                      port)
                     (display
