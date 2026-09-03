@@ -531,6 +531,21 @@
         },
         "successMarker": "dnethack guix smoke passed"
       }
+    },
+    {
+      "issueNumber": 680,
+      "packageName": "drl",
+      "artifactPath": ".goocastle/evidence/issue-680.png",
+      "runtime": {
+        "executable": "drl",
+        "invocation": {
+          "file": "drl",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "DRL_GOOCASTLE_RUNTIME_OK"
+      }
     }
   ]
 }
