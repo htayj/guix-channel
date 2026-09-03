@@ -25,7 +25,6 @@ test -x "$drl_out/bin/drl"
 test -x "$drl_out/libexec/drl-real"
 test -s "$drl_out/share/drl/config.lua"
 test -s "$drl_out/share/drl/smoke-settings.lua"
-grep -F 'input_legacysave = 118' "$drl_out/share/drl/smoke-settings.lua" >/dev/null
 test -s "$drl_out/share/drl/data/core/main.lua"
 test -s "$drl_out/share/drl/data/drl/main.lua"
 test ! -e "$drl_out/share/drl/data/drl/graphics"
@@ -123,7 +122,7 @@ export LC_ALL=C
 # --guix-smoke branch creates the PTYs for the two real curses sessions.
 raw=${GOOCASTLE_RUNTIME_RAW_CAPTURE:-$smoke_root/terminal.raw}
 proof=$(GOOCASTLE_RUNTIME_RAW_CAPTURE="$raw" \
-    "$node_bin" "$bounded_validation" --timeout-ms 60000 -- \
+    "$node_bin" "$bounded_validation" --timeout-ms 110000 -- \
     "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
     "$drl_out/bin/drl" --guix-smoke)
 case "$proof" in

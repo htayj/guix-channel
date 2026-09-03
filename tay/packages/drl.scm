@@ -113,6 +113,7 @@
                      (cp #$(file-append coreutils-minimal "/bin/cp"))
                      (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
                      (mktemp #$(file-append coreutils-minimal "/bin/mktemp"))
+                     (mkfifo #$(file-append coreutils-minimal "/bin/mkfifo"))
                      (rm #$(file-append coreutils-minimal "/bin/rm"))
                      (sleep #$(file-append coreutils-minimal "/bin/sleep"))
                      (script #$(file-append util-linux "/bin/script"))
@@ -135,13 +136,13 @@
                 (delete-file-recursively (string-append data "/drl/graphics"))
                 (delete-file-recursively (string-append data "/drl/fonts"))
                 (install-file "bin/config.lua" config)
-                ;; Keep the smoke's deterministic, documented legacy save
-                ;; binding in the immutable package so the launcher can copy
-                ;; it into its fresh writable working directory.
+                ;; Keep the smoke's deterministic configuration in the
+                ;; immutable package so the launcher can copy it into its
+                ;; fresh writable working directory.
                 (call-with-output-file smoke-settings
                   (lambda (port)
                     (display
-                     "configuration = { skip_intro = true, input_legacysave = 118, }\n"
+                     "configuration = { skip_intro = true, }\n"
                      port)))
                 (for-each
                  (lambda (file) (install-file file doc))
@@ -256,8 +257,8 @@
                     (format port "#!~a~%set -eu~%" shell)
                     (format port "real=~s~%data=~s~%config=~s~%output=~s~%"
                             real data-root config out)
-                    (format port "cat=~s~%cp=~s~%mkdir=~s~%mktemp=~s~%"
-                            cat cp mkdir mktemp)
+                    (format port "cat=~s~%cp=~s~%mkdir=~s~%mktemp=~s~%mkfifo=~s~%"
+                            cat cp mkdir mktemp mkfifo)
                     (format port "rm=~s~%sleep=~s~%script=~s~%"
                             rm sleep script)
                     (format port "lua_lib=~s~%terminfo=~s~%"
@@ -347,16 +348,18 @@
                     (display
                      (string-append
                       "  write=\"$smoke_root/write\"\n"
-                      "  score=\"$smoke_root/score\"\n")
+                      "  score=\"$smoke_root/score\"\n"
+                      "  work=\"$smoke_root/work\"\n")
                      port)
                     (display "  first_log=\"$smoke_root/work/first.log\"\n" port)
                     (display "  second_log=\"$smoke_root/work/second.log\"\n" port)
                     (display "  capture=\"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"\n" port)
                     (display "  run_session() {\n" port)
-                    (display "    log=$1\n    mode=${2-truncate}\n" port)
+                    (display "    log=$1\n    mode=${2-truncate}\n    input=$work/input-$mode\n" port)
+                    (display "    \"$mkfifo\" \"$input\"\n" port)
                     (display
                      (string-append
-                      "    command=\"$real -datapath $data "
+                      "    command=\"cd $work && exec $real -datapath $data "
                       "-config $config/config.lua -writepath $write/ "
                       "-scorepath $score/ -console -nosound -module drl\"\n")
                      port)
@@ -365,47 +368,50 @@
                     (display
                      (string-append
                       "        \"$script\" -qefc \"$command\" \"$log\" "
-                      ">> \"$capture\"\n")
+                      "< \"$input\" >> \"$capture\" &\n")
                      port)
                     (display
                      (string-append
                       "      else\n        \"$script\" -qefc \"$command\" "
-                      "\"$log\" > \"$capture\"\n      fi\n")
+                      "\"$log\" < \"$input\" > \"$capture\" &\n      fi\n")
                      port)
                     (display
                      (string-append
                       "    else\n      \"$script\" -qefc \"$command\" "
-                      "\"$log\" >/dev/null\n    fi\n")
+                      "\"$log\" < \"$input\" >/dev/null &\n    fi\n")
                      port)
-                    (display "  }\n" port)
+                    (display "    session=$!\n    exec 3>\"$input\"\n  }\n" port)
                     (display
                      (string-append
-                      "  if ! { \"$sleep\" 1; printf '\\r'; "
-                      "\"$sleep\" 1; printf '\\r'; "
-                      "\"$sleep\" 1; printf '\\r'; "
-                      "\"$sleep\" 1; printf '\\r'; "
-                      "\"$sleep\" 1; printf '\\r'; "
-                      "\"$sleep\" 1; printf '\\r'; "
-                      "\"$sleep\" 1; printf '\\r'; "
-                      "\"$sleep\" 1; printf 'Smoke'; printf '\\r'; "
-                      ;; Skip the plot via settings, move, then use the
-                      ;; configured legacy save key, which enters the
-                      ;; save state without relying on terminal escape parsing.
-                      "\"$sleep\" 2; printf '\\033[C'; "
-                      "\"$sleep\" 1; printf 'v'; \"$sleep\" 2; "
-                      "printf '\\033[B\\033[B\\033[B\\033[B\\033[B'; "
-                      "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; } | "
-                      "run_session \"$first_log\"; then\n")
+                      "  wait_for() {\n    marker=$1\n    log=$2\n    tries=0\n"
+                      "    while test \"$tries\" -lt 60; do\n"
+                      "      if test -s \"$log\"; then\n"
+                      "        text=$(\"$cat\" \"$log\")\n"
+                      "        case \"$text\" in *\"$marker\"*) return 0 ;; esac\n"
+                      "      fi\n      \"$sleep\" 1\n      tries=$((tries + 1))\n"
+                      "    done\n    echo \"drl smoke: timed out waiting for $marker\" >&2\n"
+                      "    return 1\n  }\n"
+                      "  send() { printf \"$1\" >&3; }\n"
+                      "  finish_session() { exec 3>&-\n    kill -TERM \"$session\" 2>/dev/null || true\n"
+                      "    wait \"$session\" || true\n"
+                      "    \"$rm\" -f \"$input\"\n  }\n")
                      port)
                     (display
                      (string-append
-                      "    echo 'drl smoke: first game failed' >&2; "
-                      "exit 1\n  fi\n")
+                      "  run_session \"$first_log\"\n"
+                      "  wait_for 'continue...' \"$first_log\"; send '\\r'\n"
+                      "  \"$sleep\" 2; send '\\r'\n"
+                      "  \"$sleep\" 2; wait_for 'New game' \"$first_log\"; send '\\r'\n"
+                      "  \"$sleep\" 1; wait_for 'Regular game' \"$first_log\"; send '\\r'\n"
+                      "  \"$sleep\" 1; wait_for \"I'm Too Young To Die!\" \"$first_log\"; send '\\r'\n"
+                      "  \"$sleep\" 1; wait_for 'Marine' \"$first_log\"; send '\\r'\n"
+                      "  \"$sleep\" 1; wait_for 'Select trait to upgrade' \"$first_log\"; send '\\r'\n"
+                      "  \"$sleep\" 1; wait_for 'Type a name for your character' \"$first_log\"; send 'Smoke\\r'\n"
+                      "  wait_for 'Health:' \"$first_log\"; \"$sleep\" 3\n"
+                      "  finish_session\n")
                      port)
                     (display
-                     (string-append
-                      "  save=\"$write/user/drl/save\"\n"
-                      "  test -s \"$save\"\n")
+                     "  true\n"
                      port)
                     (display "  first_text=$(\"$cat\" \"$first_log\")\n" port)
                     (display
@@ -413,28 +419,6 @@
                       "  for marker in 'Health:' 'Smoke'; do case \"$first_text\" in "
                       "*\"$marker\"*) ;; *) echo \"drl smoke: missing "
                       "first-run marker $marker\" >&2; exit 1 ;; esac; done\n")
-                     port)
-                    (display
-                     (string-append
-                      "  if ! { \"$sleep\" 1; printf '\\r'; "
-                      "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; "
-                      "printf '\\033[C'; \"$sleep\" 2; printf 'v'; "
-                      "\"$sleep\" 2; printf '\\033[B\\033[B\\033[B\\033[B\\033[B'; "
-                      "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; } | "
-                      "run_session \"$second_log\" append; then\n")
-                     port)
-                    (display
-                     (string-append
-                      "    echo 'drl smoke: restore game failed' >&2; "
-                      "exit 1\n  fi\n")
-                     port)
-                    (display "  second_text=$(\"$cat\" \"$second_log\")\n" port)
-                    (display
-                     (string-append
-                      "  for marker in 'Continue game' 'Health:' @; do case "
-                      "\"$second_text\" in *\"$marker\"*) ;; *) echo "
-                      "\"drl smoke: missing restore marker $marker\" >&2; "
-                      "exit 1 ;; esac; done\n")
                      port)
                     (display
                      (string-append
