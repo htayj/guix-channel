@@ -24,6 +24,8 @@ fi
 test -x "$drl_out/bin/drl"
 test -x "$drl_out/libexec/drl-real"
 test -s "$drl_out/share/drl/config.lua"
+test -s "$drl_out/share/drl/smoke-settings.lua"
+grep -F 'input_legacysave = 115' "$drl_out/share/drl/smoke-settings.lua" >/dev/null
 test -s "$drl_out/share/drl/data/core/main.lua"
 test -s "$drl_out/share/drl/data/drl/main.lua"
 test ! -e "$drl_out/share/drl/data/drl/graphics"

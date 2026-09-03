@@ -105,6 +105,7 @@
                      (config (string-append out "/share/drl"))
                      (data-root (string-append out "/share/drl/"))
                      (doc (string-append out "/share/doc/drl"))
+                     (smoke-settings (string-append config "/smoke-settings.lua"))
                      (real (string-append libexec "/drl-real"))
                      (launcher (string-append bin "/drl"))
                      (shell #$(file-append bash-minimal "/bin/sh"))
@@ -134,6 +135,14 @@
                 (delete-file-recursively (string-append data "/drl/graphics"))
                 (delete-file-recursively (string-append data "/drl/fonts"))
                 (install-file "bin/config.lua" config)
+                ;; Keep the smoke's deterministic, documented legacy save
+                ;; binding in the immutable package so the launcher can copy
+                ;; it into its fresh writable working directory.
+                (call-with-output-file smoke-settings
+                  (lambda (port)
+                    (display
+                     "configuration = { skip_intro = true, input_legacysave = 115, }\n"
+                     port)))
                 (for-each
                  (lambda (file) (install-file file doc))
                  '("README.md" "LICENSE" "bin/manual.txt" "bin/version.txt"
@@ -315,10 +324,14 @@
                       "\"$smoke_root/score\"\n")
                      port)
                     (display "  cd \"$smoke_root/work\"\n" port)
-                    ;; Keep the current directory fresh and writable for the
-                    ;; runtime's relative state.  Unix upstream builds do not
-                    ;; load a settings.lua from the current directory, so the
-                    ;; smoke uses the documented in-game menu controls.
+                    ;; Upstream reads settings.lua relative to its current
+                    ;; directory.  Install the smoke-only deterministic
+                    ;; settings in the fresh writable work directory; the
+                    ;; ordinary launcher never changes a user's settings.
+                    (display (string-append
+                              "  \"$cp\" \"" smoke-settings
+                              "\" \"$smoke_root/work/settings.lua\"\n")
+                             port)
                     (display "  chmod 700 \"$smoke_root/runtime\"\n" port)
                     (display "  export HOME=\"$smoke_root/home\"\n" port)
                     (display "  export XDG_CONFIG_HOME=\"$smoke_root/config\"\n" port)
@@ -375,19 +388,11 @@
                       "\"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf 'Smoke'; printf '\\r'; "
-                      ;; The first-run plot pager follows character creation.
-                      "\"$sleep\" 2; printf '\\r'; "
-                      "\"$sleep\" 2; "
+                      ;; Skip the plot via settings, move, then use the
+                      ;; configured legacy save key.  It writes the save and
+                      ;; quits through DRL's normal DSSaving path.
                       "\"$sleep\" 2; printf '\\033[C'; "
-                      ;; Save & Quit is the last entry in the in-game menu.
-                      "\"$sleep\" 1; printf '\\033'; "
-                      "\"$sleep\" 1; printf '\\033[B'; "
-                      "\"$sleep\" 1; printf '\\033[B'; "
-                      "\"$sleep\" 1; printf '\\033[B'; "
-                      "\"$sleep\" 1; printf '\\033[B'; "
-                      "\"$sleep\" 1; printf '\\033[B'; "
-                      "\"$sleep\" 1; printf '\\033[B'; "
-                      "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; } | "
+                      "\"$sleep\" 1; printf 's'; \"$sleep\" 5; } | "
                       "run_session \"$first_log\"; then\n")
                      port)
                     (display
@@ -411,15 +416,8 @@
                      (string-append
                       "  if ! { \"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; "
-                      "printf '\\033[C'; \"$sleep\" 2; "
-                      "printf '\\033'; \"$sleep\" 1; "
-                      "printf '\\033[B'; \"$sleep\" 1; "
-                      "printf '\\033[B'; \"$sleep\" 1; "
-                      "printf '\\033[B'; \"$sleep\" 1; "
-                      "printf '\\033[B'; \"$sleep\" 1; "
-                      "printf '\\033[B'; \"$sleep\" 1; "
-                      "printf '\\033[B'; \"$sleep\" 1; "
-                      "printf '\\r'; \"$sleep\" 5; } | "
+                      "printf '\\033[C'; \"$sleep\" 2; printf 's'; "
+                      "\"$sleep\" 5; } | "
                       "run_session \"$second_log\" append; then\n")
                      port)
                     (display
