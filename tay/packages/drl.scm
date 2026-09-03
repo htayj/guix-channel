@@ -141,7 +141,7 @@
                 (call-with-output-file smoke-settings
                   (lambda (port)
                     (display
-                     "configuration = { skip_intro = true, input_legacysave = 115, }\n"
+                     "configuration = { skip_intro = true, input_legacysave = 118, }\n"
                      port)))
                 (for-each
                  (lambda (file) (install-file file doc))
@@ -389,10 +389,10 @@
                       "\"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf 'Smoke'; printf '\\r'; "
                       ;; Skip the plot via settings, move, then use the
-                      ;; configured legacy save key.  Saving returns to the
-                      ;; main menu, where the final six downs select Exit.
+                      ;; configured legacy save key (v).  Saving returns to
+                      ;; the main menu, where the final six downs select Exit.
                       "\"$sleep\" 2; printf '\\033[C'; "
-                      "\"$sleep\" 1; printf 's'; \"$sleep\" 2; "
+                      "\"$sleep\" 1; printf 'v'; \"$sleep\" 2; "
                       "printf '\\033[B\\033[B\\033[B\\033[B\\033[B\\033[B'; "
                       "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; } | "
                       "run_session \"$first_log\"; then\n")
@@ -418,7 +418,7 @@
                      (string-append
                       "  if ! { \"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; "
-                      "printf '\\033[C'; \"$sleep\" 2; printf 's'; "
+                      "printf '\\033[C'; \"$sleep\" 2; printf 'v'; "
                       "\"$sleep\" 2; "
                       "printf '\\033[B\\033[B\\033[B\\033[B\\033[B\\033[B'; "
                       "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; } | "
