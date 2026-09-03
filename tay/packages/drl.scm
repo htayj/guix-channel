@@ -136,13 +136,13 @@
                 (delete-file-recursively (string-append data "/drl/graphics"))
                 (delete-file-recursively (string-append data "/drl/fonts"))
                 (install-file "bin/config.lua" config)
-                ;; Keep the smoke's deterministic configuration in the
-                ;; immutable package so the launcher can copy it into its
-                ;; fresh writable working directory.
+                ;; Keep the smoke's deterministic configuration and dedicated
+                ;; save binding in the immutable package so the launcher can
+                ;; copy it into its fresh writable working directory.
                 (call-with-output-file smoke-settings
                   (lambda (port)
                     (display
-                     "configuration = { skip_intro = true, }\n"
+                     "configuration = { skip_intro = true, input_legacysave = 118, }\n"
                      port)))
                 (for-each
                  (lambda (file) (install-file file doc))
@@ -427,10 +427,10 @@
                       "  \"$sleep\" 1; wait_for 'Type a name for your character' "
                       "\"$first_log\"; send 'Smoke\\r'\n"
                       "  wait_for 'Health:' \"$first_log\"; \"$sleep\" 2\n"
-                      "  send '\\033[C'; \"$sleep\" 1; send '\\033'\n"
-                      "  wait_for 'Save & Quit' \"$first_log\"\n"
-                      "  send '\\033[B\\033[B\\033[B\\033[B\\033[B\\033[B'\n"
-                      "  \"$sleep\" 1; send '\\r'\n"
+                      ;; The configured legacy save key writes the save and
+                      ;; returns to the main menu without escape-sequence
+                      ;; ambiguity in a piped PTY.
+                      "  send '\\033[C'; \"$sleep\" 1; send 'v'\n"
                       "  wait_for 'Continue game' \"$first_log\"\n"
                       "  save=\"$write/user/drl/save\"\n"
                       "  test -s \"$save\"\n"
@@ -456,17 +456,15 @@
                       "  wait_for 'Game loaded.' \"$second_log\"\n"
                       "  wait_for 'Health:' \"$second_log\"\n"
                       "  wait_for 'Smoke' \"$second_log\"\n"
-                      "  send '\\033'\n"
-                      "  wait_for 'Abandon Run' \"$second_log\"\n"
+                      "  send 'v'\n"
+                      "  wait_for 'Continue game' \"$second_log\"\n"
                       "  send '\\033[B\\033[B\\033[B\\033[B\\033[B'\n"
                       "  \"$sleep\" 1; send '\\r'\n"
-                      "  wait_for 'Abandon run' \"$second_log\"\n"
-                      "  send '\\033[B'; \"$sleep\" 1; send '\\r'\n"
                       "  finish_session\n")
                      port)
                     (display
                      (string-append
-                      "  test ! -e \"$save\"\n"
+                      "  test -s \"$save\"\n"
                       "  second_text=$(\"$cat\" \"$second_log\")\n"
                       "  for marker in 'Continue game' 'Game loaded.' 'Health:' "
                       "'Smoke'; do\n"
