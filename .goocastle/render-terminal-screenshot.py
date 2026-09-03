@@ -26,7 +26,7 @@ def param_list(text: str) -> list[int]:
     return [int(part) if part else 0 for part in text.split(";")] if text else []
 
 def retain_populated_screen() -> None:
-    """Keep the last useful ncurses frame before a clear/alternate exit."""
+    """Keep the most complete ncurses frame before a clear/alternate exit."""
     global best_screen, best_score
     score = sum(cell != " " for line in screen for cell in line)
     if score > best_score:
