@@ -75,7 +75,11 @@ fi
 
 before=$($guix_bin hash -S nar "$dnethack_out")
 
-smoke_root=$(mktemp -d -t dnethack-smoke.XXXXXX)
+smoke_root=$(mktemp -d /tmp/goocastle-agent-dnethack-XXXXXXXX)
+case "$smoke_root" in
+    /tmp/goocastle-agent-dnethack-*) ;;
+    *) echo 'refusing an unvalidated dnethack smoke workspace' >&2; exit 1 ;;
+esac
 cleanup ()
 {
     "$rm_bin" -rf "$smoke_root"
