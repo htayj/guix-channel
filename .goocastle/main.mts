@@ -3591,12 +3591,18 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       const latestRecovery = priorRecovery?.epochs.at(-1);
       const authenticationExpiry = phaseRecord(journal, repeatedAgentPhase.name)?.failureReceipt?.kind === "provider-auth-expired";
       const recoveryEpochLimit = authenticationExpiry ? 1 : providerStateRecoveryMaxEpochs;
+      // Recovery epochs are phase-scoped.  A completed fresh session for an
+      // earlier audit cannot consume the retry budget of a later timed-out
+      // implementation phase.
+      const recoveryAttempts = (priorRecovery?.epochs ?? []).filter((entry) =>
+        entry.phase === repeatedAgentPhase.name && entry.state !== "complete",
+      ).length;
       // A crash after quarantine but before the phase starts leaves a
       // scheduled epoch. Reuse that already-isolated home rather than moving
       // it again or consuming another automatic retry.
       if (priorRecovery?.state === "active" && latestRecovery?.phase === repeatedAgentPhase.name && latestRecovery.state === "scheduled") {
         providerStateHomeName = latestRecovery.stateHomeName;
-      } else if ((priorRecovery?.epochs.length ?? 0) >= recoveryEpochLimit) {
+      } else if (recoveryAttempts >= recoveryEpochLimit) {
         const recovery = "Fresh provider-state recovery exhausted after " + recoveryEpochLimit +
           " isolated retry attempts for agent phase " + JSON.stringify(repeatedAgentPhase.name) +
           ". Preserved state homes: " + JSON.stringify((priorRecovery?.epochs ?? []).map((entry) => entry.quarantinePath ?? entry.stateHomeName)) +
