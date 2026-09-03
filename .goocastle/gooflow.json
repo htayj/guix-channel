@@ -68,7 +68,7 @@
           "provider": "codex",
       "model": "gpt-5.6-luna",
       "effort": "xhigh",
-          "budget": { "maxCommands": 80, "maxCommandOutputBytes": 4096 },
+          "budget": { "maxCommands": 40, "maxCommandOutputBytes": 4096 },
           "completion": { "requiresCommits": true },
           "capabilities": { "network": true, "guixDaemon": true }
         },
@@ -85,6 +85,7 @@
           "provider": "codex",
           "model": "gpt-5.6-luna",
           "effort": "xhigh",
+          "budget": { "maxCommands": 24, "maxCommandOutputBytes": 4096 },
           "capabilities": { "network": false, "guixDaemon": true }
         },
         {
@@ -128,7 +129,7 @@
           "provider": "codex",
           "model": "gpt-5.6-luna",
           "effort": "xhigh",
-          "budget": { "maxCommands": 80, "maxCommandOutputBytes": 4096 },
+          "budget": { "maxCommands": 40, "maxCommandOutputBytes": 4096 },
           "completion": { "requiresCommits": true },
           "capabilities": { "network": true, "guixDaemon": true }
         },
@@ -145,6 +146,7 @@
           "provider": "codex",
           "model": "gpt-5.6-luna",
           "effort": "xhigh",
+          "budget": { "maxCommands": 24, "maxCommandOutputBytes": 4096 },
           "capabilities": { "network": false, "guixDaemon": true }
         },
         {
