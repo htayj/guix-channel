@@ -389,10 +389,12 @@
                       "\"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf 'Smoke'; printf '\\r'; "
                       ;; Skip the plot via settings, move, then use the
-                      ;; configured legacy save key.  It writes the save and
-                      ;; quits through DRL's normal DSSaving path.
+                      ;; configured legacy save key.  Saving returns to the
+                      ;; main menu, where the final six downs select Exit.
                       "\"$sleep\" 2; printf '\\033[C'; "
-                      "\"$sleep\" 1; printf 's'; \"$sleep\" 5; } | "
+                      "\"$sleep\" 1; printf 's'; \"$sleep\" 2; "
+                      "printf '\\033[B\\033[B\\033[B\\033[B\\033[B\\033[B'; "
+                      "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; } | "
                       "run_session \"$first_log\"; then\n")
                      port)
                     (display
@@ -417,7 +419,9 @@
                       "  if ! { \"$sleep\" 1; printf '\\r'; "
                       "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; "
                       "printf '\\033[C'; \"$sleep\" 2; printf 's'; "
-                      "\"$sleep\" 5; } | "
+                      "\"$sleep\" 2; "
+                      "printf '\\033[B\\033[B\\033[B\\033[B\\033[B\\033[B'; "
+                      "\"$sleep\" 1; printf '\\r'; \"$sleep\" 5; } | "
                       "run_session \"$second_log\" append; then\n")
                      port)
                     (display
