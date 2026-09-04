@@ -195,6 +195,7 @@
                       "      *) echo 'Dungeon Monkey smoke failed' >&2; exit 1 ;;\n"
                       "    esac\n"
                       "    printf '%s\\n' 'DMU-SMOKE: campaign-save-load-ok'\n"
+                      "    exit 0\n"
                       "    ;;\n"
                       "  '') ;;\n"
                       "  *) ;;\n"
