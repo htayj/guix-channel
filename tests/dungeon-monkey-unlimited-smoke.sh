@@ -115,12 +115,12 @@ export HTTPS_PROXY=http://127.0.0.1:9
 export NO_PROXY='*'
 export LC_ALL=C
 
-if ! "$guix_bin" build util-linux >/dev/null 2>&1; then
+if ! "$guix_bin" build --no-substitutes util-linux >/dev/null 2>&1; then
     echo 'dungeon-monkey-unlimited smoke: util-linux is required' >&2
     exit 77
 fi
 unshare_bin=
-for output in $($guix_bin build util-linux); do
+for output in $($guix_bin build --no-substitutes util-linux); do
     if test -x "$output/bin/unshare"; then
         unshare_bin="$output/bin/unshare"
         break
