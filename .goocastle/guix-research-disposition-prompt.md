@@ -10,6 +10,16 @@ or branches.  Inspect the local channel and authoritative upstream/project
 material as needed.  Determine whether the request has a concrete, legal,
 source-buildable, technically viable Guix package outcome.
 
+Command-budget discipline is mandatory.  Use at most twelve commands to obtain
+the canonical source, its license/provenance, and build metadata, then write
+the final disposition before doing any optional corroboration.  If those facts
+do not establish a safe delivery brief by that point, choose `blocked` and name
+the exact missing prerequisite.  Do not dump upstream source trees or use broad
+unbounded `rg`, `grep`, `find`, `tar`, or `sed` output: inspect only named files
+and line ranges, and cap every listing to the smallest useful result.  The
+remaining command budget is for correcting a concrete uncertainty, not for
+exploratory source browsing.
+
 The research sandbox intentionally need not have a Guix daemon.  Attempt a
 direct upstream feasibility build only if it can invoke a complete declared
 toolchain through `guix shell` (for example, `guix shell gcc-toolchain make

@@ -11,6 +11,7 @@
   (specifications->manifest
    (list "bash"
          "coreutils"
+         "curl"
          "file"
          "findutils"
          "gawk"
