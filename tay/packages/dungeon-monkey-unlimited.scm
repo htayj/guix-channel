@@ -189,7 +189,12 @@
                        "    export TMPDIR=\"$scratch/tmp\"\n")
                       "    export SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LC_ALL=C\n"
                       "    cd \"$scratch/work\"\n"
-                      "    exec \"$smoke\"\n"
+                      "    proof=$(\"$smoke\" 2>&1)\n"
+                      "    case \"$proof\" in\n"
+                      "      *'DMU-SMOKE: campaign-save-load-ok'*) ;;\n"
+                      "      *) echo 'Dungeon Monkey smoke failed' >&2; exit 1 ;;\n"
+                      "    esac\n"
+                      "    printf '%s\\n' 'DMU-SMOKE: campaign-save-load-ok'\n"
                       "    ;;\n"
                       "  '') ;;\n"
                       "  *) ;;\n"
