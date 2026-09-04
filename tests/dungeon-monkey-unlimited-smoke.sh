@@ -121,7 +121,10 @@ for output in $($guix_bin build util-linux); do
     fi
 done
 test -n "$unshare_bin"
-if ! "$unshare_bin" --user --map-root-user --net --fork true >/dev/null 2>&1; then
+test -r "$bounded_validation"
+if ! "$node_bin" "$bounded_validation" --timeout-ms 5000 -- \
+        "$unshare_bin" --user --map-root-user --net --fork \
+        true >/dev/null 2>&1; then
     echo 'dungeon-monkey-unlimited smoke requires an unprivileged network namespace' >&2
     exit 77
 fi

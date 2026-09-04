@@ -26,7 +26,10 @@
     (source
      (origin
        (method url-fetch)
-       (uri "https://downloads.sourceforge.net/project/dmonkey/v1.000%20Series/DungeonMonkeyUnlimited-1.001-source.zip")
+       (uri
+        (string-append
+         "https://downloads.sourceforge.net/project/dmonkey/v1.000%20Series/"
+         "DungeonMonkeyUnlimited-1.001-source.zip"))
        (sha256
         (base32
          "1p796097xgyykvax2piv8k04g9asdr2wnfd9aigzayjpfh6yswpp"))))
@@ -69,6 +72,7 @@
                           (string-append "-k-L" sdl-image)
                           (string-append "-k-L" sdl-ttf)
                           (string-append "-k-L" x11)
+                          (string-append "-k-rpath=" x11)
                           "-k-lSDL"
                           "-k-lSDL_image"
                           "-k-lSDL_ttf"
@@ -91,8 +95,8 @@
                 (mkdir-p graphics)
                 (mkdir-p libexec)
                 (mkdir-p doc)
-                (install-file "build/dungeon-monkey-unlimited-real" real)
-                (install-file "build/dungeon-monkey-unlimited-smoke" smoke)
+                (install-file "build/dungeon-monkey-unlimited-real" libexec)
+                (install-file "build/dungeon-monkey-unlimited-smoke" libexec)
                 (copy-recursively "gamedata" (string-append data "/gamedata"))
                 (for-each (lambda (file) (install-file file graphics))
                           (find-files "image" "\\.png$"))
@@ -110,46 +114,79 @@
                   (lambda (port)
                     (display "Dungeon Monkey Unlimited third-party materials\n\n" port)
                     (display "David E. Gervais tile graphics\n" port)
-                    (display "Most tile graphics are by David E. Gervais and are\n" port)
-                    (display "available under the Creative Commons Attribution 3.0\n" port)
-                    (display "license. Credit David E. Gervais when redistributing\n" port)
-                    (display "these graphics.\n" port)
+                    (display
+                     (string-append
+                      "Most tile graphics are by David E. Gervais and are\n"
+                      "available under the Creative Commons Attribution 3.0\n")
+                     port)
+                    (display
+                     (string-append
+                      "license. Credit David E. Gervais when redistributing\n"
+                      "these graphics.\n")
+                     port)
                     (display "https://creativecommons.org/licenses/by/3.0/\n\n" port)
                     (display "RLTiles\n" port)
-                    (display "Part of (or All) the graphic tiles used in this program is\n" port)
-                    (display "the public domain roguelike tileset \"RLTiles\".\n" port)
-                    (display "Some of the tiles have been modified by Joseph Hewitt.\n\n" port)
+                    (display
+                     (string-append
+                      "Part of (or All) the graphic tiles used in this\n"
+                      "program is the public domain roguelike tileset\n"
+                      "\"RLTiles\".\n")
+                     port)
+                    (display
+                     (string-append
+                      "Some of the tiles have been modified by Joseph\n"
+                      "Hewitt.\n\n")
+                     port)
                     (display "You can find the original tileset at:\n" port)
                     (display "http://rltiles.sf.net\n\n" port)
                     (display "Bitstream Vera\n" port)
-                    (display "The used VeraBd.ttf is distributed under the Bitstream Vera\n" port)
+                    (display
+                     (string-append
+                      "The used VeraBd.ttf is distributed under the\n"
+                      "Bitstream Vera license.\n")
+                     port)
                     (display "license. The complete, exact license text is in\n" port)
                     (display "Bitstream-Vera-COPYRIGHT.TXT in this directory.\n" port)))
                 (call-with-output-file launcher
                   (lambda (port)
                     (format port "#!~a/bin/sh~%set -eu~%" #$bash-minimal)
-                    (format port "real=~s~ndata=~s~nsmoke=~s~n"
+                    (format port "real=~s~%data=~s~%smoke=~s~%"
                             real data smoke)
-                    (format port "ln=~s~nmkdir=~s~nmktemp=~s~nrm=~s~n"
+                    (format port "ln=~s~%mkdir=~s~%mktemp=~s~%rm=~s~%"
                             #$(file-append coreutils-minimal "/bin/ln")
                             #$(file-append coreutils-minimal "/bin/mkdir")
                             #$(file-append coreutils-minimal "/bin/mktemp")
                             #$(file-append coreutils-minimal "/bin/rm"))
                     (display
-                     "usage() { echo 'usage: dungeon-monkey-unlimited [--smoke]' >&2; exit 64; }\n"
+                     (string-append
+                      "usage() { echo 'usage: dungeon-monkey-unlimited "
+                      "[--smoke]' >&2; exit 64; }\n")
                      port)
                     (display
                      (string-append
                       "case \"${1-}\" in\n"
                       "  --smoke)\n"
                       "    test \"$#\" -eq 1 || usage\n"
-                      "    scratch=$(\"$mktemp\" -d \"${TMPDIR:-/tmp}/dungeon-monkey-unlimited-smoke.XXXXXXXX\")\n"
+                      (string-append
+                       "    scratch=$(\"$mktemp\" -d \"${TMPDIR:-/tmp}/dungeon-"
+                       "monkey-unlimited-smoke.XXXXXXXX\")\n")
                       "    trap '\"$rm\" -rf \"$scratch\"' EXIT HUP INT TERM\n"
-                      "    \"$mkdir\" -p \"$scratch/home\" \"$scratch/config\" \"$scratch/data\" \"$scratch/cache\" \"$scratch/state\" \"$scratch/runtime\" \"$scratch/tmp\" \"$scratch/work/savegame\"\n"
+                      (string-append
+                       "    \"$mkdir\" -p \"$scratch/home\" \"$scratch/config\" "
+                       "\"$scratch/data\" \"$scratch/cache\" \"$scratch/state\" "
+                       "\"$scratch/runtime\" \"$scratch/tmp\" "
+                       "\"$scratch/work/savegame\"\n")
                       "    \"$ln\" -s \"$data/gamedata\" \"$scratch/work/gamedata\"\n"
                       "    \"$ln\" -s \"$data/image\" \"$scratch/work/image\"\n"
-                      "    export HOME=\"$scratch/home\" XDG_CONFIG_HOME=\"$scratch/config\" XDG_DATA_HOME=\"$scratch/data\"\n"
-                      "    export XDG_CACHE_HOME=\"$scratch/cache\" XDG_STATE_HOME=\"$scratch/state\" XDG_RUNTIME_DIR=\"$scratch/runtime\" TMPDIR=\"$scratch/tmp\"\n"
+                      (string-append
+                       "    export HOME=\"$scratch/home\"\n"
+                       "    export XDG_CONFIG_HOME=\"$scratch/config\"\n"
+                       "    export XDG_DATA_HOME=\"$scratch/data\"\n")
+                      (string-append
+                       "    export XDG_CACHE_HOME=\"$scratch/cache\"\n"
+                       "    export XDG_STATE_HOME=\"$scratch/state\"\n"
+                       "    export XDG_RUNTIME_DIR=\"$scratch/runtime\"\n"
+                       "    export TMPDIR=\"$scratch/tmp\"\n")
                       "    export SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LC_ALL=C\n"
                       "    cd \"$scratch/work\"\n"
                       "    exec \"$smoke\"\n"
@@ -157,7 +194,9 @@
                       "  '') ;;\n"
                       "  *) ;;\n"
                       "esac\n"
-                      "state=\"${XDG_DATA_HOME:-${HOME:?HOME or XDG_DATA_HOME must be set}/.local/share}/dungeon-monkey-unlimited\"\n"
+                      (string-append
+                       "state=\"${XDG_DATA_HOME:-${HOME:?HOME or XDG_DATA_HOME "
+                       "must be set}/.local/share}/dungeon-monkey-unlimited\"\n")
                       "\"$mkdir\" -p \"$state/savegame\"\n"
                       "for resource in gamedata image; do\n"
                       "  if test ! -e \"$state/$resource\"; then\n"

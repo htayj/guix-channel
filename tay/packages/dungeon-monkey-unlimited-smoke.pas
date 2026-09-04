@@ -5,7 +5,7 @@ program dmu_smoke;
 
 {$LONGSTRINGS ON}
 
-uses SysUtils, SDL, sdlgfx, gears, gamebook, randmaps, randworld;
+uses SysUtils, SDL, sdlgfx, uiconfig, gears, gamebook, randmaps, randworld;
 
 const
   SmokeMarker = 'DMU-SMOKE: campaign-save-load-ok';
