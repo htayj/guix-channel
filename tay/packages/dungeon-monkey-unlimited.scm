@@ -128,8 +128,8 @@
                     (display "RLTiles\n" port)
                     (display
                      (string-append
-                      "Part of (or All) the graphic tiles used in this\n"
-                      "program is the public domain roguelike tileset\n"
+                      "Part of (or All) the graphic tiles used in this "
+                      "program is the public domain roguelike tileset "
                       "\"RLTiles\".\n")
                      port)
                     (display
