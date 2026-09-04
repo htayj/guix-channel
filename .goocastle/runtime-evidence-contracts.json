@@ -594,6 +594,22 @@
         },
         "successMarker": "DynaHack smoke test: gameplay-and-save-load passed"
       }
+    },
+    {
+      "issueNumber": 685,
+      "packageName": "evilhack",
+      "packageModulePath": "tay/packages/evilhack.scm",
+      "artifactPath": ".goocastle/evidence/issue-685.png",
+      "runtime": {
+        "executable": "evilhack",
+        "invocation": {
+          "file": "evilhack",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "evilhack guix smoke passed"
+      }
     }
   ]
 }
