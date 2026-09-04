@@ -93,14 +93,14 @@
           "type": "command",
           "command": { "file": "sh", "args": [".goocastle/prove-guix-package.sh"] },
           "capabilities": { "network": false, "guixDaemon": true },
-          "timeout": { "completionMs": 14400000 }
+          "timeout": { "completionMs": 14400000, "executionMs": 2700000, "wallMs": 2700000 }
         },
         {
           "name": "runtime-screenshot",
           "type": "command",
           "command": { "file": "sh", "args": [".goocastle/capture-guix-package-screenshot.sh"] },
           "capabilities": { "network": false, "guixDaemon": true },
-          "timeout": { "completionMs": 14400000 }
+          "timeout": { "completionMs": 14400000, "executionMs": 2700000, "wallMs": 2700000 }
         }
       ]
     },
@@ -154,14 +154,14 @@
           "type": "command",
           "command": { "file": "sh", "args": [".goocastle/prove-guix-package.sh"] },
           "capabilities": { "network": false, "guixDaemon": true },
-          "timeout": { "completionMs": 14400000 }
+          "timeout": { "completionMs": 14400000, "executionMs": 2700000, "wallMs": 2700000 }
         },
         {
           "name": "runtime-screenshot",
           "type": "command",
           "command": { "file": "sh", "args": [".goocastle/capture-guix-package-screenshot.sh"] },
           "capabilities": { "network": false, "guixDaemon": true },
-          "timeout": { "completionMs": 14400000 }
+          "timeout": { "completionMs": 14400000, "executionMs": 2700000, "wallMs": 2700000 }
         }
       ]
     },
@@ -183,14 +183,14 @@
           "type": "command",
           "command": { "file": "sh", "args": [".goocastle/refresh-runtime-evidence.sh", "proof"] },
           "capabilities": { "network": false, "guixDaemon": true },
-          "timeout": { "completionMs": 14400000 }
+          "timeout": { "completionMs": 14400000, "executionMs": 2700000, "wallMs": 2700000 }
         },
         {
           "name": "runtime-screenshot",
           "type": "command",
           "command": { "file": "sh", "args": [".goocastle/refresh-runtime-evidence.sh", "screenshot"] },
           "capabilities": { "network": false, "guixDaemon": true },
-          "timeout": { "completionMs": 14400000 }
+          "timeout": { "completionMs": 14400000, "executionMs": 2700000, "wallMs": 2700000 }
         }
       ]
     }
