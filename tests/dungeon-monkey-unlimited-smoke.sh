@@ -6,7 +6,8 @@ guix_bin=$(command -v "${GUIX:-guix}")
 grep_bin=$(command -v grep)
 find_bin=$(command -v find)
 env_bin=$(command -v env)
-true_bin=$(command -v true)
+true_bin=/usr/bin/true
+test -x "$true_bin"
 convert_bin=$(command -v convert || true)
 node_bin=${GOOCASTLE_NODE:-/usr/bin/node}
 test -x "$node_bin" || node_bin=$(command -v node)
