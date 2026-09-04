@@ -626,6 +626,22 @@
         },
         "successMarker": "fiqhack guix smoke passed"
       }
+    },
+    {
+      "issueNumber": 687,
+      "packageName": "gearhead",
+      "packageModulePath": "tay/packages/gearhead.scm",
+      "artifactPath": ".goocastle/evidence/issue-687.png",
+      "runtime": {
+        "executable": "gearhead",
+        "invocation": {
+          "file": "gearhead",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "gearhead guix smoke passed: ASCII gameplay and isolated state"
+      }
     }
   ]
 }
