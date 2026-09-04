@@ -1450,7 +1450,15 @@ const applyDisposition = async (journal, issue) => {
     let ticket = selected.implementationTicket;
     const runtimeEvidenceHandoff = await validateTicketRuntimeEvidence(ticket);
     if (ticket.create !== "complete") {
-      let matches = await exactImplementationTickets(ticket);
+      // Once GitHub has returned a concrete issue URL, preserve that exact
+      // number before making any further network request.  A read can fail
+      // after a successful create; leaving only a "started" marker in that
+      // window loses the strongest available receipt and makes later search
+      // reconciliation depend on GitHub's search indexing.
+      let matches = ticket.issueNumber === undefined
+        ? await exactImplementationTickets(ticket)
+        : [await selectedIssue(ticket.issueNumber)].filter((candidate) =>
+          candidate.title === ticket.title && candidate.body === ticket.body);
       if (matches.length > 1) {
         throw new Error("Found multiple implementation tickets with the exact Goocastle receipt for #" + issue.number + "; resolve the duplicate tickets manually, then resume with: " + resumeRecoveryCommand());
       }
@@ -1484,6 +1492,10 @@ const applyDisposition = async (journal, issue) => {
             if (issueNumber === undefined) throw new Error("gh issue create did not return an issue URL");
             const createdIssueNumber = Number(issueNumber);
             if (!Number.isSafeInteger(createdIssueNumber)) throw new Error("gh issue create returned an unsafe issue number");
+            ticket = { ...ticket, issueNumber: createdIssueNumber, create: "started" };
+            journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+              disposition: { ...journal.disposition, implementationTicket: ticket }, status: "active",
+            });
             const created = await selectedIssue(createdIssueNumber);
             if (created.title !== ticket.title || created.body !== ticket.body) {
               throw new Error("gh issue create returned an issue without the expected Goocastle receipt");
