@@ -610,6 +610,22 @@
         },
         "successMarker": "evilhack guix smoke passed"
       }
+    },
+    {
+      "issueNumber": 686,
+      "packageName": "fiqhack",
+      "packageModulePath": "tay/packages/fiqhack.scm",
+      "artifactPath": ".goocastle/evidence/issue-686.png",
+      "runtime": {
+        "executable": "fiqhack",
+        "invocation": {
+          "file": "fiqhack",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "fiqhack guix smoke passed"
+      }
     }
   ]
 }
