@@ -10,9 +10,11 @@
  (list
   (specifications->manifest
    (list "bash"
+         "binutils"
          "coreutils"
          "curl"
          "file"
+         "fontconfig"
          "findutils"
          "gawk"
          "glibc-locales"
