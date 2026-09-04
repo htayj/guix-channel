@@ -30,6 +30,7 @@
          "python"
          "ripgrep"
          "sed"
+         "tar"
          "font-dejavu"
          "unzip"
          "xxd"))
