@@ -8,6 +8,8 @@ find_bin=$(command -v find)
 env_bin=$(command -v env)
 true_bin=/usr/bin/true
 test -x "$true_bin"
+dirname_bin=$(command -v dirname)
+mkdir_bin=$(command -v mkdir)
 convert_bin=$(command -v convert || true)
 node_bin=${GOOCASTLE_NODE:-/usr/bin/node}
 test -x "$node_bin" || node_bin=$(command -v node)
@@ -138,7 +140,7 @@ screenshot_bmp=
 if test -n "${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}"; then
     artifact="$channel_dir/.goocastle/evidence/issue-683.png"
     screenshot_bmp="$disposable_workspace/dungeon-monkey-unlimited-smoke.bmp"
-    mkdir -p "$(dirname -- "$artifact")"
+    "$mkdir_bin" -p "$("$dirname_bin" -- "$artifact")"
     test -x "$convert_bin"
 fi
 
