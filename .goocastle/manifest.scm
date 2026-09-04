@@ -23,6 +23,7 @@
          "gzip"
          "grep"
          "imagemagick"
+         "jq"
          "make"
          "node"
          "nss-certs"
