@@ -578,6 +578,22 @@
         },
         "successMarker": "DMU-SMOKE: campaign-save-load-ok"
       }
+    },
+    {
+      "issueNumber": 684,
+      "packageName": "dynahack",
+      "packageModulePath": "tay/packages/dynahack.scm",
+      "artifactPath": ".goocastle/evidence/issue-684.png",
+      "runtime": {
+        "executable": "dynahack",
+        "invocation": {
+          "file": "dynahack",
+          "args": [
+            "--smoke-test"
+          ]
+        },
+        "successMarker": "DynaHack smoke test: gameplay-and-save-load passed"
+      }
     }
   ]
 }
