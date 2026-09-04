@@ -562,6 +562,22 @@
         },
         "successMarker": "DRAGONSLAYER_SMOKE_OK"
       }
+    },
+    {
+      "issueNumber": 683,
+      "packageName": "dungeon-monkey-unlimited",
+      "packageModulePath": "tay/packages/dungeon-monkey-unlimited.scm",
+      "artifactPath": ".goocastle/evidence/issue-683.png",
+      "runtime": {
+        "executable": "dungeon-monkey-unlimited",
+        "invocation": {
+          "file": "dungeon-monkey-unlimited",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "DMU-SMOKE: campaign-save-load-ok"
+      }
     }
   ]
 }
