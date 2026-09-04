@@ -90,7 +90,12 @@ while index < len(raw):
             index += 2
         continue
     if char == "\r": column = 0
-    elif char == "\n": row = min(rows - 1, row + 1)
+    elif char == "\n":
+        # Captures can originate from a pipe as well as a PTY.  A pipe does
+        # not apply the terminal's ONLCR transformation, so treat its LF as a
+        # complete newline rather than retaining the previous output column.
+        row = min(rows - 1, row + 1)
+        column = 0
     elif char == "\b": column = max(0, column - 1)
     elif char >= " ":
         rendered = acs.get(char, char) if special_graphics else char

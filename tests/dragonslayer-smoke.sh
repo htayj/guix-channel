@@ -2,7 +2,9 @@
 # Exercise Dragonslayer's installed command-line game in isolated state.
 set -eu
 
-guix_bin=${GUIX:-guix}
+guix_bin=$(command -v "${GUIX:-guix}")
+grep_bin=$(command -v grep)
+find_bin=$(command -v find)
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$channel_dir"
 
@@ -45,13 +47,13 @@ for file in README.md license.htm changes.htm changes.doc daedalus.htm \
     daedalus.doc script.htm script.doc; do
     test -s "$doc/$file"
 done
-grep -F 'GNU GENERAL PUBLIC LICENSE' "$doc/license.htm" >/dev/null
-grep -F 'Version 2, June 1991' "$doc/license.htm" >/dev/null
-grep -F 'Walter D.' "$doc/changes.htm" >/dev/null
-grep -F 'Pullen' "$doc/changes.htm" >/dev/null
-grep -F 'By Walter D. Pullen' \
+"$grep_bin" -F 'GNU GENERAL PUBLIC LICENSE' "$doc/license.htm" >/dev/null
+"$grep_bin" -F 'Version 2, June 1991' "$doc/license.htm" >/dev/null
+"$grep_bin" -F 'Walter D.' "$doc/changes.htm" >/dev/null
+"$grep_bin" -F 'Pullen' "$doc/changes.htm" >/dev/null
+"$grep_bin" -F 'By Walter D. Pullen' \
     "$dragonslayer_out/share/dragonslayer/dragon.ds" >/dev/null
-grep -F 'Based on the leaves.bmp background from Windows 3.1' \
+"$grep_bin" -F 'Based on the leaves.bmp background from Windows 3.1' \
     "$dragonslayer_out/share/dragonslayer/dragon.ds" >/dev/null
 
 grep -F '"issueNumber": 681' .goocastle/runtime-evidence-contracts.json >/dev/null
@@ -62,7 +64,7 @@ grep -F '"artifactPath": ".goocastle/evidence/issue-681.png"' \
 grep -F '"successMarker": "DRAGONSLAYER_SMOKE_OK"' \
     .goocastle/runtime-evidence-contracts.json >/dev/null
 
-test -z "$(find "$dragonslayer_out" -xdev -type f -perm /222 -print -quit)"
+test -z "$("$find_bin" "$dragonslayer_out" -xdev -type f -perm /222 -print -quit)"
 before=$($guix_bin hash -S nar "$dragonslayer_out")
 
 if test -n "${GOOCASTLE_DISPOSABLE_WORKSPACE-}"; then
@@ -105,16 +107,18 @@ proof=$(cd "$scratch/work" && \
     "$dragonslayer_out/bin/dragonslayer" --smoke)
 test "$proof" = 'DRAGONSLAYER_SMOKE_OK'
 test -s "$raw"
-grep -aF 'Welcome to Dragonslayer!' "$raw" >/dev/null
-grep -aF 'Level:' "$raw" >/dev/null
-grep -aF 'DRAGONSLAYER_SMOKE_OK' "$raw" >/dev/null
-test -z "$(find "$scratch/work" -mindepth 1 -print -quit)"
-test -z "$(find "$scratch/home" "$scratch/config" "$scratch/data" \
+"$grep_bin" -aF 'Welcome to Dragonslayer!' "$raw" >/dev/null
+# The command-line build renders the game's complete first-run help panel;
+# unlike the GUI build it has no redraw hook for the status-line macro.
+"$grep_bin" -aF 'Select OK for more help, or Cancel to start playing.' "$raw" >/dev/null
+"$grep_bin" -aF 'DRAGONSLAYER_SMOKE_OK' "$raw" >/dev/null
+test -z "$("$find_bin" "$scratch/work" -mindepth 1 -print -quit)"
+test -z "$("$find_bin" "$scratch/home" "$scratch/config" "$scratch/data" \
     "$scratch/cache" "$scratch/state" "$scratch/runtime" "$scratch/tmp" \
     -mindepth 1 -print -quit)"
 
 after=$($guix_bin hash -S nar "$dragonslayer_out")
 test "$before" = "$after"
-test -z "$(find "$dragonslayer_out" -xdev -type f -perm /222 -print -quit)"
+test -z "$("$find_bin" "$dragonslayer_out" -xdev -type f -perm /222 -print -quit)"
 test ! -w "$dragonslayer_out"
 printf '%s\n' "$proof"

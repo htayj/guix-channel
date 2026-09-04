@@ -46,7 +46,11 @@
               ;; Windows and MSVC feature macros.
               (substitute* "util.h"
                 (("^#define WIN") "// #define WIN")
-                (("^#define PC") "// #define PC"))
+                (("^#define PC") "// #define PC")
+                ;; The bitmap code computes storage in 32-bit words.  On
+                ;; LP64 systems `unsigned long` is 64 bits, so the original
+                ;; definition makes pointer iteration overrun that storage.
+                (("typedef unsigned long dword;") "typedef unsigned int dword;"))
               ;; Remove `--smoke` before the ordinary command-line parser sees
               ;; the arguments.  This keeps the proof on the same script-
               ;; loading and movement code as normal use.
@@ -63,14 +67,36 @@
                   "      fSmoke = fTrue;\n"
                   "      argv[iarg][0] = chNull;\n"
                   "    }\n"))
-                (("  RunCommandLine\\(szLine, NULL\\);")
+                ;; Ignore the cleared proof-only flag when constructing the
+                ;; command line.  Otherwise the original loop appends extra
+                ;; spaces to the script pathname, making the engine report a
+                ;; false successful smoke result after a failed file open.
+                (("    //printf\\(\"%d: '%s'\\\\n\", iarg, argv\\[iarg\\]\\);")
                  (string-append
+                  "    if (argv[iarg][0] == chNull)\n"
+                  "      continue;\n"
+                  "    //printf(\"%d: '%s'\\n\", iarg, argv[iarg]);"))
+                (("  RunCommandLine\\(szLine, NULL\\);")
+                (string-append
+                  ;; The original loop leaves one trailing separator after
+                  ;; its final argument.  Trim it before handing the absolute
+                  ;; script name to the file-command parser.
+                  "  while (pch > szLine && pch[-1] == ' ') *--pch = chNull;\n"
                   "  RunCommandLine(szLine, NULL);\n\n"
                   "  if (fSmoke) {\n"
                   "    DoCommand(cmdMoveU);\n"
-                  "    printf(\"DRAGONSLAYER_SMOKE_OK\\n\");\n"
                   "    return 0;\n"
                   "  }\n\n")))))
+          (add-after 'patch-unix-command-line 'patch-linux-allocator
+            (lambda _
+              (substitute* "util.cpp"
+                (("void \\*operator new\\(size_t cb, void \\*pv\\)")
+                 (string-append
+                  "void operator delete(void *pv, size_t cb)\n"
+                  "{\n"
+                  "  DeallocateP(pv);\n"
+                  "}\n\n"
+                  "void *operator new(size_t cb, void *pv)")))))
           (replace 'build
             (lambda _
               ;; This is the offline Unix build documented by upstream's
@@ -87,7 +113,9 @@
                      (program (string-append libexec "/dragonslayer-real"))
                      (launcher (string-append bin "/dragonslayer"))
                      (shell #$(file-append bash-minimal "/bin/sh"))
-                     (mkdir #$(file-append coreutils-minimal "/bin/mkdir")))
+                     (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
+                     (cat #$(file-append coreutils-minimal "/bin/cat"))
+                     (ln #$(file-append coreutils-minimal "/bin/ln")))
                 (mkdir-p bin)
                 (mkdir-p libexec)
                 (mkdir-p data)
@@ -103,8 +131,12 @@
                             "script.htm" "script.doc"))
                 (call-with-output-file launcher
                   (lambda (port)
-                    (format port "#!~a~%set -eu~%real=~s~%script=~s~%mkdir=~s~%"
-                            shell program (string-append data "/dragon.ds") mkdir)
+                    (format port
+                            (string-append
+                             "#!~a~%set -eu~%real=~s~%data=~s~%script=~s~%"
+                             "mkdir=~s~%cat=~s~%ln=~s~%")
+                            shell program data (string-append data "/dragon.ds")
+                            mkdir cat ln)
                     (display
                      "if test \"${1-}\" = --smoke; then\n"
                      port)
@@ -114,8 +146,21 @@
                       "'usage: dragonslayer [--smoke]' >&2; exit 64; }\n")
                      port)
                     ;; Do not create a state directory in the proof path.
-                    (display "  exec \"$real\" \"$script\" --smoke\n"
-                             port)
+                    ;; Daedalus has a small command-line buffer, so invoke its
+                    ;; installed script from its data directory by short name.
+                    (display "  cd \"$data\"\n" port)
+                    (display "  raw=${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\n" port)
+                    (display "  if test -n \"$raw\"; then\n" port)
+                    (display
+                     "    if ! \"$real\" dragon.ds --smoke >\"$raw\" 2>&1; then\n"
+                     port)
+                    (display
+                     "      \"$cat\" \"$raw\" >&2 || true\n      exit 1\n    fi\n"
+                     port)
+                    (display "    printf 'DRAGONSLAYER_SMOKE_OK\\n' >>\"$raw\"\n" port)
+                    (display "    \"$cat\" \"$raw\" >&2\n" port)
+                    (display "  else\n    \"$real\" dragon.ds --smoke >&2\n  fi\n" port)
+                    (display "  printf 'DRAGONSLAYER_SMOKE_OK\\n'\n  exit 0\n" port)
                     (display "fi\n" port)
                     (display
                      (string-append
@@ -131,7 +176,8 @@
                     (display "state=\"$state_root/dragonslayer\"\n" port)
                     (display "\"$mkdir\" -p \"$state\"\n" port)
                     (display "cd \"$state\"\n" port)
-                    (display "exec \"$real\" \"$script\"\n" port)))
+                    (display "\"$ln\" -sfn \"$script\" dragon.ds\n" port)
+                    (display "exec \"$real\" dragon.ds\n" port)))
                 (chmod launcher #o555)))))))
     (native-inputs (list gcc-toolchain))
     (inputs (list bash-minimal coreutils-minimal))
