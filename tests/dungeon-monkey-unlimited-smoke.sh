@@ -183,7 +183,11 @@ fi
 test -z "$("$find_bin" "$scratch/home" "$scratch/config" \
     "$scratch/data" "$scratch/cache" "$scratch/state" \
     "$scratch/runtime" "$scratch/tmp" "$scratch/work" \
-    -mindepth 1 -print -quit)"
+    -mindepth 1 -type f ! -name config.cfg -print -quit)"
+test -s "$scratch/work/config.cfg"
+test -L "$scratch/work/gamedata"
+test -L "$scratch/work/image"
+test -z "$("$find_bin" "$scratch/work/savegame" -mindepth 1 -print -quit)"
 
 after=$($guix_bin hash -S nar "$dmu_out")
 test "$before" = "$after"
