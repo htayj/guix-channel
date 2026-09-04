@@ -1060,7 +1060,25 @@ const gooflowSelectionMatchesSchedulerFilter = (selection) =>
   requestedGooflowFilter === undefined || selection.workflow?.name === requestedGooflowFilter;
 const gooflowMatchesSchedulerFilter = (resolved) =>
   gooflowSelectionMatchesSchedulerFilter(resolved);
-const reportGooflowFilterSkip = (issue, resolved) => console.log(
+const SCHEDULER_SKIP_SAMPLE_LIMIT = 3;
+let schedulerSkipReports = new Map();
+const resetSchedulerSkipReports = () => { schedulerSkipReports = new Map(); };
+const reportSchedulerSkip = (reason, message) => {
+  const report = schedulerSkipReports.get(reason) ?? { count: 0, samples: [] };
+  report.count += 1;
+  if (report.samples.length < SCHEDULER_SKIP_SAMPLE_LIMIT) {
+    report.samples.push(message);
+    console.log(message);
+  }
+  schedulerSkipReports.set(reason, report);
+};
+const flushSchedulerSkipReports = () => {
+  const summaries = [...schedulerSkipReports.entries()]
+    .filter(([, report]) => report.count > SCHEDULER_SKIP_SAMPLE_LIMIT)
+    .map(([reason, report]) => reason + "=" + String(report.count));
+  if (summaries.length > 0) console.log("Scheduler skip summary: " + summaries.join(", ") + "; first " + String(SCHEDULER_SKIP_SAMPLE_LIMIT) + " examples per reason were shown.");
+};
+const reportGooflowFilterSkip = (issue, resolved) => reportSchedulerSkip("workflow-filter",
   "Skipping issue #" + issue.number + "; scheduler workflow filter " + JSON.stringify(requestedGooflowFilter) +
     " excludes its normal Gooflow route " + JSON.stringify(resolved.workflow?.name ?? "template") + ".",
 );
@@ -1097,7 +1115,7 @@ const hasTerminalBlockedLabel = (issue) =>
   issue.labels.some((label) => label.name === "state:blocked");
 const hasTerminalDeferredLabel = (issue) =>
   issue.labels.some((label) => label.name === "state:deferred");
-const reportDeferredIssue = (issue) => console.log(
+const reportDeferredIssue = (issue) => reportSchedulerSkip("deferred",
   "Skipping issue #" + issue.number + "; state:deferred is a terminal scheduler exclusion. " +
   "Remove state:deferred to reactivate it.",
 );
@@ -1129,6 +1147,7 @@ const terminalDispositionFor = (journal) => typeof isTerminalSequentialDispositi
     ));
 
 const nextActionableIssue = async (excludedIssues = new Set()) => {
+  resetSchedulerSkipReports();
   const latestJournalByIssue = new Map();
   for (const journal of await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME)) {
     const current = latestJournalByIssue.get(journal.issueNumber);
@@ -1171,7 +1190,7 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
       continue;
     }
     if (terminalDispositionIssues.has(issue.number)) {
-      console.log("Skipping issue #" + issue.number + "; its terminal Gooflow disposition is already recorded in the journal.");
+      reportSchedulerSkip("terminal-journal", "Skipping issue #" + issue.number + "; its terminal Gooflow disposition is already recorded in the journal.");
       continue;
     }
     if (hasTerminalBlockedLabel(issue)) continue;
@@ -1247,9 +1266,11 @@ const nextActionableIssue = async (excludedIssues = new Set()) => {
         "; difficulty=" + (difficulty === difficultyLabels.length ? "none" : JSON.stringify(difficultyLabels[difficulty])) +
         "; tie-breaker=#" + selected.number;
       console.log("Scheduler selected #" + selected.number + ": " + rationale);
+      flushSchedulerSkipReports();
       return { issue: selected, resolved, explanation, rationale };
     }
   }
+  flushSchedulerSkipReports();
   return undefined;
 };
 
