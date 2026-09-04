@@ -5,6 +5,9 @@ set -eu
 guix_bin=$(command -v "${GUIX:-guix}")
 grep_bin=$(command -v grep)
 find_bin=$(command -v find)
+env_bin=$(command -v env)
+true_bin=$(command -v true)
+convert_bin=$(command -v convert || true)
 node_bin=${GOOCASTLE_NODE:-/usr/bin/node}
 test -x "$node_bin" || node_bin=$(command -v node)
 bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
@@ -124,7 +127,7 @@ test -n "$unshare_bin"
 test -r "$bounded_validation"
 if ! "$node_bin" "$bounded_validation" --timeout-ms 5000 -- \
         "$unshare_bin" --user --map-root-user --net --fork \
-        true >/dev/null 2>&1; then
+        "$true_bin" >/dev/null 2>&1; then
     echo 'dungeon-monkey-unlimited smoke requires an unprivileged network namespace' >&2
     exit 77
 fi
@@ -135,10 +138,11 @@ if test -n "${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}"; then
     artifact="$channel_dir/.goocastle/evidence/issue-683.png"
     screenshot_bmp="$disposable_workspace/dungeon-monkey-unlimited-smoke.bmp"
     mkdir -p "$(dirname -- "$artifact")"
+    test -x "$convert_bin"
 fi
 
 if test -n "$screenshot_bmp"; then
-    proof=$(env -i \
+    proof=$("$env_bin" -i \
         HOME="$scratch/home" \
         XDG_CONFIG_HOME="$scratch/config" \
         XDG_DATA_HOME="$scratch/data" \
@@ -154,7 +158,7 @@ if test -n "$screenshot_bmp"; then
         "$unshare_bin" --user --map-root-user --net --fork \
         "$dmu_out/bin/dungeon-monkey-unlimited" --smoke)
 else
-    proof=$(env -i \
+    proof=$("$env_bin" -i \
         HOME="$scratch/home" \
         XDG_CONFIG_HOME="$scratch/config" \
         XDG_DATA_HOME="$scratch/data" \
@@ -172,8 +176,6 @@ fi
 test "$proof" = 'DMU-SMOKE: campaign-save-load-ok'
 
 if test -n "$screenshot_bmp"; then
-    convert_bin=$(command -v convert)
-    test -x "$convert_bin"
     "$convert_bin" "$screenshot_bmp" "PNG24:$artifact"
     test -s "$artifact"
 fi
