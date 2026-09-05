@@ -8,7 +8,8 @@
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (gnu packages bash)
   #:use-module (gnu packages base)
-  #:use-module (gnu packages commencement))
+  #:use-module (gnu packages commencement)
+  #:use-module (gnu packages elf))
 
 (define %grippy-socks-commit
   "32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8")
@@ -96,6 +97,14 @@
             (lambda _
               ;; The upstream Makefile documents this offline Unix build.
               (invoke "make" "daedalus")))
+          (add-after 'build 'shrink-build-rpath
+            (lambda _
+              ;; The linker wrapper adds every build library directory to the
+              ;; runpath.  Keep only directories needed by the executable so
+              ;; the native compiler toolchain does not become a runtime
+              ;; reference.
+              (invoke "patchelf" "--shrink-rpath" "daedalus")))
+          (delete 'make-dynamic-linker-cache)
           (delete 'install-license-files)
           (replace 'install
             (lambda _
@@ -175,7 +184,7 @@
                     (display "\"$ln\" -sfn \"$script\" gripsox.ds\n" port)
                     (display "exec \"$real\" gripsox.ds\n" port)))
                 (chmod launcher #o555)))))))
-    (native-inputs (list gcc-toolchain))
+    (native-inputs (list gcc-toolchain patchelf))
     (inputs (list bash-minimal coreutils-minimal))
     (home-page "https://github.com/CruiserOne/Daedalus")
     (synopsis "Terminal Grippy Socks mental health simulation")
