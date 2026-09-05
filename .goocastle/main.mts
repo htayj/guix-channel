@@ -3821,9 +3821,14 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     const repairPhases = activeRepair
       ? (evidenceConfig?.capturePhase === repairPhaseName
         ? [
-          ...(evidenceConfig !== undefined && phaseRecord(journal, evidenceConfig.proofPhase)?.state !== "complete"
-            ? [phases.find((phase) => phase.name === evidenceConfig.proofPhase)]
-            : []),
+          // A capture assertion can fail after a package implementation has
+          // changed its launcher, state handling, or recorder adapter. Give
+          // the bounded repair agents a chance to correct that branch before
+          // recapturing, then replay proof so the screenshot is tied to the
+          // repaired artifact rather than a stale receipt.
+          phases.find((phase) => phase.name === implementationPhaseName && phase.type === "agent"),
+          phases.find((phase) => phase.name === "edge-case-audit" && phase.type === "agent") ?? phases.find((phase) => phase.type === "agent" && /audit|review/iu.test(phase.name) && phase.name !== implementationPhaseName),
+          ...(evidenceConfig === undefined ? [] : [phases.find((phase) => phase.name === evidenceConfig.proofPhase)]),
           phases.find((phase) => phase.name === repairPhaseName),
         ]
         : [
@@ -4383,7 +4388,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           (repairPhaseName === evidenceConfig.proofPhase || repairPhaseName === evidenceConfig.capturePhase);
         if (evidenceRepair && failedRepairPhase !== undefined) {
           const replayProofBeforeCapture = repairPhaseName === evidenceConfig.capturePhase &&
-            phaseRecord(journal, evidenceConfig.proofPhase)?.state !== "complete";
+            repairPhases.some((phase) => phase.name === evidenceConfig.proofPhase);
           const preparation = repairPhases.filter((phase) =>
             phase.name !== repairPhaseName && !(replayProofBeforeCapture && phase.name === evidenceConfig.proofPhase));
           const initial = await runBatch(sandbox, preparation, pendingPhases.length > 0 && setup.length > 0 && !setupIncluded);
