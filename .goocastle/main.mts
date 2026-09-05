@@ -4303,6 +4303,21 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       });
       const runEvidencePhase = async (phase) => {
         if (pendingFor([phase]).length === 0) return;
+        // Runtime evidence is a host-owned transaction: its command may alter
+        // only the declared image.  Detect an agent that returned successfully
+        // with residual edits before entering that transaction, so repair is
+        // attributed to the preceding agent work rather than surfacing later
+        // as an opaque screenshot-boundary failure.
+        const residualWork = gitAt(taskWorktree.worktreePath, ["status", "--porcelain=v1", "--untracked-files=all", "-z"], { encoding: "utf8" });
+        if (residualWork.length > 0) {
+          const phaseIndex = phases.findIndex((candidate) => candidate.name === phase.name);
+          const predecessor = phases.slice(0, phaseIndex).reverse().find((candidate) => candidate.type === "agent");
+          throw new Error(
+            "Cannot start runtime evidence phase " + JSON.stringify(phase.name) +
+            ": task worktree contains uncommitted changes after agent phase " + JSON.stringify(predecessor?.name ?? "unknown") +
+            "; commit or repair the preserved agent work before resuming",
+          );
+        }
         if (evidenceConfig?.runtimeContract !== undefined) {
           const currentEvidence = await resolveGooflowEvidence(
             materializeGooflowEvidence(materializedGooflow.evidence, promptArgs),
