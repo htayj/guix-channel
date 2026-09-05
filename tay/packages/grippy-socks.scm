@@ -114,7 +114,8 @@
                 (mkdir-p libexec)
                 (mkdir-p data)
                 (mkdir-p doc)
-                (install-file "daedalus" program)
+                (install-file "daedalus" libexec)
+                (rename-file (string-append libexec "/daedalus") program)
                 (install-file "gripsox.ds" data)
                 ;; Keep the complete license, author notices, and upstream
                 ;; documentation with the installed game content.
