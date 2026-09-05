@@ -658,6 +658,22 @@
         },
         "successMarker": "gearhead2 guix smoke passed: ASCII gameplay, save/load, and isolated state"
       }
+    },
+    {
+      "issueNumber": 689,
+      "packageName": "grippy-socks",
+      "packageModulePath": "tay/packages/grippy-socks.scm",
+      "artifactPath": ".goocastle/evidence/issue-689.png",
+      "runtime": {
+        "executable": "grippy-socks",
+        "invocation": {
+          "file": "grippy-socks",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "GRIPPY_SOCKS_SMOKE_OK"
+      }
     }
   ]
 }
