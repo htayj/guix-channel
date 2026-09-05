@@ -4092,6 +4092,25 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
                 expectedPacingMs: phaseLiveness.expectedPacingMs,
                 stalledAfterMs: phaseLiveness.stalledAfterMs,
               };
+          const freshRuntimeEvidence = evidenceConfig?.capturePhase === phase.name && journal.runtimeEvidence !== undefined
+            ? (() => {
+                // This is a newly launched capture, not crash recovery of the
+                // prior host transaction.  A delivery repair may have advanced
+                // the branch after an earlier image was committed; retain the
+                // reviewed contract but discard that stale artifact anchor.
+                const {
+                  artifactStartSha: _artifactStartSha,
+                  artifactSha256: _artifactSha256,
+                  artifactBytes: _artifactBytes,
+                  artifactFormat: _artifactFormat,
+                  artifactCommitSha: _artifactCommitSha,
+                  artifactUrl: _artifactUrl,
+                  runtimeAssertion: _runtimeAssertion,
+                  ...contract
+                } = journal.runtimeEvidence;
+                return { ...contract, artifact: "started" as const, comment: "pending" as const };
+              })()
+            : undefined;
           journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
             status: "active",
             ...(evidenceConfig?.capturePhase === phase.name && journal.runtimeEvidence === undefined ? {} : {}),
@@ -4103,9 +4122,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
               liveness,
               ...(existingRecord?.failureHistory === undefined ? {} : { failureHistory: existingRecord.failureHistory }),
             }],
-            ...(evidenceConfig?.capturePhase === phase.name && journal.runtimeEvidence !== undefined ? {
-              runtimeEvidence: { ...journal.runtimeEvidence, artifact: "started" },
-            } : {}),
+            ...(freshRuntimeEvidence === undefined ? {} : { runtimeEvidence: freshRuntimeEvidence }),
           });
           console.log("\n--- " + phase.name + " ---\n");
         },
