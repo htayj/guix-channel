@@ -3135,7 +3135,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // terminal label must not consume a work slot. Resume mode may inspect a
     // blocked repair so a changed runner or Gooflow can reopen its bounded
     // window; an unchanged repair is still skipped below.
-    if (issue.state === "OPEN" && hasTerminalBlockedLabel(issue) && !RECOVER_BLOCKED && !RESUME_ONLY) {
+    if (issue.state === "OPEN" && hasTerminalBlockedLabel(issue) && !RECOVER_BLOCKED) {
       deferredJournalIssues.add(issue.number);
       terminallyBlockedJournalIssues.add(issue.number);
       attemptedIssues.add(issue.number);
