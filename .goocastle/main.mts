@@ -1818,8 +1818,16 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
         hostGit(["show", "-s", "--format=%s", artifactStartSha], { encoding: "utf8" }).trim() === artifactCommitSubject &&
         currentChanges.length === 2 && ["A", "M"].includes(currentChanges[0]!) &&
         currentChanges[1] === evidenceConfig.artifactPath;
-      if ((!priorStartIsAncestor && !rebasedArtifactCommit) ||
-          (!journaledLaterPhase && !recordedArtifactCommit && !rebasedArtifactCommit)) {
+      // Reconciliation may rewrite a previous artifact anchor.  When this
+      // invocation has already host-validated a new capture and the declared
+      // image is the only modification, its fresh receipt is sufficient to
+      // establish the new boundary without trusting the stale SHA.
+      const freshlyValidatedReplacement = journal.runtimeEvidence?.artifact === "started" &&
+        phaseRecord(journal, capturePhase)?.state === "complete" &&
+        phaseRecord(journal, capturePhase)?.commandReceipt !== undefined &&
+        entries.length === 1 && entries[0] === expectedModified;
+      if ((!priorStartIsAncestor && !rebasedArtifactCommit && !freshlyValidatedReplacement) ||
+          (!journaledLaterPhase && !recordedArtifactCommit && !rebasedArtifactCommit && !freshlyValidatedReplacement)) {
         throw new Error("Runtime screenshot artifact branch changed before its host commit; inspect the preserved branch before resuming");
       }
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
