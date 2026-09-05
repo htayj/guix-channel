@@ -4817,12 +4817,18 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       task -= 1;
       continue;
     }
+    // A proof that times out after making observable progress (for example a
+    // PTY smoke sequence that reached the program menu) needs the same
+    // bounded implementation/audit retry as an ordinary non-zero gate.  Keep
+    // cancellation and resource-limit outcomes terminal: retrying those can
+    // defeat an operator stop or host safety boundary.
+    const requiredCommandFailure = boundedFailureKind(error, false);
     const requiredCommandGate = failedGooflowPhase?.type === "command" &&
       materializedGooflow?.requiredPhases?.includes(failedGooflowPhase.name) === true &&
       (materializedGooflow?.phases.some((phase) => phase.type === "agent") === true ||
         materializedGooflow?.evidence?.proofPhase === failedGooflowPhase.name ||
         materializedGooflow?.evidence?.capturePhase === failedGooflowPhase.name) &&
-      boundedFailureKind(error, false) === "error";
+      (requiredCommandFailure === "error" || requiredCommandFailure === "timeout");
     if (requiredCommandGate) {
       const semanticFingerprint = repairSemanticFingerprintFor(materializedGooflow, failedGooflowPhase.name);
       const repairResult = await scheduleRequiredCommandRepair(journal, failedGooflowPhase.name, semanticFingerprint);
