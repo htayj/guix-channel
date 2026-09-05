@@ -24,8 +24,8 @@
              (url "https://github.com/CruiserOne/Daedalus")
              (commit %grippy-socks-commit)))
        (file-name (git-file-name name version))
-       ;; Guix recursive base32: lf4pteu5f2l67eysaq3yd277vmha3yfkpjfouu52umw7zp7ix44q.
-       ;; Guix package fields use the equivalent Nix base32 representation.
+       ;; Recursive/Nix base32 hash, as reported by `guix hash -rx` on the
+       ;; fixed Git checkout.
        (sha256
         (base32
          "0fdzx2zzqbd3p99yljksmbh0s3mbzzmq2dq42a9yz5rfkn9gjy2r"))))
