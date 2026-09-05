@@ -642,6 +642,22 @@
         },
         "successMarker": "gearhead guix smoke passed: ASCII gameplay and isolated state"
       }
+    },
+    {
+      "issueNumber": 688,
+      "packageName": "gearhead2",
+      "packageModulePath": "tay/packages/gearhead2.scm",
+      "artifactPath": ".goocastle/evidence/issue-688.png",
+      "runtime": {
+        "executable": "gearhead2",
+        "invocation": {
+          "file": "gearhead2",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "gearhead2 guix smoke passed: ASCII gameplay, save/load, and isolated state"
+      }
     }
   ]
 }
