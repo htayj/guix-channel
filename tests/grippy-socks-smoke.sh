@@ -117,7 +117,7 @@ proof=$(cd "$scratch/work" && \
 test "$proof" = 'GRIPPY_SOCKS_SMOKE_OK'
 test -s "$raw"
 "$grep_bin" -aF 'Grippy Socks: A mental health simulation' "$raw" >/dev/null
-"$grep_bin" -aF 'Energy:' "$raw" >/dev/null
+"$grep_bin" -aF 'Select OK for more help, or Cancel to start playing.' "$raw" >/dev/null
 "$grep_bin" -aF 'GRIPPY_SOCKS_SMOKE_OK' "$raw" >/dev/null
 
 # The smoke wrapper runs in the data directory but must not create state or
