@@ -77,7 +77,7 @@
                   "  while (pch > szLine && pch[-1] == ' ') *--pch = chNull;\n"
                   "  RunCommandLine(szLine, NULL);\n\n"
                   "  if (fSmoke) {\n"
-                  "    DoCommand(cmdMoveU);\n"
+                  "    DoCommand(cmdMoveForward);\n"
                   "    return 0;\n"
                   "  }\n\n")))))
           (add-after 'patch-unix-command-line 'patch-linux-allocator

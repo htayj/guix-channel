@@ -126,6 +126,7 @@ test -z "$($find_bin "$scratch/work" -mindepth 1 -print -quit)"
 test -z "$($find_bin "$scratch/home" "$scratch/config" "$scratch/data" \
     "$scratch/cache" "$scratch/state" "$scratch/runtime" "$scratch/tmp" \
     -mindepth 1 -print -quit)"
+test ! -e "$scratch/state/grippy-socks"
 
 after=$($guix_bin hash -S nar "$grippy_socks_out")
 test "$before" = "$after"
