@@ -2686,6 +2686,24 @@ const exceptionDiagnosticFor = (error, maximum = 1_000) => {
   const diagnostic = messages.join(" Caused by: ");
   return diagnostic.length <= maximum ? diagnostic : diagnostic.slice(0, Math.max(0, maximum - 1)) + "…";
 };
+// A command can succeed at the process boundary yet fail a later, host-owned
+// validation (for example a runtime recorder which omitted its required
+// assertion line).  Such errors have no command tail, but repairs still need
+// a bounded, secret-redacted receipt that identifies the failed command and
+// the validation boundary.  Do not use this for agents: provider exceptions
+// can contain credentials and are intentionally recorded only as their
+// classified recovery state.
+const exceptionFailureSummaryFor = (error, phase) => {
+  if (!phase || phase.type !== "command") return undefined;
+  const diagnostic = exceptionDiagnosticFor(error);
+  if (!diagnostic) return undefined;
+  return {
+    command: phase.command,
+    exitCode: 1,
+    lines: [{ stream: "stderr", text: diagnostic }],
+    truncated: false,
+  };
+};
 
 // A required command defect is different from an unavailable host
 // prerequisite: the task branch can be repaired by re-entering the agent and
@@ -2766,10 +2784,29 @@ const reconcileReopenedRequiredCommandRepair = async (journal, issueNumber) => {
     status: "active",
   });
 };
-const scheduleRequiredCommandRepair = async (journal, phaseName, semanticFingerprint) => {
+const scheduleRequiredCommandRepair = async (journal, phaseName, semanticFingerprint, hostValidationCapture = false) => {
   const phase = journal.phases.find((candidate) => candidate.name === phaseName);
-  const failureReceipt = phase?.failureReceipt;
+  let failureReceipt = phase?.failureReceipt;
   if (failureReceipt === undefined) return { journal, blocked: false };
+  // Host-owned validation can fail after a command returns successfully. In
+  // that path the phase has no command tail, but the outer task journal has
+  // already persisted a bounded, redacted diagnostic. Promote it here so the
+  // repair epoch and terminal GitHub receipt remain actionable rather than
+  // degrading to "no failure evidence retained".
+  if (hostValidationCapture && failureReceipt.failureSummary === undefined) {
+    const diagnostic = typeof journal.failure === "string" && journal.failure.trim()
+      ? journal.failure.slice(0, 1_000)
+      : "Required command gate failed after host validation without retained command output";
+    failureReceipt = {
+      ...failureReceipt,
+      failureSummary: {
+        command: { file: "goocastle-host-validation", args: [phaseName] },
+        exitCode: 1,
+        lines: [{ stream: "stderr", text: diagnostic }],
+        truncated: false,
+      },
+    };
+  }
   const previous = journal.repair?.epochs.at(-1);
   const semanticChanged = previous !== undefined && previous.semanticFingerprint !== semanticFingerprint;
   if (semanticChanged || (previous !== undefined && previous.semanticFingerprint === undefined)) {
@@ -4173,7 +4210,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           const kind = boundedFailureKind(failure.error, failure.phase.type === "agent");
           const recovery = "Inspect the preserved branch, correct the phase, then resume with: " + resumeRecoveryCommand();
           const authenticationExpiry = failure.phase.type === "agent" && providerAuthenticationExpiryFor(failure.error);
-          const failureSummary = authenticationExpiry ? undefined : failureSummaryFor(failure.error);
+          const failureSummary = authenticationExpiry
+            ? undefined
+            : failureSummaryFor(failure.error) ?? exceptionFailureSummaryFor(failure.error, failure.phase);
           const phaseBeforeFailure = phaseRecord(journal, failure.phase.name);
           journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
             phases: [...journal.phases.filter((item) => item.name !== failure.phase.name), {
@@ -4595,17 +4634,27 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // OAuth error payloads can include credential material. The classifier
     // consumes them transiently, but the durable receipt records only the
     // host-owned provider-auth-expired marker and recovery command.
-    const failureSummary = providerAuthenticationExpiry ? undefined : failureSummaryFor(error);
+    const daemonOperation = daemonOperationFor(error);
+    const freshRecoveryNames = failedPhase === undefined
+      ? new Set(journal.phases.filter((phase) => phase.state === "fresh" && freshAttemptPhaseNames.has(phase.name)).map((phase) => phase.name))
+      : new Set([failedPhase.name]);
+    // Host validation can throw after a command phase has completed its
+    // process invocation, in which case WorkflowPhaseError has no phase
+    // payload. The durable fresh phase is the authoritative identity for the
+    // just-attempted command and lets its bounded exception receipt survive
+    // repair scheduling.
+    const inferredFailedPhase = failedPhase ?? (freshRecoveryNames.size === 1
+      ? materializedGooflow?.phases.find((phase) => freshRecoveryNames.has(phase.name))
+      : undefined);
+    const failureSummary = providerAuthenticationExpiry
+      ? undefined
+      : failureSummaryFor(error) ?? exceptionFailureSummaryFor(error, inferredFailedPhase);
     // Setup failures (before an agent command exists) have no command
     // failure summary. Preserve one bounded diagnostic so recovery does not
     // collapse a concrete sandbox/worktree error into an opaque "error".
     const exceptionDiagnostic = !providerAuthenticationExpiry && failureSummary === undefined
       ? exceptionDiagnosticFor(error)
       : "";
-    const daemonOperation = daemonOperationFor(error);
-    const freshRecoveryNames = failedPhase === undefined
-      ? new Set(journal.phases.filter((phase) => phase.state === "fresh" && freshAttemptPhaseNames.has(phase.name)).map((phase) => phase.name))
-      : new Set([failedPhase.name]);
     const recoveryFailureNames = freshRecoveryNames.size === 0 ? undefined : freshRecoveryNames;
     const providerRecovery = journal.providerStateRecovery;
     const providerRecoveryEpoch = providerRecovery?.epochs.at(-1);
@@ -4831,7 +4880,12 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       (requiredCommandFailure === "error" || requiredCommandFailure === "timeout");
     if (requiredCommandGate) {
       const semanticFingerprint = repairSemanticFingerprintFor(materializedGooflow, failedGooflowPhase.name);
-      const repairResult = await scheduleRequiredCommandRepair(journal, failedGooflowPhase.name, semanticFingerprint);
+      const repairResult = await scheduleRequiredCommandRepair(
+        journal,
+        failedGooflowPhase.name,
+        semanticFingerprint,
+        materializedGooflow?.evidence?.capturePhase === failedGooflowPhase.name,
+      );
       journal = repairResult.journal;
       if (!repairResult.blocked) {
         const epoch = journal.repair?.epochs.at(-1)?.epoch;
