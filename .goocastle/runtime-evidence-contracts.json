@@ -674,6 +674,22 @@
         },
         "successMarker": "GRIPPY_SOCKS_SMOKE_OK"
       }
+    },
+    {
+      "issueNumber": 690,
+      "packageName": "gruesome",
+      "packageModulePath": "tay/packages/gruesome.scm",
+      "artifactPath": ".goocastle/evidence/issue-690.png",
+      "runtime": {
+        "executable": "gruesome",
+        "invocation": {
+          "file": "gruesome",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "GRUESOME-SMOKE: gameplay-turn-ok"
+      }
     }
   ]
 }
