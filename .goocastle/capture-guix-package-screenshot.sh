@@ -87,4 +87,22 @@ test "$assertion_count" = 1 || {
   tail -c 12000 "$runtime_transcript" >&2 || true
   exit 1
 }
-grep '^GOOCASTLE_RUNTIME_ASSERTION_V1 ' "$runtime_transcript"
+assertion=$(grep '^GOOCASTLE_RUNTIME_ASSERTION_V1 ' "$runtime_transcript")
+# Runtime evidence validation requires the packaged subject's standalone
+# marker as well as the final structured assertion. Derive the marker from
+# the adapter-produced assertion (which was emitted only after the adapter
+# observed that exact marker from the package) so this remains generic across
+# reviewed package contracts and the assertion stays the final stdout line.
+runtime_marker=$(printf '%s\n' "$assertion" | node -e '
+  const prefix = "GOOCASTLE_RUNTIME_ASSERTION_V1 ";
+  const line = require("node:fs").readFileSync(0, "utf8").trimEnd();
+  if (!line.startsWith(prefix)) process.exit(2);
+  const marker = JSON.parse(line.slice(prefix.length)).successMarker;
+  if (typeof marker !== "string" || !marker || /[\r\n\0]/.test(marker)) process.exit(2);
+  process.stdout.write(marker);
+') || {
+  echo "runtime-screenshot: assertion has no safe runtime marker" >&2
+  exit 1
+}
+printf '%s\n' "$runtime_marker"
+printf '%s\n' "$assertion"
