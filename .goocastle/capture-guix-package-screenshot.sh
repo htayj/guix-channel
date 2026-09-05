@@ -77,6 +77,14 @@ test -s "$artifact" || {
   echo "runtime-screenshot: missing native PNG or captured terminal UI for $artifact" >&2
   exit 1
 }
-# The host requires the last line to be a matching assertion.  Keep the
-# program's stdout and this assertion out of the screenshot-only proof log.
-cat "$runtime_transcript"
+# The bounded validator may add diagnostic lines around the runtime adapter
+# output.  The host requires the assertion itself to be the final capture
+# stdout line, so extract and validate the adapter's single reviewed receipt
+# rather than forwarding the mixed transcript after the screenshot is made.
+assertion_count=$(grep -c '^GOOCASTLE_RUNTIME_ASSERTION_V1 ' "$runtime_transcript" || true)
+test "$assertion_count" = 1 || {
+  echo "runtime-screenshot: expected exactly one runtime assertion receipt" >&2
+  tail -c 12000 "$runtime_transcript" >&2 || true
+  exit 1
+}
+grep '^GOOCASTLE_RUNTIME_ASSERTION_V1 ' "$runtime_transcript"
