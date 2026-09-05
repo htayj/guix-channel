@@ -4337,11 +4337,19 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         if (residualWork.length > 0) {
           const phaseIndex = phases.findIndex((candidate) => candidate.name === phase.name);
           const predecessor = phases.slice(0, phaseIndex).reverse().find((candidate) => candidate.type === "agent");
-          throw new Error(
+          const residualError = new Error(
             "Cannot start runtime evidence phase " + JSON.stringify(phase.name) +
             ": task worktree contains uncommitted changes after agent phase " + JSON.stringify(predecessor?.name ?? "unknown") +
-            "; commit or repair the preserved agent work before resuming",
+            "; scheduling bounded implementation/audit repair before retrying",
           );
+          // This is a host-side precondition failure, but it belongs to the
+          // required evidence command that it prevents.  Preserve that phase
+          // identity so the ordinary bounded required-command repair path can
+          // re-enter the implementation and audit agents instead of leaving a
+          // healthy, preserved task branch for an operator to babysit.
+          residualError.name = "WorkflowPhaseError";
+          Object.assign(residualError, { phase });
+          throw residualError;
         }
         if (evidenceConfig?.runtimeContract !== undefined) {
           const currentEvidence = await resolveGooflowEvidence(
