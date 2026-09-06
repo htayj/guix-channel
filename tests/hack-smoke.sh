@@ -25,7 +25,7 @@ test -x "$hack_out/libexec/hack"
 for asset in data help hh rumors; do
     test -s "$hack_out/share/hack/$asset"
 done
-test -s "$hack_out/share/man/man6/hack.6"
+test -s "$hack_out/share/man/man6/hack.6.zst"
 test -s "$hack_out/share/doc/hack/COPYRIGHT"
 test -s "$hack_out/share/doc/hack/COPYRIGHT-JF"
 test -s "$hack_out/share/doc/hack/READ_ME"
@@ -90,4 +90,16 @@ after=$($guix_bin hash -S nar "$hack_out")
 test "$before" = "$after"
 test -z "$(find "$hack_out" -xdev -type f -perm /222 -print -quit)"
 test ! -w "$hack_out"
+
+# The PTY stream can be turned into the reviewed runtime screenshot by the
+# evidence adapter.  Keep the artifact within this channel's evidence tree.
+if test -n "${GOOCASTLE_SCREENSHOT:-}"; then
+    case "$GOOCASTLE_SCREENSHOT" in
+        "$channel_dir"/.goocastle/evidence/*.png) ;;
+        *) echo 'hack smoke: screenshot must be a channel evidence PNG' >&2; exit 1 ;;
+    esac
+    mkdir -p "$(dirname -- "$GOOCASTLE_SCREENSHOT")"
+    cp "$raw" "$GOOCASTLE_SCREENSHOT"
+fi
+
 printf '%s\n' 'hack guix smoke passed'
