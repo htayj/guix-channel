@@ -1,0 +1,24 @@
+Script started on 2026-09-06 14:35:13+00:00 [COMMAND="/gnu/store/460ip7jqycn1arbr8shjwf19c5q4phi0-hack-1.0.3/libexec/hack -d "/tmp/goocastle-agent-hack-smoke-WoAwN3nA/tmp/hack-guix-smoke.r8SuITR2/data/hack" -n -u goocastle" <not executed on terminal>]
+[H[2J
+Are you an experienced player? [ny] n
+
+I'll choose a character for you.
+This game you will be a Fighter.
+
+Hit space to continue: 
+[H[2J[10;25H-------------[11;25H+...........|[12;25H|...........|[13;25H|.d@........|[14;25H|..........$+[15;25H-------------[24;1HLevel 1    Hp  14(14)   Ac 7    Str 17      Exp  1          [HHello goocastle, welcome to hack![K[13;27H.[14;26Hd[A[C[H[K[14;26H.d[A[H[2JBe seeing you ...
+
+Script done on 2026-09-06 14:35:17+00:00 [COMMAND_EXIT_CODE="0"]
+Script started on 2026-09-06 14:35:17+00:00 [COMMAND="/gnu/store/460ip7jqycn1arbr8shjwf19c5q4phi0-hack-1.0.3/libexec/hack -d "/tmp/goocastle-agent-hack-smoke-WoAwN3nA/tmp/hack-guix-smoke.r8SuITR2/data/hack" -n -u goocastle" <not executed on terminal>]
+[H[2J[HRestoring old save file...[K[H[2J[10;25H-------------[11;25H+...........|[12;25H|...........|[13;25H|..@........|[14;25H|.d........$+[15;25H-------------[24;1HLevel 1    Hp  14(14)   Ac 7    Str 17      Exp  1          [HHello goocastle, welcome to hack![K[13;28H[H[K[14;27H.d[A[HReally quit?[K[H[2JGoodbye Fighter goocastle...
+
+You quit on dungeon level 1 with 50 points,
+and 0 pieces of gold, after 4 moves.
+You were level 1 with a maximum of 14 hit points when you quit.
+
+You made the top ten list!
+
+Number Points  Name                                                    Hp [max]
+[7m  1     50 goocastl-F cravenly gave up on dungeon level 1.             14 [14][27m
+
+Script done on 2026-09-06 14:35:20+00:00 [COMMAND_EXIT_CODE="0"]

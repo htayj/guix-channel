@@ -261,13 +261,13 @@ case \"${1-}\" in~%
     # Game files are all relative to the private -d directory.  The only
     # files outside it would indicate a path escape; the empty isolation
     # directories themselves are expected.
-    escaped=$(\"$find\" \"$smoke\" -type f ! -path \"$state/*\"~%
+    escaped=$(\"$find\" \"$smoke\" -type f ! -path \"$state/*\" \\~%
       -print -quit) 2>/dev/null || true~%
     test -z \"$escaped\" || {~%
       echo \"hack smoke: path escaped state: $escaped\" >&2~%
       exit 1~%
     }~%
-    escaped=$(\"$find\" \"$smoke\" -type l ! -path \"$state/*\"~%
+    escaped=$(\"$find\" \"$smoke\" -type l ! -path \"$state/*\" \\~%
       -print -quit) 2>/dev/null || true~%
     test -z \"$escaped\" || {~%
       echo \"hack smoke: link escaped state: $escaped\" >&2~%
