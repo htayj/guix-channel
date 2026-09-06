@@ -36,9 +36,6 @@
           (delete 'configure)
           (delete 'check)
           (delete 'install-license-files)
-          (add-after 'unpack 'enter-source-directory
-            (lambda _
-              (chdir "Gruesome")))
           (replace 'build
             (lambda _
               (mkdir-p "build/units")
@@ -64,8 +61,7 @@
                 (for-each (lambda (file) (install-file file doc))
                           '("license.txt" "readme.txt" "history.txt"
                             "source.pas"))
-                (call-with-output-file launcher
-                  (lambda (port)
+                (let ((port (open-output-file launcher)))
                     (format port "#!~a/bin/bash~%set -eu~%"
                             #$(file-append bash-minimal))
                     (format port "real=~s~%expect=~s~%"
@@ -86,11 +82,11 @@
                       "    scratch=$(\"$mktemp\" -d "
                       "\"${TMPDIR:-/tmp}/gruesome-smoke.XXXXXXXX\")\n"
                       "    trap '\"$rm\" -rf \"$scratch\"' EXIT HUP INT TERM\n"
-                      "    \"$mkdir\" -p \"$scratch/home\" \"
-                      "$scratch/config\" \"$scratch/data\" \"
-                      "$scratch/cache\" \"$scratch/state\" \"
-                      "$scratch/runtime\" \"$scratch/tmp\" \"
-                      "$scratch/work\"\n"
+                      "    \"$mkdir\" -p \"$scratch/home\" "
+                      "\"$scratch/config\" \"$scratch/data\" "
+                      "\"$scratch/cache\" \"$scratch/state\" "
+                      "\"$scratch/runtime\" \"$scratch/tmp\" "
+                      "\"$scratch/work\"\n"
                       "    \"$chmod\" 700 \"$scratch/runtime\"\n"
                       "    export HOME=\"$scratch/home\"\n"
                       "    export XDG_CONFIG_HOME=\"$scratch/config\"\n"
@@ -161,8 +157,9 @@
                       "    exec \"$real\" \"$@\"\n"
                       "    ;;\n"
                       "esac\n")
-                     port))
-                (chmod launcher #o555))))))))
+                     port)
+                  (close-port port))
+                (chmod launcher #o555)))))))
     (native-inputs
      (list fpc unzip))
     ;; Expect is used by the installed --smoke launcher, not just by the
