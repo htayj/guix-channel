@@ -194,7 +194,7 @@ case \"${1-}\" in~%
     test -n \"$saved\" || { echo 'grunthack smoke: save missing' >&2; exit 1; }~%
     first_text=$(\"$cat\" \"$first_log\")~%
     case \"$first_text\" in *GruntHack*) ;; *) echo 'grunthack smoke: title missing' >&2; exit 1 ;; esac~%
-    if ! { printf ' '; \"$sleep\" 1; printf '.'; \"$sleep\" 1; printf 'Q'; \"$sleep\" 1; printf 'y'; } | run_game \"$second_log\" append; then~%
+    if ! { printf ' '; \"$sleep\" 1; printf '.'; \"$sleep\" 1; printf '\\033q'; \"$sleep\" 1; printf 'y'; } | run_game \"$second_log\" append; then~%
       echo 'grunthack smoke: restore game failed' >&2; exit 1~%
     fi~%
     second_text=$(\"$cat\" \"$second_log\")~%
