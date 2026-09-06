@@ -33,7 +33,7 @@
        (file-name (string-append name "-" version ".tar.gz"))
        ;; SHA-256: 00c8b0178f4fb2aefd08c51d08263b9f6c57340b601afb6d9f9528fdd9bd718
        (sha256
-        (base32 "1lv5yx83m94fvv6g30hy9x55zdm95a9x91q2i3gc361x78xyx071"))))
+        (base32 "11vippczsa4mkxnzn6k01cs5fv4z7ck0h7f513ysxcjgiwbv1j00"))))
     (build-system gnu-build-system)
     (arguments
      (list
