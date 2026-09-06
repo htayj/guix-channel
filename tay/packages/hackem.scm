@@ -77,7 +77,9 @@
               ;; The upstream installer deletes HACKDIR and creates mutable
               ;; files there.  Generate only the build makefiles and install
               ;; the resulting files explicitly in the install phase.
-              (invoke "sh" "sys/unix/setup.sh" "hints/linux")
+              ;; setup.sh is called from the repository root, so the hint
+              ;; path must include its sys/unix prefix.
+              (invoke "sh" "sys/unix/setup.sh" "sys/unix/hints/linux")
               ;; makedefs uses this value when REPRODUCIBLE_BUILD is enabled.
               (setenv "SOURCE_DATE_EPOCH" "1698401163")
               (setenv "TZ" "UTC0")))
