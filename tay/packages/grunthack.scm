@@ -228,7 +228,7 @@ case \"${1-}\" in~%
 esac~%"
                             shell data real mkdir mktemp rm sleep script cat cp
                             dirname find))
-                (chmod launcher #o555))))))
+                (chmod launcher #o555))))
           (add-after 'install 'verify-license-notices
             (lambda _
               (let ((data (string-append #$output "/share/grunthack/"))
@@ -248,7 +248,7 @@ esac~%"
                 (invoke "grep" "-F" "NETHACK GENERAL PUBLIC LICENSE"
                         (string-append data "license"))
                 (invoke "grep" "-F" "GruntHack is a derivative of NetHack"
-                        (string-append doc "README"))))
+                        (string-append doc "README")))))
           (add-after 'make-dynamic-linker-cache 'make-output-immutable
             (lambda _
               (for-each
@@ -257,7 +257,7 @@ esac~%"
                         (cond ((file-is-directory? file) #o555)
                               ((access? file X_OK) #o555)
                               (else #o444))))
-               (find-files #$output ".*" #:directories? #t)))))))
+               (find-files #$output ".*" #:directories? #t))))))))
     (native-inputs
      (list bison flex gcc-toolchain gnu-make groff-minimal))
     (inputs
