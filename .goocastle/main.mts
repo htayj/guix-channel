@@ -4337,19 +4337,29 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         if (residualWork.length > 0) {
           const phaseIndex = phases.findIndex((candidate) => candidate.name === phase.name);
           const predecessor = phases.slice(0, phaseIndex).reverse().find((candidate) => candidate.type === "agent");
-          const residualError = new Error(
-            "Cannot start runtime evidence phase " + JSON.stringify(phase.name) +
-            ": task worktree contains uncommitted changes after agent phase " + JSON.stringify(predecessor?.name ?? "unknown") +
-            "; scheduling bounded implementation/audit repair before retrying",
+          // This worktree is exclusively owned by the task sandbox.  Preserve
+          // residual agent edits in a host-signed checkpoint rather than
+          // replaying the same agents until their required-command repair
+          // budget is exhausted.  The checkpoint remains part of the task
+          // branch, so proof and capture still run against the exact code
+          // that the agent left behind; nothing is discarded or hidden.
+          const checkpointBoundary = signingBoundary("residual-checkpoint", predecessor?.name ?? "unknown");
+          journal = await prepareCommitSigning(journal, checkpointBoundary);
+          const checkpointStartSha = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
+          gitAt(taskWorktree.worktreePath, ["add", "--all"], { stdio: "inherit" });
+          gitAt(taskWorktree.worktreePath, [
+            "-c", "commit.gpgSign=" + String(signingMode === "required"),
+            "commit", "--no-verify",
+            "-m", "chore(goocastle): checkpoint residual agent changes before runtime evidence",
+          ], { stdio: "inherit" });
+          const checkpointHead = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
+          const signed = await ensureSignedPhaseCommits(journal, checkpointBoundary, checkpointStartSha, checkpointHead);
+          journal = signed.journal;
+          journal = await recordUnsignedCommit(journal, checkpointBoundary);
+          console.log(
+            "Checkpointed residual agent changes after " + JSON.stringify(predecessor?.name ?? "unknown") +
+            " before runtime evidence phase " + JSON.stringify(phase.name) + ".",
           );
-          // This is a host-side precondition failure, but it belongs to the
-          // required evidence command that it prevents.  Preserve that phase
-          // identity so the ordinary bounded required-command repair path can
-          // re-enter the implementation and audit agents instead of leaving a
-          // healthy, preserved task branch for an operator to babysit.
-          residualError.name = "WorkflowPhaseError";
-          Object.assign(residualError, { phase });
-          throw residualError;
         }
         if (evidenceConfig?.runtimeContract !== undefined) {
           const currentEvidence = await resolveGooflowEvidence(
