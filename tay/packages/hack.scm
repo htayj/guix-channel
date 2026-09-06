@@ -61,28 +61,28 @@
               ;; historical implementation and its internal linkage, but
               ;; declare the handful of local helpers before their callers.
               (substitute* "hack.apply.c"
-                (("extern struct monst \\*bchit\\(\\);\\n")
+                (("extern struct monst \\*bchit\\(\\);")
                  "static struct monst *bchit();\n")
-                (("extern char pl_character\\[\\];\\n")
+                (("extern char pl_character\\[\\];")
                  (string-append
                   "extern char pl_character[];\n\n"
                   "static use_camera(), in_ice_box(), ck_ice_box(),\n"
                   "       out_ice_box(), use_ice_box(), use_whistle(),\n"
                   "       use_magic_whistle(), dig(), use_pick_axe();\n")))
               (substitute* "hack.do.c"
-                (("extern char \\*nomovemsg;\\n")
+                (("extern char \\*nomovemsg;")
                  "extern char *nomovemsg;\n\nstatic drop();\n"))
               (substitute* "hack.invent.c"
-                (("char \\*xprname\\(\\);\\n")
+                (("char \\*xprname\\(\\);")
                  "static char *xprname();\n"))
               (substitute* "hack.shk.c"
-                (("extern struct obj \\*o_on\\(\\), \\*bp_to_obj\\(\\);\\n")
+                (("extern struct obj \\*o_on\\(\\), \\*bp_to_obj\\(\\);")
                  (string-append
                   "extern struct obj *o_on(), *bp_to_obj();\n\n"
                   "static setpaid(), addupbill(), findshk(), pay(),\n"
                   "       dopayobj(), getprice(), realhunger();\n")))
               (substitute* "hack.vault.c"
-                (("#define[[:space:]]+EGD.*\n")
+                (("#define[[:space:]]+EGD.*")
                  (string-append
                   "#define EGD\t((struct egd *)(&(guard->mextra[0])))\n\n"
                   "static restfakecorr(), goldincorridor();\n")))
