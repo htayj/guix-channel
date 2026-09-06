@@ -100,6 +100,10 @@
               (substitute* "hack.makemon.c"
                 (("\\{ extern boolean in_mklev;")
                  "extern boolean in_mklev;\n\t{"))
+              (substitute* "hack.mkshop.c"
+                (("#include \\\"hack.h\\\"\\n")
+                 "#include \"hack.h\"\nextern char *getenv();\n")
+                (("\\t\\textern char \\*getenv\\(\\);\\n") ""))
               ;; Compile and link through the target compiler.  The source's
               ;; final command assumes /lib/crt0.o and an old termlib, and
               ;; `all' needlessly invokes an unavailable lint implementation.
