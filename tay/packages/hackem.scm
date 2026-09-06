@@ -243,10 +243,9 @@ esac~%"
                         (string-append data "license"))
                 (invoke "grep" "-F" "Hack'EM"
                         (string-append doc "README.md")))))
-          ;; Guix makes completed store outputs immutable.  Keep this after
-          ;; the linker cache so the wrapper and every generated data file are
-          ;; read-only when handed to the user.
-          (add-after 'make-dynamic-linker-cache 'make-output-immutable
+          ;; Guix makes completed store outputs immutable.  Run this after
+          ;; documentation compression so generated manpages can be finalized.
+          (add-after 'compress-documentation 'make-output-immutable
             (lambda _
               (for-each
                (lambda (file)
