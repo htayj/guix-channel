@@ -99,6 +99,11 @@ boolean wr;
                  "&& strcmp(dir, HACKDIR) && !var_playground"))
               (substitute* "include/unixconf.h"
                 (("#define MAIL[[:space:]]+.*") "/* #define MAIL */"))
+              ;; The tty build calls this always-available no-op/check helper,
+              ;; but the shipped header declares only the old name.
+              (substitute* "include/extern.h"
+                (("E void NDECL\\(server_admin_msg\\);")
+                 "E void NDECL(server_admin_msg);\nE void NDECL(ck_server_admin_msg);"))
               (substitute* "include/config.h"
                 (("#define COMPRESS \"/bin/gzip\"")
                  "/* #define COMPRESS */")
