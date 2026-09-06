@@ -65,17 +65,19 @@
                 (("all:[[:space:]]+\\$\\(GAME\\)[[:space:]]+lint")
                  "all: $(GAME)")
                 (("cc -o makedefs makedefs\\.c")
-                 "$(CC) $(CFLAGS) -o makedefs makedefs.c"))
+                 "$(CC) $(CFLAGS) -o makedefs makedefs.c")
+                (("makedefs > hack\\.onames\\.h")
+                 "./makedefs > hack.onames.h"))
               ;; Force this generated header through the pinned makedefs
               ;; source instead of trusting the copy in the distribution.
               (when (file-exists? "hack.onames.h")
                 (delete-file "hack.onames.h"))))
           (replace 'build
-            (lambda _
+            (lambda* (#:key make-flags #:allow-other-keys)
               ;; Building the executable pulls in makedefs and therefore
               ;; deterministically regenerates hack.onames.h.  Do not invoke
               ;; the upstream `all' target because it includes lint.
-              (invoke "make" "hack")))
+              (apply invoke "make" (append make-flags '("hack")))))
           (delete 'install-license-files)
           (replace 'install
             (lambda _
