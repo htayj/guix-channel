@@ -37,6 +37,7 @@ contract=$channel_dir/.goocastle/runtime-evidence-contracts.json
 test -s "$contract"
 grep -F '"issueNumber": 692' "$contract" >/dev/null
 grep -F '"packageName": "hack"' "$contract" >/dev/null
+grep -F '"packageModulePath": "tay/packages/hack.scm"' "$contract" >/dev/null
 grep -F '"artifactPath": ".goocastle/evidence/issue-692.png"' "$contract" >/dev/null
 grep -F '"executable": "hack"' "$contract" >/dev/null
 grep -F '"--guix-smoke"' "$contract" >/dev/null
