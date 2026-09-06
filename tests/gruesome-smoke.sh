@@ -95,9 +95,14 @@ export NO_PROXY='*'
 # The package's --smoke path opens and controls a PTY via expect.  The
 # immutable host validator supervises the complete process group, and the
 # network namespace contains no host interfaces or routes.
-util_linux_out=$($guix_bin build --no-grafts --no-substitutes util-linux)
-unshare_bin="$util_linux_out/bin/unshare"
-test -x "$unshare_bin"
+unshare_bin=
+for output in $($guix_bin build --no-grafts --no-substitutes util-linux); do
+    if test -x "$output/bin/unshare"; then
+        unshare_bin="$output/bin/unshare"
+        break
+    fi
+done
+test -n "$unshare_bin"
 true_bin=/usr/bin/true
 test -x "$true_bin"
 if ! "$node_bin" "$bounded_validation" --timeout-ms 5000 -- \
