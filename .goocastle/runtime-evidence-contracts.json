@@ -690,6 +690,22 @@
         },
         "successMarker": "GRUESOME-SMOKE: gameplay-turn-ok"
       }
+    },
+    {
+      "issueNumber": 691,
+      "packageName": "grunthack",
+      "packageModulePath": "tay/packages/grunthack.scm",
+      "artifactPath": ".goocastle/evidence/issue-691.png",
+      "runtime": {
+        "executable": "grunthack",
+        "invocation": {
+          "file": "grunthack",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "grunthack guix smoke passed"
+      }
     }
   ]
 }
