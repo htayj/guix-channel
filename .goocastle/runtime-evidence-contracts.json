@@ -738,6 +738,22 @@
         },
         "successMarker": "hackem guix smoke passed"
       }
+    },
+    {
+      "issueNumber": 694,
+      "packageName": "hellcrawl",
+      "packageModulePath": "tay/packages/hellcrawl.scm",
+      "artifactPath": ".goocastle/evidence/issue-694.png",
+      "runtime": {
+        "executable": "hellcrawl",
+        "invocation": {
+          "file": "hellcrawl",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "hellcrawl smoke: terminal UI OK; no store writes"
+      }
     }
   ]
 }
