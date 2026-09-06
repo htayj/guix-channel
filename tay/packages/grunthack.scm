@@ -79,8 +79,8 @@
                 "/* #define COMPRESS */")
                (("#define COMPRESS_EXTENSION \"\\.gz\"")
                 "/* #define COMPRESS_EXTENSION */")
-               (("#define DUMP_LOG")
-                "/* #define DUMP_LOG */")
+                (("#define DUMP_FN[ \t]+.*")
+                 "#define DUMP_FN \"\"")
                (("#define SERVER_ADMIN_MSG[ \t]+.*")
                 "/* #define SERVER_ADMIN_MSG */"))
               ;; The upstream path setup otherwise treats an explicit HACKDIR
