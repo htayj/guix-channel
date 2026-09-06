@@ -86,6 +86,20 @@
                  (string-append
                   "#define EGD\t((struct egd *)(&(guard->mextra[0])))\n\n"
                   "static restfakecorr(), goldincorridor();\n")))
+              ;; The historical declaration disagrees with the POSIX libc
+              ;; prototype now exposed by stdio.h, which GCC diagnoses as an
+              ;; error when hack.c includes both headers.
+              (substitute* "hack.h"
+                (("extern char \\*sprintf\\(\\);" )
+                 "extern int sprintf(char *, const char *, ...);"))
+              (substitute* "hack.main.c"
+                (("register char \\*sfoo;")
+                 "register char *sfoo;\n\t\textern char genocided[], fut_geno[];\n")
+                (("int hangup\\(\\);")
+                 "int hangup();\n#ifdef CHDIR\nstatic chdirx();\n#endif CHDIR"))
+              (substitute* "hack.makemon.c"
+                (("\\{ extern boolean in_mklev;")
+                 "extern boolean in_mklev;\n\t{"))
               ;; Compile and link through the target compiler.  The source's
               ;; final command assumes /lib/crt0.o and an old termlib, and
               ;; `all' needlessly invokes an unavailable lint implementation.
