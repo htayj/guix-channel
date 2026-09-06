@@ -232,8 +232,8 @@ case \"${1-}\" in~%
     prepare_state~%
     first_log=\"$state/smoke-first.log\"~%
     second_log=\"$state/smoke-second.log\"~%
-    if ! { \"$sleep\" 1; printf 'n'; \"$sleep\" 1; printf '.';~%
-      \"$sleep\" 1; printf 'S'; } |~%
+    if ! { \"$sleep\" 1; printf 'n'; \"$sleep\" 1; printf ' ';~%
+      \"$sleep\" 1; printf '.'; \"$sleep\" 1; printf 'S'; } |~%
       run_game \"$first_log\"; then~%
       echo 'hack smoke: first game failed' >&2~%
       exit 1~%
