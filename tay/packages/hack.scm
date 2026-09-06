@@ -64,7 +64,7 @@
                  "\t@$(CC) $(LDFLAGS) -o $(GAME) $(HOBJ) $(TERMLIB) $(LDLIBS)")
                 (("^all: .* lint$") "all: $(GAME)")
                 (("^cc -o makedefs makedefs\\.c$")
-                 "$(CC) $(CFLAGS) -o makedefs makedefs.c"))
+                 "$(CC) $(CFLAGS) -o makedefs makedefs.c")
                 (("^[[:space:]]*cc -o makedefs makedefs.c$")
                  "\t$(CC) $(CFLAGS) -o makedefs makedefs.c"))
               ;; Force this generated header through the pinned makedefs
