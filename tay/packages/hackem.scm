@@ -74,6 +74,12 @@
                  "/* #define SERVER_ADMIN_MSG */")
                 (("^/[*/][[:space:]]+#define VAR_PLAYGROUND.*$")
                  "#define VAR_PLAYGROUND nh_getenv(\"HACKEM_VAR_PLAYGROUND\")"))
+              ;; append_slash is defined by the Unix tty port, but the
+              ;; upstream declaration is incorrectly limited to PC ports;
+              ;; C99 rejects its use from files.c without a prototype.
+              (substitute* "include/extern.h"
+                (("/\\* ### files\\.c ### \\*/")
+                 "E void FDECL(append_slash, (char *));\n\n/* ### files.c ### */"))
               ;; The upstream installer deletes HACKDIR and creates mutable
               ;; files there.  Generate only the build makefiles and install
               ;; the resulting files explicitly in the install phase.
