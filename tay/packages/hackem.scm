@@ -77,6 +77,8 @@
               ;; The upstream installer deletes HACKDIR and creates mutable
               ;; files there.  Generate only the build makefiles and install
               ;; the resulting files explicitly in the install phase.
+              (substitute* "sys/unix/setup.sh"
+                (("/bin/sh") #$(file-append bash-minimal "/bin/sh")))
               ;; setup.sh is called from the repository root, so the hint
               ;; path must include its sys/unix prefix.
               (invoke "sh" "sys/unix/setup.sh" "sys/unix/hints/linux")
