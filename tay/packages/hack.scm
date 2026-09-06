@@ -237,6 +237,10 @@ case \"${1-}\" in~%
       echo 'hack smoke: first game failed' >&2~%
       exit 1~%
     fi~%
+    if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"; then~%
+      \"$mkdir\" -p \"$(\"$dirname\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"~%
+      \"$cp\" \"$first_log\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"~%
+    fi~%
     saved=~%
     for file in \"$state/save\"/*; do~%
       test -f \"$file\" || continue~%
