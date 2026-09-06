@@ -189,7 +189,20 @@ terminfo=~s~%~%
 prepare_state() {~%
   state=\"${XDG_DATA_HOME:-${HOME:?}/.local/share}/hack\"~%
   test ! -L \"$state\" || { echo 'hack: state directory is a symlink' >&2; exit 1; }~%
-  \"$mkdir\" -p \"$state/save\"~%
+  \"$mkdir\" -p \"$state\"~%
+  save_dir=\"$state/save\"~%
+  test ! -L \"$save_dir\" || {~%
+    echo \"hack: save directory is a symlink\" >&2~%
+    exit 1~%
+  }~%
+  if test -e \"$save_dir\"; then~%
+    test -d \"$save_dir\" || {~%
+      echo \"hack: save path is not a directory\" >&2~%
+      exit 1~%
+    }~%
+  else~%
+    \"$mkdir\" \"$save_dir\"~%
+  fi~%
   for file in data help hh rumors; do~%
     path=\"$state/$file\"~%
     target=\"$data/$file\"~%
@@ -261,12 +274,16 @@ case \"${1-}\" in~%
     # Game files are all relative to the private -d directory.  The only
     # files outside it would indicate a path escape; the empty isolation
     # directories themselves are expected.
-    escaped=$(\"$find\" \"$smoke\" -type f ! -path \"$state/*\" -print -quit) 2>/dev/null || true~%
+    escaped=$(~%
+      \"$find\" \"$smoke\" -type f ! -path \"$state/*\" -print -quit~%
+    ) 2>/dev/null || true~%
     test -z \"$escaped\" || {~%
       echo \"hack smoke: path escaped state: $escaped\" >&2~%
       exit 1~%
     }~%
-    escaped=$(\"$find\" \"$smoke\" -type l ! -path \"$state/*\" -print -quit) 2>/dev/null || true~%
+    escaped=$(~%
+      \"$find\" \"$smoke\" -type l ! -path \"$state/*\" -print -quit~%
+    ) 2>/dev/null || true~%
     test -z \"$escaped\" || {~%
       echo \"hack smoke: link escaped state: $escaped\" >&2~%
       exit 1~%
