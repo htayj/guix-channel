@@ -56,6 +56,36 @@
                 (("^#define[[:space:]]+SHELL.*$") "/* #define SHELL */")
                 (("^#define[[:space:]]+HACKDIR.*$")
                  "/* #define HACKDIR */"))
+              ;; GCC no longer permits an implicit external declaration to
+              ;; be followed by a file-local K&R definition.  Keep the
+              ;; historical implementation and its internal linkage, but
+              ;; declare the handful of local helpers before their callers.
+              (substitute* "hack.apply.c"
+                (("extern struct monst \\*bchit\\(\\);\\n")
+                 "static struct monst *bchit();\n")
+                (("extern char pl_character\\[\\];\\n")
+                 (string-append
+                  "extern char pl_character[];\n\n"
+                  "static use_camera(), in_ice_box(), ck_ice_box(),\n"
+                  "       out_ice_box(), use_ice_box(), use_whistle(),\n"
+                  "       use_magic_whistle(), dig(), use_pick_axe();\n")))
+              (substitute* "hack.do.c"
+                (("extern char \\*nomovemsg;\\n")
+                 "extern char *nomovemsg;\n\nstatic drop();\n"))
+              (substitute* "hack.invent.c"
+                (("char \\*xprname\\(\\);\\n")
+                 "static char *xprname();\n"))
+              (substitute* "hack.shk.c"
+                (("extern struct obj \\*o_on\\(\\), \\*bp_to_obj\\(\\);\\n")
+                 (string-append
+                  "extern struct obj *o_on(), *bp_to_obj();\n\n"
+                  "static setpaid(), addupbill(), findshk(), pay(),\n"
+                  "       dopayobj(), getprice(), realhunger();\n")))
+              (substitute* "hack.vault.c"
+                (("#define[[:space:]]+EGD.*\n")
+                 (string-append
+                  "#define EGD\t((struct egd *)(&(guard->mextra[0])))\n\n"
+                  "static restfakecorr(), goldincorridor();\n")))
               ;; Compile and link through the target compiler.  The source's
               ;; final command assumes /lib/crt0.o and an old termlib, and
               ;; `all' needlessly invokes an unavailable lint implementation.
