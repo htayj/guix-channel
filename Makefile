@@ -43,7 +43,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	azurra-gtk-theme pdp10-xpl-pdp-10 faugus-launcher react-blessed wanderers \
 	clojure-roguelike astx acehack bell-labs-rogue7 aquarium-arena atlas-warriors \
 	bcrawl avanor bootrogue brogue brogue-lite chessrogue corerl cryptrover \
-	cutlassrl dhack diabaig dnethack dragonslayer grippy-socks gruesome
+	cutlassrl dhack diabaig dnethack dragonslayer grippy-socks gruesome hack
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -80,6 +80,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-dragonslayer \
 	check-grippy-socks \
 	check-gruesome \
+	check-hack \
 	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs build build-sources
 
 check-source-count:
@@ -288,6 +289,9 @@ check-grippy-socks:
 check-gruesome:
 	GUIX="$(GUIX)" tests/gruesome-smoke.sh
 
+check-hack:
+	GUIX="$(GUIX)" tests/hack-smoke.sh
+
 check-trebuchet:
 	GUIX="$(GUIX)" tests/trebuchet-smoke.sh
 
@@ -305,7 +309,7 @@ check: check-source-count check-sentinelone check-datamosh-security \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
-	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-bell-labs-rogue7 check-astx check-acehack check-avanor check-bootrogue check-wanderers check-emacs-org-popup-posframe \
+	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-bell-labs-rogue7 check-astx check-acehack check-avanor check-bootrogue check-wanderers check-hack check-emacs-org-popup-posframe \
 	check-emacs-forth-mode check-emacs-aidermacs check-aquarium-arena check-atlas-warriors check-bcrawl check-chessrogue check-corerl check-cutlassrl check-dhack check-cryptrover check-dnethack check-dragonslayer check-grippy-socks check-gruesome
 	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \
