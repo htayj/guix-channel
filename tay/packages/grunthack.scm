@@ -80,6 +80,14 @@
                  "/* #define COMPRESS_EXTENSION */")
                 (("#define SERVER_ADMIN_MSG[ \t]+.*")
                  "/* #define SERVER_ADMIN_MSG */"))
+              ;; The upstream path setup otherwise treats an explicit HACKDIR
+              ;; as a custom installation and leaves score/save prefixes in
+              ;; the data directory.  The launcher intentionally supplies
+              ;; HACKDIR/NETHACKDIR for store data, so honor VAR_PLAYGROUND in
+              ;; that case as well.
+              (substitute* "sys/unix/unixmain.c"
+                (("if \\(dir[[:space:]]*/\\* User specified directory")
+                 "if (dir && !VAR_PLAYGROUND /* User specified directory"))
               (setenv "TZ" "UTC0")
               ;; makedefs embeds the build clock in generated headers and
               ;; data.  The pinned revision was committed on 2018-09-17.
@@ -123,9 +131,8 @@
                    "doc/changes01.0" "doc/changes01.1" "doc/changes02.0"
                    "doc/changes02.1" "sys/unix/README.linux"))
                 (install-file "dat/license" doc)
-                (call-with-output-file launcher
-                  (lambda (port)
-                    (format port "#!~a~%set -eu~%~%
+                (let ((port (open-file launcher "w")))
+                  (format port "#!~a~%set -eu~%~%
 data=~s~%
 real=~s~%
 mkdir=~s~%
@@ -209,10 +216,11 @@ case \"${1-}\" in~%
     ;;~%
 esac~%"
                             shell data real mkdir mktemp rm sleep script cat cp
-                            dirname find))
+                            dirname find)
+                  (close-port port))
                 (unless (file-exists? launcher)
                   (error "GruntHack launcher was not created" launcher))
-                (chmod launcher #o555)))))
+                (chmod launcher #o555))))
           (add-after 'install 'verify-license-notices
             (lambda _
               (let ((data (string-append #$output "/share/grunthack/"))
