@@ -13,7 +13,7 @@
   #:use-module (gnu packages base)
   #:use-module (gnu packages bison)
   #:use-module (gnu packages commencement)
-  #:use-module (gnu packages flex)
+  #:use-module (gnu packages compiler-tools)
   #:use-module (gnu packages linux)
   #:use-module (gnu packages ncurses))
 
@@ -241,11 +241,10 @@ esac~%"
                 (invoke "grep" "-F" "NETHACK GENERAL PUBLIC LICENSE"
                         (string-append data "license"))
                 (invoke "grep" "-F" "GruntHack is a derivative of NetHack"
-                        (string-append doc "README")))))
+                        (string-append doc "README"))))))))
           ;; Guix makes completed store outputs immutable.  Do not chmod the
           ;; output while it is still being assembled: the recursive walk can
           ;; encounter generated paths that the upstream makefiles remove.
-          )))
     (native-inputs
      (list bison flex gcc-toolchain gnu-make))
     (inputs

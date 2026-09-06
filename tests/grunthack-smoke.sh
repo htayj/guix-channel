@@ -41,6 +41,8 @@ contract=$channel_dir/.goocastle/runtime-evidence-contracts.json
 test -s "$contract"
 grep -F '"issueNumber": 691' "$contract" >/dev/null
 grep -F '"packageName": "grunthack"' "$contract" >/dev/null
+grep -F '"packageModulePath": "tay/packages/grunthack.scm"' \
+    "$contract" >/dev/null
 grep -F '"artifactPath": ".goocastle/evidence/issue-691.png"' \
     "$contract" >/dev/null
 grep -F '"executable": "grunthack"' "$contract" >/dev/null
