@@ -75,6 +75,11 @@
               (substitute* "hack.invent.c"
                 (("char \\*xprname\\(\\);")
                  "static char *xprname();\n"))
+              (substitute* "hack.read.c"
+                (("#include \"hack.h\"")
+                 "#include \"hack.h\"\n\nextern struct obj *some_armor();"))
+              (substitute* "hack.tty.c"
+                (("inline") "input_line"))
               (substitute* "hack.shk.c"
                 (("extern struct obj \\*o_on\\(\\), \\*bp_to_obj\\(\\);")
                  (string-append
@@ -304,7 +309,7 @@ esac~%"
                         (string-append doc "COPYRIGHT-JF")))))
           ;; Leave the completed store output immutable; game state is created
           ;; only in the wrapper's XDG data directory.
-          (add-after 'make-dynamic-linker-cache 'make-output-immutable
+          (add-after 'compress-documentation 'make-output-immutable
             (lambda _
               (for-each
                (lambda (file)
