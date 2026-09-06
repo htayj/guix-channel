@@ -245,10 +245,19 @@ esac~%"
                 (invoke "grep" "-F" "NETHACK GENERAL PUBLIC LICENSE"
                         (string-append data "license"))
                 (invoke "grep" "-F" "GruntHack is a derivative of NetHack"
-                        (string-append doc "README"))))))))
+                        (string-append doc "README"))))))
           ;; Guix makes completed store outputs immutable.  Do not chmod the
           ;; output while it is still being assembled: the recursive walk can
           ;; encounter generated paths that the upstream makefiles remove.
+          (add-after 'make-dynamic-linker-cache 'make-output-immutable
+            (lambda _
+              (for-each
+               (lambda (file)
+                 (chmod file
+                        (cond ((file-is-directory? file) #o555)
+                              ((access? file X_OK) #o555)
+                              (else #o444))))
+               (find-files #$output ".*" #:directories? #t))))))
     (native-inputs
      (list bison flex gcc-toolchain gnu-make))
     (inputs
