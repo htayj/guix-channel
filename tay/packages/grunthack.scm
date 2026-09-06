@@ -7,6 +7,7 @@
   #:use-module (guix download)
   #:use-module (guix gexp)
   #:use-module (guix packages)
+  #:use-module (guix utils)
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (gnu packages bash)
   #:use-module (gnu packages base)
@@ -41,7 +42,7 @@
       ;; is exercised by tests/grunthack-smoke.sh.
       #:tests? #f
       #:make-flags
-      #~(list "CC=gcc"
+      #~(list (string-append "CC=" #$(cc-for-target))
               ;; This historical source uses K&R definitions and declarations
               ;; that GCC's default gnu17 mode rejects as errors.
               "CFLAGS=-O2 -g0 -std=gnu89 -fcommon -I../include -D_DEFAULT_SOURCE -DTEXTCOLOR"
