@@ -92,6 +92,12 @@ boolean wr;
             fqn_prefix[TROUBLEPREFIX] = fqn_prefix[SCOREPREFIX];
         }
 # endif"))
+              ;; The launcher deliberately passes the store data directory as
+              ;; NETHACKDIR.  Honor its writable prefix even when that is not
+              ;; the compiled-in default HACKDIR.
+              (substitute* "sys/unix/unixmain.c"
+                (("&&[[:space:]]+strcmp\\(dir, HACKDIR\\)")
+                 "&& strcmp(dir, HACKDIR) && !var_playground"))
               (substitute* "include/unixconf.h"
                 (("#define MAIL[[:space:]]+.*") "/* #define MAIL */"))
               (substitute* "include/config.h"
