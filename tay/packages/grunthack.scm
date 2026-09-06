@@ -114,8 +114,9 @@
                      (cat #$(file-append coreutils-minimal "/bin/cat"))
                      (cp #$(file-append coreutils-minimal "/bin/cp"))
                      (dirname #$(file-append coreutils-minimal "/bin/dirname"))
-                     (find #$(file-append coreutils-minimal "/bin/find"))
                      (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
+                     (chmod-bin #$(file-append coreutils-minimal "/bin/chmod"))
+                     (find #$(file-append findutils "/bin/find"))
                      (mktemp #$(file-append coreutils-minimal "/bin/mktemp"))
                      (rm #$(file-append coreutils-minimal "/bin/rm"))
                      (sleep #$(file-append coreutils-minimal "/bin/sleep"))
@@ -147,6 +148,7 @@ cat=~s~%
 cp=~s~%
 dirname=~s~%
 find=~s~%~%
+chmod=~s~%~%
 prepare_state() {~%
   state=\"${XDG_DATA_HOME:-${HOME:?}/.local/share}/grunthack\"~%
   \"$mkdir\" -p \"$state/save\" \"$state/whereis\"~%
@@ -177,7 +179,7 @@ case \"${1-}\" in~%
     cleanup() { \"$rm\" -rf \"$smoke\"; }~%
     trap cleanup EXIT HUP INT TERM~%
     \"$mkdir\" \"$smoke/home\" \"$smoke/config\" \"$smoke/data\" \"$smoke/cache\" \"$smoke/state\" \"$smoke/runtime\" \"$smoke/tmp\"~%
-    chmod 700 \"$smoke/runtime\"~%
+    \"$chmod\" 700 \"$smoke/runtime\"~%
     export HOME=\"$smoke/home\" XDG_CONFIG_HOME=\"$smoke/config\"~%
     export XDG_DATA_HOME=\"$smoke/data\" XDG_CACHE_HOME=\"$smoke/cache\"~%
     export XDG_STATE_HOME=\"$smoke/state\" XDG_RUNTIME_DIR=\"$smoke/runtime\"~%
@@ -219,7 +221,7 @@ case \"${1-}\" in~%
     ;;~%
 esac~%"
                             shell data real mkdir mktemp rm sleep script cat cp
-                            dirname find)
+                            dirname find chmod-bin)
                   (close-port port))
                 (unless (file-exists? launcher)
                   (error "GruntHack launcher was not created" launcher))
@@ -250,7 +252,7 @@ esac~%"
     (native-inputs
      (list bison flex gcc-toolchain gnu-make))
     (inputs
-     (list bash-minimal coreutils-minimal ncurses/tinfo util-linux))
+     (list bash-minimal coreutils-minimal findutils ncurses/tinfo util-linux))
     (home-page "https://github.com/NHTangles/GruntHack")
     (synopsis "Historical terminal dungeon exploration game")
     (description
