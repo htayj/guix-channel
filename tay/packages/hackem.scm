@@ -47,7 +47,7 @@
               (string-append "LINK=" #$(cc-for-target))
               ;; This historical source uses K&R definitions and common
               ;; tentative globals, while its current code also needs C99.
-              "CFLAGS=-O2 -g0 -std=gnu99 -fcommon -D_DEFAULT_SOURCE -I../include -DNOTPARMDECL -DNOCWD_ASSUMPTIONS -DCURSES_GRAPHICS -DDLB -DREPRODUCIBLE_BUILD -DNOMAIL -DNOSHELL -DNOUSER_SOUNDS -DFCMASK=0644"
+              "CFLAGS=-O2 -g0 -std=gnu99 -fcommon -D_DEFAULT_SOURCE -I../include -DNOTPARMDECL -DNOCWD_ASSUMPTIONS -DCURSES_GRAPHICS -DDLB -DREPRODUCIBLE_BUILD -DDUMPLOG -DNOMAIL -DNOSHELL -DNOUSER_SOUNDS -DFCMASK=0644"
               "WINLIB=-lncurses -ltinfo"
               "LEX=flex"
               "YACC=bison -y"
