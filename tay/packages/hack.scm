@@ -60,13 +60,12 @@
               ;; final command assumes /lib/crt0.o and an old termlib, and
               ;; `all' needlessly invokes an unavailable lint implementation.
               (substitute* "Makefile"
-                (("^\t@ld -X -o .* /lib/crt0\\.o .* -lc$")
+                (("@ld -X -o .* /lib/crt0\\.o .* -lc")
                  "\t@$(CC) $(LDFLAGS) -o $(GAME) $(HOBJ) $(TERMLIB) $(LDLIBS)")
-                (("^all: .* lint$") "all: $(GAME)")
-                (("^cc -o makedefs makedefs\\.c$")
-                 "$(CC) $(CFLAGS) -o makedefs makedefs.c")
-                (("^[[:space:]]*cc -o makedefs makedefs.c$")
-                 "\t$(CC) $(CFLAGS) -o makedefs makedefs.c"))
+                (("all:[[:space:]]+\\$\\(GAME\\)[[:space:]]+lint")
+                 "all: $(GAME)")
+                (("cc -o makedefs makedefs\\.c")
+                 "$(CC) $(CFLAGS) -o makedefs makedefs.c"))
               ;; Force this generated header through the pinned makedefs
               ;; source instead of trusting the copy in the distribution.
               (when (file-exists? "hack.onames.h")
