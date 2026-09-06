@@ -74,13 +74,15 @@
               (substitute* "include/extern.h"
                 (("E void NDECL\\(server_admin_msg\\);")
                  "E void NDECL(server_admin_msg);\nE void NDECL(ck_server_admin_msg);"))
-              (substitute* "include/config.h"
-                (("#define COMPRESS \"/bin/gzip\"")
-                 "/* #define COMPRESS */")
-                (("#define COMPRESS_EXTENSION \"\\.gz\"")
-                 "/* #define COMPRESS_EXTENSION */")
-                (("#define SERVER_ADMIN_MSG[ \t]+.*")
-                 "/* #define SERVER_ADMIN_MSG */"))
+             (substitute* "include/config.h"
+               (("#define COMPRESS \"/bin/gzip\"")
+                "/* #define COMPRESS */")
+               (("#define COMPRESS_EXTENSION \"\\.gz\"")
+                "/* #define COMPRESS_EXTENSION */")
+               (("#define DUMP_LOG")
+                "/* #define DUMP_LOG */")
+               (("#define SERVER_ADMIN_MSG[ \t]+.*")
+                "/* #define SERVER_ADMIN_MSG */"))
               ;; The upstream path setup otherwise treats an explicit HACKDIR
               ;; as a custom installation and leaves score/save prefixes in
               ;; the data directory.  The launcher intentionally supplies
