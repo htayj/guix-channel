@@ -42,11 +42,16 @@
       #:tests? #f
       #:make-flags
       #~(list "CC=gcc"
-              "CFLAGS=-O2 -g0 -I../include -D_DEFAULT_SOURCE -DTEXTCOLOR"
+              ;; This historical source uses K&R definitions and declarations
+              ;; that GCC's default gnu17 mode rejects as errors.
+              "CFLAGS=-O2 -g0 -std=gnu89 -fcommon -I../include -D_DEFAULT_SOURCE -DTEXTCOLOR"
               "LEX=flex"
               "YACC=bison -y"
               "WINTTYLIB=-lncurses"
-              "WINCURSESLIB="
+              ;; Guix's ncurses splits the terminfo entry points into a
+              ;; separate library, while the old Makefile assumes they are
+              ;; pulled in transitively.
+              "WINCURSESLIB=-ltinfo"
               "VCS_DESCRIPTION=git 51d75ee")
       #:phases
       #~(modify-phases %standard-phases
@@ -59,46 +64,10 @@
               (invoke "sh" "sys/unix/setup.sh")
               ;; Keep VAR_PLAYGROUND's code path but obtain its value from the
               ;; launcher, rather than embedding a writable system directory.
-              (substitute* "sys/unix/unixmain.c"
-                (("#ifdef VAR_PLAYGROUND\n[[:space:]]+int len = strlen\\(VAR_PLAYGROUND\\);\n\n[[:space:]]+fqn_prefix\\[SCOREPREFIX\\] = \\(char \\*\\)alloc\\(len\\+2\\);\n[[:space:]]+Strcpy\\(fqn_prefix\\[SCOREPREFIX\\], VAR_PLAYGROUND\\);\n[[:space:]]+if \\(fqn_prefix\\[SCOREPREFIX\\]\\[len-1\\] != '/'\\) \\{\n[[:space:]]+fqn_prefix\\[SCOREPREFIX\\]\\[len\\] = '/';\n[[:space:]]+fqn_prefix\\[SCOREPREFIX\\]\\[len\\+1\\] = '\\0';\n[[:space:]]+\\}\n[[:space:]]+#endif")
-                 "#ifdef VAR_PLAYGROUND
-        if (var_playground) {
-            int len = strlen(var_playground);
-
-            fqn_prefix[SCOREPREFIX] = (char *)alloc(len+2);
-            Strcpy(fqn_prefix[SCOREPREFIX], var_playground);
-            if (fqn_prefix[SCOREPREFIX][len-1] != '/') {
-                fqn_prefix[SCOREPREFIX][len] = '/';
-                fqn_prefix[SCOREPREFIX][len+1] = '\\0';
-            }
-        }
- #endif")
-                (("chdirx\\(dir,wr\\)\nconst char \\*dir;\nboolean wr;\n\\{")
-                 "chdirx(dir,wr)
-const char *dir;
-boolean wr;
-{
-#ifdef VAR_PLAYGROUND
-    const char *var_playground = nh_getenv(\"GRUNTHACK_VAR_PLAYGROUND\");
-#endif")
-                (("# ifdef VAR_PLAYGROUND\n[[:space:]]+fqn_prefix\\[LEVELPREFIX\\] = fqn_prefix\\[SCOREPREFIX\\];\n[[:space:]]+fqn_prefix\\[SAVEPREFIX\\] = fqn_prefix\\[SCOREPREFIX\\];\n[[:space:]]+fqn_prefix\\[BONESPREFIX\\] = fqn_prefix\\[SCOREPREFIX\\];\n[[:space:]]+fqn_prefix\\[LOCKPREFIX\\] = fqn_prefix\\[SCOREPREFIX\\];\n[[:space:]]+fqn_prefix\\[TROUBLEPREFIX\\] = fqn_prefix\\[SCOREPREFIX\\];\n# endif")
-                 "# ifdef VAR_PLAYGROUND
-        if (var_playground) {
-            fqn_prefix[LEVELPREFIX] = fqn_prefix[SCOREPREFIX];
-            fqn_prefix[SAVEPREFIX] = fqn_prefix[SCOREPREFIX];
-            fqn_prefix[BONESPREFIX] = fqn_prefix[SCOREPREFIX];
-            fqn_prefix[LOCKPREFIX] = fqn_prefix[SCOREPREFIX];
-            fqn_prefix[TROUBLEPREFIX] = fqn_prefix[SCOREPREFIX];
-        }
-# endif"))
-              ;; The launcher deliberately passes the store data directory as
-              ;; NETHACKDIR.  Honor its writable prefix even when that is not
-              ;; the compiled-in default HACKDIR.
-              (substitute* "sys/unix/unixmain.c"
-                (("&&[[:space:]]+strcmp\\(dir, HACKDIR\\)")
-                 "&& strcmp(dir, HACKDIR) && !var_playground"))
               (substitute* "include/unixconf.h"
-                (("#define MAIL[[:space:]]+.*") "/* #define MAIL */"))
+                (("^#define VAR_PLAYGROUND[ \t]+[^\n]*")
+                 "#define VAR_PLAYGROUND nh_getenv(\"GRUNTHACK_VAR_PLAYGROUND\")")
+                (("^#define MAIL[ \t]+[^\n]*") "/* #define MAIL */"))
               ;; The tty build calls this always-available no-op/check helper,
               ;; but the shipped header declares only the old name.
               (substitute* "include/extern.h"
@@ -108,7 +77,9 @@ boolean wr;
                 (("#define COMPRESS \"/bin/gzip\"")
                  "/* #define COMPRESS */")
                 (("#define COMPRESS_EXTENSION \"\\.gz\"")
-                 "/* #define COMPRESS_EXTENSION */"))
+                 "/* #define COMPRESS_EXTENSION */")
+                (("#define SERVER_ADMIN_MSG[ \t]+.*")
+                 "/* #define SERVER_ADMIN_MSG */"))
               (setenv "TZ" "UTC0")
               ;; makedefs embeds the build clock in generated headers and
               ;; data.  The pinned revision was committed on 2018-09-17.
@@ -220,8 +191,9 @@ case \"${1-}\" in~%
     fi~%
     second_text=$(\"$cat\" \"$second_log\")~%
     case \"$second_text\" in *\"Restoring save file\"*) ;; *) echo 'grunthack smoke: restore missing' >&2; exit 1 ;; esac~%
-    for file in $(\"$find\" \"$state\" -mindepth 1 -print); do~%
-      case \"$file\" in \"$XDG_DATA_HOME\"/*) ;; *) echo 'grunthack smoke: mutable path escaped XDG data' >&2; exit 1 ;; esac~%
+    for root in \"$HOME\" \"$XDG_CONFIG_HOME\" \"$XDG_CACHE_HOME\" \"$XDG_STATE_HOME\" \"$XDG_RUNTIME_DIR\" \"$TMPDIR\"; do~%
+      escaped=$(\"$find\" \"$root\" -mindepth 1 -print -quit)~%
+      test -z \"$escaped\" || { echo 'grunthack smoke: mutable path escaped XDG data' >&2; exit 1; }~%
     done~%
     if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"; then~%
       \"$mkdir\" -p \"$(\"$dirname\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"~%
@@ -238,6 +210,8 @@ case \"${1-}\" in~%
 esac~%"
                             shell data real mkdir mktemp rm sleep script cat cp
                             dirname find))
+                (unless (file-exists? launcher)
+                  (error "GruntHack launcher was not created" launcher))
                 (chmod launcher #o555)))))
           (add-after 'install 'verify-license-notices
             (lambda _
@@ -259,15 +233,10 @@ esac~%"
                         (string-append data "license"))
                 (invoke "grep" "-F" "GruntHack is a derivative of NetHack"
                         (string-append doc "README")))))
-          (add-after 'make-dynamic-linker-cache 'make-output-immutable
-            (lambda _
-              (for-each
-               (lambda (file)
-                 (chmod file
-                        (cond ((file-is-directory? file) #o555)
-                              ((access? file X_OK) #o555)
-                              (else #o444))))
-               (find-files #$output ".*" #:directories? #t)))))))
+          ;; Guix makes completed store outputs immutable.  Do not chmod the
+          ;; output while it is still being assembled: the recursive walk can
+          ;; encounter generated paths that the upstream makefiles remove.
+          )))
     (native-inputs
      (list bison flex gcc-toolchain gnu-make))
     (inputs
