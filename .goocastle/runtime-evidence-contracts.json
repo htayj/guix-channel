@@ -722,6 +722,22 @@
         },
         "successMarker": "hack guix smoke passed"
       }
+    },
+    {
+      "issueNumber": 693,
+      "packageName": "hackem",
+      "packageModulePath": "tay/packages/hackem.scm",
+      "artifactPath": ".goocastle/evidence/issue-693.png",
+      "runtime": {
+        "executable": "hackem",
+        "invocation": {
+          "file": "hackem",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "hackem guix smoke passed"
+      }
     }
   ]
 }
