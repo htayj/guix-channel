@@ -13,7 +13,6 @@
   #:use-module (gnu packages bison)
   #:use-module (gnu packages commencement)
   #:use-module (gnu packages flex)
-  #:use-module (gnu packages groff)
   #:use-module (gnu packages linux)
   #:use-module (gnu packages ncurses))
 
@@ -265,7 +264,7 @@ esac~%"
                               (else #o444))))
                (find-files #$output ".*" #:directories? #t))))))))
     (native-inputs
-     (list bison flex gcc-toolchain gnu-make groff-minimal))
+     (list bison flex gcc-toolchain gnu-make))
     (inputs
      (list bash-minimal coreutils-minimal ncurses/tinfo util-linux))
     (home-page "https://github.com/NHTangles/GruntHack")
