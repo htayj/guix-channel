@@ -706,6 +706,22 @@
         },
         "successMarker": "grunthack guix smoke passed"
       }
+    },
+    {
+      "issueNumber": 692,
+      "packageName": "hack",
+      "packageModulePath": "tay/packages/hack.scm",
+      "artifactPath": ".goocastle/evidence/issue-692.png",
+      "runtime": {
+        "executable": "hack",
+        "invocation": {
+          "file": "hack",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "hack guix smoke passed"
+      }
     }
   ]
 }
