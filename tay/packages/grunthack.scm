@@ -42,7 +42,7 @@
       #:tests? #f
       #:make-flags
       #~(list "CC=gcc"
-              "CFLAGS=-O2 -g0 -I../include -D_DEFAULT_SOURCE"
+              "CFLAGS=-O2 -g0 -I../include -D_DEFAULT_SOURCE -DTEXTCOLOR"
               "LEX=flex"
               "YACC=bison -y"
               "WINTTYLIB=-lncurses"
