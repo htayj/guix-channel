@@ -47,7 +47,12 @@
               (string-append "LINK=" #$(cc-for-target))
               ;; This historical source uses K&R definitions and common
               ;; tentative globals, while its current code also needs C99.
-              "CFLAGS=-O2 -g0 -std=gnu99 -fcommon -D_DEFAULT_SOURCE -I../include -DNOTPARMDECL -DNOCWD_ASSUMPTIONS -DCURSES_GRAPHICS -DDLB -DREPRODUCIBLE_BUILD -DDUMPLOG -DNOMAIL -DNOSHELL -DNOUSER_SOUNDS -DFCMASK=0644"
+              (string-append
+               "CFLAGS=-O2 -g0 -std=gnu99 -fcommon -D_DEFAULT_SOURCE "
+               "-I../include -DNOTPARMDECL -DNOCWD_ASSUMPTIONS "
+               "-DCURSES_GRAPHICS -DDLB -DREPRODUCIBLE_BUILD "
+               "-DDUMPLOG -DNOMAIL -DNOSHELL -DNOUSER_SOUNDS "
+               "-DFCMASK=0644")
               "WINLIB=-lncurses -ltinfo"
               "LEX=flex"
               "YACC=bison -y"
@@ -108,6 +113,7 @@
                      (launcher (string-append bin "/hackem"))
                      (shell #$(file-append bash-minimal "/bin/sh"))
                      (cat #$(file-append coreutils-minimal "/bin/cat"))
+                     (chmod #$(file-append coreutils-minimal "/bin/chmod"))
                      (dirname #$(file-append coreutils-minimal "/bin/dirname"))
                      (find #$(file-append findutils "/bin/find"))
                      (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
@@ -137,6 +143,7 @@
 data=~s~%
 real=~s~%
 cat=~s~%
+chmod=~s~%
 dirname=~s~%
 find=~s~%
 mkdir=~s~%
@@ -166,22 +173,27 @@ run_game() {~%
   if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"; then~%
     \"$mkdir\" -p \"$(\"$dirname\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"~%
     if test \"$mode\" = append; then~%
-      \"$script\" -qefc \"$real -u goocastle-tourist-human-neutral-male\" \"$log\" >> \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"~%
+      \"$script\" -qefc \"$real -u goocastle-tourist-human-neutral-male\" \\
+        \"$log\" >> \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"~%
     else~%
-      \"$script\" -qefc \"$real -u goocastle-tourist-human-neutral-male\" \"$log\" > \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"~%
+      \"$script\" -qefc \"$real -u goocastle-tourist-human-neutral-male\" \\
+        \"$log\" > \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"~%
     fi~%
   else~%
-    \"$script\" -qefc \"$real -u goocastle-tourist-human-neutral-male\" \"$log\" >/dev/null~%
+    \"$script\" -qefc \"$real -u goocastle-tourist-human-neutral-male\" \\
+      \"$log\" >/dev/null~%
   fi~%
 }~%~%
 case \"${1-}\" in~%
   --guix-smoke)~%
     test \"$#\" -eq 1 || { echo 'usage: hackem [--guix-smoke]' >&2; exit 64; }~%
-    smoke=$(\"$mktemp\" -d \"${TMPDIR:-/tmp}/hackem-guix-smoke.XXXXXXXX\")~%
+    smoke=$(\"$mktemp\" -d \\
+      \"${TMPDIR:-/tmp}/hackem-guix-smoke.XXXXXXXX\")~%
     cleanup() { \"$rm\" -rf \"$smoke\"; }~%
     trap cleanup EXIT HUP INT TERM~%
-    \"$mkdir\" \"$smoke/home\" \"$smoke/config\" \"$smoke/data\" \"$smoke/cache\" \"$smoke/state\" \"$smoke/runtime\" \"$smoke/tmp\"~%
-    chmod 700 \"$smoke/runtime\"~%
+    \"$mkdir\" \"$smoke/home\" \"$smoke/config\" \"$smoke/data\" \\
+      \"$smoke/cache\" \"$smoke/state\" \"$smoke/runtime\" \"$smoke/tmp\"~%
+    \"$chmod\" 700 \"$smoke/runtime\"~%
     export HOME=\"$smoke/home\" XDG_CONFIG_HOME=\"$smoke/config\"~%
     export XDG_DATA_HOME=\"$smoke/data\" XDG_CACHE_HOME=\"$smoke/cache\"~%
     export XDG_STATE_HOME=\"$smoke/state\" XDG_RUNTIME_DIR=\"$smoke/runtime\"~%
@@ -189,7 +201,10 @@ case \"${1-}\" in~%
     prepare_state~%
     first_log=\"$state/smoke-first.log\"~%
     second_log=\"$state/smoke-second.log\"~%
-    if ! { printf 'y'; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf 'l'; \"$sleep\" 1; printf 'S'; \"$sleep\" 1; printf 'y'; } | run_game \"$first_log\"; then~%
+    if ! {~%
+      printf 'y'; \"$sleep\" 1; printf ' '; \"$sleep\" 1;~%
+      printf 'l'; \"$sleep\" 1; printf 'S'; \"$sleep\" 1; printf 'y';~%
+    } | run_game \"$first_log\"; then~%
       echo 'hackem smoke: first game failed' >&2; exit 1~%
     fi~%
     saved=~%
@@ -199,13 +214,24 @@ case \"${1-}\" in~%
     done~%
     test -n \"$saved\" || { echo 'hackem smoke: save missing' >&2; exit 1; }~%
     first_text=$(\"$cat\" \"$first_log\")~%
-    case \"$first_text\" in *Hack*EM*|*Hack\\'EM*) ;; *) echo 'hackem smoke: title missing' >&2; exit 1 ;; esac~%
-    if ! { printf ' '; \"$sleep\" 1; printf '.'; \"$sleep\" 1; printf '#quit\\n'; \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf 'n'; \"$sleep\" 1; printf '    '; } | run_game \"$second_log\" append; then~%
+    case \"$first_text\" in~%
+      *Hack*EM*|*Hack\\'EM*) ;;~%
+      *) echo 'hackem smoke: title missing' >&2; exit 1 ;;~%
+    esac~%
+    if ! {~%
+      printf ' '; \"$sleep\" 1; printf '.'; \"$sleep\" 1;~%
+      printf '#quit\\n'; \"$sleep\" 1; printf 'y'; \"$sleep\" 1;~%
+      printf 'n'; \"$sleep\" 1; printf '    ';~%
+    } | run_game \"$second_log\" append; then~%
       echo 'hackem smoke: restore game failed' >&2; exit 1~%
     fi~%
     second_text=$(\"$cat\" \"$second_log\")~%
-    case \"$second_text\" in *\"Restoring save file\"*|*\"Welcome back\"*) ;; *) echo 'hackem smoke: restore missing' >&2; exit 1 ;; esac~%
-    for root in \"$smoke/home\" \"$smoke/config\" \"$smoke/data\" \"$smoke/cache\" \"$smoke/state\" \"$smoke/runtime\" \"$smoke/tmp\"; do~%
+    case \"$second_text\" in~%
+      *\"Restoring save file\"*|*\"Welcome back\"*) ;;~%
+      *) echo 'hackem smoke: restore missing' >&2; exit 1 ;;~%
+    esac~%
+    for root in \"$smoke/home\" \"$smoke/config\" \"$smoke/data\" \\
+      \"$smoke/cache\" \"$smoke/state\" \"$smoke/runtime\" \"$smoke/tmp\"; do~%
       case \"$root\" in \"$smoke\"/*) ;; *) echo 'hackem smoke: mutable root escaped isolated tree' >&2; exit 1 ;; esac~%
     done~%
     printf '%s\\n' 'hackem guix smoke passed'~%
@@ -216,7 +242,7 @@ case \"${1-}\" in~%
     exec \"$real\" \"$@\"~%
     ;;~%
 esac~%"
-                            shell data real cat dirname find mkdir mktemp rm
+                            shell data real cat chmod dirname find mkdir mktemp rm
                             sleep script)
                   (close-port port))
                 (chmod launcher #o555))))

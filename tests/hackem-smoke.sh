@@ -21,6 +21,8 @@ fi
 
 test -x "$hackem_out/bin/hackem"
 test -x "$hackem_out/libexec/hackem-real"
+test ! -L "$hackem_out/bin/hackem"
+test ! -L "$hackem_out/libexec/hackem-real"
 test -s "$hackem_out/share/hackem/nhdat"
 test -s "$hackem_out/share/hackem/license"
 test ! -e "$hackem_out/share/hackem/sounds"
