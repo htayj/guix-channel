@@ -49,7 +49,13 @@
               ;; tentative globals, while its current code also needs C99.
               (string-append
                "CFLAGS=-O2 -g0 -std=gnu99 -fcommon -D_DEFAULT_SOURCE "
-               "-I../include -DNOTPARMDECL -DNOCWD_ASSUMPTIONS "
+               ;; Keep the upstream CHDIR phase enabled: it maps the
+               ;; variable playground prefixes to HACKEM_VAR_PLAYGROUND
+               ;; while leaving the read-only data directory as cwd.
+               "-I../include -DNOTPARMDECL "
+               ;; setup.sh's Linux hint can otherwise leave the default
+               ;; /usr/games/lib/hackemdir in the final compile.
+               "-DHACKDIR=\\\"" #$output "/share/hackem\\\" "
                "-DCURSES_GRAPHICS -DDLB -DREPRODUCIBLE_BUILD "
                "-DDUMPLOG -DNOMAIL -DNOSHELL -DNOUSER_SOUNDS "
                "-DFCMASK=0644")
@@ -202,8 +208,9 @@ case \"${1-}\" in~%
     first_log=\"$state/smoke-first.log\"~%
     second_log=\"$state/smoke-second.log\"~%
     if ! {~%
-      printf 'y'; \"$sleep\" 1; printf ' '; \"$sleep\" 1;~%
-      printf 'l'; \"$sleep\" 1; printf 'S'; \"$sleep\" 1; printf 'y';~%
+      printf 'y'; \"$sleep\" 1; printf 'y'; \"$sleep\" 1;~%
+      printf ' '; \"$sleep\" 1; printf 'l'; \"$sleep\" 1;~%
+      printf 'S'; \"$sleep\" 1; printf 'y';~%
     } | run_game \"$first_log\"; then~%
       echo 'hackem smoke: first game failed' >&2; exit 1~%
     fi~%
