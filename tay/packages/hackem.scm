@@ -2,7 +2,7 @@
 
 (define-module (tay packages hackem)
   #:use-module (guix build-system gnu)
-  #:use-module (guix download)
+  #:use-module (guix git-download)
   #:use-module (guix gexp)
   #:use-module (guix packages)
   #:use-module (guix utils)
@@ -25,14 +25,16 @@
     (version "1.2.2")
     (source
      (origin
-       (method url-fetch)
-       (uri (string-append
-             "https://github.com/elunna/hackem/archive/"
-             %hackem-commit ".tar.gz"))
-       (file-name (string-append name "-" version ".tar.gz"))
-       ;; SHA-256: 53cee6b27997eceab653401b20face1f64f6e7360ec6ad448f5b2256c76dddb
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/elunna/hackem")
+             (commit %hackem-commit)))
+       (file-name (git-file-name name version))
+       ;; The GitHub commit archive is also reproducibly identified by
+       ;; SHA-256 53cee6b27997eceab653401b20face1f64f6e7360ec6ad448f5b2256c76dddb.
+       ;; The hash below is the Guix git-fetch checkout hash for this commit.
        (sha256
-        (base32 "1d6xdp3mc8jvix2avihf6vkzcr0zrvx206s0afvfmv4pg6rfdkjk"))))
+        (base32 "1x50zq5rw5skvxb4qbnvx2rh04nqsp730sqin5060hdaj3cqn7af"))))
     (build-system gnu-build-system)
     (arguments
      (list
