@@ -113,7 +113,7 @@
                      (launcher (string-append bin "/hackem"))
                      (shell #$(file-append bash-minimal "/bin/sh"))
                      (cat #$(file-append coreutils-minimal "/bin/cat"))
-                     (chmod #$(file-append coreutils-minimal "/bin/chmod"))
+                     (chmod-bin #$(file-append coreutils-minimal "/bin/chmod"))
                      (dirname #$(file-append coreutils-minimal "/bin/dirname"))
                      (find #$(file-append findutils "/bin/find"))
                      (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
@@ -242,7 +242,7 @@ case \"${1-}\" in~%
     exec \"$real\" \"$@\"~%
     ;;~%
 esac~%"
-                            shell data real cat chmod dirname find mkdir mktemp rm
+                            shell data real cat chmod-bin dirname find mkdir mktemp rm
                             sleep script)
                   (close-port port))
                 (chmod launcher #o555))))
