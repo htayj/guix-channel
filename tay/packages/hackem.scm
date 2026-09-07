@@ -12,6 +12,7 @@
   #:use-module (gnu packages bison)
   #:use-module (gnu packages commencement)
   #:use-module (gnu packages compiler-tools)
+  #:use-module (gnu packages compression)
   #:use-module (gnu packages groff)
   #:use-module (gnu packages linux)
   #:use-module (gnu packages ncurses))
@@ -64,6 +65,9 @@
               "WINLIB=-lncurses -ltinfo"
               "LEX=flex"
               "YACC=bison -y"
+              (string-append "CFLAGS+=-DCOMPRESS=\\\""
+                             #$(file-append gzip "/bin/gzip")
+                             "\\\" -DCOMPRESS_EXTENSION=\\\".gz\\\"")
               ;; There is no .git directory in the Guix source archive.
               "GITINFO=0")
       #:phases
@@ -296,7 +300,8 @@ esac~%"
     (native-inputs
      (list bison flex gcc-toolchain gnu-make groff-minimal))
     (inputs
-     (list bash-minimal coreutils-minimal findutils ncurses/tinfo util-linux))
+     (list bash-minimal coreutils-minimal findutils gzip ncurses/tinfo
+           util-linux))
     (home-page "https://github.com/elunna/hackem")
     (synopsis "Hack'EM terminal dungeon exploration game")
     (description
