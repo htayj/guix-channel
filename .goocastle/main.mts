@@ -4577,7 +4577,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     // stopped required phase with no observed commits needs recovery.
     const stoppedWithoutCommits = phases.find((phase) => {
       const record = phaseRecord(journal, phase.name);
-      return record?.stoppedEarly === true && (record.commitCount ?? 0) === 0;
+      // A fresh provider-state recovery may re-run an implementation phase
+      // solely to inspect or validate already committed work.  Do not discard
+      // the task's earlier qualifying delivery commits merely because that
+      // later bounded pass made no additional commit; proof/capture still
+      // independently validate the final branch.
+      const priorTaskCommits = hostGit(["rev-list", "--count", journal.baseSha + ".." + branch], { encoding: "utf8" }).trim();
+      return record?.stoppedEarly === true && (record.commitCount ?? 0) === 0 && priorTaskCommits === "0";
     });
     if (stoppedWithoutCommits && dispositionPolicy === undefined) {
       throw new Error("Required Gooflow phase " + JSON.stringify(stoppedWithoutCommits.name) + " made no commits for #" + issue.number + "; inspect the preserved branch and resume after fixing the phase");
