@@ -30,7 +30,7 @@ doc=$hackem_out/share/doc/hackem
 for notice in LICENSE README.md Guidebook.txt hackem_changelog.txt README.linux; do
     test -s "$doc/$notice"
 done
-test -s "$hackem_out/share/man/man6/hackem.6"
+test -s "$hackem_out/share/man/man6/hackem.6.zst"
 grep -F 'NETHACK GENERAL PUBLIC LICENSE' \
     "$hackem_out/share/hackem/license" >/dev/null
 grep -F "Hack'EM" "$doc/README.md" >/dev/null
@@ -52,7 +52,7 @@ grep -F '"successMarker": "hackem guix smoke passed"' \
 
 bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
 test -r "$bounded_validation"
-unshare_out=$($guix_bin build -L "$channel_dir" --no-grafts util-linux)
+unshare_out=$($guix_bin build -L "$channel_dir" --no-grafts util-linux | sed -n '2p')
 test -x "$unshare_out/bin/unshare"
 
 before=$($guix_bin hash -S nar "$hackem_out")

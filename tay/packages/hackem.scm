@@ -66,7 +66,8 @@
                 (("^#define SYSCF_FILE[[:space:]]+.*$")
                  "/* #define SYSCF_FILE */")
                 (("^#define HACKDIR[[:space:]]+\"/usr/games/lib/hackemdir\"$")
-                 "#define HACKDIR \".\"")
+                 (string-append "#define HACKDIR \"" #$output
+                                "/share/hackem\""))
                 (("^/\\*[[:space:]]+#define REPRODUCIBLE_BUILD[[:space:]]+\\*/$")
                  "#define REPRODUCIBLE_BUILD"))
               (substitute* "include/unixconf.h"
