@@ -212,7 +212,7 @@ case \"${1-}\" in~%
     if ! {~%
       printf 'y'; \"$sleep\" 1; printf 'y'; \"$sleep\" 1;~%
       printf ' '; \"$sleep\" 1; printf 'l'; \"$sleep\" 1;~%
-      printf 'S'; \"$sleep\" 1; printf 'y';~%
+      printf 'S'; \"$sleep\" 2; printf 'y'; \"$sleep\" 1;~%
     } | run_game \"$first_log\"; then~%
       echo 'hackem smoke: first game failed' >&2; exit 1~%
     fi~%
@@ -229,7 +229,7 @@ case \"${1-}\" in~%
     esac~%
     if ! {~%
       printf ' '; \"$sleep\" 1; printf '.'; \"$sleep\" 1;~%
-      printf '#quit\\n'; \"$sleep\" 1; printf 'y'; \"$sleep\" 1;~%
+      printf '#quit\\n'; \"$sleep\" 2; printf 'y'; \"$sleep\" 1;~%
       printf 'n'; \"$sleep\" 1; printf '    ';~%
     } | run_game \"$second_log\" append; then~%
       echo 'hackem smoke: restore game failed' >&2; exit 1~%
