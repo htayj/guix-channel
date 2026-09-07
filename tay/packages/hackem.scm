@@ -232,7 +232,10 @@ case \"${1-}\" in~%
     esac~%
     for root in \"$smoke/home\" \"$smoke/config\" \"$smoke/data\" \\
       \"$smoke/cache\" \"$smoke/state\" \"$smoke/runtime\" \"$smoke/tmp\"; do~%
-      case \"$root\" in \"$smoke\"/*) ;; *) echo 'hackem smoke: mutable root escaped isolated tree' >&2; exit 1 ;; esac~%
+      case \"$root\" in~%
+        \"$smoke\"/*) ;;~%
+        *) echo 'hackem smoke: mutable root escaped isolated tree' >&2; exit 1 ;;~%
+      esac~%
     done~%
     printf '%s\\n' 'hackem guix smoke passed'~%
     exit 0~%
