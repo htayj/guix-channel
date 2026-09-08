@@ -2449,6 +2449,32 @@ const manuallyRecoverableJournalIssues = new Set();
 const missingBranchManualJournalIssues = new Set();
 const incompleteJournal = async () => {
   const journals = await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME);
+  // A closed delivery may be deliberately reopened after visual review or a
+  // revised runtime contract. Only an explicit resume --issue may allocate
+  // a new epoch: ordinary scheduling must never reinterpret old history as
+  // fresh work.  The new journal has no copied phase receipts, so current
+  // issue/contract routing is validated through the normal fresh-task path.
+  if (RESUME_ONLY && RESUME_TARGET_ISSUE !== undefined) {
+    const terminal = journals
+      .filter((journal) => journal.issueNumber === RESUME_TARGET_ISSUE && deliveryComplete(journal) && journal.cleanup === "complete")
+      .sort((left, right) => journalEpoch(right) - journalEpoch(left))[0];
+    if (terminal !== undefined) {
+      const issue = await selectedIssue(terminal.issueNumber);
+      if (issue.state === "OPEN") {
+        const branch = "goocastle/reopen/issue-" + terminal.issueNumber + "-epoch-" + journalEpoch(terminal) + "-" + randomBytes(8).toString("hex");
+        const reopened = await createSequentialTaskJournal({
+          gitCommonDir,
+          workflow: WORKFLOW_NAME,
+          issueNumber: terminal.issueNumber,
+          baseSha: hostGit(["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
+          baseBranch,
+          branch,
+        });
+        console.log("Created fresh delivery epoch " + journalEpoch(reopened) + " for reopened issue #" + terminal.issueNumber + ".");
+        return reopened;
+      }
+    }
+  }
   const candidates = journals
     .filter((journal) => (!deliveryComplete(journal) || journal.cleanup !== "complete") &&
       (RESUME_TARGET_ISSUE === undefined || journal.issueNumber === RESUME_TARGET_ISSUE) &&
