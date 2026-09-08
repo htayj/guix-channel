@@ -754,6 +754,22 @@
         },
         "successMarker": "hellcrawl smoke: terminal UI OK; no store writes"
       }
+    },
+    {
+      "issueNumber": 695,
+      "packageName": "hunger-games",
+      "packageModulePath": "tay/packages/hunger-games.scm",
+      "artifactPath": ".goocastle/evidence/issue-695.png",
+      "runtime": {
+        "executable": "hunger-games",
+        "invocation": {
+          "file": "hunger-games",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "HUNGER_GAMES_SMOKE_OK"
+      }
     }
   ]
 }
