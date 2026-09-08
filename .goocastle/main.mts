@@ -2550,6 +2550,14 @@ const createFreshRecoveryJournal = async (terminal, sourceEpoch) => {
   if (replacement === undefined) {
     throw new Error("Could not allocate a fresh recovery branch for #" + terminal.issueNumber + "; run: " + MISSING_BRANCH_MANUAL_ACTION);
   }
+  // The replacement journal has the same pre-reconciliation requirement as a
+  // newly selected task: its named branch must already be an exact ref.  Do
+  // not force-update it if a concurrent resume materialized the same epoch.
+  try {
+    hostGit(["branch", replacement.branch, replacement.baseSha], { encoding: "utf8" });
+  } catch (error) {
+    if (exactRefSha("refs/heads/" + replacement.branch) === undefined) throw error;
+  }
   console.error("Recovered missing empty task branch for #" + terminal.issueNumber + " with fresh journal epoch " + journalEpoch(replacement) + ".");
   return replacement;
 };
