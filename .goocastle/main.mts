@@ -1732,9 +1732,17 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
       // Older journals began the evidence boundary after capture and therefore
       // lack artifactStartSha.  Their merge base is still a bounded, branch
       // local lower limit for locating the sole deterministic artifact commit.
-      const start = journal.runtimeEvidence?.artifactStartSha ?? hostGit(
-        ["merge-base", candidate, "origin/master"], { encoding: "utf8" },
-      ).trim();
+      let start = journal.runtimeEvidence?.artifactStartSha;
+      // Base reconciliation rebases the task branch and therefore rewrites
+      // the capture commit and its start SHA.  Fall back to the current
+      // branch-local merge base only when that recorded anchor is no longer
+      // reachable; the exact subject, one-file change, and unchanged-image
+      // checks below still bind the replacement to the declared evidence.
+      if (start !== undefined) {
+        try { hostGit(["merge-base", "--is-ancestor", start, candidate], { stdio: "ignore" }); }
+        catch { start = undefined; }
+      }
+      start ??= hostGit(["merge-base", candidate, "origin/master"], { encoding: "utf8" }).trim();
       let commits: string[];
       try {
         commits = hostGit(["rev-list", "--ancestry-path", start + ".." + candidate], { encoding: "utf8" })
@@ -1936,7 +1944,27 @@ const invalidateStaleRuntimeEvidence = async (journal, evidenceConfig, branch) =
   try {
     hostGit(["merge-base", "--is-ancestor", evidence.artifactCommitSha, branchHead], { stdio: "ignore" });
   } catch (error) {
-    throw new Error("Runtime evidence artifact commit is not an ancestor of the delivery branch; inspect the preserved branch before resuming", { cause: error });
+    // A base reconciliation rewrites every task commit, including the
+    // host-owned screenshot commit. Rebind only a unique, reachable replay
+    // with the deterministic capture subject that added exactly the declared
+    // artifact and whose descendants never changed that path.
+    const subject = "test(runtime): record package screenshot for #" + String(journal.issueNumber);
+    const base = hostGit(["merge-base", branchHead, "origin/" + journal.baseBranch], { encoding: "utf8" }).trim();
+    const matches = hostGit(["rev-list", "--ancestry-path", base + ".." + branchHead], { encoding: "utf8" })
+      .trim().split("
+").filter(Boolean).filter((commit) => {
+        const parents = hostGit(["rev-list", "--parents", "-n", "1", commit], { encoding: "utf8" }).trim().split(" ");
+        const changes = hostGit(["diff-tree", "--no-commit-id", "--name-status", "-r", parents[1] ?? commit, commit], { encoding: "utf8" }).trim().split("
+").filter(Boolean);
+        return parents.length === 2 && hostGit(["show", "-s", "--format=%s", commit], { encoding: "utf8" }).trim() === subject &&
+          changes.length === 1 && changes[0] === "A	" + evidenceConfig.artifactPath &&
+          hostGit(["diff", "--name-only", commit + ".." + branchHead, "--", evidenceConfig.artifactPath], { encoding: "utf8" }).trim() === "";
+      });
+    if (matches.length !== 1) throw new Error("Runtime evidence artifact commit is not an ancestor of the delivery branch; inspect the preserved branch before resuming", { cause: error });
+    return await transitionSequentialTaskJournal(gitCommonDir, journal, {
+      status: "active",
+      runtimeEvidence: { ...evidence, artifactCommitSha: matches[0] },
+    });
   }
   const refresh = new Set([evidenceConfig.proofPhase, evidenceConfig.capturePhase]);
   const phases = journal.phases.map((phase) => !refresh.has(phase.name) ? phase : {
