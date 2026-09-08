@@ -651,6 +651,11 @@ const branchWorktreePath = (branch) => {
   }
   return undefined;
 };
+const gitAt = (directory, args, options = {}) => execFileSync(
+  "git",
+  ["-c", "core.hooksPath=/dev/null", "-C", directory, ...args],
+  { env: { ...hostSigningEnvironment, GIT_TERMINAL_PROMPT: "0", GPG_TTY: "/dev/null" }, ...options },
+);
 const signRequiredPhaseCommits = async (journal, boundary, startSha, endSha) => {
   if (signingMode !== "required" || startSha === endSha) return { journal, head: endSha };
   const worktree = branchWorktreePath(journal.branch);
@@ -1661,11 +1666,6 @@ const applyDisposition = async (journal, issue) => {
   }
   return journal;
 };
-const gitAt = (directory, args, options = {}) => execFileSync(
-  "git",
-  ["-c", "core.hooksPath=/dev/null", "-C", directory, ...args],
-  { env: { ...hostSigningEnvironment, GIT_TERMINAL_PROMPT: "0", GPG_TTY: "/dev/null" }, ...options },
-);
 const predecessorWorkReceiptFor = (phase, worktreePath) => {
   let statusOutput;
   let headSha;
