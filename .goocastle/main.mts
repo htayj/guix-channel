@@ -1955,7 +1955,8 @@ const invalidateStaleRuntimeEvidence = async (journal, evidenceConfig, branch) =
         const parents = hostGit(["rev-list", "--parents", "-n", "1", commit], { encoding: "utf8" }).trim().split(" ");
         const changes = hostGit(["diff-tree", "--no-commit-id", "--name-status", "-r", parents[1] ?? commit, commit], { encoding: "utf8" }).trim().split(String.fromCharCode(10)).filter(Boolean);
         return parents.length === 2 && hostGit(["show", "-s", "--format=%s", commit], { encoding: "utf8" }).trim() === subject &&
-          changes.length === 1 && changes[0] === "A	" + evidenceConfig.artifactPath &&
+          changes.length === 1 && ["A	", "M	"].includes(changes[0]!.slice(0, 2)) &&
+          changes[0]!.slice(2) === evidenceConfig.artifactPath &&
           hostGit(["diff", "--name-only", commit + ".." + branchHead, "--", evidenceConfig.artifactPath], { encoding: "utf8" }).trim() === "";
       });
     if (matches.length !== 1) throw new Error("Runtime evidence artifact commit is not an ancestor of the delivery branch; inspect the preserved branch before resuming", { cause: error });
