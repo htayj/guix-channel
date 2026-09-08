@@ -2272,7 +2272,20 @@ const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => 
   if (journal.merge === "started" && currentBase === journal.integrationSha) {
     return await transitionSequentialTaskJournal(gitCommonDir, journal, { merge: "complete" });
   }
-  if (currentBase === recordedBase) return journal;
+  // A prior reconciliation may have replayed a task onto an equivalent but
+  // distinct base commit (for example, when a generated-runner upgrade was
+  // signed independently in the task branch and integration checkout).  The
+  // recorded destination alone is not proof that this exact current base is
+  // contained by the task tip; verify ancestry before skipping replay.
+  const taskHead = hostGit(["rev-parse", journal.branch], { encoding: "utf8" }).trim();
+  if (currentBase === recordedBase) {
+    try {
+      hostGit(["merge-base", "--is-ancestor", currentBase, taskHead]);
+      return journal;
+    } catch {
+      // Continue with the original replay source below.
+    }
+  }
   try {
     hostGit(["merge-base", "--is-ancestor", recordedBase, currentBase]);
   } catch (error) {
@@ -2283,7 +2296,9 @@ const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => 
       { cause: error },
     );
   }
-  const taskHead = hostGit(["rev-parse", journal.branch], { encoding: "utf8" }).trim();
+  const replayBase = journal.reconciliation?.state === "complete"
+    ? journal.reconciliation.sourceBaseSha
+    : recordedBase;
   // A task that has not produced commits is exactly its recorded base.  There
   // is nothing to replay: advance its checked-out worktree directly instead
   // of creating a rebase worktree that can fail during otherwise-idempotent
@@ -2386,7 +2401,7 @@ const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => 
   const reconciliationWorktree = await mkdtemp(join(hostWorkTree, ".goocastle", "reconcile-"));
   hostGit(["worktree", "add", "--detach", reconciliationWorktree, taskHead], { stdio: "inherit" });
   try {
-    gitAt(reconciliationWorktree, ["rebase", "--onto", currentBase, recordedBase], { stdio: "inherit" });
+    gitAt(reconciliationWorktree, ["rebase", "--onto", currentBase, replayBase], { stdio: "inherit" });
   } catch (error) {
     journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
       reconciliation: { ...journal.reconciliation, state: "conflicted", recoveryWorktreePath: reconciliationWorktree },
