@@ -1710,7 +1710,11 @@ const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePha
   if (!journal.runtimeEvidence?.runtimeAssertion) {
     throw new Error("Cannot record runtime evidence without the host-validated packaged-runtime assertion; resume the screenshot phase after it emits the declared marker");
   }
-  const artifact = await inspectRuntimeEvidenceArtifact(taskWorktree.worktreePath, evidenceConfig.artifactPath);
+  const artifact = await inspectRuntimeEvidenceArtifact(
+    taskWorktree.worktreePath,
+    evidenceConfig.artifactPath,
+    evidenceConfig.runtime.kind === "node-library" ? 1 : (evidenceConfig.runtime.minimumScreenshotBytes ?? 1),
+  );
   const status = gitAt(taskWorktree.worktreePath, ["status", "--porcelain=v1", "--untracked-files=all", "-z"], { encoding: "utf8" });
   const entries = status.split("\0").filter(Boolean);
   const expected = "?? " + evidenceConfig.artifactPath;
