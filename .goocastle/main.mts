@@ -1951,11 +1951,9 @@ const invalidateStaleRuntimeEvidence = async (journal, evidenceConfig, branch) =
     const subject = "test(runtime): record package screenshot for #" + String(journal.issueNumber);
     const base = hostGit(["merge-base", branchHead, "origin/" + journal.baseBranch], { encoding: "utf8" }).trim();
     const matches = hostGit(["rev-list", "--ancestry-path", base + ".." + branchHead], { encoding: "utf8" })
-      .trim().split("
-").filter(Boolean).filter((commit) => {
+      .trim().split(String.fromCharCode(10)).filter(Boolean).filter((commit) => {
         const parents = hostGit(["rev-list", "--parents", "-n", "1", commit], { encoding: "utf8" }).trim().split(" ");
-        const changes = hostGit(["diff-tree", "--no-commit-id", "--name-status", "-r", parents[1] ?? commit, commit], { encoding: "utf8" }).trim().split("
-").filter(Boolean);
+        const changes = hostGit(["diff-tree", "--no-commit-id", "--name-status", "-r", parents[1] ?? commit, commit], { encoding: "utf8" }).trim().split(String.fromCharCode(10)).filter(Boolean);
         return parents.length === 2 && hostGit(["show", "-s", "--format=%s", commit], { encoding: "utf8" }).trim() === subject &&
           changes.length === 1 && changes[0] === "A	" + evidenceConfig.artifactPath &&
           hostGit(["diff", "--name-only", commit + ".." + branchHead, "--", evidenceConfig.artifactPath], { encoding: "utf8" }).trim() === "";
