@@ -2470,6 +2470,10 @@ const incompleteJournal = async () => {
           baseBranch,
           branch,
         });
+        // Materialize the known-empty branch immediately. Without this, the
+        // generic missing-branch recovery quite reasonably allocates another
+        // epoch before createWorktree gets its first chance to create it.
+        hostGit(["branch", branch, reopened.baseSha]);
         console.log("Created fresh delivery epoch " + journalEpoch(reopened) + " for reopened issue #" + terminal.issueNumber + ".");
         return reopened;
       }
