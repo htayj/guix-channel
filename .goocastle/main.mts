@@ -778,7 +778,7 @@ if (hostStatus && !hostTransitionStillAuthorized) {
 // launched runners from passing preflight and executing overlapping tasks.
 // Managed locks reap dead owners, so a crash remains safely resumable.
 const workflowRunLock = await acquireManagedLock(gitCommonDir, "workflow-runner:" + WORKFLOW_NAME);
-try {
+const runSequentialRunner = async () => {
 const codingStandards = await readFile(".goocastle/CODING_STANDARDS.md", "utf8");
 const codexBinDirectory = projectConfig.agent === "codex"
   ? process.env.GOOCASTLE_CODEX_BIN_DIR
@@ -5039,6 +5039,9 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     reexecuteDogfoodRunner(task + 1, attemptedIssues);
   }
 }
+};
+try {
+  await runSequentialRunner();
 } finally {
   await workflowRunLock.release();
 }
