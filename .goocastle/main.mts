@@ -4628,7 +4628,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     if (evidenceConfig !== undefined && journal.runtimeEvidence?.artifact === "complete") {
       const refreshedEvidence = await invalidateStaleRuntimeEvidence(journal, evidenceConfig, branch);
       if (refreshedEvidence !== journal) {
-        throw new Error("Runtime evidence was invalidated by later delivery commits; resume to refresh the package proof, screenshot, and evidence comment");
+        journal = refreshedEvidence;
+        if (journal.runtimeEvidence?.artifact !== "complete") {
+          throw new Error("Runtime evidence was invalidated by later delivery commits; resume to refresh the package proof, screenshot, and evidence comment");
+        }
       }
     }
     // Delivery is forbidden until the host-owned evidence artifact is
