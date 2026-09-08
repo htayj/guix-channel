@@ -66,6 +66,13 @@
               (invoke "gcc" "-O2" "-Wall" "-Wextra"
                       "-o" "hellcrawl-smoke-pty"
                       "hellcrawl-smoke-pty.c" "-lutil")))
+          (add-after 'build-smoke-helper 'patch-cxx-compatibility
+            (lambda _
+              ;; Modern libstdc++ no longer provides ostream through the
+              ;; transitive headers used by this old release.
+              (substitute* "domino.h"
+                (("#include <vector>" )
+                 "#include <vector>\n#include <ostream>"))))
           (replace 'build
             (lambda _
               ;; An empty TILES value selects the console build and avoids

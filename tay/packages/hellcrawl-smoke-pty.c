@@ -71,12 +71,6 @@ remember (unsigned char *seen, size_t *seen_length,
 {
   const size_t capacity = 65536;
 
-  if (length >= capacity)
-    {
-      memcpy (seen, data + length - capacity, capacity);
-      *seen_length = capacity;
-      return;
-    }
   if (*seen_length + length > capacity)
     {
       size_t drop = *seen_length + length - capacity;
