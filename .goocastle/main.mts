@@ -638,6 +638,19 @@ const requireSignedPhaseCommits = async (journal, boundary, startSha, endSha) =>
   journal = await blockCommitSigning(journal, boundary);
   throw new Error("Required commit signing rejected " + String(unsigned.length) + " unsigned or unverifiable commit(s) before " + boundary + ". The task branch is preserved; inspect it with: " + recoveryCommand(journal.branch) + ", sign or replace those commits, then resume the workflow.");
 };
+// This helper is also used by signing callbacks defined before the main
+// runner body. Keep it in the generated outer scope rather than inside the
+// async body, so every phase boundary resolves the same checked-out branch.
+const branchWorktreePath = (branch) => {
+  const fields = hostGit(["worktree", "list", "--porcelain", "-z"], { encoding: "utf8" }).split("\0");
+  let worktree;
+  for (const field of fields) {
+    if (field.startsWith("worktree ")) worktree = field.slice("worktree ".length);
+    else if (field === "branch refs/heads/" + branch) return worktree;
+    else if (field === "") worktree = undefined;
+  }
+  return undefined;
+};
 const signRequiredPhaseCommits = async (journal, boundary, startSha, endSha) => {
   if (signingMode !== "required" || startSha === endSha) return { journal, head: endSha };
   const worktree = branchWorktreePath(journal.branch);
@@ -1996,16 +2009,6 @@ const invalidateStaleRuntimeEvidence = async (journal, evidenceConfig, branch) =
       comment: "pending",
     },
   });
-};
-const branchWorktreePath = (branch) => {
-  const fields = hostGit(["worktree", "list", "--porcelain", "-z"], { encoding: "utf8" }).split("\0");
-  let worktree;
-  for (const field of fields) {
-    if (field.startsWith("worktree ")) worktree = field.slice("worktree ".length);
-    else if (field === "branch refs/heads/" + branch) return worktree;
-    else if (field === "") worktree = undefined;
-  }
-  return undefined;
 };
 const deliveryComplete = (journal) => journal.merge === "complete" && journal.push === "complete" &&
   journal.remoteVerification === "complete" && journal.issueClose === "complete" &&
