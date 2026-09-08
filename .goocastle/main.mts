@@ -3488,6 +3488,16 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       branch,
       specification,
     });
+    // Reconciliation is intentionally ahead of worktree creation so a task
+    // always starts from the current integration base.  It nevertheless
+    // verifies the task tip, so create the newly journaled ref before that
+    // check.  Do not use branch -f here: a concurrent/restarted runner must
+    // never overwrite a ref it did not create.
+    try {
+      hostGit(["branch", branch, baseHead], { encoding: "utf8" });
+    } catch (error) {
+      if (exactRefSha("refs/heads/" + branch) === undefined) throw error;
+    }
     console.log("\n=== Task " + task + "/" + MAX_TASKS + ": #" + issue.number + " " + issue.title + " ===\nScheduler rationale: " + selected.rationale + "\n");
   }
   const branch = journal.branch;
