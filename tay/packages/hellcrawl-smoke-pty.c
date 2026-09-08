@@ -94,6 +94,7 @@ main (int argc, char **argv)
   unsigned char seen[65536];
   size_t seen_length = 0;
   int master;
+  int sent_difficulty = 0;
   int sent_weapon = 0;
   int sent_begin = 0;
   int sent_play = 0;
@@ -196,6 +197,14 @@ main (int argc, char **argv)
             break;
           remember (seen, &seen_length, data, (size_t) length);
 
+          if (!sent_difficulty
+              && contains (seen, seen_length,
+                           "Select the desired difficulty."))
+            {
+              if (!send_keys (master, "n"))
+                break;
+              sent_difficulty = 1;
+            }
           if (!sent_weapon && contains (seen, seen_length, "choice of weapons"))
             {
               if (!send_keys (master, "a"))
