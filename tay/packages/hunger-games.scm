@@ -77,6 +77,11 @@
                    "  RunCommandLine(szLine, NULL);\n\n"
                    "  if (fSmoke) {\n"
                    "    DoCommand(cmdMoveForward);\n"
+                   ;; Exercise the script's own status and map commands after
+                   ;; the required movement so the smoke transcript is a
+                   ;; visible gameplay receipt, not just a wrapper marker.
+                   "    RunCommandLine(\"*FTable\", NULL);\n"
+                   "    RunCommandLine(\"*FMap\", NULL);\n"
                    "    return 0;\n"
                    "  }\n\n")))))
           (add-after 'patch-unix-command-line 'patch-linux-allocator
