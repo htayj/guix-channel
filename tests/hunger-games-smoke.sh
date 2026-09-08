@@ -125,7 +125,9 @@ test -s "$raw"
 # The engine must have emitted the script's own post-movement status and map
 # receipts.  These are the substantive runtime evidence used for the screen
 # capture; a wrapper-only marker is not sufficient.
-"$grep_bin" -aF 'The Hunger Games' "$raw" >/dev/null
+"$grep_bin" -aF 'Name' "$raw" >/dev/null
+"$grep_bin" -aF 'Health' "$raw" >/dev/null
+"$grep_bin" -aF 'Food' "$raw" >/dev/null
 "$grep_bin" -aF 'Arena tribute map' "$raw" >/dev/null
 
 # The smoke wrapper runs in the data directory but must not create state or
