@@ -96,7 +96,6 @@ main (int argc, char **argv)
   int master;
   int sent_difficulty = 0;
   int sent_weapon = 0;
-  int sent_begin = 0;
   int sent_play = 0;
   int sent_quit = 0;
   int sent_more = 0;
@@ -211,14 +210,8 @@ main (int argc, char **argv)
                 break;
               sent_weapon = 1;
             }
-          if (sent_weapon && !sent_begin
-              && contains (seen, seen_length, "[Enter] Begin!"))
-            {
-              if (!send_keys (master, "\r"))
-                break;
-              sent_begin = 1;
-            }
-          if (sent_begin && !sent_play && contains (seen, seen_length, "Health:"))
+          if (sent_weapon && !sent_play
+              && contains (seen, seen_length, "Health:"))
             {
               if (!send_keys (master, ".l"))
                 break;
@@ -234,7 +227,7 @@ main (int argc, char **argv)
     return 1;
 
   close (master);
-  if (!sent_weapon || !sent_begin || !sent_play || !sent_quit
+  if (!sent_difficulty || !sent_weapon || !sent_play || !sent_quit
       || !sent_more || !sent_inventory || !sent_goodbye || timed_out)
     return 1;
   if (!WIFEXITED (status) || WEXITSTATUS (status) != 0)
