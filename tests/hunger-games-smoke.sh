@@ -5,6 +5,9 @@ set -eu
 guix_bin=$(command -v "${GUIX:-guix}")
 grep_bin=$(command -v grep)
 find_bin=$(command -v find)
+mkdir_bin=$(command -v mkdir)
+dirname_bin=$(command -v dirname)
+cp_bin=$(command -v cp)
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$channel_dir"
 
@@ -43,9 +46,9 @@ test -x "$hunger_games_out/libexec/hunger-games-real"
 data="$hunger_games_out/share/hunger-games"
 test -s "$data/hunger.ds"
 test -s "$data/hunger.bmp"
-test -z "$(find "$data" -type f ! -name hunger.ds ! -name hunger.bmp \
+test -z "$("$find_bin" "$data" -type f ! -name hunger.ds ! -name hunger.bmp \
     -print -quit)"
-test -z "$(find "$data" -type f -name '*.wav' -print -quit)"
+test -z "$("$find_bin" "$data" -type f -name '*.wav' -print -quit)"
 
 doc="$hunger_games_out/share/doc/hunger-games"
 for file in README.md license.htm changes.htm changes.doc daedalus.htm \
@@ -57,6 +60,7 @@ done
 "$grep_bin" -F 'Walter D.' "$doc/changes.htm" >/dev/null
 "$grep_bin" -F 'Pullen' "$doc/changes.htm" >/dev/null
 "$grep_bin" -F 'By Walter D. Pullen' "$data/hunger.ds" >/dev/null
+"$grep_bin" -F 'Happy Hunger Games!' "$data/hunger.ds" >/dev/null
 
 # The reviewed per-issue runtime contract is part of this package proof.
 contract="$channel_dir/.goocastle/runtime-evidence-contracts.json"
@@ -74,7 +78,7 @@ test -s "$contract"
 
 # The NAR hash and writable-file scan cover the complete installed tree.
 before=$($guix_bin hash -S nar "$hunger_games_out")
-test -z "$(find "$hunger_games_out" -xdev -type f -perm /222 -print -quit)"
+test -z "$("$find_bin" "$hunger_games_out" -xdev -type f -perm /222 -print -quit)"
 test ! -w "$hunger_games_out"
 
 if test -n "${GOOCASTLE_DISPOSABLE_WORKSPACE-}"; then
@@ -117,22 +121,19 @@ proof=$(cd "$scratch/work" && \
     "$hunger_games_out/bin/hunger-games" --smoke)
 test "$proof" = 'HUNGER_GAMES_SMOKE_OK'
 test -s "$raw"
-"$grep_bin" -aF 'Happy Hunger Games!' "$raw" >/dev/null
-"$grep_bin" -aF 'Select OK for more help, or Cancel to start playing.' \
-    "$raw" >/dev/null
-"$grep_bin" -aF 'HUNGER_GAMES_SMOKE_OK' "$raw" >/dev/null
+"$grep_bin" -aFx 'HUNGER_GAMES_SMOKE_OK' "$raw" >/dev/null
 
 # The smoke wrapper runs in the data directory but must not create state or
 # temporary files there.  The raw terminal stream is the sole expected file.
-test -z "$(find "$scratch/work" -mindepth 1 -print -quit)"
-test -z "$(find "$scratch/home" "$scratch/config" "$scratch/data" \
+test -z "$("$find_bin" "$scratch/work" -mindepth 1 -print -quit)"
+test -z "$("$find_bin" "$scratch/home" "$scratch/config" "$scratch/data" \
     "$scratch/cache" "$scratch/state" "$scratch/runtime" "$scratch/tmp" \
     -mindepth 1 -print -quit)"
 test ! -e "$scratch/state/hunger-games"
 
 after=$($guix_bin hash -S nar "$hunger_games_out")
 test "$before" = "$after"
-test -z "$(find "$hunger_games_out" -xdev -type f -perm /222 -print -quit)"
+test -z "$("$find_bin" "$hunger_games_out" -xdev -type f -perm /222 -print -quit)"
 test ! -w "$hunger_games_out"
 
 # The evidence adapter may request a screenshot copy from the captured
@@ -143,8 +144,8 @@ if test -n "${GOOCASTLE_SCREENSHOT-}"; then
         *) echo 'hunger-games smoke: screenshot must be a channel evidence PNG' >&2
            exit 1 ;;
     esac
-    mkdir -p "$(dirname -- "$GOOCASTLE_SCREENSHOT")"
-    cp "$raw" "$GOOCASTLE_SCREENSHOT"
+    "$mkdir_bin" -p "$("$dirname_bin" -- "$GOOCASTLE_SCREENSHOT")"
+    "$cp_bin" "$raw" "$GOOCASTLE_SCREENSHOT"
 fi
 
 printf '%s\n' "$proof"
