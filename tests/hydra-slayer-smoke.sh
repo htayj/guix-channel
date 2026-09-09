@@ -45,8 +45,14 @@ marker='HYDRA_SLAYER_GUIX_SMOKE_OK: new-game, turn, save-load, isolated-state'
 grep -F "\"successMarker\": \"$marker\"" "$contract" >/dev/null
 
 test -r "$bounded_validation"
-util_linux_out=$($guix_bin build util-linux)
-test -x "$util_linux_out/bin/unshare"
+util_linux_out=
+for candidate in $($guix_bin build util-linux); do
+    if test -x "$candidate/bin/unshare"; then
+        util_linux_out=$candidate
+        break
+    fi
+done
+test -n "$util_linux_out"
 if ! "$node_bin" "$bounded_validation" --timeout-ms 5000 -- \
         "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
         true >/dev/null 2>&1; then
@@ -80,6 +86,7 @@ export XDG_RUNTIME_DIR="$scratch/runtime"
 export TMPDIR="$scratch/tmp"
 export TERM=xterm-256color
 export LC_ALL=C.UTF-8
+host_path=$PATH
 export PATH="$hydra_out/bin"
 
 # The package's --guix-smoke branch creates another fresh XDG tree below the
@@ -90,6 +97,7 @@ proof=$(cd "$scratch/work" && \
     "$node_bin" "$bounded_validation" --timeout-ms 90000 -- \
     "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
     "$hydra_out/bin/hydra" --guix-smoke)
+export PATH="$host_path"
 test "$proof" = "$marker"
 test -s "$raw"
 grep -aF 'Hydra Slayer v18.3' "$raw" >/dev/null
