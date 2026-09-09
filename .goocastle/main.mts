@@ -1163,14 +1163,17 @@ const reportStaleSpecificationJournal = (issue) => console.error(
 // Keep generated runners compatible with test/runtime facades that predate
 // the exported predicate while making the current runtime's terminal-state
 // semantics authoritative.
-const terminalDispositionFor = (journal) => typeof isTerminalSequentialDisposition === "function"
-  ? isTerminalSequentialDisposition(journal)
-  : journal.status === "complete" && journal.disposition?.comment === "complete" && journal.disposition.labels === "complete" &&
+const dispositionReceiptComplete = (journal) => journal.disposition?.comment === "complete" && journal.disposition.labels === "complete" &&
     (journal.disposition.implementationTicket === undefined || (
       journal.disposition.implementationTicket.create === "complete" &&
       journal.disposition.implementationTicket.labels === "complete" &&
       (journal.disposition.implementationTicket.contract === undefined || journal.disposition.implementationTicket.contract === "complete")
     ));
+const terminalDispositionFor = (journal) => journal.status === "complete" && (
+  typeof isTerminalSequentialDisposition === "function"
+    ? isTerminalSequentialDisposition(journal)
+    : dispositionReceiptComplete(journal)
+);
 
 const nextActionableIssue = async (excludedIssues = new Set()) => {
   resetSchedulerSkipReports();
@@ -1663,7 +1666,9 @@ const applyDisposition = async (journal, issue) => {
       }));
     }
     journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
-      disposition: { ...journal.disposition, labels: "complete" }, status: "complete",
+      // Cleanup records its receipt immediately after the final host receipt,
+      // before the journal becomes immutable.
+      disposition: { ...journal.disposition, labels: "complete" }, status: "active",
     });
   }
   return journal;
@@ -2156,15 +2161,9 @@ const terminalProviderStateNames = (journal) => {
   }
   return [...names];
 };
-const cleanupOutcome = async (journal, outcome) => {
-  const completed = await transitionSequentialTaskJournal(gitCommonDir, journal, {
-    cleanup: "complete",
-    cleanupOutcome: outcome,
-    status: "complete",
-  });
-  if (outcome.state !== "cleaned") return completed;
+const removeTerminalProviderStateHomes = async (journal) => {
   const removed = [];
-  for (const name of terminalProviderStateNames(completed)) {
+  for (const name of terminalProviderStateNames(journal)) {
     try {
       if (await removeManagedStateHome({ gitCommonDir, name })) removed.push(name);
     } catch (error) {
@@ -2173,7 +2172,17 @@ const cleanupOutcome = async (journal, outcome) => {
       console.warn("Could not clean terminal managed state home " + JSON.stringify(name) + ": " + (error instanceof Error ? error.message : String(error)));
     }
   }
-  if (removed.length > 0) console.log("Cleaned " + String(removed.length) + " terminal managed state home(s) for #" + completed.issueNumber + ".");
+  if (removed.length > 0) console.log("Cleaned " + String(removed.length) + " terminal managed state home(s) for #" + journal.issueNumber + ".");
+  return removed;
+};
+const cleanupOutcome = async (journal, outcome) => {
+  const completed = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+    cleanup: "complete",
+    cleanupOutcome: outcome,
+    status: "complete",
+  });
+  if (outcome.state !== "cleaned") return completed;
+  await removeTerminalProviderStateHomes(completed);
   return completed;
 };
 const reconcileTerminalDispositionCleanup = async (journal) => {
@@ -2181,7 +2190,13 @@ const reconcileTerminalDispositionCleanup = async (journal) => {
   // any materialized implementation-ticket receipt). Unlike a delivery it
   // has no branch merge to reconcile, but its provider home is equally
   // terminal and may contain large provider caches or credentials.
-  if (!terminalDispositionFor(journal) || journal.cleanup === "complete") return journal;
+  if (!dispositionReceiptComplete(journal) || journal.cleanup === "complete") return journal;
+  // Historical disposition journals are immutable after completion. Their
+  // host receipt still authorizes state pruning, but must not be rewritten.
+  if (journal.status === "complete") {
+    await removeTerminalProviderStateHomes(journal);
+    return journal;
+  }
   return await cleanupOutcome(journal, {
     state: "cleaned",
     ref: "provider-state",
