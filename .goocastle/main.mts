@@ -257,6 +257,7 @@ const boundedValidationExposes = [
 ];
 const runtimeModule = await import(runtimeModuleUrl);
 const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, acquireManagedLock, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialManualRepairReceipt, createSequentialPredecessorWorkReceipt, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, guixPackageProofCommand, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, materializeRuntimeEvidenceContractEntry, parseGooflowDispositionResult, quarantineManagedStateHome, readInterTaskDelayState, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runtimeContractIssueDigest, runtimeEvidenceCaptureCommand, isRuntimeContractResolutionFailure, sequentialJournalActivity, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isCodexAuthenticationExpiry, isProviderInterruption, isRetryableCodexProviderError, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
+const { removeManagedStateHome } = runtimeModule;
 const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Object.freeze({
   expectedPacingMs: 5 * 60_000,
   stalledAfterMs: 15 * 60_000,
@@ -269,6 +270,7 @@ const runtimeHandshake = typeof generatedRunnerRuntimeHandshake === "function"
 if (
   runtimeApiVersion !== GENERATED_RUNNER_RUNTIME_API_VERSION ||
   typeof createSequentialManualRepairReceipt !== "function" ||
+  typeof removeManagedStateHome !== "function" ||
   typeof runtimeEvidenceCaptureCommand !== "function" ||
   typeof guixPackageProofCommand !== "function" ||
   runtimeHandshake?.identity !== GENERATED_RUNNER_RUNTIME_IDENTITY ||
@@ -2140,11 +2142,40 @@ const acceptManualProviderRepair = async (journal, phase) => {
     phases: [...journal.phases.filter((item) => item.name !== phase.name), completedPhase],
   });
 };
-const cleanupOutcome = async (journal, outcome) => await transitionSequentialTaskJournal(gitCommonDir, journal, {
-  cleanup: "complete",
-  cleanupOutcome: outcome,
-  status: "complete",
-});
+const terminalProviderStateNames = (journal) => {
+  // Provider homes contain credentials and interrupted-session evidence, so
+  // remove them only after the delivery ref was conclusively cleaned. Include
+  // both the original home and any bounded fresh homes used for recovery.
+  const names = new Set([WORKFLOW_NAME + "-issue-" + journal.issueNumber]);
+  for (const epoch of journal.providerStateRecovery?.epochs ?? []) {
+    if (typeof epoch.stateHomeName === "string") names.add(epoch.stateHomeName);
+    if (typeof epoch.quarantinePath === "string") {
+      const candidate = relative(resolve(gitCommonDir, "goocastle", "state"), epoch.quarantinePath);
+      if (/^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(candidate)) names.add(candidate);
+    }
+  }
+  return [...names];
+};
+const cleanupOutcome = async (journal, outcome) => {
+  const completed = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+    cleanup: "complete",
+    cleanupOutcome: outcome,
+    status: "complete",
+  });
+  if (outcome.state !== "cleaned") return completed;
+  const removed = [];
+  for (const name of terminalProviderStateNames(completed)) {
+    try {
+      if (await removeManagedStateHome({ gitCommonDir, name })) removed.push(name);
+    } catch (error) {
+      // A completed issue must never become stuck solely because an old
+      // provider directory cannot be pruned. Leave it for manual recovery.
+      console.warn("Could not clean terminal managed state home " + JSON.stringify(name) + ": " + (error instanceof Error ? error.message : String(error)));
+    }
+  }
+  if (removed.length > 0) console.log("Cleaned " + String(removed.length) + " terminal managed state home(s) for #" + completed.issueNumber + ".");
+  return completed;
+};
 const retainCleanupRef = async (journal, ref, sha, reason) => {
   // This is intentionally the only recovery line for a divergent ref. It is
   // terminal journal state, not an exception that would produce an uncaught
