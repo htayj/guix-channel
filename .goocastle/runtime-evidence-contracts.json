@@ -803,6 +803,22 @@
         },
         "successMarker": "HYDRA_SLAYER_GUIX_SMOKE_OK: new-game, turn, save-load, isolated-state"
       }
+    },
+    {
+      "issueNumber": 698,
+      "packageName": "ighalsk",
+      "packageModulePath": "tay/packages/ighalsk.scm",
+      "artifactPath": ".goocastle/evidence/issue-698.png",
+      "runtime": {
+        "executable": "ighalsk",
+        "invocation": {
+          "file": "ighalsk",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "ighalsk isolated smoke passed"
+      }
     }
   ]
 }
