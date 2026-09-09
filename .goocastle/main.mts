@@ -2511,7 +2511,10 @@ const incompleteJournal = async () => {
   // cleanup existed. Reconcile those receipts here before filtering them out
   // of scheduler selection, so a restart progressively reclaims only state
   // whose host outcome is already final.
-  for (const terminal of journals.filter(terminalDispositionFor)) {
+  // A host receipt can be complete even if an older runner failed immediately
+  // afterward at its cleanup boundary. Reconcile by the receipt, not the
+  // stale task status, before blocked-label filtering excludes that journal.
+  for (const terminal of journals.filter(dispositionReceiptComplete)) {
     await reconcileTerminalDispositionCleanup(terminal);
   }
   // A closed delivery may be deliberately reopened after visual review or a
