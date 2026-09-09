@@ -819,6 +819,22 @@
         },
         "successMarker": "ighalsk isolated smoke passed"
       }
+    },
+    {
+      "issueNumber": 699,
+      "packageName": "raelives",
+      "packageModulePath": "tay/packages/raelives.scm",
+      "artifactPath": ".goocastle/evidence/issue-699.png",
+      "runtime": {
+        "executable": "raelives",
+        "invocation": {
+          "file": "raelives",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "RAELIVES_RUNTIME_OK"
+      }
     }
   ]
 }
