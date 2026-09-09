@@ -72,12 +72,15 @@ fi
 before=$($guix_bin hash -S nar "$raelives_out")
 test -z "$(find "$raelives_out" -xdev -type f -perm /222 -print -quit)"
 
-scratch=$(mktemp -d /tmp/goocastle-agent-raelives-XXXXXX)
-case "$scratch" in
+disposable_workspace=$(mktemp -d /tmp/goocastle-agent-XXXXXX)
+disposable_workspace=$(realpath -- "$disposable_workspace")
+case "$disposable_workspace" in
     /tmp/goocastle-agent-*) ;;
     *) echo 'refusing an unvalidated disposable workspace' >&2; exit 1 ;;
 esac
-test -d "$scratch"
+test -d "$disposable_workspace"
+scratch=$disposable_workspace/raelives
+mkdir "$scratch"
 mkdir "$scratch/home" "$scratch/config" "$scratch/data" \
     "$scratch/cache" "$scratch/state" "$scratch/runtime" "$scratch/tmp" \
     "$scratch/caller"
