@@ -835,6 +835,22 @@
         },
         "successMarker": "RAELIVES_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 700,
+      "packageName": "keeperrl",
+      "packageModulePath": "tay/packages/keeperrl.scm",
+      "artifactPath": ".goocastle/evidence/issue-700.png",
+      "runtime": {
+        "executable": "keeper",
+        "invocation": {
+          "file": "keeper",
+          "args": [
+            "--smoke-test"
+          ]
+        },
+        "successMarker": "KEEPERRL_SMOKE_OK"
+      }
     }
   ]
 }
