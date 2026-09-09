@@ -17,7 +17,6 @@
          "glibc-locales"
          "git"
          "guix"
-         "gnupg"
          "github-cli"
          "gzip"
          "grep"
