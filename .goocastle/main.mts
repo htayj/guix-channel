@@ -263,7 +263,7 @@ const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Obje
   stalledAfterMs: 15 * 60_000,
 });
 const sequentialPhaseFailureHistoryLimit = SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT ?? 8;
-const providerStateRecoveryMaxEpochs = SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS ?? 2;
+const providerStateRecoveryMaxEpochs = SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS ?? 5;
 const runtimeHandshake = typeof generatedRunnerRuntimeHandshake === "function"
   ? generatedRunnerRuntimeHandshake()
   : undefined;
@@ -3897,8 +3897,21 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         const record = phaseRecord(journal, phase.name);
         return phase.type === "agent" && record?.state === "failed" && record.failureReceipt?.kind === "timeout";
       });
-      if (timedOutPhase !== undefined) {
-        const recovery = journal.providerStateRecovery;
+      const recovery = journal.providerStateRecovery;
+      const legacyCapCanReopen = !timedOutPhase &&
+        recovery.epochs.length < providerStateRecoveryMaxEpochs &&
+        !phases.some((phase) => phase.type === "agent" && phaseRecord(journal, phase.name)?.failureReceipt?.kind === "provider-auth-expired");
+      if (legacyCapCanReopen) {
+        journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+          status: "active",
+          failure: undefined,
+          providerStateRecovery: {
+            state: "active",
+            epochs: recovery.epochs.map((entry) => entry.state === "blocked" ? { ...entry, state: "failed" } : entry),
+          },
+        });
+        console.warn("Reopened legacy provider recovery below the current bounded attempt limit.");
+      } else if (timedOutPhase !== undefined) {
         journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
           status: "active",
           failure: undefined,
@@ -3909,7 +3922,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         });
         console.warn("Accepted explicit host-timeout recovery for phase " + JSON.stringify(timedOutPhase.name) + "; preserved provider-state history remains available for inspection.");
       } else {
-        const exhaustedPhase = phases.find((phase) => phase.name === journal.providerStateRecovery?.epochs.at(-1)?.phase);
+        const exhaustedPhase = phases.find((phase) =>
+          phase.type === "agent" && phaseRecord(journal, phase.name)?.state === "failed" &&
+          phaseRecord(journal, phase.name)?.failureReceipt?.kind === "provider-interruption",
+        ) ?? phases.find((phase) => phase.name === journal.providerStateRecovery?.epochs.at(-1)?.phase);
         journal = await acceptManualProviderRepair(journal, exhaustedPhase);
       }
     }
