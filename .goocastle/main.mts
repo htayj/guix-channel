@@ -2176,6 +2176,18 @@ const cleanupOutcome = async (journal, outcome) => {
   if (removed.length > 0) console.log("Cleaned " + String(removed.length) + " terminal managed state home(s) for #" + completed.issueNumber + ".");
   return completed;
 };
+const reconcileTerminalDispositionCleanup = async (journal) => {
+  // A completed disposition has a durable host comment and label receipt (and
+  // any materialized implementation-ticket receipt). Unlike a delivery it
+  // has no branch merge to reconcile, but its provider home is equally
+  // terminal and may contain large provider caches or credentials.
+  if (!terminalDispositionFor(journal) || journal.cleanup === "complete") return journal;
+  return await cleanupOutcome(journal, {
+    state: "cleaned",
+    ref: "provider-state",
+    reason: "terminal-disposition",
+  });
+};
 const retainCleanupRef = async (journal, ref, sha, reason) => {
   // This is intentionally the only recovery line for a divergent ref. It is
   // terminal journal state, not an exception that would produce an uncaught
@@ -2480,6 +2492,13 @@ const manuallyRecoverableJournalIssues = new Set();
 const missingBranchManualJournalIssues = new Set();
 const incompleteJournal = async () => {
   const journals = await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME);
+  // Older runners recorded terminal research receipts before provider-state
+  // cleanup existed. Reconcile those receipts here before filtering them out
+  // of scheduler selection, so a restart progressively reclaims only state
+  // whose host outcome is already final.
+  for (const terminal of journals.filter(terminalDispositionFor)) {
+    await reconcileTerminalDispositionCleanup(terminal);
+  }
   // A closed delivery may be deliberately reopened after visual review or a
   // revised runtime contract. Only an explicit resume --issue may allocate
   // a new epoch: ordinary scheduling must never reinterpret old history as
@@ -4724,6 +4743,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     }
     if (dispositionPolicy !== undefined) {
       journal = await applyDisposition(journal, issue);
+      journal = await reconcileTerminalDispositionCleanup(journal);
       await restoreHostGitConfig();
       console.log("Recorded disposition " + JSON.stringify(journal.disposition?.disposition) + " for #" + issue.number + ".");
       await persistInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs);
