@@ -775,8 +775,24 @@
     {
       "issueNumber": 696,
       "packageName": "hydra-slayer",
-      "packageModulePath": "gnu/packages/games.scm",
+      "packageModulePath": "tay/packages/hydra-slayer.scm",
       "artifactPath": ".goocastle/evidence/issue-696.png",
+      "runtime": {
+        "executable": "hydra",
+        "invocation": {
+          "file": "hydra",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "HYDRA_SLAYER_GUIX_SMOKE_OK: new-game, turn, save-load, isolated-state"
+      }
+    },
+    {
+      "issueNumber": 697,
+      "packageName": "hydra-slayer",
+      "packageModulePath": "tay/packages/hydra-slayer.scm",
+      "artifactPath": ".goocastle/evidence/issue-697.png",
       "runtime": {
         "executable": "hydra",
         "invocation": {
