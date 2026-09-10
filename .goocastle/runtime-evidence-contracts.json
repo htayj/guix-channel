@@ -851,6 +851,22 @@
         },
         "successMarker": "KEEPERRL_SMOKE_OK"
       }
+    },
+    {
+      "issueNumber": 701,
+      "packageName": "kimchi",
+      "packageModulePath": "tay/packages/kimchi.scm",
+      "artifactPath": ".goocastle/evidence/issue-701.png",
+      "runtime": {
+        "executable": "kimchi",
+        "invocation": {
+          "file": "kimchi",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "kimchi smoke: terminal UI OK; no store writes"
+      }
     }
   ]
 }
