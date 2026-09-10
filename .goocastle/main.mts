@@ -693,7 +693,10 @@ const signRequiredPhaseCommits = async (journal, boundary, startSha, endSha) => 
     // commits in the host worktree and sign each replayed commit, not merely
     // the final tip. The command is static and passed as one argv element to
     // Git's documented --exec hook.
-    gitAt(worktree, ["rebase", "--exec", "git -c core.hooksPath=/dev/null -c commit.gpgSign=true commit --amend --no-edit --no-verify", signingBaseSha], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1024 * 1024 });
+    // A host signature can be the only intended change to a provider commit.
+    // Git otherwise rejects that replay amendment as empty before invoking
+    // the configured signing program.
+    gitAt(worktree, ["rebase", "--exec", "git -c core.hooksPath=/dev/null -c commit.gpgSign=true commit --amend --no-edit --no-verify --allow-empty", signingBaseSha], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1024 * 1024 });
     if (stashedWorktree) {
       gitAt(worktree, ["stash", "pop", "--index"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1024 * 1024 });
       stashedWorktree = false;
