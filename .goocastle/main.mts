@@ -3091,6 +3091,46 @@ const reconcileBlockedRequiredCommandRepair = async (journal, issueNumber) => {
   });
 };
 
+// Provider-state recovery has the same terminal scheduling semantics as a
+// bounded required-command repair.  Keeping the receipt in the journal alone
+// is insufficient: a normal invocation would select it again, fail while
+// trying to launch the provider, and starve a later eligible issue.  Publish a
+// deterministic, idempotent forge receipt before skipping it.
+const providerStateRecoveryComment = (issueNumber, recovery) => {
+  const boundedRecovery = failureDiagnosticFor(recovery?.recovery, 4_000).trim() ||
+    "(no provider-recovery diagnostic retained)";
+  const phase = recovery?.epochs?.at(-1)?.phase ?? "unknown agent phase";
+  return [
+    "<!-- goocastle-provider-recovery-blocked:" + String(issueNumber) + ":" + phase + " -->",
+    "",
+    "Goocastle blocked this ticket after its bounded fresh provider-state recovery budget was exhausted.",
+    "The preserved task branch, journal, and quarantined provider-state locations remain available for manual diagnosis; inspect them before an explicit resume.",
+    "",
+    "Bounded recovery evidence:",
+    boundedRecovery,
+  ].join("\n");
+};
+const reconcileBlockedProviderStateRecovery = async (journal, issueNumber) => {
+  const recovery = journal.providerStateRecovery;
+  if (recovery?.state !== "blocked") return;
+  const comment = providerStateRecoveryComment(issueNumber, recovery);
+  await retryGitHub("provider-state recovery escalation", async () => {
+    const current = await selectedIssue(issueNumber);
+    const blocked = current.labels.some((label) => label.name === "state:blocked");
+    const ready = current.labels.some((label) => label.name === "ready-for-agent");
+    if (!current.comments.some((entry) => entry.body === comment)) {
+      execFileSync("gh", ["issue", "comment", String(issueNumber), "--body", comment], { stdio: "inherit" });
+    }
+    if (!blocked || ready) {
+      execFileSync("gh", [
+        "issue", "edit", String(issueNumber),
+        ...(blocked ? [] : ["--add-label", "state:blocked"]),
+        ...(ready ? ["--remove-label", "ready-for-agent"] : []),
+      ], { stdio: "inherit" });
+    }
+  });
+};
+
 const reexecutionRecoveryCommand = (state) => {
   const argumentsForNode = [process.execPath, ...process.execArgv, ...process.argv.slice(1)];
   const runtimeEnvironment = [
@@ -3313,6 +3353,18 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       console.log(
         "Skipping open terminally blocked issue #" + issue.number +
           " (state:blocked); its preserved journal and worktree remain unchanged.",
+      );
+      task -= 1;
+      continue;
+    }
+    if (issue.state === "OPEN" && journal.providerStateRecovery?.state === "blocked" && !RESUME_ONLY) {
+      await reconcileBlockedProviderStateRecovery(journal, issue.number);
+      deferredJournalIssues.add(issue.number);
+      terminallyBlockedJournalIssues.add(issue.number);
+      attemptedIssues.add(issue.number);
+      console.log(
+        "Skipping open issue #" + issue.number +
+          " with terminal provider-state recovery; its preserved journal and worktree remain unchanged.",
       );
       task -= 1;
       continue;
@@ -4557,19 +4609,41 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
           journal = await prepareCommitSigning(journal, checkpointBoundary);
           const checkpointStartSha = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
           gitAt(taskWorktree.worktreePath, ["add", "--all"], { stdio: "inherit" });
-          gitAt(taskWorktree.worktreePath, [
-            "-c", "commit.gpgSign=" + String(signingMode === "required"),
-            "commit", "--no-verify",
-            "-m", "chore(goocastle): checkpoint residual agent changes before runtime evidence",
-          ], { stdio: "inherit" });
+          // An agent can leave a transient file which disappears while the
+          // sandbox is being reaped, or a path Git deliberately declines to
+          // stage.  Do not turn that into an empty signed-commit failure.
+          // Commit only an actual staged delta; if residual work remains,
+          // retain it and report a concrete manual-recovery error.
+          const stagedWork = gitAt(taskWorktree.worktreePath, ["diff", "--cached", "--name-only"], { encoding: "utf8" }).trim();
+          if (stagedWork !== "") {
+            gitAt(taskWorktree.worktreePath, [
+              "-c", "commit.gpgSign=" + String(signingMode === "required"),
+              "commit", "--no-verify",
+              "-m", "chore(goocastle): checkpoint residual agent changes before runtime evidence",
+            ], { stdio: "inherit" });
+          } else {
+            const unstagedResidual = gitAt(taskWorktree.worktreePath, ["status", "--porcelain=v1", "--untracked-files=all"], { encoding: "utf8" }).trim();
+            if (unstagedResidual !== "") {
+              throw new Error(
+                "Residual agent work could not be staged for the runtime-evidence checkpoint: " +
+                failureDiagnosticFor(unstagedResidual, 1_000),
+              );
+            }
+            console.log(
+              "Residual agent work disappeared before checkpointing for " + JSON.stringify(predecessor?.name ?? "unknown") +
+                "; no checkpoint commit was needed.",
+            );
+          }
           const checkpointHead = hostGit(["rev-parse", branch], { encoding: "utf8" }).trim();
-          const signed = await ensureSignedPhaseCommits(journal, checkpointBoundary, checkpointStartSha, checkpointHead);
-          journal = signed.journal;
-          journal = await recordUnsignedCommit(journal, checkpointBoundary);
-          console.log(
-            "Checkpointed residual agent changes after " + JSON.stringify(predecessor?.name ?? "unknown") +
-            " before runtime evidence phase " + JSON.stringify(phase.name) + ".",
-          );
+          if (stagedWork !== "") {
+            const signed = await ensureSignedPhaseCommits(journal, checkpointBoundary, checkpointStartSha, checkpointHead);
+            journal = signed.journal;
+            journal = await recordUnsignedCommit(journal, checkpointBoundary);
+            console.log(
+              "Checkpointed residual agent changes after " + JSON.stringify(predecessor?.name ?? "unknown") +
+              " before runtime evidence phase " + JSON.stringify(phase.name) + ".",
+            );
+          }
         }
         if (evidenceConfig?.runtimeContract !== undefined) {
           const currentEvidence = await resolveGooflowEvidence(
