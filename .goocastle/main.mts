@@ -5033,7 +5033,12 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       break;
     }
     let providerRecoveryEscalation;
-    const providerBranchIsValid = providerInterruption && taskWorktreeRecovery.preservedWorktreePath !== undefined
+    // Sandboxes may own the task worktree.  The recovery result is canonical
+    // cleanup result and preserves that path regardless of whether it came
+    // from the explicit task worktree or from the sandbox that wrapped it.
+    // Requiring only taskWorktreeRecovery incorrectly turns a safely
+    // preserved provider interruption into a scheduler-stopping failure.
+    const providerBranchIsValid = providerInterruption && recovery.preservedWorktreePath !== undefined
       ? (() => {
           try {
             return exactRefSha("refs/heads/" + branch) !== undefined;
