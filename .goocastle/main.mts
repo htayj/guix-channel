@@ -2461,41 +2461,48 @@ const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => 
     },
   });
   const reconciliationWorktree = await mkdtemp(join(hostWorkTree, ".goocastle", "reconcile-"));
+  let preserveReconciliationWorktree = false;
   hostGit(["worktree", "add", "--detach", reconciliationWorktree, taskHead], { stdio: "inherit" });
   try {
-    gitAt(reconciliationWorktree, ["rebase", "--onto", currentBase, replayBase], { stdio: "inherit" });
-  } catch (error) {
-    journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
-      reconciliation: { ...journal.reconciliation, state: "conflicted", recoveryWorktreePath: reconciliationWorktree },
+    try {
+      gitAt(reconciliationWorktree, ["rebase", "--onto", currentBase, replayBase], { stdio: "inherit" });
+    } catch (error) {
+      preserveReconciliationWorktree = true;
+      journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+        reconciliation: { ...journal.reconciliation, state: "conflicted", recoveryWorktreePath: reconciliationWorktree },
+      });
+      throw new Error("Could not reconcile #" + issueNumber + " onto " + journal.baseBranch + ". " + reconciliationRecovery(journal), { cause: error });
+    }
+    const rewrittenHead = gitAt(reconciliationWorktree, ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+    if (hostGit(["rev-parse", journal.branch], { encoding: "utf8" }).trim() !== taskHead) {
+      throw new Error("Cannot finish reconciliation for #" + issueNumber + ": task branch changed while replaying. Original work remains at " + backupBranch + ".");
+    }
+    const checkedOutWorktree = branchWorktreePath(journal.branch);
+    if (checkedOutWorktree === undefined) {
+      hostGit(["branch", "-f", journal.branch, rewrittenHead]);
+    } else {
+      resetCheckedOutWorktreePreservingDirtyState(checkedOutWorktree, rewrittenHead, "base reconciliation");
+    }
+    const phases = journal.phases.map((phase) => {
+      if (phase.state !== "running" || !phase.startSha) return phase;
+      const commitCount = Number(hostGit(["rev-list", "--count", phase.startSha + ".." + taskHead], { encoding: "utf8" }).trim());
+      return commitCount === 0
+        ? { ...phase, startSha: rewrittenHead }
+        : { ...phase, state: "complete", commitCount, completedAt: new Date().toISOString() };
     });
-    throw new Error("Could not reconcile #" + issueNumber + " onto " + journal.baseBranch + ". " + reconciliationRecovery(journal), { cause: error });
+    journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+      phases,
+      reconciliation: { ...journal.reconciliation, state: "complete", rewrittenHead },
+    });
+    if (Number(gitAt(reconciliationWorktree, ["rev-list", "--count", currentBase + ".." + rewrittenHead], { encoding: "utf8" }).trim()) > 0) {
+      journal = await recordUnsignedCommit(journal, signingBoundary("reconciliation", journal.baseBranch));
+    }
+    return journal;
+  } finally {
+    if (!preserveReconciliationWorktree) {
+      hostGit(["worktree", "remove", "--force", reconciliationWorktree], { stdio: "inherit" });
+    }
   }
-  const rewrittenHead = gitAt(reconciliationWorktree, ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
-  if (hostGit(["rev-parse", journal.branch], { encoding: "utf8" }).trim() !== taskHead) {
-    throw new Error("Cannot finish reconciliation for #" + issueNumber + ": task branch changed while replaying. Original work remains at " + backupBranch + ".");
-  }
-  const checkedOutWorktree = branchWorktreePath(journal.branch);
-  if (checkedOutWorktree === undefined) {
-    hostGit(["branch", "-f", journal.branch, rewrittenHead]);
-  } else {
-    resetCheckedOutWorktreePreservingDirtyState(checkedOutWorktree, rewrittenHead, "base reconciliation");
-  }
-  const phases = journal.phases.map((phase) => {
-    if (phase.state !== "running" || !phase.startSha) return phase;
-    const commitCount = Number(hostGit(["rev-list", "--count", phase.startSha + ".." + taskHead], { encoding: "utf8" }).trim());
-    return commitCount === 0
-      ? { ...phase, startSha: rewrittenHead }
-      : { ...phase, state: "complete", commitCount, completedAt: new Date().toISOString() };
-  });
-  journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
-    phases,
-    reconciliation: { ...journal.reconciliation, state: "complete", rewrittenHead },
-  });
-  if (Number(gitAt(reconciliationWorktree, ["rev-list", "--count", currentBase + ".." + rewrittenHead], { encoding: "utf8" }).trim()) > 0) {
-    journal = await recordUnsignedCommit(journal, signingBoundary("reconciliation", journal.baseBranch));
-  }
-  hostGit(["worktree", "remove", reconciliationWorktree], { stdio: "inherit" });
-  return journal;
 };
 const deferredJournalIssues = new Set();
 const terminallyBlockedJournalIssues = new Set();
@@ -3881,10 +3888,23 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       : configuredPhases.map((phase) => phase.type === "command" && phase.name === evidenceConfig.proofPhase
         ? { ...phase, command: guixPackageProofCommand(evidenceConfig) }
         : phase);
-    const phases = proofScopedPhases.map((phase) => ({
-      ...phase,
-      liveness: phase.liveness ?? defaultSequentialPhaseLiveness,
-    }));
+    const phases = proofScopedPhases.map((phase) => {
+      const prior = phaseRecord(journal, phase.name);
+      // A command phase's execution limit is a launch-to-reap ceiling, not a
+      // fresh allowance for every runner restart.  In particular, a retained
+      // Guix daemon operation can be attached after a crash, but that attach
+      // must consume the original proof window recorded in the journal.
+      const priorStartedAt = prior?.state === "running" ? prior.liveness?.startedAt : undefined;
+      const priorStartedAtMs = priorStartedAt === undefined ? Number.NaN : Date.parse(priorStartedAt);
+      const remainingTimeoutMs = phase.type !== "command" || phase.options?.timeoutMs === undefined || !Number.isFinite(priorStartedAtMs)
+        ? undefined
+        : Math.max(1, phase.options.timeoutMs - Math.max(0, Date.now() - priorStartedAtMs));
+      return {
+        ...phase,
+        ...(remainingTimeoutMs === undefined ? {} : { options: { ...phase.options, timeoutMs: remainingTimeoutMs } }),
+        liveness: phase.liveness ?? defaultSequentialPhaseLiveness,
+      };
+    });
     const setup = materializedGooflow
       ? issueGooflowSetup(materializedGooflow, projectConfig, { signal: runnerCancellation.signal })
       : [];
