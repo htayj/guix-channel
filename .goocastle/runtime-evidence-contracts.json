@@ -867,6 +867,22 @@
         },
         "successMarker": "kimchi smoke: terminal UI OK; no store writes"
       }
+    },
+    {
+      "issueNumber": 702,
+      "packageName": "lambdahack",
+      "packageModulePath": "tay/packages/lambdahack.scm",
+      "artifactPath": ".goocastle/evidence/issue-702.png",
+      "runtime": {
+        "executable": "lambdahack",
+        "invocation": {
+          "file": "lambdahack",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "LAMBDAHACK-SMOKE-OK"
+      }
     }
   ]
 }
