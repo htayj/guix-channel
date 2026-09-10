@@ -5043,7 +5043,14 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         })()
       : false;
     const currentProviderRecovery = journal.providerStateRecovery;
-    const providerRecoveryAttempts = currentProviderRecovery?.epochs.length ?? 0;
+    // Recovery capacity belongs to the failed agent phase.  A successfully
+    // recovered implementation or audit phase must not consume retries for a
+    // later, independently interrupted phase in the same durable journal.
+    // Keep this in lockstep with the phase-scoped count used when allocating
+    // a fresh provider state home on the next scheduler turn.
+    const providerRecoveryAttempts = currentProviderRecovery?.epochs.filter((entry) =>
+      entry.phase === failedPhase?.name && entry.state !== "complete",
+    ).length ?? 0;
     const providerRecoveryCanRetry = providerInterruption &&
       providerBranchIsValid &&
       currentProviderRecovery?.state !== "blocked" &&
