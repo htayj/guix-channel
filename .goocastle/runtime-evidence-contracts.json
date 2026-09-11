@@ -995,6 +995,22 @@
         },
         "successMarker": "nitrohack guix smoke passed"
       }
+    },
+    {
+      "issueNumber": 710,
+      "packageName": "nlarn",
+      "packageModulePath": "tay/packages/nlarn.scm",
+      "artifactPath": ".goocastle/evidence/issue-710.png",
+      "runtime": {
+        "executable": "nlarn",
+        "invocation": {
+          "file": "nlarn",
+          "args": [
+            "--highscores"
+          ]
+        },
+        "successMarker": "NLarn Hall of Fame"
+      }
     }
   ]
 }
