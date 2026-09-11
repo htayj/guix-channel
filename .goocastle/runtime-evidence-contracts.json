@@ -1011,6 +1011,22 @@
         },
         "successMarker": "NLarn Hall of Fame"
       }
+    },
+    {
+      "issueNumber": 711,
+      "packageName": "obumbrata",
+      "packageModulePath": "tay/packages/obumbrata.scm",
+      "artifactPath": ".goocastle/evidence/issue-711.png",
+      "runtime": {
+        "executable": "obumbrata",
+        "invocation": {
+          "file": "obumbrata",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "OBUMBRATA_RUNTIME_OK"
+      }
     }
   ]
 }
