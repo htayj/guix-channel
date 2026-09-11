@@ -24,8 +24,8 @@
        (method git-fetch)
        (uri (git-reference
              (url "https://github.com/nlarn/nlarn")
-             ;; Annotated release tag, whose tagged commit is
-             ;; 7163a9925406014bfa74304032dfae920c6d8a8a.
+             ;; Annotated release tag object 7163a9925406014bfa74304032dfae920c6d8a8a;
+             ;; its tagged commit is 1873599a5682e4645e2801f7de6bd11ce54c2dfd.
              (commit "1873599a5682e4645e2801f7de6bd11ce54c2dfd")))
        (file-name (git-file-name name version))
        ;; Guix git-fetch tree hash for the fixed release checkout.  The
