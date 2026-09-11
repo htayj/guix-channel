@@ -1043,6 +1043,22 @@
         },
         "successMarker": "PL0MROGUE_SMOKE_OK"
       }
+    },
+    {
+      "issueNumber": 713,
+      "packageName": "pyro",
+      "packageModulePath": "tay/packages/pyro.scm",
+      "artifactPath": ".goocastle/evidence/issue-713.png",
+      "runtime": {
+        "executable": "pyro",
+        "invocation": {
+          "file": "pyro",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "PYRO_RUNTIME_OK"
+      }
     }
   ]
 }
