@@ -112,7 +112,7 @@ test -z "$(find "$scratch/home" "$scratch/config" "$scratch/data" \
 # Run both real curses sessions in a fresh network namespace.  The helper is
 # itself launched by the bounded argv-only executor, which owns the complete
 # process group if the PTY session ever stops responding.
-raw="$scratch/nlarn-terminal.raw"
+raw=${GOOCASTLE_RUNTIME_RAW_CAPTURE:-"$scratch/nlarn-terminal.raw"}
 proof=$(cd "$scratch/work" && env -i $common_env \
     GOOCASTLE_RUNTIME_RAW_CAPTURE="$raw" \
     "$node_bin" "$bounded_validation" --timeout-ms 90000 -- \
