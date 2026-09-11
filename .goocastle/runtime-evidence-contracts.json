@@ -963,6 +963,22 @@
         },
         "successMarker": "NARWHARL_SMOKE_OK"
       }
+    },
+    {
+      "issueNumber": 708,
+      "packageName": "nhfourk",
+      "packageModulePath": "tay/packages/nhfourk.scm",
+      "artifactPath": ".goocastle/evidence/issue-708.png",
+      "runtime": {
+        "executable": "nhfourk",
+        "invocation": {
+          "file": "nhfourk",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "nhfourk isolated smoke passed"
+      }
     }
   ]
 }
