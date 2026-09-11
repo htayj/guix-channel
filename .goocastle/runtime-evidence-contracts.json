@@ -947,6 +947,22 @@
         },
         "successMarker": "GOOCASTLE_UMORIA_SMOKE_OK"
       }
+    },
+    {
+      "issueNumber": 707,
+      "packageName": "narwharl",
+      "packageModulePath": "tay/packages/narwharl.scm",
+      "artifactPath": ".goocastle/evidence/issue-707.png",
+      "runtime": {
+        "executable": "narwharl",
+        "invocation": {
+          "file": "narwharl",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "NARWHARL_SMOKE_OK"
+      }
     }
   ]
 }
