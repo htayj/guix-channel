@@ -38,6 +38,8 @@ strace_out=$(find_output bin/strace strace)
 node_bin=${GOOCASTLE_NODE:-/usr/bin/node}
 test -x "$node_bin" || node_bin=$(command -v node)
 bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
+convert_bin=$(command -v convert || true)
+python_bin=$(command -v python3 || true)
 
 test -x "$nitrohack_out/bin/nitrohack"
 test -x "$nitrohack_out/libexec/nitrohack-real"
@@ -172,8 +174,17 @@ if test -n "${GOOCASTLE_SCREENSHOT:-}"; then
         "$channel_dir"/.goocastle/evidence/*.png) ;;
         *) echo 'nitrohack smoke: screenshot must be a channel evidence PNG' >&2; exit 1 ;;
     esac
+    test -x "$convert_bin"
+    test -x "$python_bin"
     mkdir -p "$(dirname -- "$GOOCASTLE_SCREENSHOT")"
-    cp "$raw" "$GOOCASTLE_SCREENSHOT"
+    rendered=$scratch/work/terminal.txt
+    "$python_bin" "$channel_dir/.goocastle/render-terminal-screenshot.py" \
+        "$raw" "$rendered"
+    "$convert_bin" -background '#1f1f1f' -fill '#eeeeee' \
+        -font DejaVu-Sans-Mono -pointsize 16 \
+        -bordercolor '#1f1f1f' -border 20 \
+        label:@"$rendered" "PNG24:$GOOCASTLE_SCREENSHOT"
+    test -s "$GOOCASTLE_SCREENSHOT"
 fi
 
 printf '%s\n' "$proof"
