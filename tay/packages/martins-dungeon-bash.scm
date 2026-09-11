@@ -5,6 +5,7 @@
   #:use-module (guix download)
   #:use-module (guix gexp)
   #:use-module (guix packages)
+  #:use-module (guix utils)
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (gnu packages bash)
   #:use-module (gnu packages base)
@@ -34,15 +35,19 @@
     (arguments
      (list
       ;; Upstream has no automated test target.  The installed terminal game,
-      ;; including save/load, is exercised by tests/martins-dungeon-bash-smoke.sh.
+      ;; including save/load, is exercised by
+      ;; tests/martins-dungeon-bash-smoke.sh.
       #:tests? #f
       #:make-flags
       #~(list
-         "CC=gcc"
+         (string-append "CC=" #$(cc-for-target))
          ;; Keep upstream's warning checks while allowing GCC 14 to report
          ;; historical maybe-uninitialized diagnostics without rejecting the
          ;; otherwise successful build.  -g0 avoids variable build paths.
-         "CFLAGS=-O2 -g0 -Wall -Wstrict-prototypes -Wwrite-strings -Wmissing-prototypes -Wredundant-decls -Wunreachable-code -DMAJVERS=1 -DMINVERS=7")
+         (string-append
+          "CFLAGS=-O2 -g0 -Wall -Wstrict-prototypes "
+          "-Wwrite-strings -Wmissing-prototypes -Wredundant-decls "
+          "-Wunreachable-code -DMAJVERS=1 -DMINVERS=7"))
       #:phases
       #~(modify-phases %standard-phases
           (delete 'configure)
@@ -62,7 +67,8 @@
               (let* ((out #$output)
                      (bin (string-append out "/bin"))
                      (libexec (string-append out "/libexec"))
-                     (doc (string-append out "/share/doc/martins-dungeon-bash"))
+                     (doc (string-append
+                           out "/share/doc/martins-dungeon-bash"))
                      (real (string-append libexec "/dungeonbash"))
                      (launcher (string-append bin "/dungeonbash"))
                      (cat #$(file-append coreutils-minimal "/bin/cat"))
@@ -91,40 +97,67 @@
                     (format port "terminfo=~s~%~%"
                             #$(file-append ncurses "/share/terminfo"))
                     (display
-                     "export TERMINFO_DIRS=\"$terminfo${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"\n"
+                     (string-append
+                      "export TERMINFO_DIRS=\"$terminfo"
+                      "${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"\n")
                      port)
                     (display "export TERM=\"${TERM:-xterm-256color}\"\n" port)
                     (display "if test \"${1-}\" = --smoke; then\n" port)
                     (display
-                     "  test \"$#\" -eq 1 || { echo 'usage: dungeonbash [--smoke]' >&2; exit 64; }\n"
+                     (string-append
+                      "  test \"$#\" -eq 1 || { echo "
+                      "'usage: dungeonbash [--smoke]' >&2; exit 64; }\n")
                      port)
                     (display "  export LC_ALL=C\n" port)
                     (display
-                     "  state=\"${XDG_STATE_HOME:-${HOME:?HOME or XDG_STATE_HOME must be set}/.local/state}/martins-dungeon-bash\"\n"
+                     (string-append
+                      "  state=\"${XDG_STATE_HOME:-${HOME:?HOME or "
+                      "XDG_STATE_HOME must be set}/.local/state}/"
+                      "martins-dungeon-bash\"\n")
                      port)
                     (display "  work=\"$state/smoke\"\n" port)
                     (display "  \"$mkdir\" -p \"$work\"\n" port)
                     (display "  cd \"$state\"\n" port)
                     (format port
-                            "  printf 'Goocastle\\n5S ' | TERM=xterm-256color \"$script\" -qefc ~s /dev/null >\"$work/first.raw\"~%"
+                            (string-append
+                             "  printf 'Goocastle\\n5S ' | "
+                             "TERM=xterm-256color \"$script\" -qefc ~s "
+                             "/dev/null >\"$work/first.raw\"~%")
                             smoke-first)
                     (display "  test -s \"$state/dunbash.sav.gz\"\n" port)
                     (format port
-                            "  printf 'XY ' | TERM=xterm-256color \"$script\" -qefc ~s /dev/null >\"$work/load.raw\"~%"
+                            (string-append
+                             "  printf 'XY ' | TERM=xterm-256color "
+                             "\"$script\" -qefc ~s /dev/null "
+                             ">\"$work/load.raw\"~%")
                             smoke-second)
                     (display "  test ! -e \"$state/dunbash.sav.gz\"\n" port)
                     (display "  first=\"$(\"$cat\" \"$work/first.raw\")\"\n" port)
                     (display "  case \"$first\" in\n" port)
                     (display "    *\"Welcome to Martin's Infinite Dungeon.\"*) ;;\n" port)
-                    (display "    *) echo 'dungeonbash smoke: first transcript missing welcome' >&2; exit 1 ;;\n" port)
+                    (display
+                     (string-append
+                      "    *) echo 'dungeonbash smoke: first transcript "
+                      "missing welcome' >&2; exit 1 ;;\n")
+                     port)
                     (display "  esac\n" port)
                     (display "  second=\"$(\"$cat\" \"$work/load.raw\")\"\n" port)
                     (display "  case \"$second\" in\n" port)
                     (display "    *\"Game loaded.\"*) ;;\n" port)
-                    (display "    *) echo 'dungeonbash smoke: load transcript missing Game loaded' >&2; exit 1 ;;\n" port)
+                    (display
+                     (string-append
+                      "    *) echo 'dungeonbash smoke: load transcript missing "
+                      "Game loaded' >&2; exit 1 ;;\n")
+                     port)
                     (display "  esac\n" port)
-                    (display "  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}\"; then\n" port)
-                    (display "    \"$cat\" \"$work/first.raw\" \"$work/load.raw\" >\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n" port)
+                    (display
+                     "  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}\"; then\n"
+                     port)
+                    (display
+                     (string-append
+                      "    \"$cat\" \"$work/first.raw\" "
+                      "\"$work/load.raw\" >\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n")
+                     port)
                     (display "  fi\n" port)
                     (display "  printf '%s\\n' MARTINS_DUNGEON_BASH_SMOKE_OK\n" port)
                     (display "  exit 0\n" port)
