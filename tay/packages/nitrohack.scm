@@ -91,7 +91,8 @@
                      (shell #$(file-append bash-minimal "/bin/sh"))
                      (cat #$(file-append coreutils-minimal "/bin/cat"))
                      (cp #$(file-append coreutils-minimal "/bin/cp"))
-                     (dirname-bin #$(file-append coreutils-minimal "/bin/dirname"))
+                     (dirname-bin #$(file-append
+                                      coreutils-minimal "/bin/dirname"))
                      (find #$(file-append findutils "/bin/find"))
                      (grep #$(file-append grep "/bin/grep"))
                      (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
@@ -133,52 +134,185 @@
                     (format port "sleep=~s~%script=~s~%stty=~s~%terminfo=~s~%"
                             sleep script stty terminfo)
                     (display
-                     "export LD_LIBRARY_PATH=\"$libexec:$out/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\"\n"
+                     (string-append
+                      "export LD_LIBRARY_PATH=\""
+                      "$libexec:$out/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\"\n")
                      port)
                     (display
                      "export TERM=\"${TERM:-xterm-256color}\"\n"
                      port)
                     (display
-                     "export TERMINFO_DIRS=\"$terminfo${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"\n\n"
+                     (string-append
+                      "export TERMINFO_DIRS=\""
+                      "$terminfo${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"\n\n")
                      port)
                     (display "run_session() {\n" port)
                     (display "  log=$1\n  mode=${2-truncate}\n" port)
-                    (display "  command=\"$stty rows 25 cols 80; exec $real -@ -u goocastle-smoke\"\n" port)
-                    (display "  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"; then\n" port)
-                    (display "    \"$mkdir\" -p \"$(\"$dirname\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"\n" port)
+                    (display
+                     (string-append
+                      "  command=\"$stty rows 25 cols 80; exec "
+                      "$real -@ -u goocastle-smoke\"\n")
+                     port)
+                    (display
+                     (string-append
+                      "  if test -n \""
+                      "${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"; then\n")
+                     port)
+                    (display
+                     (string-append
+                      "    \"$mkdir\" -p \"$(\""
+                      "$dirname\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"\n")
+                     port)
                     (display "    if test \"$mode\" = append; then\n" port)
-                    (display "      \"$script\" -qefc \"$command\" \"$log\" >> \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n" port)
-                    (display "    else\n      \"$script\" -qefc \"$command\" \"$log\" > \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n    fi\n" port)
-                    (display "  else\n    \"$script\" -qefc \"$command\" \"$log\" >/dev/null\n  fi\n" port)
+                    (display
+                     (string-append
+                      "      \"$script\" -qefc \"$command\" \"$log\" >> "
+                      "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n")
+                     port)
+                    (display "    else\n" port)
+                    (display
+                     (string-append
+                      "      \"$script\" -qefc \"$command\" \"$log\" > "
+                      "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n")
+                     port)
+                    (display "    fi\n" port)
+                    (display "  else\n" port)
+                    (display
+                     (string-append
+                      "    \"$script\" -qefc \"$command\" \"$log\" "
+                      ">/dev/null\n")
+                     port)
+                    (display "  fi\n" port)
                     (display "}\n\n" port)
                     (display "if test \"${1-}\" = --guix-smoke; then\n" port)
-                    (display "  test \"$#\" -eq 1 || { echo 'usage: nitrohack [--guix-smoke]' >&2; exit 64; }\n" port)
+                    (display
+                     (string-append
+                      "  test \"$#\" -eq 1 || { echo 'usage: "
+                      "nitrohack [--guix-smoke]' >&2; exit 64; }\n")
+                     port)
                     ;; Keep the package smoke self-contained: it does not
                     ;; inspect or reuse a caller's home/configuration state.
-                    (display "  smoke=$(\"$mktemp\" -d \"${TMPDIR:-/tmp}/nitrohack-guix-smoke.XXXXXXXX\")\n" port)
-                    (display "  \"$mkdir\" -p \"$smoke/home\" \"$smoke/config\" \"$smoke/data\" \"$smoke/cache\" \"$smoke/state\" \"$smoke/runtime\" \"$smoke/tmp\"\n" port)
-                    (display "  export HOME=\"$smoke/home\" XDG_CONFIG_HOME=\"$smoke/config\" XDG_DATA_HOME=\"$smoke/data\" XDG_CACHE_HOME=\"$smoke/cache\" XDG_STATE_HOME=\"$smoke/state\" XDG_RUNTIME_DIR=\"$smoke/runtime\" TMPDIR=\"$smoke/tmp\" TERM=xterm-256color LC_ALL=C\n" port)
-                    (display "  first_log=\"$smoke/tmp/smoke-first.log\"\n  second_log=\"$smoke/tmp/smoke-second.log\"\n" port)
+                    (display
+                     (string-append
+                      "  smoke=$(\"$mktemp\" -d "
+                      "\"${TMPDIR:-/tmp}/nitrohack-guix-smoke.XXXXXXXX\")\n")
+                     port)
+                    (display
+                     (string-append
+                      "  \"$mkdir\" -p \"$smoke/home\" \"$smoke/config\" "
+                      "\"$smoke/data\" \"$smoke/cache\" \"$smoke/state\" "
+                      "\"$smoke/runtime\" \"$smoke/tmp\"\n")
+                     port)
+                    (display
+                     (string-append
+                      "  export HOME=\"$smoke/home\" "
+                      "XDG_CONFIG_HOME=\"$smoke/config\" "
+                      "XDG_DATA_HOME=\"$smoke/data\" "
+                      "XDG_CACHE_HOME=\"$smoke/cache\" "
+                      "XDG_STATE_HOME=\"$smoke/state\" "
+                      "XDG_RUNTIME_DIR=\"$smoke/runtime\" "
+                      "TMPDIR=\"$smoke/tmp\" TERM=xterm-256color LC_ALL=C\n")
+                     port)
+                    (display
+                     (string-append
+                      "  first_log=\"$smoke/tmp/smoke-first.log\"\n"
+                      "  second_log=\"$smoke/tmp/smoke-second.log\"\n")
+                     port)
                     ;; New game, deterministic movement, then save and leave
                     ;; the first session through the main menu.
-                    (display "  if ! { \"$sleep\" 2; printf 'n'; \"$sleep\" 2; printf '  .hjl'; printf 'S'; printf 'y'; printf ' q'; } | run_session \"$first_log\"; then\n" port)
-                    (display "    echo 'nitrohack smoke: first game failed' >&2; exit 1\n  fi\n" port)
-                    (display "  saved=\"\"\n  for file in \"$smoke/config/NitroHack/save\"/*.nhgame; do\n    test -f \"$file\" || continue\n    saved=\"$file\"\n  done\n  test -n \"$saved\" || { echo 'nitrohack smoke: save artifact missing' >&2; exit 1; }\n" port)
-                    (display "  case \"$saved\" in \"$smoke/\"*) ;; *) echo 'nitrohack smoke: save escaped isolated state' >&2; exit 1 ;; esac\n" port)
-                    (display "  \"$grep\" -F 'NitroHack' \"$first_log\" >/dev/null || { echo 'nitrohack smoke: gameplay title missing' >&2; exit 1; }\n" port)
-                    (display "  \"$grep\" -F 'welcome to NitroHack' \"$first_log\" >/dev/null || { echo 'nitrohack smoke: gameplay welcome missing' >&2; exit 1; }\n" port)
+                    (display
+                     (string-append
+                      "  if ! { \"$sleep\" 2; printf 'n'; "
+                      "\"$sleep\" 2; printf '  .hjl'; printf 'S'; "
+                      "printf 'y'; printf ' q'; } | run_session "
+                      "\"$first_log\"; then\n")
+                     port)
+                    (display
+                     (string-append
+                      "    echo 'nitrohack smoke: first game failed' >&2; "
+                      "exit 1\n  fi\n")
+                     port)
+                    (display
+                     (string-append
+                      "  saved=\"\"\n"
+                      "  for file in \"$smoke/config/NitroHack/save\"/*.nhgame; do\n"
+                      "    test -f \"$file\" || continue\n"
+                      "    saved=\"$file\"\n"
+                      "  done\n"
+                      "  test -n \"$saved\" || { echo 'nitrohack smoke: "
+                      "save artifact missing' >&2; exit 1; }\n")
+                     port)
+                    (display
+                     (string-append
+                      "  case \"$saved\" in \"$smoke/\"*) ;; *) "
+                      "echo 'nitrohack smoke: save escaped isolated state' >&2; "
+                      "exit 1 ;; esac\n")
+                     port)
+                    (display
+                     (string-append
+                      "  \"$grep\" -F 'NitroHack' \"$first_log\" >/dev/null || "
+                      "{ echo 'nitrohack smoke: gameplay title missing' >&2; "
+                      "exit 1; }\n")
+                     port)
+                    (display
+                     (string-append
+                      "  \"$grep\" -F 'welcome to NitroHack' \"$first_log\" "
+                      ">/dev/null || { echo 'nitrohack smoke: gameplay welcome "
+                      "missing' >&2; exit 1; }\n")
+                     port)
                     ;; Relaunch, load the saved game, observe the restored
                     ;; welcome, save/quit again, and leave the menu.
-                    (display "  if ! { \"$sleep\" 2; printf 'l'; \"$sleep\" 2; printf ' '; printf 'S'; printf 'y'; printf ' q'; } | run_session \"$second_log\" append; then\n" port)
-                    (display "    echo 'nitrohack smoke: restore game failed' >&2; exit 1\n  fi\n" port)
-                    (display "  \"$grep\" -E 'welcome back to NitroHack|Welcome back' \"$second_log\" >/dev/null || { echo 'nitrohack smoke: restored-game text missing' >&2; exit 1; }\n" port)
+                    (display
+                     (string-append
+                      "  if ! { \"$sleep\" 2; printf 'l'; "
+                      "\"$sleep\" 2; printf 'a'; printf 'S'; printf 'y'; "
+                      "printf ' q'; } | run_session \"$second_log\" "
+                      "append; then\n")
+                     port)
+                    (display
+                     (string-append
+                      "    echo 'nitrohack smoke: restore game failed' >&2; "
+                      "exit 1\n  fi\n")
+                     port)
+                    (display
+                     (string-append
+                      "  \"$grep\" -E 'welcome back to NitroHack|Welcome back' "
+                      "\"$second_log\" >/dev/null || { echo 'nitrohack smoke: "
+                      "restored-game text missing' >&2; exit 1; }\n")
+                     port)
                     ;; The game is allowed to write only its fresh HOME and
                     ;; XDG config tree.  Data/cache/state/runtime are checked
                     ;; explicitly because the game does not use those APIs.
-                    (display "  test -z \"$(\"$find\" \"$smoke/data\" \"$smoke/cache\" \"$smoke/state\" \"$smoke/runtime\" -mindepth 1 -print -quit)\" || { echo 'nitrohack smoke: unexpected XDG write' >&2; exit 1; }\n" port)
-                    (display "  test -z \"$(\"$find\" \"$out\" -xdev -type f -perm /222 -print -quit)\" || { echo 'nitrohack smoke: package output became writable' >&2; exit 1; }\n" port)
-                    (display "  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"; then\n    \"$mkdir\" -p \"$(\"$dirname\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"\n    \"$cp\" \"$first_log\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n    \"$cat\" \"$second_log\" >> \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n  fi\n" port)
-                    (display "  printf '%s\\n' 'nitrohack guix smoke passed'\n  exit 0\nfi\n\n" port)
+                    (display
+                     (string-append
+                      "  test -z \"$(\"$find\" \"$smoke/data\" "
+                      "\"$smoke/cache\" \"$smoke/state\" "
+                      "\"$smoke/runtime\" -mindepth 1 -print -quit)\" || "
+                      "{ echo 'nitrohack smoke: unexpected XDG write' >&2; "
+                      "exit 1; }\n")
+                     port)
+                    (display
+                     (string-append
+                      "  test -z \"$(\"$find\" \"$out\" -xdev -type f "
+                      "-perm /222 -print -quit)\" || { echo 'nitrohack smoke: "
+                      "package output became writable' >&2; exit 1; }\n")
+                     port)
+                    (display
+                     (string-append
+                      "  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"; then\n"
+                      "    \"$mkdir\" -p \"$(\"$dirname\" "
+                      "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"\n"
+                      "    \"$cp\" \"$first_log\" "
+                      "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n"
+                      "    \"$cat\" \"$second_log\" >> "
+                      "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n"
+                      "  fi\n")
+                     port)
+                    (display
+                     (string-append
+                      "  printf '%s\\n' 'nitrohack guix smoke passed'\n"
+                      "  exit 0\nfi\n\n")
+                     port)
                     ;; Ordinary invocations retain normal argument
                     ;; forwarding while keeping the executable private.
                     (display "exec \"$real\" \"$@\"\n" port)))
