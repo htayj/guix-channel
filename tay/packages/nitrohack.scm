@@ -161,7 +161,7 @@
                     (display "  first_log=\"$smoke/tmp/smoke-first.log\"\n  second_log=\"$smoke/tmp/smoke-second.log\"\n" port)
                     ;; New game, deterministic movement, then save and leave
                     ;; the first session through the main menu.
-                    (display "  if ! { \"$sleep\" 1; printf 'n'; \"$sleep\" 1; printf '.'; \"$sleep\" 1; printf 'h'; \"$sleep\" 1; printf 'j'; \"$sleep\" 1; printf 'l'; \"$sleep\" 1; printf 'S'; \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf 'q'; } | run_session \"$first_log\"; then\n" port)
+                    (display "  if ! { \"$sleep\" 2; printf 'n'; \"$sleep\" 2; printf '  .hjl'; printf 'S'; printf 'y'; printf ' q'; } | run_session \"$first_log\"; then\n" port)
                     (display "    echo 'nitrohack smoke: first game failed' >&2; exit 1\n  fi\n" port)
                     (display "  saved=\"\"\n  for file in \"$smoke/config/NitroHack/save\"/*.nhgame; do\n    test -f \"$file\" || continue\n    saved=\"$file\"\n  done\n  test -n \"$saved\" || { echo 'nitrohack smoke: save artifact missing' >&2; exit 1; }\n" port)
                     (display "  case \"$saved\" in \"$smoke/\"*) ;; *) echo 'nitrohack smoke: save escaped isolated state' >&2; exit 1 ;; esac\n" port)
@@ -169,7 +169,7 @@
                     (display "  \"$grep\" -F 'welcome to NitroHack' \"$first_log\" >/dev/null || { echo 'nitrohack smoke: gameplay welcome missing' >&2; exit 1; }\n" port)
                     ;; Relaunch, load the saved game, observe the restored
                     ;; welcome, save/quit again, and leave the menu.
-                    (display "  if ! { \"$sleep\" 1; printf 'l'; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf 'S'; \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf 'q'; } | run_session \"$second_log\" append; then\n" port)
+                    (display "  if ! { \"$sleep\" 2; printf 'l'; \"$sleep\" 2; printf ' '; printf 'S'; printf 'y'; printf ' q'; } | run_session \"$second_log\" append; then\n" port)
                     (display "    echo 'nitrohack smoke: restore game failed' >&2; exit 1\n  fi\n" port)
                     (display "  \"$grep\" -E 'welcome back to NitroHack|Welcome back' \"$second_log\" >/dev/null || { echo 'nitrohack smoke: restored-game text missing' >&2; exit 1; }\n" port)
                     ;; The game is allowed to write only its fresh HOME and

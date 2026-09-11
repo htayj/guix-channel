@@ -85,9 +85,9 @@ before=$($guix_bin hash -S nar "$nitrohack_out")
 test -z "$(find "$nitrohack_out" -xdev -type f -perm /222 \
     -print -quit)"
 
-scratch=$(mktemp -d "${TMPDIR:-/tmp}/nitrohack-smoke-proof.XXXXXXXX")
+scratch=$(mktemp -d /tmp/goocastle-agent-nitrohack-XXXXXXXX)
 case "$scratch" in
-    "${TMPDIR:-/tmp}/nitrohack-smoke-proof."*) ;;
+    /tmp/goocastle-agent-nitrohack-*) ;;
     *) echo 'refusing an unvalidated nitrohack smoke workspace' >&2; exit 1 ;;
 esac
 mkdir "$scratch/home" "$scratch/config" "$scratch/data" \
