@@ -3,6 +3,7 @@
 set -eu
 
 guix_bin=${GUIX:-guix}
+guix_bin=$(command -v "$guix_bin")
 node_bin=${GOOCASTLE_NODE:-$(command -v node)}
 env_bin=$(command -v env)
 bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
