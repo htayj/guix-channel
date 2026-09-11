@@ -69,7 +69,7 @@ def run_session(executable, root, resume, raw):
             os.write(master, b"a")
             sent.add("continue")
 
-        if not resume and b"By what name shall you be called?" in seen \
+        if not resume and b"By what name shall " in seen \
                 and "name" not in sent:
             os.write(master, b"Goocastle\r")
             sent.add("name")
@@ -84,7 +84,9 @@ def run_session(executable, root, resume, raw):
             os.write(master, b"a")
             sent.add("stats")
 
-        if b"Lvl:" in seen and "move" not in sent:
+        in_game = ((resume and "continue" in sent)
+                   or (not resume and "stats" in sent))
+        if in_game and b"Lvl:" in seen and "move" not in sent:
             # The initial town tile can block one direction.  Try each
             # cardinal/diagonal vi-key once; at least one is a legal move
             # from the deterministic starting position.
