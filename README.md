@@ -114,6 +114,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
 | `bcrawl` | b-crawl/bcrawl 1.42.1 | Terminal-only Dungeon Crawl Stone Soup fork with XDG-managed state |
 | `avanor` | Avanor 0.5.8 | Historical terminal roguelike with XDG-managed saves and high scores |
+| `nlarn` | NLarn 0.8.0 | Curses roguelike rewrite of Larn with isolated user state |
 | `durthang` | Durthang 0.2.0 | Rust TUI MUD client with TLS, GMCP, automapping, and encrypted Secret Service transport |
 | `frostbite` | Frostbite 1.18.2 | Qt5 DragonRealms client with Ruby scripting, profiles, maps, sound, and XDG state |
 | `godisc` | DavidSatimeWallin/godisc | Discworld-oriented terminal MUD client with an optional tmux workspace |
