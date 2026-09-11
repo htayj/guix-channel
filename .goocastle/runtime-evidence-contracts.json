@@ -931,6 +931,22 @@
         },
         "successMarker": "MARTINS_DUNGEON_BASH_SMOKE_OK"
       }
+    },
+    {
+      "issueNumber": 706,
+      "packageName": "umoria",
+      "packageModulePath": "tay/packages/umoria.scm",
+      "artifactPath": ".goocastle/evidence/issue-706.png",
+      "runtime": {
+        "executable": "umoria",
+        "invocation": {
+          "file": "umoria",
+          "args": [
+            "--goocastle-smoke"
+          ]
+        },
+        "successMarker": "GOOCASTLE_UMORIA_SMOKE_OK"
+      }
     }
   ]
 }
