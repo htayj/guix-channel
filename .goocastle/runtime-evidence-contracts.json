@@ -883,6 +883,22 @@
         },
         "successMarker": "LAMBDAHACK-SMOKE-OK"
       }
+    },
+    {
+      "issueNumber": 703,
+      "packageName": "letter-hunt",
+      "packageModulePath": "tay/packages/letter-hunt.scm",
+      "artifactPath": ".goocastle/evidence/issue-703.png",
+      "runtime": {
+        "executable": "letter-hunt",
+        "invocation": {
+          "file": "letter-hunt",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "LETTER_HUNT_RUNTIME_OK"
+      }
     }
   ]
 }
