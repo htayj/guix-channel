@@ -1027,6 +1027,22 @@
         },
         "successMarker": "OBUMBRATA_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 712,
+      "packageName": "plomrogue",
+      "packageModulePath": "tay/packages/plomrogue.scm",
+      "artifactPath": ".goocastle/evidence/issue-712.png",
+      "runtime": {
+        "executable": "plomrogue",
+        "invocation": {
+          "file": "plomrogue",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "PL0MROGUE_SMOKE_OK"
+      }
     }
   ]
 }
