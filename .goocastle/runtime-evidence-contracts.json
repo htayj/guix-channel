@@ -899,6 +899,22 @@
         },
         "successMarker": "LETTER_HUNT_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 704,
+      "packageName": "linerogue",
+      "packageModulePath": "tay/packages/linerogue.scm",
+      "artifactPath": ".goocastle/evidence/issue-704.png",
+      "runtime": {
+        "executable": "linerogue",
+        "invocation": {
+          "file": "linerogue",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "linerogue isolated smoke passed"
+      }
     }
   ]
 }
