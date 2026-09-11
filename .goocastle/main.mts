@@ -3152,7 +3152,7 @@ const reexecutionRecoveryCommand = (state) => {
     runtimeEnvironment.map(shellDisplayQuote).join(" ") + " " +
     argumentsForNode.map(shellDisplayQuote).join(" ");
 };
-const reexecuteDogfoodRunner = (nextTask, attemptedIssues) => {
+const reexecuteDogfoodRunner = async (nextTask, attemptedIssues) => {
   const state = {
     version: 1,
     nextTask,
@@ -3166,6 +3166,9 @@ const reexecuteDogfoodRunner = (nextTask, attemptedIssues) => {
   }
   console.log("Restarting the runner after integration so subsequent tasks use the integrated runtime and configuration.");
   try {
+    // execve replaces this process without running the outer finally. Release
+    // the durable lease first so the replacement runner can acquire it.
+    await workflowRunLock.release();
     process.execve(process.execPath, [process.execPath, ...process.execArgv, ...process.argv.slice(1)], {
       ...process.env,
       [REEXECUTION_STATE_ENVIRONMENT]: JSON.stringify(state),
@@ -5300,7 +5303,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     throw error;
   }
   if (refreshAfterIntegration) {
-    reexecuteDogfoodRunner(task + 1, attemptedIssues);
+    await reexecuteDogfoodRunner(task + 1, attemptedIssues);
   }
 }
 };
