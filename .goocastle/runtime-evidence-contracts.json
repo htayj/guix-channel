@@ -915,6 +915,22 @@
         },
         "successMarker": "linerogue isolated smoke passed"
       }
+    },
+    {
+      "issueNumber": 705,
+      "packageName": "martins-dungeon-bash",
+      "packageModulePath": "tay/packages/martins-dungeon-bash.scm",
+      "artifactPath": ".goocastle/evidence/issue-705.png",
+      "runtime": {
+        "executable": "dungeonbash",
+        "invocation": {
+          "file": "dungeonbash",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "MARTINS_DUNGEON_BASH_SMOKE_OK"
+      }
     }
   ]
 }
