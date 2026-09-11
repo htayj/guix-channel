@@ -54,6 +54,8 @@
          (string-append "-DBINDIR=" #$output "/libexec")
          (string-append "-DLIBDIR=" #$output "/lib")
          (string-append "-DDATADIR=" #$output "/share/nitrohack")
+         (string-append "-DCMAKE_INSTALL_RPATH=" #$output "/libexec:"
+                        #$output "/lib")
          ;; Upstream emits a shell launcher here.  It is removed after the
          ;; install because the Guix launcher below supplies the library path
          ;; and keeps the real executable private.
@@ -67,6 +69,10 @@
               (substitute* "libnitrohack/util/makedefs.c"
                 (("time\\(&clocktim\\);")
                  "clocktim = 1329666608L;"))
+              ;; Guix's wide ncurses headers are installed directly as
+              ;; include/curses.h rather than Debian's ncursesw/curses.h.
+              (substitute* "nitrohack/include/nhcurses.h"
+                (("<ncursesw/curses\\.h>") "<curses.h>"))
               (setenv "TZ" "UTC0")))
           ;; CMake's generated shell script is not the package interface.  It
           ;; is installed in a separate directory so it cannot overwrite the
@@ -85,7 +91,7 @@
                      (shell #$(file-append bash-minimal "/bin/sh"))
                      (cat #$(file-append coreutils-minimal "/bin/cat"))
                      (cp #$(file-append coreutils-minimal "/bin/cp"))
-                     (dirname #$(file-append coreutils-minimal "/bin/dirname"))
+                     (dirname-bin #$(file-append coreutils-minimal "/bin/dirname"))
                      (find #$(file-append findutils "/bin/find"))
                      (grep #$(file-append grep "/bin/grep"))
                      (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
@@ -94,7 +100,11 @@
                      (sleep #$(file-append coreutils-minimal "/bin/sleep"))
                      (script #$(file-append util-linux "/bin/script"))
                      (stty #$(file-append coreutils-minimal "/bin/stty"))
-                     (terminfo (string-append #$ncurses "/share/terminfo")))
+                     (terminfo (string-append #$ncurses "/share/terminfo"))
+                     (source (dirname (car (find-files ".." "^README$"))))
+                     (notices '("README" "doc/Guidebook.txt"
+                                "dist/debian/copyright")))
+                (invoke "cmake" "--install" ".")
                 (mkdir-p libexec)
                 (mkdir-p bin)
                 (mkdir-p doc)
@@ -104,8 +114,9 @@
                 (when (file-exists? installed-shell)
                   (delete-file installed-shell))
                 (for-each
-                 (lambda (file) (install-file file doc))
-                 '("README" "doc/Guidebook.txt" "dist/debian/copyright"))
+                 (lambda (file)
+                   (install-file (string-append source "/" file) doc))
+                 notices)
                 ;; The upstream CMake data install retains nhdat and the
                 ;; complete NitroHack/NetHack General Public License beside
                 ;; the generated game data.
@@ -113,10 +124,10 @@
                   (lambda (port)
                     (format port "#!~a~%set -eu~%~%"
                             shell)
-                    (format port "real=~s~%data=~s~%out=~s~%"
-                            real data out)
+                    (format port "real=~s~%data=~s~%out=~s~%libexec=~s~%"
+                            real data out libexec)
                     (format port "cat=~s~%cp=~s~%dirname=~s~%find=~s~%"
-                            cat cp dirname find)
+                            cat cp dirname-bin find)
                     (format port "grep=~s~%mkdir=~s~%mktemp=~s~%rm=~s~%"
                             grep mkdir mktemp rm)
                     (format port "sleep=~s~%script=~s~%stty=~s~%terminfo=~s~%"
@@ -202,7 +213,7 @@
                (find-files #$output ".*" #:directories? #t)))))))
     ;; CMake invokes the checked-in bison/flex generators.  gcc-toolchain is
     ;; explicit because the project predates modern Guix CMake defaults.
-    (native-inputs (list bison cmake flex gcc-toolchain))
+    (native-inputs (list bison cmake-minimal flex gcc-toolchain))
     ;; Jansson and wide ncurses are linked by the local client/UI.  The shell
     ;; helpers and util-linux/script are runtime inputs for the reviewed smoke
     ;; branch only.
