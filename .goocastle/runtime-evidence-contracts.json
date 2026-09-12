@@ -1059,6 +1059,22 @@
         },
         "successMarker": "PYRO_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 714,
+      "packageName": "rapidbrogue",
+      "packageModulePath": "tay/packages/rapidbrogue.scm",
+      "artifactPath": ".goocastle/evidence/issue-714.png",
+      "runtime": {
+        "executable": "rapidbrogue",
+        "invocation": {
+          "file": "rapidbrogue",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "RAPIDBROGUE_GUIX_SMOKE_OK"
+      }
     }
   ]
 }
