@@ -91,9 +91,9 @@
                     (display
                      "if test \"${1-}\" = --guix-smoke; then\n"
                      port)
-                    (display
-                     "  test \"$#\" -eq 1 || { echo 'usage: robotfindskitten [--guix-smoke]' >&2; exit 64; }\n"
-                     port)
+                    (format port
+                            "  test \"$#\" -eq 1 || { echo '~a' >&2; exit 64; }\n"
+                            "usage: robotfindskitten [--guix-smoke]")
                     (display
                      "  exec \"$python\" \"$helper\" \"$real\"\n"
                      port)

@@ -16,6 +16,10 @@ import time
 
 MARKER = "GUIX_SMOKE_OK robotfindskitten"
 KEYSTROKES = b" " + (b"hjkl" * 16) + b"q"
+VERSION_FRAMES = (
+    b"robotfindskitten 3.0000000.726",
+    b"robotfindskitten 3.0\x1b[6b.726",
+)
 
 
 def fail(message):
@@ -116,7 +120,7 @@ def run_game(binary, root):
     exit_code = os.waitstatus_to_exitcode(status)
     if exit_code != 0:
         fail(f"robotfindskitten exited with status {exit_code}")
-    if b"robotfindskitten 3.0000000.726" not in transcript:
+    if not any(frame in transcript for frame in VERSION_FRAMES):
         fail("terminal transcript lacks the fixed release version")
     if b"In this game, you are robot (#)." not in transcript:
         fail("terminal transcript lacks the gameplay introduction")

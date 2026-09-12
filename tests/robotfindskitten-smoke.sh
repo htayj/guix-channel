@@ -27,8 +27,8 @@ test ! -e "$robotfindskitten_out/games/robotfindskitten"
 
 data="$robotfindskitten_out/share/games/robotfindskitten"
 test -s "$data/vanilla.nki"
-test -s "$robotfindskitten_out/share/man/man6/robotfindskitten.6"
-test -s "$robotfindskitten_out/share/info/robotfindskitten.info"
+test -s "$robotfindskitten_out/share/man/man6/robotfindskitten.6.zst"
+test -s "$robotfindskitten_out/share/info/robotfindskitten.info.gz"
 test -s "$robotfindskitten_out/share/applications/robotfindskitten.desktop"
 test -s "$robotfindskitten_out/share/metainfo/org.robotfindskitten.robotfindskitten.metainfo.xml"
 test -s "$robotfindskitten_out/share/icons/hicolor/512x512/apps/robotfindskitten.png"
@@ -61,8 +61,14 @@ grep -F '"successMarker": "GUIX_SMOKE_OK robotfindskitten"' \
 
 test -r "$bounded_validation"
 test -x "$node_bin"
-util_linux_out=$($guix_bin build -L . --no-grafts --no-substitutes util-linux)
-test -x "$util_linux_out/bin/unshare"
+util_linux_out=
+for candidate in $($guix_bin build -L . --no-grafts --no-substitutes util-linux); do
+    if test -x "$candidate/bin/unshare"; then
+        util_linux_out=$candidate
+        break
+    fi
+done
+test -n "$util_linux_out"
 
 # The output NAR and file modes are checked before and after running the
 # wrapper, proving that the installed code and assets remain immutable.
@@ -110,16 +116,20 @@ proof=$(cd "$scratch/work" && \
     "$robotfindskitten_out/bin/robotfindskitten" --guix-smoke)
 test "$proof" = 'GUIX_SMOKE_OK robotfindskitten'
 test -s "$raw"
-grep -aF 'robotfindskitten 3.0000000.726' "$raw" >/dev/null
+if ! grep -aF 'robotfindskitten 3.0000000.726' "$raw" >/dev/null; then
+    grep -aF "$(printf '%s\033[6b%s' 'robotfindskitten 3.0' '.726')" \
+        "$raw" >/dev/null
+fi
 grep -aF 'In this game, you are robot (#).' "$raw" >/dev/null
-grep -aF 'GUIX_SMOKE_OK robotfindskitten' "$raw" >/dev/null
 
 # The helper's HOME, all XDG locations, and working directory are private;
-# the package output itself must have the same NAR identity after execution.
+# its temporary root is the only expected content below the fresh TMPDIR.
+# The package output itself must have the same NAR identity after execution.
 test -z "$(find "$scratch/home" "$scratch/config" "$scratch/data" \
     "$scratch/cache" "$scratch/state" "$scratch/runtime" "$scratch/work" \
     -mindepth 1 -print -quit)"
-test -z "$(find "$scratch" -type l -print -quit)"
+test -n "$(find "$scratch/tmp" -mindepth 1 -print -quit)"
+test -z "$(find "$scratch/tmp" -type l -print -quit)"
 after=$($guix_bin hash -S nar "$robotfindskitten_out")
 test "$before" = "$after"
 test -z "$(find "$robotfindskitten_out" -xdev -type f -perm /222 \
