@@ -1191,6 +1191,22 @@
         },
         "successMarker": "SLASHEM GUIX SMOKE PASS"
       }
+    },
+    {
+      "issueNumber": 722,
+      "packageName": "space-privateers",
+      "packageModulePath": "tay/packages/space-privateers.scm",
+      "artifactPath": ".goocastle/evidence/issue-722.png",
+      "runtime": {
+        "executable": "space-privateers",
+        "invocation": {
+          "file": "space-privateers",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "SPACE_PRIVATEERS_SMOKE_OK"
+      }
     }
   ]
 }
