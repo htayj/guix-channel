@@ -1207,6 +1207,22 @@
         },
         "successMarker": "SPACE_PRIVATEERS_SMOKE_OK"
       }
+    },
+    {
+      "issueNumber": 723,
+      "packageName": "splicehack-rewrite",
+      "packageModulePath": "tay/packages/splicehack-rewrite.scm",
+      "artifactPath": ".goocastle/evidence/issue-723.png",
+      "runtime": {
+        "executable": "splicehack-rewrite",
+        "invocation": {
+          "file": "splicehack-rewrite",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "splicehack-rewrite guix smoke passed"
+      }
     }
   ]
 }
