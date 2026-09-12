@@ -138,7 +138,10 @@
                     (display "        move_at = time.monotonic()\n\n" port)
                     (display "    if (sent_move and not sent_quit\n" port)
                     (display "            and time.monotonic() - move_at >= 0.5):\n" port)
-                    (display "        os.write(master, b'Q')\n        sent_quit = True\n" port)
+                    ;; Lowercase q reaches the gameplay quit command; the
+                    ;; curses platform reserves uppercase Q for immediate
+                    ;; title-screen exit without confirmation.
+                    (display "        os.write(master, b'q')\n        sent_quit = True\n" port)
                     (display "        post_quit.clear()\n\n" port)
                     (display "    if (sent_quit and not sent_confirm\n" port)
                     (display "            and all(word in quit_lower for word in\n" port)
