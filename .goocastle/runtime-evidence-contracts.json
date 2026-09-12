@@ -1127,6 +1127,22 @@
         },
         "successMarker": "GUIX_SMOKE_OK robotfindskitten"
       }
+    },
+    {
+      "issueNumber": 718,
+      "packageName": "savescummer",
+      "packageModulePath": "tay/packages/savescummer.scm",
+      "artifactPath": ".goocastle/evidence/issue-718.png",
+      "runtime": {
+        "executable": "savescummer",
+        "invocation": {
+          "file": "savescummer",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "SAVESCUMMER_RUNTIME_OK"
+      }
     }
   ]
 }
