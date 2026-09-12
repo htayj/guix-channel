@@ -1159,6 +1159,22 @@
         },
         "successMarker": "shamogu isolated smoke passed"
       }
+    },
+    {
+      "issueNumber": 720,
+      "packageName": "six-two-one",
+      "packageModulePath": "tay/packages/six-two-one.scm",
+      "artifactPath": ".goocastle/evidence/issue-720.png",
+      "runtime": {
+        "executable": "six-two-one",
+        "invocation": {
+          "file": "six-two-one",
+          "args": [
+            "--goocastle-smoke"
+          ]
+        },
+        "successMarker": "SIX_TWO_ONE_SMOKE_OK"
+      }
     }
   ]
 }
