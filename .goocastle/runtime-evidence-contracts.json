@@ -1223,6 +1223,22 @@
         },
         "successMarker": "splicehack-rewrite guix smoke passed"
       }
+    },
+    {
+      "issueNumber": 724,
+      "packageName": "stoat-soup",
+      "packageModulePath": "tay/packages/stoat-soup.scm",
+      "artifactPath": ".goocastle/evidence/issue-724.png",
+      "runtime": {
+        "executable": "stoat-soup",
+        "invocation": {
+          "file": "stoat-soup",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "stoat-soup smoke: terminal UI OK; no store writes"
+      }
     }
   ]
 }
