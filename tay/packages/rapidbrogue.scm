@@ -141,7 +141,8 @@
                     (display "        os.write(master, b'Q')\n        sent_quit = True\n" port)
                     (display "        post_quit.clear()\n\n" port)
                     (display "    if (sent_quit and not sent_confirm\n" port)
-                    (display "            and b'quit and abandon this game' in quit_lower):\n" port)
+                    (display "            and all(word in quit_lower for word in\n" port)
+                    (display "                    (b'quit', b'abandon', b'game')):\n" port)
                     (display "        os.write(master, b'y')\n        sent_confirm = True\n\n" port)
                     ;; A positive score first shows the high-score page and
                     ;; then asks where to save the recording.
