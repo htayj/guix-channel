@@ -3185,6 +3185,10 @@ const reexecuteDogfoodRunner = async (nextTask, attemptedIssues) => {
 };
 
 const attemptedIssues = new Set(reexecutionState.attemptedIssues);
+// Delivery retries are serialized, so a runner-local counter is sufficient to
+// make fallback recovery exponential while the durable journal remains the
+// source of truth for the work itself.
+const deliveryRecoveryAttempts = new Map();
 // An explicit blocked-repair request opens at most one fresh bounded window
 // per issue in this invocation. If that window exhausts again, leave the
 // journal terminally blocked until a later explicit command.
@@ -4972,6 +4976,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       integration = "closed";
     }
     journal = await reconcileDeliveredCleanup(journal, issue.number);
+    deliveryRecoveryAttempts.delete(issue.number);
     console.log("Completed and integrated #" + issue.number + ".");
     await persistInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs);
     refreshAfterIntegration = !RESUME_ONLY && task < MAX_TASKS;
@@ -5177,9 +5182,10 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         }),
       });
     }
-    const transientDeliveryPause = isTransientSequentialError(error) && (journal.merge !== "pending" || journal.push !== "pending" || journal.remoteVerification !== "pending");
+    const retryableDeliveryPause = (isTransientSequentialError(error) || isRetryableGitHubError(error)) &&
+      (journal.merge !== "pending" || journal.push !== "pending" || journal.remoteVerification !== "pending");
     const signingPause = error instanceof Error && error.message.startsWith("Required commit signing");
-    if (transientDeliveryPause) {
+    if (retryableDeliveryPause) {
       reportTransientDeliveryPause(journal);
     } else if (!signingPause) {
       reportRecovery(issue, branch, integration, recovery);
@@ -5276,12 +5282,19 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       task -= 1;
       continue;
     }
-    if (transientDeliveryPause) {
+    if (retryableDeliveryPause) {
       // A local base that is ahead of origin cannot safely continue with a
-      // different issue, even when phase failures are normally configured to
-      // continue.  Leave the resumable journal as the sole next action.
-      process.exitCode = 1;
-      break;
+      // different issue. Retry the same resumable journal after exponential
+      // backoff instead of requiring an operator to restart the runner.
+      const retryAttempt = (deliveryRecoveryAttempts.get(issue.number) ?? 0) + 1;
+      deliveryRecoveryAttempts.set(issue.number, retryAttempt);
+      const retryDelay = providerRecoveryDelay(retryAttempt);
+      console.error("Retryable GitHub delivery interruption for #" + issue.number +
+        "; retrying the preserved journal after " + String(retryDelay) + "ms backoff (attempt " +
+        String(retryAttempt) + ").");
+      if (retryDelay > 0) await sleep(retryDelay);
+      task -= 1;
+      continue;
     }
     if (projectConfig.failurePolicy === "continue") {
       deferredJournalIssues.add(issue.number);
