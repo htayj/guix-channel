@@ -1175,6 +1175,22 @@
         },
         "successMarker": "SIX_TWO_ONE_SMOKE_OK"
       }
+    },
+    {
+      "issueNumber": 721,
+      "packageName": "slashem",
+      "packageModulePath": "tay/packages/slashem.scm",
+      "artifactPath": ".goocastle/evidence/issue-721.png",
+      "runtime": {
+        "executable": "slashem",
+        "invocation": {
+          "file": "slashem",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "SLASHEM GUIX SMOKE PASS"
+      }
     }
   ]
 }
