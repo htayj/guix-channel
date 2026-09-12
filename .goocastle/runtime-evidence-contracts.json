@@ -1143,6 +1143,22 @@
         },
         "successMarker": "SAVESCUMMER_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 719,
+      "packageName": "shamogu",
+      "packageModulePath": "tay/packages/shamogu.scm",
+      "artifactPath": ".goocastle/evidence/issue-719.png",
+      "runtime": {
+        "executable": "shamogu",
+        "invocation": {
+          "file": "shamogu",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "shamogu isolated smoke passed"
+      }
     }
   ]
 }
