@@ -4981,6 +4981,17 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     await persistInterTaskDelay(gitCommonDir, projectConfig.taskLimits.interTaskDelayMs);
     refreshAfterIntegration = !RESUME_ONLY && task < MAX_TASKS;
   } catch (error) {
+    // Delivery helpers checkpoint nested boundaries (such as an implementation
+    // ticket number) before their next forge operation.  If that next request
+    // fails, this outer scope still holds the journal value from before the
+    // helper began.  Reload the exact durable journal before recording the
+    // recovery receipt so the failure transition cannot erase a successfully
+    // accepted GitHub mutation and make resume create a duplicate.
+    const persistedJournal = (await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME))
+      .find((candidate) => candidate.issueNumber === journal.issueNumber &&
+        candidate.branch === journal.branch &&
+        (candidate.epoch ?? 1) === (journal.epoch ?? 1));
+    if (persistedJournal !== undefined) journal = persistedJournal;
     const failedPhase = error !== null && typeof error === "object" && error.name === "WorkflowPhaseError" && error.phase !== null && typeof error.phase === "object"
       ? error.phase
       : undefined;
