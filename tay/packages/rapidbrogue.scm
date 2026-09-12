@@ -103,6 +103,7 @@
                     (display "sent_confirm = False\nsent_continue = False\n" port)
                     (display "sent_record = False\nsent_final = False\n" port)
                     (display "sent_menu_quit = False\nreaped = False\n" port)
+                    (display "sent_prompt_reply = False\n" port)
                     (display "move_at = None\ndeadline = time.monotonic() + 30\n\n" port)
                     (display "def fail(message):\n" port)
                     (display "    if not reaped:\n" port)
@@ -130,18 +131,25 @@
                     (display "    lower = bytes(seen).lower()\n" port)
                     (display "    quit_lower = visible(bytes(post_quit)).lower()\n" port)
                     ;; HP/health and depth/level appear on the actual dungeon
-                    ;; screen.  l is one legal movement in the default keymap.
+                    ;; screen.  h is one legal movement onto the floor tile
+                    ;; immediately left of the fixed-seed starting position.
                     (display "    if (not sent_move and b'dungeons of doom' in lower\n" port)
                     (display "            and (b'hp' in lower or b'health' in lower)\n" port)
                     (display "            and (b'depth' in lower or b'level' in lower)):\n" port)
-                    (display "        os.write(master, b'l')\n        sent_move = True\n" port)
+                    (display "        os.write(master, b'h')\n        sent_move = True\n" port)
                     (display "        move_at = time.monotonic()\n\n" port)
+
+                    ;; The fixed seed can place the first step on a pressure
+                    ;; plate.  Answer the resulting safe prompt so quit is
+                    ;; handled by the gameplay screen rather than ignored.
+                    (display "    if (sent_move and not sent_prompt_reply\n" port)
+                    (display "            and b'step onto the pressure plate?' in lower):\n" port)
+                    (display "        os.write(master, b'n')\n        sent_prompt_reply = True\n\n" port)
                     (display "    if (sent_move and not sent_quit\n" port)
                     (display "            and time.monotonic() - move_at >= 0.5):\n" port)
-                    ;; Lowercase q reaches the gameplay quit command; the
-                    ;; curses platform reserves uppercase Q for immediate
-                    ;; title-screen exit without confirmation.
-                    (display "        os.write(master, b'q')\n        sent_quit = True\n" port)
+                    ;; Uppercase Q reaches the gameplay quit command in the
+                    ;; upstream keymap and asks for confirmation.
+                    (display "        os.write(master, b'Q')\n        sent_quit = True\n" port)
                     (display "        post_quit.clear()\n\n" port)
                     (display "    if (sent_quit and not sent_confirm\n" port)
                     (display "            and all(word in quit_lower for word in\n" port)
