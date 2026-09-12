@@ -1075,6 +1075,24 @@
         },
         "successMarker": "RAPIDBROGUE_GUIX_SMOKE_OK"
       }
+    },
+    {
+      "issueNumber": 715,
+      "packageName": "revengate",
+      "packageModulePath": "tay/packages/revengate.scm",
+      "artifactPath": ".goocastle/evidence/issue-715.png",
+      "runtime": {
+        "executable": "revengate",
+        "invocation": {
+          "file": "revengate",
+          "args": [
+            "--headless",
+            "--scene",
+            "src/combat/combat_sim.tscn"
+          ]
+        },
+        "successMarker": "Done!"
+      }
     }
   ]
 }
