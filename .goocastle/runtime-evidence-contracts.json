@@ -1093,6 +1093,24 @@
         },
         "successMarker": "Done!"
       }
+    },
+    {
+      "issueNumber": 716,
+      "packageName": "revengate",
+      "packageModulePath": "tay/packages/revengate.scm",
+      "artifactPath": ".goocastle/evidence/issue-716.png",
+      "runtime": {
+        "executable": "revengate",
+        "invocation": {
+          "file": "revengate",
+          "args": [
+            "--headless",
+            "--scene",
+            "src/combat/combat_sim.tscn"
+          ]
+        },
+        "successMarker": "Done!"
+      }
     }
   ]
 }
