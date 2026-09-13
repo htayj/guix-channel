@@ -30,7 +30,7 @@ RELEASE_FONT_PACKAGES := cadr-fonts-latin cadr-fonts-symbols dec-fonts \
 	genera-fonts-latin genera-fonts-symbols
 FONT_PACKAGES := atarist-font $(RELEASE_FONT_PACKAGES)
 PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
-	computer-builder rust-computus custom-nix-pkgs databases-team75 dorxng-mcp \
+	computer-builder rust-computus custom-nix-pkgs databases-team75 dorxng-mcp buzz \
 	hyprland-preview-share-picker sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
 	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a emacs-aidermacs \
@@ -52,7 +52,7 @@ INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 OPTIONAL_PROPRIETARY_PACKAGES ?= sentinelone
 CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 
-.PHONY: check check-source-count check-sentinelone check-datamosh-security \
+.PHONY: check check-source-count check-sentinelone check-datamosh-security check-buzz \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-flex-launcher check-mmapper check-mudlet check-mudpuppy check-notion-river check-mushkin check-mushtato check-ocaml-irc-client check-potato \
 	check-kitty-bitmap check-lyntin check-pycat check-rune check-tinyfugue check-weidu lint lint-cve \
@@ -97,6 +97,9 @@ check-source-count:
 
 check-sentinelone:
 	tests/sentinelone-smoke.sh
+
+check-buzz:
+	GUIX="$(GUIX)" tests/buzz-smoke.sh
 
 check-datamosh-security:
 	GUIX="$(GUIX)" tests/you-can-datamosh-on-linux-security-smoke.sh \

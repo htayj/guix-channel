@@ -1278,9 +1278,9 @@
       "packageModulePath": "tay/packages/buzz.scm",
       "artifactPath": ".goocastle/evidence/issue-726.png",
       "runtime": {
-        "executable": "buzz",
+        "executable": "buzz-desktop",
         "invocation": {
-          "file": "buzz",
+          "file": "buzz-desktop",
           "args": [
             "--guix-smoke"
           ]
