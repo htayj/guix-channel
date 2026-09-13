@@ -1239,6 +1239,22 @@
         },
         "successMarker": "stoat-soup smoke: terminal UI OK; no store writes"
       }
+    },
+    {
+      "issueNumber": 725,
+      "packageName": "srogue",
+      "packageModulePath": "tay/packages/srogue.scm",
+      "artifactPath": ".goocastle/evidence/issue-725.png",
+      "runtime": {
+        "executable": "srogue",
+        "invocation": {
+          "file": "srogue",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "SROGUE_GUIX_SMOKE_OK"
+      }
     }
   ]
 }
