@@ -1271,6 +1271,22 @@
         },
         "successMarker": "TETRAWORLD_GUIX_SMOKE_OK"
       }
+    },
+    {
+      "issueNumber": 726,
+      "packageName": "buzz",
+      "packageModulePath": "tay/packages/buzz.scm",
+      "artifactPath": ".goocastle/evidence/issue-726.png",
+      "runtime": {
+        "executable": "buzz",
+        "invocation": {
+          "file": "buzz",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "BUZZ_GUIX_SMOKE_OK"
+      }
     }
   ]
 }
