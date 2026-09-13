@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     durthang_out=$1
 else
-    durthang_out=$($guix_bin build -L "$channel_dir" --no-grafts durthang)
+    durthang_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts durthang)
 fi
 
 python_out=

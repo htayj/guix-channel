@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     pdp10_out=$1
 else
-    pdp10_out=$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes pdp10-gcc)
+    pdp10_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes pdp10-gcc)
 fi
 
 find_output ()

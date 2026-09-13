@@ -17,7 +17,7 @@ else
     if test "$#" -eq 1; then
         herdr_out=$1
     else
-        herdr_out=$($guix_bin build -L "$channel_dir" --no-grafts herdr)
+        herdr_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts herdr)
     fi
     test -x "$herdr_out/bin/herdr"
     test -r "$validator"

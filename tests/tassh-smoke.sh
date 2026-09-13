@@ -27,7 +27,7 @@ fi
 if test "$#" -eq 1; then
     tassh_out=$1
 else
-    tassh_out=$($guix_bin build -L "$channel_dir" tassh)
+    tassh_out=$($guix_bin build -L "$channel_dir/guix" tassh)
 fi
 
 python_out=$(output_with_program bin/python3 python)

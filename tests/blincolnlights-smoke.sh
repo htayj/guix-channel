@@ -29,7 +29,7 @@ fi
 if test "$#" -eq 1; then
     blincolnlights_out=$1
 else
-    blincolnlights_out=$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes blincolnlights)
+    blincolnlights_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes blincolnlights)
 fi
 
 find_program_output() {

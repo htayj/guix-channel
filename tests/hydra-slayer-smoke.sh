@@ -16,7 +16,7 @@ fi
 if test "$#" -eq 1; then
     hydra_out=$1
 else
-    hydra_out=$($guix_bin build -L "$channel_dir" --no-grafts \
+    hydra_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts \
         --no-substitutes hydra-slayer)
 fi
 
@@ -35,7 +35,7 @@ contract="$channel_dir/.goocastle/runtime-evidence-contracts.json"
 test -s "$contract"
 grep -F '"issueNumber": 697' "$contract" >/dev/null
 grep -F '"packageName": "hydra-slayer"' "$contract" >/dev/null
-grep -F '"packageModulePath": "tay/packages/hydra-slayer.scm"' \
+grep -F '"packageModulePath": "guix/tay/packages/hydra-slayer.scm"' \
     "$contract" >/dev/null
 grep -F '"artifactPath": ".goocastle/evidence/issue-697.png"' \
     "$contract" >/dev/null

@@ -1,6 +1,7 @@
 ;;; GNU Guix package for Aquarium Arena.
 
 (define-module (tay packages aquarium-arena)
+  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system copy)
   #:use-module (guix build utils)
   #:use-module (guix download)
@@ -15,7 +16,8 @@
 ;; Exact Liberation Fonts 1.7 notice for the unmodified
 ;; LiberationMono-Bold.ttf shipped by the fixed upstream snapshot.
 (define liberation-mono-license
-  (local-file "../licenses/liberation-font-license-1.7.txt"))
+  (local-file
+   (search-tay-package-file "../licenses/liberation-font-license-1.7.txt")))
 
 (define-public aquarium-arena
   (package

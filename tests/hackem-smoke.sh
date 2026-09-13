@@ -15,7 +15,7 @@ fi
 if test "$#" -eq 1; then
     hackem_out=$1
 else
-    hackem_out=$($guix_bin build -L "$channel_dir" --no-grafts \
+    hackem_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts \
         --no-substitutes hackem)
 fi
 
@@ -43,7 +43,7 @@ contract=$channel_dir/.goocastle/runtime-evidence-contracts.json
 test -s "$contract"
 grep -F '"issueNumber": 693' "$contract" >/dev/null
 grep -F '"packageName": "hackem"' "$contract" >/dev/null
-grep -F '"packageModulePath": "tay/packages/hackem.scm"' \
+grep -F '"packageModulePath": "guix/tay/packages/hackem.scm"' \
     "$contract" >/dev/null
 grep -F '"artifactPath": ".goocastle/evidence/issue-693.png"' \
     "$contract" >/dev/null
@@ -54,7 +54,7 @@ grep -F '"successMarker": "hackem guix smoke passed"' \
 
 bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
 test -r "$bounded_validation"
-unshare_out=$($guix_bin build -L "$channel_dir" --no-grafts util-linux | sed -n '2p')
+unshare_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts util-linux | sed -n '2p')
 test -x "$unshare_out/bin/unshare"
 
 before=$($guix_bin hash -S nar "$hackem_out")

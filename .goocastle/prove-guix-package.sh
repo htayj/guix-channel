@@ -13,7 +13,7 @@ guix_bin=${GUIX:-guix}
 base_ref=${GOOCASTLE_PROOF_BASE_REF:-origin/master}
 git rev-parse --verify "$base_ref" >/dev/null 2>&1 || base_ref=master
 base=$(git merge-base HEAD "$base_ref")
-changed_modules=$(git diff --name-only "$base"...HEAD -- tay/packages | sed -n 's|^tay/packages/\(.*\)\.scm$|\1|p' | sort -u)
+changed_modules=$(git diff --name-only "$base"...HEAD -- guix/tay/packages | sed -n 's|^guix/tay/packages/\(.*\)\.scm$|\1|p' | sort -u)
 packages=${GOOCASTLE_PROOF_PACKAGE:-}
 
 # An evidence-refresh or audit delivery may intentionally change no package
@@ -36,12 +36,12 @@ process.stdout.write(contract.packageName);
 fi
 
 test -n "$packages" || test -n "$changed_modules" || {
-  echo "safe-package-proof: active change adds no package module under tay/packages" >&2
+  echo "safe-package-proof: active change adds no package module under guix/tay/packages" >&2
   exit 1
 }
 
 for module in $changed_modules; do
-  names=$(sed -n 's/^[[:space:]]*(define-public[[:space:]]\+\([a-z0-9][a-z0-9-]*\).*/\1/p' "tay/packages/$module.scm" | sort -u)
+  names=$(sed -n 's/^[[:space:]]*(define-public[[:space:]]\+\([a-z0-9][a-z0-9-]*\).*/\1/p' "guix/tay/packages/$module.scm" | sort -u)
   # Supporting manifests can be changed together with a package but do not
   # themselves provide end-user deliverables.  They remain covered by the
   # consuming package's build, reproducibility, and smoke proof below.
@@ -69,7 +69,7 @@ mkdir "$proof_root/home" "$proof_root/config" "$proof_root/data" "$proof_root/ca
 # Realize every changed sibling before any check or smoke gate.  A package's
 # integration smoke test may intentionally exercise a later-defined backend.
 for package in $packages; do
-  "$guix_bin" build -L . --no-grafts "$package" >/dev/null
+  "$guix_bin" build -L guix --no-grafts "$package" >/dev/null
 done
 
 for package in $packages; do
@@ -78,11 +78,11 @@ for package in $packages; do
     echo "safe-package-proof: $package requires package-specific $smoke" >&2
     exit 1
   }
-  "$guix_bin" lint -L . --no-network --exclude=cve,refresh,archival "$package"
+  "$guix_bin" lint -L guix --no-network --exclude=cve,refresh,archival "$package"
   # Guix's --check rebuild compares against an already-realized ordinary
   # output; invoking it first fails before any reproducibility proof exists.
-  output=$("$guix_bin" build -L . --no-grafts "$package")
-  "$guix_bin" build -L . --no-grafts --check "$package"
+  output=$("$guix_bin" build -L guix --no-grafts "$package")
+  "$guix_bin" build -L guix --no-grafts --check "$package"
   test -n "$output"
   # `guix package -p` tries to update the per-user profile registry below
   # /var/guix/profiles.  Rootless Goocastle containers deliberately expose

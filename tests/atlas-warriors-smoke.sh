@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     atlas_out=$1
 else
-    atlas_out=$($guix_bin build -L "$channel_dir" \
+    atlas_out=$($guix_bin build -L "$channel_dir/guix" \
         --no-grafts --no-substitutes atlas-warriors)
 fi
 

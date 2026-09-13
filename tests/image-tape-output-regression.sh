@@ -32,7 +32,7 @@ compile ()
 
 archive=${IMAGE_TAPE_SOURCE_ARCHIVE:-}
 if [ -z "$archive" ]; then
-  archive=$($guix_bin build -L "$root" --source larsbrinkhoff-image-tape-source)
+  archive=$($guix_bin build -L "$root/guix" --source larsbrinkhoff-image-tape-source)
 fi
 mkdir "$tmp/source"
 "$tar" -xf "$archive" -C "$tmp/source"
@@ -42,7 +42,7 @@ if [ "$#" -ne 1 ] || [ ! -d "$1" ]; then
   exit 1
 fi
 source=$1
-"$patch" -d "$source" -p1 <"$root/tay/packages/patches/image-tape-safe-output.patch"
+"$patch" -d "$source" -p1 <"$root/guix/tay/packages/patches/image-tape-safe-output.patch"
 
 cat >"$tmp/tape-shim.c" <<'EOF'
 #include <errno.h>

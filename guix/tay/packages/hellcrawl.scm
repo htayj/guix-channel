@@ -1,6 +1,7 @@
 ;;; GNU Guix package for the Hellcrawl terminal roguelike.
 
 (define-module (tay packages hellcrawl)
+  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system gnu)
   #:use-module (guix build utils)
   #:use-module (guix gexp)
@@ -22,7 +23,7 @@
 ;; package-owned --smoke mode.  It avoids a runtime dependency on a host PTY
 ;; utility while keeping the requested runtime closure small.
 (define %hellcrawl-smoke-pty
-  (local-file "hellcrawl-smoke-pty.c"))
+  (local-file (search-tay-package-file "hellcrawl-smoke-pty.c")))
 
 (define-public hellcrawl
   (package

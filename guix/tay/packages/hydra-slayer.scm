@@ -3,6 +3,7 @@
 ;;; SPDX-License-Identifier: GPL-3.0-or-later
 
 (define-module (tay packages hydra-slayer)
+  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system gnu)
   #:use-module (guix gexp)
   #:use-module (guix git-download)
@@ -17,7 +18,7 @@
   "55bb69d716a9fb269c6364f9df89d4bc260cb1a1")
 
 (define hydra-slayer-smoke-script
-  (local-file "hydra-slayer-smoke.py"))
+  (local-file (search-tay-package-file "hydra-slayer-smoke.py")))
 
 (define-public hydra-slayer
   (package

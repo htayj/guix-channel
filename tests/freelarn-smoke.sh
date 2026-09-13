@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     freelarn_out=$1
 else
-    freelarn_out=$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes freelarn)
+    freelarn_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes freelarn)
 fi
 
 find_program_output() {

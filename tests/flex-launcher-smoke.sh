@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     flex_out=$1
 else
-    flex_out=$($guix_bin build -L "$channel_dir" --no-grafts flex-launcher)
+    flex_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts flex-launcher)
 fi
 
 python_out=
@@ -43,7 +43,7 @@ test -f "$flex_out/share/doc/flex-launcher/third-party-notices/nanosvg.txt"
 test -f "$flex_out/share/doc/flex-launcher/third-party-notices/fonts.txt"
 test -f "$flex_out/share/doc/flex-launcher/third-party-notices/icons.txt"
 grep -F 'cc0d98734518af897f6c2af86abd94d0790c0661' \
-    "$channel_dir/tay/packages/flex-launcher.scm" >/dev/null
+    "$channel_dir/guix/tay/packages/flex-launcher.scm" >/dev/null
 grep -F 'Numix project' \
     "$flex_out/share/doc/flex-launcher/third-party-notices/icons.txt" >/dev/null
 grep -F 'SIL Open Font License 1.1' \

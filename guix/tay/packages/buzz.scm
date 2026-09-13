@@ -1,6 +1,7 @@
 ;;; GNU Guix package for the Block Buzz desktop application.
 
 (define-module (tay packages buzz)
+  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system copy)
   #:use-module (guix download)
   #:use-module (guix gexp)
@@ -40,7 +41,7 @@
      (base32 "1klw3h6d073kpy38vzp3ckd976dkla76mj38ymj8i3zq440fbwcl"))))
 
 (define buzz-launcher
-  (local-file "buzz-launcher.sh"))
+  (local-file (search-tay-package-file "buzz-launcher.sh")))
 
 (define-public buzz
   (package

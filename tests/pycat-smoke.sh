@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     pycat_out=$1
 else
-    pycat_out=$($guix_bin build -L "$channel_dir" pycat)
+    pycat_out=$($guix_bin build -L "$channel_dir/guix" pycat)
 fi
 
 python_out=

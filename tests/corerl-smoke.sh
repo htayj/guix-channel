@@ -14,7 +14,7 @@ fi
 if test "$#" -eq 1; then
     corerl_out=$1
 else
-    corerl_out=$($guix_bin build -L . --no-grafts --no-substitutes corerl)
+    corerl_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes corerl)
 fi
 
 test -x "$corerl_out/bin/corerl"
@@ -40,7 +40,7 @@ marker=CORERL_RUNTIME_OK
 grep -F '"successMarker": "CORERL_RUNTIME_OK"' "$contract" >/dev/null
 
 util_linux_out=
-for candidate in $($guix_bin build -L . --no-grafts --no-substitutes util-linux); do
+for candidate in $($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes util-linux); do
     if test -x "$candidate/bin/script"; then
         util_linux_out=$candidate
         break

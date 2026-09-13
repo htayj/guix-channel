@@ -14,7 +14,7 @@ fi
 if test "$#" -eq 1; then
     diabaig_out=$1
 else
-    diabaig_out=$($guix_bin build -L . --no-grafts --no-substitutes diabaig)
+    diabaig_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes diabaig)
 fi
 
 test -f "$diabaig_out/bin/diabaig"
@@ -52,7 +52,7 @@ find_program_output ()
 {
     program=$1
     package=$2
-    for output in $($guix_bin build -L . --no-grafts "$package"); do
+    for output in $($guix_bin build -L "$channel_dir/guix" --no-grafts "$package"); do
         if test -x "$output/$program"; then
             printf '%s\n' "$output"
             return 0

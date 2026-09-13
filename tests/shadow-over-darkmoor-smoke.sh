@@ -14,7 +14,7 @@ fi
 if test "$#" -eq 1; then
     darkmoor_out=$1
 else
-    darkmoor_out=$($guix_bin build -L . --no-grafts shadow-over-darkmoor)
+    darkmoor_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts shadow-over-darkmoor)
 fi
 
 python_out=

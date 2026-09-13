@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     secretpathway_out=$1
 else
-    secretpathway_out=$($guix_bin build -L "$channel_dir" secretpathway)
+    secretpathway_out=$($guix_bin build -L "$channel_dir/guix" secretpathway)
 fi
 
 python_out=

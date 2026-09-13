@@ -15,7 +15,7 @@ if test "$#" -eq 1; then
 else
     # Do not pass --no-check: this intentionally proves the package build with
     # its upstream tests enabled before exercising the installed result.
-    wired_out=$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes wired)
+    wired_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes wired)
 fi
 
 find_program_output() {

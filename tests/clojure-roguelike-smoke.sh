@@ -14,12 +14,12 @@ fi
 if test "$#" -eq 1; then
     game_out=$1
 else
-    game_out=$($guix_bin build -L . --no-grafts --no-substitutes \
+    game_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes \
         clojure-roguelike)
 fi
 
 if test "${CLOJURE_ROGUELIKE_SMOKE_IN_NETNS:-}" != 1; then
-    util_linux=${UTIL_LINUX:-$($guix_bin build -L . --no-grafts util-linux \
+    util_linux=${UTIL_LINUX:-$($guix_bin build -L "$channel_dir/guix" --no-grafts util-linux \
       | grep -E -- '-util-linux-[0-9.]+$')}
     test -x "$util_linux/bin/script"
     if ! unshare --user --map-root-user --net --fork true >/dev/null 2>&1; then

@@ -19,13 +19,13 @@ fi
 if test "$#" -eq 1; then
     hunger_games_out=$1
 else
-    hunger_games_out=$($guix_bin build -L . --no-grafts --no-substitutes hunger-games)
+    hunger_games_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes hunger-games)
 fi
 
 find_output () {
     program=$1
     package=$2
-    for output in $($guix_bin build -L . --no-grafts --no-substitutes "$package"); do
+    for output in $($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes "$package"); do
         if test -x "$output/$program"; then
             printf '%s\n' "$output"
             return 0
@@ -67,7 +67,7 @@ contract="$channel_dir/.goocastle/runtime-evidence-contracts.json"
 test -s "$contract"
 "$grep_bin" -F '"issueNumber": 695' "$contract" >/dev/null
 "$grep_bin" -F '"packageName": "hunger-games"' "$contract" >/dev/null
-"$grep_bin" -F '"packageModulePath": "tay/packages/hunger-games.scm"' \
+"$grep_bin" -F '"packageModulePath": "guix/tay/packages/hunger-games.scm"' \
     "$contract" >/dev/null
 "$grep_bin" -F '"artifactPath": ".goocastle/evidence/issue-695.png"' \
     "$contract" >/dev/null

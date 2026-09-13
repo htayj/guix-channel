@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     package_out=$1
 else
-    package_out=$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes \
+    package_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes \
         emacs-forth-mode@0-4450a3a)
 fi
 
@@ -31,7 +31,7 @@ find_program_output() {
 
 emacs_out=$(find_program_output bin/emacs emacs-minimal)
 gforth_out=$(find_program_output bin/gforth gforth)
-source_out=$($guix_bin build -L "$channel_dir" larsbrinkhoff-forth-mode-source)
+source_out=$($guix_bin build -L "$channel_dir/guix" larsbrinkhoff-forth-mode-source)
 emacs_bin=$emacs_out/bin/emacs
 gforth_bin=$gforth_out/bin/gforth
 source_fixtures=$source_out/share/larsbrinkhoff/projects/forth-mode

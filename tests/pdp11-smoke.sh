@@ -12,7 +12,7 @@ fi
 if test "$#" -eq 1; then
     pdp11_out=$1
 else
-    pdp11_out=$($guix_bin build -L "$channel_dir" --no-grafts pdp11)
+    pdp11_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts pdp11)
 fi
 
 find_output ()

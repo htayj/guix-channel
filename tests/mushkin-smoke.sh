@@ -12,7 +12,7 @@ fi
 if test "$#" -eq 1; then
     mushkin_out=$1
 else
-    mushkin_out=$($guix_bin build -L "$channel_dir" --no-grafts mushkin)
+    mushkin_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts mushkin)
 fi
 
 python_out=

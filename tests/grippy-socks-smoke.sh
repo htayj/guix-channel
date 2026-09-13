@@ -16,13 +16,13 @@ fi
 if test "$#" -eq 1; then
     grippy_socks_out=$1
 else
-    grippy_socks_out=$($guix_bin build -L . --no-grafts --no-substitutes grippy-socks)
+    grippy_socks_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes grippy-socks)
 fi
 
 find_output () {
     program=$1
     package=$2
-    for output in $($guix_bin build -L . --no-grafts --no-substitutes "$package"); do
+    for output in $($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes "$package"); do
         if test -x "$output/$program"; then
             printf '%s\n' "$output"
             return 0
@@ -62,7 +62,7 @@ contract=$channel_dir/.goocastle/runtime-evidence-contracts.json
 test -s "$contract"
 "$grep_bin" -F '"issueNumber": 689' "$contract" >/dev/null
 "$grep_bin" -F '"packageName": "grippy-socks"' "$contract" >/dev/null
-"$grep_bin" -F '"packageModulePath": "tay/packages/grippy-socks.scm"' \
+"$grep_bin" -F '"packageModulePath": "guix/tay/packages/grippy-socks.scm"' \
     "$contract" >/dev/null
 "$grep_bin" -F '"artifactPath": ".goocastle/evidence/issue-689.png"' \
     "$contract" >/dev/null

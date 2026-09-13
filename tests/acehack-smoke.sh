@@ -15,7 +15,7 @@ if test "$#" -ge 1; then
 else
     # The program under test must come from this channel's source build, not
     # a substitute whose provenance could hide a packaging regression.
-    acehack_out=$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes acehack)
+    acehack_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes acehack)
 fi
 
 if test "$#" -eq 2; then

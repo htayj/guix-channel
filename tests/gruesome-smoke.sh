@@ -20,7 +20,7 @@ fi
 if test "$#" -eq 1; then
     gruesome_out=$1
 else
-    gruesome_out=$($guix_bin build -L . --no-grafts --no-substitutes gruesome)
+    gruesome_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes gruesome)
 fi
 
 test -r "$bounded_validation"
@@ -44,7 +44,7 @@ contract="$channel_dir/.goocastle/runtime-evidence-contracts.json"
 test -s "$contract"
 "$grep_bin" -F '"issueNumber": 690' "$contract" >/dev/null
 "$grep_bin" -F '"packageName": "gruesome"' "$contract" >/dev/null
-"$grep_bin" -F '"packageModulePath": "tay/packages/gruesome.scm"' \
+"$grep_bin" -F '"packageModulePath": "guix/tay/packages/gruesome.scm"' \
     "$contract" >/dev/null
 "$grep_bin" -F '"artifactPath": ".goocastle/evidence/issue-690.png"' \
     "$contract" >/dev/null

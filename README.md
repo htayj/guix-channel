@@ -63,10 +63,14 @@ guix pull
 For a clone of the channel, packages can be used immediately without pulling:
 
 ```sh
-guix build -L . cadr-fonts-latin
-guix install -L . sbcl-qbcl
-guix build -L . htayj-ivory-key-source
+guix build -L guix cadr-fonts-latin
+guix install -L guix sbcl-qbcl
+guix build -L guix htayj-ivory-key-source
 ```
+
+Channel modules live below `guix/`, as declared by the `directory` field in
+`.guix-channel`.  Keep repository tooling and generated Goocastle manifests
+outside that directory so `guix pull` only compiles actual channel modules.
 
 Source snapshots install below `share/ACCOUNT/projects/REPOSITORY`.  They are
 development and preservation inputs, not claims that every repository has a
@@ -265,7 +269,7 @@ is included in this channel.  To build it, supply an authorized matching
 x86_64 `.deb` explicitly:
 
 ```sh
-guix build -L . --with-source=sentinelone=/path/to/SentinelAgent-Linux-24-3-3-1-x86-64-release-24-3-3_linux_x86_64_v24_3_3_1.deb sentinelone
+guix build -L guix --with-source=sentinelone=/path/to/SentinelAgent-Linux-24-3-3-1-x86-64-release-24-3-3_linux_x86_64_v24_3_3_1.deb sentinelone
 ```
 
 The channel's package definition and documentation are GPL-3.0-or-later under

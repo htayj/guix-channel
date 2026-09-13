@@ -18,7 +18,7 @@ fi
 if test "$#" -eq 1; then
     nlarn_out=$1
 else
-    nlarn_out=$($guix_bin build -L . --no-grafts --no-substitutes nlarn)
+    nlarn_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes nlarn)
 fi
 
 test -x "$nlarn_out/bin/nlarn"
@@ -50,7 +50,7 @@ contract="$channel_dir/.goocastle/runtime-evidence-contracts.json"
 test -s "$contract"
 grep -F '"issueNumber": 710' "$contract" >/dev/null
 grep -F '"packageName": "nlarn"' "$contract" >/dev/null
-grep -F '"packageModulePath": "tay/packages/nlarn.scm"' \
+grep -F '"packageModulePath": "guix/tay/packages/nlarn.scm"' \
     "$contract" >/dev/null
 grep -F '"artifactPath": ".goocastle/evidence/issue-710.png"' \
     "$contract" >/dev/null
@@ -63,7 +63,7 @@ test -x "$node_bin"
 test -x "$python_bin"
 
 util_linux_out=
-for candidate in $($guix_bin build -L . --no-grafts --no-substitutes util-linux); do
+for candidate in $($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes util-linux); do
     if test -x "$candidate/bin/unshare"; then
         util_linux_out=$candidate
         break

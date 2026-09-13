@@ -1,6 +1,7 @@
 ;;; GNU Guix package for Mushkin.
 
 (define-module (tay packages mushkin)
+  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system cmake)
   #:use-module (guix gexp)
   #:use-module (guix git-download)
@@ -58,7 +59,9 @@
                  "tests/test_lua_api_gtest.cpp"
                  "tests/test_telnet_parser_gtest.cpp"))
               (invoke "patch" "-p1" "-i"
-                      #$(local-file "patches/mushkin-channel-runtime-security.patch"))))
+                      #$(local-file
+                         (search-tay-package-file
+                          "patches/mushkin-channel-runtime-security.patch")))))
           ;; CMake's gtest_discover_tests runs GUI test executables while the
           ;; build is still in progress, before the ordinary check phase.
           ;; Ensure that discovery is headless as well as the eventual CTest

@@ -17,7 +17,7 @@ fi
 if test "$#" -eq 1; then
     cryptrover_out=$1
 else
-    cryptrover_out=$($guix_bin build -L . --no-grafts --no-substitutes cryptrover)
+    cryptrover_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes cryptrover)
 fi
 
 test -x "$cryptrover_out/bin/cryptrover"
@@ -48,7 +48,7 @@ grep -F '"successMarker": "CRYPTROVER_RUNTIME_OK"' \
     "$contract" >/dev/null
 
 util_linux_out=
-for output in $($guix_bin build -L . --no-grafts --no-substitutes util-linux); do
+for output in $($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes util-linux); do
     if test -x "$output/bin/script" && test -x "$output/bin/unshare"; then
         util_linux_out=$output
         break

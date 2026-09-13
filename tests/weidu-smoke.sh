@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     weidu_out=$1
 else
-    weidu_out=$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes weidu)
+    weidu_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes weidu)
 fi
 
 find_program_output() {

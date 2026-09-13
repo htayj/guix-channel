@@ -43,7 +43,7 @@ fi
 if test "$#" -eq 1; then
     axmud_out=$1
 else
-    axmud_out=$($guix_bin build -L "$channel_dir" --no-grafts axmud)
+    axmud_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts axmud)
 fi
 
 python_out=

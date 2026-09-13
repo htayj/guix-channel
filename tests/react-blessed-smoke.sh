@@ -4,10 +4,10 @@ set -eu
 
 guix_bin=${GUIX:-guix}
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-out=${1:-$($guix_bin build -L "$channel_dir" --no-grafts react-blessed)}
-node_out=${NODE_OUT:-$($guix_bin build -L "$channel_dir" --no-grafts node)}
+out=${1:-$($guix_bin build -L "$channel_dir/guix" --no-grafts react-blessed)}
+node_out=${NODE_OUT:-$($guix_bin build -L "$channel_dir/guix" --no-grafts node)}
 # util-linux has lib, out, and static outputs; script is in the unsuffixed out.
-util_linux=${UTIL_LINUX:-$($guix_bin build -L "$channel_dir" --no-grafts util-linux \
+util_linux=${UTIL_LINUX:-$($guix_bin build -L "$channel_dir/guix" --no-grafts util-linux \
   | grep -E -- '-util-linux-[0-9.]+$')}
 module=$out/lib/node_modules/react-blessed
 

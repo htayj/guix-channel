@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     gogdl_out=$1
 else
-    gogdl_out=$($guix_bin build -L "$channel_dir" --no-grafts heroic-gogdl)
+    gogdl_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts heroic-gogdl)
 fi
 
 python_out=

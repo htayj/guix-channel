@@ -14,7 +14,7 @@ fi
 if test "$#" -eq 1; then
     rune_out=$1
 else
-    rune_out=$($guix_tool build -L . --no-grafts rune)
+    rune_out=$($guix_tool build -L "$channel_dir/guix" --no-grafts rune)
 fi
 
 if test "${RUNE_SMOKE_IN_NETNS:-}" = 1; then

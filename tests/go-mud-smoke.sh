@@ -15,7 +15,7 @@ fi
 if test "$#" -eq 1; then
     go_mud_out=$1
 else
-    go_mud_out=$($guix_bin build -L "$channel_dir" --no-grafts go-mud)
+    go_mud_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts go-mud)
 fi
 
 python_out=

@@ -4,7 +4,7 @@ set -eu
 
 guix_bin=${GUIX:-guix}
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-out=${1:-$($guix_bin build -L "$channel_dir" --no-grafts astx)}
+out=${1:-$($guix_bin build -L "$channel_dir/guix" --no-grafts astx)}
 
 test -x "$out/bin/astx"
 test -s "$out/share/doc/astx/LICENSE.md"

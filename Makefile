@@ -14,15 +14,15 @@ BLIGHTMUD_GUIX ?= guix time-machine -C channels.guix --
 UPSTREAM_SOURCE_PACKAGES := emacs-plz-event-source obs-gradient-source \
 	perl-crypt-random-source ruby-method-source texlive-source
 SOURCE_PACKAGES := $(filter-out $(UPSTREAM_SOURCE_PACKAGES),$(shell \
-	$(GUIX) package -L . -A 2>/dev/null | awk '$$1 ~ /-source$$/ { print $$1 }' | sort -u))
+	$(GUIX) package -L guix -A 2>/dev/null | awk '$$1 ~ /-source$$/ { print $$1 }' | sort -u))
 
 # Keep an independent textual inventory solely as a guard against a definition
 # that stopped exporting.  It accounts for Lars's dynamically exported lists.
 PARSED_SOURCE_PACKAGES := $(shell { \
-	rg --no-filename -o -P 'define-public[[:space:]]+[a-z0-9][a-z0-9-]*-source' tay/packages; \
+	rg --no-filename -o -P 'define-public[[:space:]]+[a-z0-9][a-z0-9-]*-source' guix/tay/packages; \
 	rg --no-filename '"larsbrinkhoff-[a-z0-9-]*-source"' \
-		tay/packages/larsbrinkhoff-a-f.scm tay/packages/larsbrinkhoff-g-m.scm \
-		tay/packages/larsbrinkhoff-n-s.scm tay/packages/larsbrinkhoff-t-z.scm; \
+		guix/tay/packages/larsbrinkhoff-a-f.scm guix/tay/packages/larsbrinkhoff-g-m.scm \
+		guix/tay/packages/larsbrinkhoff-n-s.scm guix/tay/packages/larsbrinkhoff-t-z.scm; \
 	} | sed -E 's/^define-public[[:space:]]+//; /^[^"]*"/ { s/^[^"]*"//; s/".*//; }' | sort -u)
 EXPECTED_SOURCE_PACKAGE_COUNT := 629
 SOURCE_PACKAGE_COUNT := $(words $(SOURCE_PACKAGES))
@@ -103,7 +103,7 @@ check-buzz:
 
 check-datamosh-security:
 	GUIX="$(GUIX)" tests/you-can-datamosh-on-linux-security-smoke.sh \
-		"$$($(GUIX) build -L . --no-grafts you-can-datamosh-on-linux)"
+		"$$($(GUIX) build -L guix --no-grafts you-can-datamosh-on-linux)"
 
 check-axmud:
 	GUIX="$(GUIX)" tests/axmud-smoke.sh
@@ -220,11 +220,11 @@ check-pdp6:
 
 check-pdp10-xpl-pdp-10:
 	GUIX="$(GUIX)" tests/pdp10-xpl-pdp-10-smoke.sh \
-		"$$($(GUIX) build -L . --no-grafts pdp10-xpl-pdp-10)"
+		"$$($(GUIX) build -L guix --no-grafts pdp10-xpl-pdp-10)"
 
 check-faugus-launcher:
 	GUIX="$(GUIX)" tests/faugus-launcher-smoke.sh \
-		"$$($(GUIX) build -L . --no-grafts faugus-launcher)"
+		"$$($(GUIX) build -L guix --no-grafts faugus-launcher)"
 
 check-react-blessed:
 	GUIX="$(GUIX)" tests/react-blessed-smoke.sh
@@ -335,19 +335,19 @@ check: check-source-count check-sentinelone check-datamosh-security \
 	check-potato check-pycat check-rune check-secretpathway \
 	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-bell-labs-rogue7 check-astx check-acehack check-avanor check-bootrogue check-wanderers check-hack check-emacs-org-popup-posframe \
 	check-emacs-forth-mode check-emacs-aidermacs check-aquarium-arena check-atlas-warriors check-bcrawl check-chessrogue check-corerl check-cutlassrl check-dhack check-cryptrover check-dnethack check-dragonslayer check-grippy-socks check-hunger-games check-gruesome check-hydra-slayer check-martins-dungeon-bash check-nlarn check-robotfindskitten
-	$(GUIX) build -L . --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
-	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \
+	$(GUIX) build -L guix --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
+	$(GUIX) lint -L guix --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 
 lint: check-source-count
-	$(GUIX) lint -L . --no-network --exclude=cve,refresh,archival \
+	$(GUIX) lint -L guix --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 
 lint-cve: check-source-count
-	$(GUIX) lint -L . --checkers=cve $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
+	$(GUIX) lint -L guix --checkers=cve $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 
 build:
-	$(GUIX) build -L . $(INSTALLABLE_PACKAGES)
+	$(GUIX) build -L guix $(INSTALLABLE_PACKAGES)
 
 build-sources: check-source-count
-	$(GUIX) build -L . $(SOURCE_PACKAGES)
+	$(GUIX) build -L guix $(SOURCE_PACKAGES)

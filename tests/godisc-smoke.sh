@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     godisc_out=$1
 else
-    godisc_out=$($guix_bin build -L "$channel_dir" --no-grafts godisc)
+    godisc_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts godisc)
 fi
 
 python_out=

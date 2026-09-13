@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 guix_bin=${GUIX:-guix}; channel=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-out=${1:-$($guix_bin build -L "$channel" --no-grafts --no-substitutes uc-explorer)}
+out=${1:-$($guix_bin build -L "$channel/guix" --no-grafts --no-substitutes uc-explorer)}
 util=$($guix_bin build util-linux | sed -n '2p')
 test -x "$out/bin/uc-explorer"
 work=$(mktemp -d); trap 'rm -rf "$work"' EXIT

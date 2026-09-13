@@ -14,7 +14,7 @@ fi
 if test "$#" -eq 1; then
     game_out=$1
 else
-    game_out=$($guix_bin build -L . --no-grafts --no-substitutes \
+    game_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes \
         bell-labs-rogue7)
 fi
 
@@ -22,7 +22,7 @@ find_output ()
 {
     program=$1
     package=$2
-    for output in $($guix_bin build -L "$channel_dir" --no-grafts \
+    for output in $($guix_bin build -L "$channel_dir/guix" --no-grafts \
                        --no-substitutes "$package"); do
         if test -x "$output/$program"; then
             printf '%s\n' "$output"

@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     trebuchet_out=$1
 else
-    trebuchet_out=$($guix_bin build -L "$channel_dir" \
+    trebuchet_out=$($guix_bin build -L "$channel_dir/guix" \
         --no-grafts --no-substitutes trebuchet)
 fi
 

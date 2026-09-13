@@ -36,7 +36,7 @@ not download, copy, or expose it.
 - `guix lint -L .` with the local structural and semantic checkers passed.
   Guix's default updater checker reports that the documentation repository has
   no release tags; that is not a package-definition error.
-- `guix build -L . bell-museum` succeeded.
+- `guix build -L guix bell-museum` succeeded.
 - The installed renderer regenerated all eight tracked outputs from the
   separately inspected pinned checkout, `--check` reported them current, and
   `diff -ru` confirmed byte-for-byte equality with the packaged reference

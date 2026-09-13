@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     mushtato_out=$1
 else
-    mushtato_out=$($guix_bin build -L "$channel_dir" --no-grafts mushtato)
+    mushtato_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts mushtato)
 fi
 
 python_out=

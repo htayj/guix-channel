@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     theme_out=$1
 else
-    theme_out=$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes azurra-gtk-theme)
+    theme_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes azurra-gtk-theme)
 fi
 
 find_program_output() {

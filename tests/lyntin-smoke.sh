@@ -3,7 +3,7 @@ set -eu
 
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 guix_bin=${GUIX:-guix}
-out=$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes lyntin)
+out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes lyntin)
 site=$(find "$out/lib" -type d -name site-packages -print -quit)
 python=$(sed -n '1s/^#!//p' "$out/bin/.lyntin-real")
 test -x "$python"

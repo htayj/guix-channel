@@ -14,14 +14,14 @@ fi
 if test "$#" -eq 1; then
     brogue_out=$1
 else
-    brogue_out=$($guix_bin build -L . --no-grafts --no-substitutes brogue)
+    brogue_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes brogue)
 fi
 
 find_program_output ()
 {
     program=$1
     package=$2
-    for output in $($guix_bin build -L . --no-grafts "$package"); do
+    for output in $($guix_bin build -L "$channel_dir/guix" --no-grafts "$package"); do
         if test -x "$output/$program"; then
             printf '%s\n' "$output"
             return 0

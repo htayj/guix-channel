@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     potato_out=$1
 else
-    potato_out=$($guix_bin build -L "$channel_dir" \
+    potato_out=$($guix_bin build -L "$channel_dir/guix" \
         --no-grafts --no-substitutes potato)
 fi
 

@@ -14,7 +14,7 @@ fi
 if test "$#" -eq 1; then
     rapidbrogue_out=$1
 else
-    rapidbrogue_out=$($guix_bin build -L . --no-grafts --no-substitutes rapidbrogue)
+    rapidbrogue_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes rapidbrogue)
 fi
 
 test -x "$rapidbrogue_out/bin/rapidbrogue"
@@ -37,7 +37,7 @@ contract=.goocastle/runtime-evidence-contracts.json
 test -s "$contract"
 grep -F '"issueNumber": 714' "$contract" >/dev/null
 grep -F '"packageName": "rapidbrogue"' "$contract" >/dev/null
-grep -F '"packageModulePath": "tay/packages/rapidbrogue.scm"' \
+grep -F '"packageModulePath": "guix/tay/packages/rapidbrogue.scm"' \
     "$contract" >/dev/null
 grep -F '"artifactPath": ".goocastle/evidence/issue-714.png"' \
     "$contract" >/dev/null
@@ -50,7 +50,7 @@ find_output ()
 {
     program=$1
     package=$2
-    for output in $($guix_bin build -L "$channel_dir" --no-grafts \
+    for output in $($guix_bin build -L "$channel_dir/guix" --no-grafts \
         --no-substitutes "$package"); do
         if test -x "$output/$program"; then
             printf '%s\n' "$output"

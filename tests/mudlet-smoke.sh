@@ -32,7 +32,7 @@ fi
 if test "$#" -eq 1; then
     mudlet_out=$1
 else
-    mudlet_out=$($guix_bin build -L "$channel_dir" --no-grafts mudlet)
+    mudlet_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts mudlet)
 fi
 
 python_out=

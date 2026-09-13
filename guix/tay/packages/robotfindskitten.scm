@@ -1,6 +1,7 @@
 ;;; GNU Guix package for robotfindskitten.
 
 (define-module (tay packages robotfindskitten)
+  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system gnu)
   #:use-module (guix download)
   #:use-module (guix gexp)
@@ -13,7 +14,7 @@
   #:use-module (gnu packages texinfo))
 
 (define %robotfindskitten-smoke
-  (local-file "robotfindskitten-smoke.py"))
+  (local-file (search-tay-package-file "robotfindskitten-smoke.py")))
 
 (define-public robotfindskitten
   (package

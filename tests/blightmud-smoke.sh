@@ -17,7 +17,7 @@ fi
 if test "$#" -eq 1; then
     blightmud_out=$1
 else
-    blightmud_out=$($guix_tool build -L . --no-grafts blightmud)
+    blightmud_out=$($guix_tool build -L "$channel_dir/guix" --no-grafts blightmud)
 fi
 
 if test "${BLIGHTMUD_SMOKE_IN_NETNS:-}" = 1; then
@@ -70,10 +70,10 @@ test "$(find "$blightmud_out/share/doc/blightmud/third-party-licenses" -type f |
 # The package, not a command-line convention, disables the startup release
 # request.  User-triggered plugin actions remain outside this smoke's scope.
 grep -F '(not (string-contains lib "check_latest_version"))' \
-    "$channel_dir/tay/packages/blightmud.scm" >/dev/null
+    "$channel_dir/guix/tay/packages/blightmud.scm" >/dev/null
 grep -F 'Package-managed update check disabled' \
-    "$channel_dir/tay/packages/blightmud.scm" >/dev/null
-grep -F -- '--no-default-features' "$channel_dir/tay/packages/blightmud.scm" >/dev/null
+    "$channel_dir/guix/tay/packages/blightmud.scm" >/dev/null
+grep -F -- '--no-default-features' "$channel_dir/guix/tay/packages/blightmud.scm" >/dev/null
 
 "$python_out/bin/python3" - "$blightmud_out" "$openssl_out/bin/openssl" <<'PY'
 import fcntl

@@ -25,7 +25,7 @@ fi
 if test "$#" -eq 1; then
     dmu_out=$1
 else
-    dmu_out=$($guix_bin build -L . --no-grafts --no-substitutes \
+    dmu_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes \
         dungeon-monkey-unlimited)
 fi
 
@@ -71,7 +71,7 @@ test -s "$contract"
 "$grep_bin" -F '"issueNumber": 683' "$contract" >/dev/null
 "$grep_bin" -F '"packageName": "dungeon-monkey-unlimited"' \
     "$contract" >/dev/null
-"$grep_bin" -F '"packageModulePath": "tay/packages/dungeon-monkey-unlimited.scm"' \
+"$grep_bin" -F '"packageModulePath": "guix/tay/packages/dungeon-monkey-unlimited.scm"' \
     "$contract" >/dev/null
 "$grep_bin" -F '"artifactPath": ".goocastle/evidence/issue-683.png"' \
     "$contract" >/dev/null

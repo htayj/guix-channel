@@ -7,7 +7,7 @@ channel neither includes nor fetches.
 
 ## sentinelone-guix
 
-`tay/packages/sentinelone.scm` is adapted from Morgan Helton's
+`guix/tay/packages/sentinelone.scm` is adapted from Morgan Helton's
 [`htayj/sentinelone-guix`](https://github.com/htayj/sentinelone-guix) upstream
 package definition at commit `2ed11dd6f935e0498c2bf91d355990c062147c2c`.
 The upstream repository supplies the following MIT notice:

@@ -17,7 +17,7 @@ if test "$#" -eq 1; then
     hack_out=$1
 else
     # The program under test must come from this channel's source build.
-    hack_out=$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes hack)
+    hack_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes hack)
 fi
 
 test -x "$hack_out/bin/hack"
@@ -37,7 +37,7 @@ contract=$channel_dir/.goocastle/runtime-evidence-contracts.json
 test -s "$contract"
 grep -F '"issueNumber": 692' "$contract" >/dev/null
 grep -F '"packageName": "hack"' "$contract" >/dev/null
-grep -F '"packageModulePath": "tay/packages/hack.scm"' "$contract" >/dev/null
+grep -F '"packageModulePath": "guix/tay/packages/hack.scm"' "$contract" >/dev/null
 grep -F '"artifactPath": ".goocastle/evidence/issue-692.png"' "$contract" >/dev/null
 grep -F '"executable": "hack"' "$contract" >/dev/null
 grep -F '"--guix-smoke"' "$contract" >/dev/null

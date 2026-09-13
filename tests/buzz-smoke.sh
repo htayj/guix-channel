@@ -13,7 +13,7 @@ fi
 if test "$#" -ge 1; then
     buzz_out=$1
 else
-    buzz_out=$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes buzz)
+    buzz_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes buzz)
 fi
 if test "$#" -eq 2; then
     screenshot=$2

@@ -12,7 +12,7 @@ fi
 if test "$#" -eq 1; then
     kbredir_out=$1
 else
-    kbredir_out=$($guix_bin build -L "$channel_dir" --no-grafts kbredir)
+    kbredir_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts kbredir)
 fi
 
 python_out=

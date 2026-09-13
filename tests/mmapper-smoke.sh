@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     mmapper_out=$1
 else
-    mmapper_out=$($guix_bin build -L "$channel_dir" --no-grafts mmapper)
+    mmapper_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts mmapper)
 fi
 
 python_out=

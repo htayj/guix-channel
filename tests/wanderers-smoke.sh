@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     wanderers_out=$1
 else
-    wanderers_out=$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes wanderers)
+    wanderers_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes wanderers)
 fi
 
 find_program_output() {

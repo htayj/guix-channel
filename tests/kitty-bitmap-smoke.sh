@@ -9,7 +9,7 @@ cd "$channel_dir"
 
 # Deliberately allow GUIX to be a command prefix such as
 # "guix time-machine -C channels.guix --", not only an executable pathname.
-source_tree=$($guix_tool build -L . --no-grafts -S kitty-bitmap)
+source_tree=$($guix_tool build -L "$channel_dir/guix" --no-grafts -S kitty-bitmap)
 select_output() {
   program=$1
   shift
@@ -24,7 +24,7 @@ select_output() {
 
 # Guix versions differ on command-line output selection syntax.  Select the
 # named output structurally, so this works with the channel-pinned Guix too.
-kitty_out=$(select_output bin/kitty -L . --no-grafts kitty-bitmap)
+kitty_out=$(select_output bin/kitty -L "$channel_dir/guix" --no-grafts kitty-bitmap)
 unscii_out=$(select_output share/fonts/misc/unscii-16-full.pcf font-unscii)
 fontconfig_out=$(select_output bin/fc-cache fontconfig)
 

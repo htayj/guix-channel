@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     kbtin_out=$1
 else
-    kbtin_out=$($guix_bin build -L "$channel_dir" --no-grafts kbtin)
+    kbtin_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts kbtin)
 fi
 
 python_out=

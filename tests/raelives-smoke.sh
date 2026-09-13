@@ -16,7 +16,7 @@ fi
 if test "$#" -eq 1; then
     raelives_out=$1
 else
-    raelives_out=$($guix_bin build -L . --no-grafts --no-substitutes raelives)
+    raelives_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes raelives)
 fi
 
 test -x "$raelives_out/bin/raelives"
@@ -40,7 +40,7 @@ contract=.goocastle/runtime-evidence-contracts.json
 test -s "$contract"
 grep -F '"issueNumber": 699' "$contract" >/dev/null
 grep -F '"packageName": "raelives"' "$contract" >/dev/null
-grep -F '"packageModulePath": "tay/packages/raelives.scm"' \
+grep -F '"packageModulePath": "guix/tay/packages/raelives.scm"' \
     "$contract" >/dev/null
 grep -F '"artifactPath": ".goocastle/evidence/issue-699.png"' \
     "$contract" >/dev/null
@@ -49,7 +49,7 @@ grep -F '"--smoke"' "$contract" >/dev/null
 grep -F '"successMarker": "RAELIVES_RUNTIME_OK"' "$contract" >/dev/null
 
 util_linux_out=
-for candidate in $($guix_bin build -L . --no-grafts --no-substitutes util-linux); do
+for candidate in $($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes util-linux); do
     if test -x "$candidate/bin/unshare"; then
         util_linux_out=$candidate
         break

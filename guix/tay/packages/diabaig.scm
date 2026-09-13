@@ -3,6 +3,7 @@
 ;;; SPDX-License-Identifier: GPL-3.0-or-later
 
 (define-module (tay packages diabaig)
+  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system gnu)
   #:use-module (guix build utils)
   #:use-module (guix gexp)
@@ -23,7 +24,7 @@
 ;; package-owned --smoke mode.  It keeps the PTY orchestration in a small
 ;; reviewable Python file rather than depending on a host script utility.
 (define %diabaig-smoke-script
-  (local-file "diabaig-smoke.py"))
+  (local-file (search-tay-package-file "diabaig-smoke.py")))
 
 (define-public diabaig
   (package

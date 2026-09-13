@@ -14,14 +14,14 @@ fi
 if test "$#" -eq 1; then
     nitrohack_out=$1
 else
-    nitrohack_out=$($guix_bin build -L . --no-grafts --no-substitutes nitrohack)
+    nitrohack_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes nitrohack)
 fi
 
 find_output()
 {
     program=$1
     package=$2
-    for output in $($guix_bin build -L "$channel_dir" --no-grafts \
+    for output in $($guix_bin build -L "$channel_dir/guix" --no-grafts \
         --no-substitutes "$package"); do
         if test -x "$output/$program"; then
             printf '%s\n' "$output"
@@ -62,7 +62,7 @@ contract=$channel_dir/.goocastle/runtime-evidence-contracts.json
 test -s "$contract"
 grep -F '"issueNumber": 709' "$contract" >/dev/null
 grep -F '"packageName": "nitrohack"' "$contract" >/dev/null
-grep -F '"packageModulePath": "tay/packages/nitrohack.scm"' \
+grep -F '"packageModulePath": "guix/tay/packages/nitrohack.scm"' \
     "$contract" >/dev/null
 grep -F '"artifactPath": ".goocastle/evidence/issue-709.png"' \
     "$contract" >/dev/null

@@ -3,6 +3,7 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-only
 
 (define-module (tay packages dungeon-monkey-unlimited)
+  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system gnu)
   #:use-module (guix download)
   #:use-module (guix gexp)
@@ -17,7 +18,8 @@
   #:use-module (gnu packages xorg))
 
 (define dmu-smoke-source
-  (local-file "dungeon-monkey-unlimited-smoke.pas"))
+  (local-file
+   (search-tay-package-file "dungeon-monkey-unlimited-smoke.pas")))
 
 (define-public dungeon-monkey-unlimited
   (package

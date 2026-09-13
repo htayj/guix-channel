@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     mudpuppy_out=$1
 else
-    mudpuppy_out=$($guix_bin build -L "$channel_dir" --no-grafts mudpuppy)
+    mudpuppy_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts mudpuppy)
 fi
 
 python_out=

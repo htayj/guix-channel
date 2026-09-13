@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     package_out=$1
 else
-    package_out=$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes \
+    package_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes \
         pdp10-its-disassembler)
 fi
 

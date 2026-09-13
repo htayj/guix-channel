@@ -16,7 +16,7 @@ fi
 if test "$#" -eq 1; then
     irc_out=$1
 else
-    irc_out=$($guix_tool build -L . --no-grafts --check ocaml-irc-client-unix)
+    irc_out=$($guix_tool build -L "$channel_dir/guix" --no-grafts --check ocaml-irc-client-unix)
 fi
 
 test -d "$irc_out"
@@ -49,7 +49,7 @@ else
 fi
 
 if test "$package_kind" != unix; then
-    integration_out=$($guix_tool build -L . --no-grafts --check ocaml-irc-client-unix)
+    integration_out=$($guix_tool build -L "$channel_dir/guix" --no-grafts --check ocaml-irc-client-unix)
 fi
 
 # Install the library and the compiler into a fresh profile.  This proves
@@ -65,7 +65,7 @@ xdg_data=$temporary/xdg-data
 xdg_state=$temporary/xdg-state
 mkdir -p "$home" "$xdg_config" "$xdg_cache" "$xdg_data" "$xdg_state"
 
-$guix_tool package -L . --no-grafts -p "$profile" \
+$guix_tool package -L "$channel_dir/guix" --no-grafts -p "$profile" \
     -i ocaml@4.14.3 ocaml-findlib gcc-toolchain python util-linux ocaml-irc-client-unix
 
 test -x "$profile/bin/ocamlfind"

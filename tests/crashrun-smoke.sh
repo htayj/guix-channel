@@ -35,7 +35,7 @@ fi
 if test "$#" -eq 1; then
     crashrun_out=$1
 else
-    crashrun_out=$($guix_bin build -L "$channel_dir" --no-grafts crashrun)
+    crashrun_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts crashrun)
 fi
 
 test -x "$crashrun_out/bin/crashrun"

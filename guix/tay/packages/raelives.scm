@@ -1,6 +1,7 @@
 ;;; GNU Guix package for Intelligence: Rae Lives.
 
 (define-module (tay packages raelives)
+  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system gnu)
   #:use-module (guix build utils)
   #:use-module (guix gexp)
@@ -20,7 +21,7 @@
 ;; keeps PTY handling out of the shell wrapper while leaving the actual game
 ;; executable private under libexec.
 (define %raelives-smoke-runner
-  (local-file "raelives-smoke.py"))
+  (local-file (search-tay-package-file "raelives-smoke.py")))
 
 (define-public raelives
   (package

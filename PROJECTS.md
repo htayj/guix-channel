@@ -123,7 +123,7 @@ dependency graphs.
 for enumeration, dry-run, and lint, but its authorized proprietary source must
 be supplied locally.  The channel's package-definition code is
 GPL-3.0-or-later; that license does not license the SentinelOne agent.
-Building requires `guix build -L . --with-source=sentinelone=/path/to/authorized-x86_64.deb sentinelone`, which
+Building requires `guix build -L guix --with-source=sentinelone=/path/to/authorized-x86_64.deb sentinelone`, which
 copies the authorized installer into the local Guix store.  The package output
 is non-substitutable, but that alone does not prevent proprietary source or
 output paths from being served by `guix publish`; isolate, remove, or ACL those

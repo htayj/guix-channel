@@ -2,7 +2,7 @@
 set -eu
 guix_bin=${GUIX:-guix}
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-out=${1:-$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes pdp6)}
+out=${1:-$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes pdp6)}
 find_output() { for p in $($guix_bin build "$2"); do test -x "$p/$1" && { printf '%s\n' "$p"; return; }; done; return 1; }
 python=$(find_output bin/python3 python)
 xorg=$(find_output bin/Xvfb xorg-server)

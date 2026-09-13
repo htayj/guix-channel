@@ -28,7 +28,7 @@ fi
 if test "$#" -eq 1; then
     frostbite_out=$1
 else
-    frostbite_out=$($guix_bin build -L "$channel_dir" -e \
+    frostbite_out=$($guix_bin build -L "$channel_dir/guix" -e \
         '(begin (use-modules (tay packages frostbite)) frostbite)')
 fi
 

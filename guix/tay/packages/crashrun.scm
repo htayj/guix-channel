@@ -1,6 +1,7 @@
 ;;; GNU Guix package for crashRun.
 
 (define-module (tay packages crashrun)
+  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system copy)
   #:use-module (guix build utils)
   #:use-module (guix gexp)
@@ -15,7 +16,7 @@
   #:use-module (gnu packages sdl))
 
 (define crashrun-smoke-script
-  (local-file "crashrun-smoke.py"))
+  (local-file (search-tay-package-file "crashrun-smoke.py")))
 
 (define-public crashrun
   (package

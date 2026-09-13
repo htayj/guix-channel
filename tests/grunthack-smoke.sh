@@ -15,7 +15,7 @@ fi
 if test "$#" -eq 1; then
     grunthack_out=$1
 else
-    grunthack_out=$($guix_bin build -L "$channel_dir" --no-grafts \
+    grunthack_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts \
         --no-substitutes grunthack)
 fi
 
@@ -41,7 +41,7 @@ contract=$channel_dir/.goocastle/runtime-evidence-contracts.json
 test -s "$contract"
 grep -F '"issueNumber": 691' "$contract" >/dev/null
 grep -F '"packageName": "grunthack"' "$contract" >/dev/null
-grep -F '"packageModulePath": "tay/packages/grunthack.scm"' \
+grep -F '"packageModulePath": "guix/tay/packages/grunthack.scm"' \
     "$contract" >/dev/null
 grep -F '"artifactPath": ".goocastle/evidence/issue-691.png"' \
     "$contract" >/dev/null

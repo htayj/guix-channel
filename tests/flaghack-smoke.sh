@@ -4,7 +4,7 @@ set -eu
 
 guix_bin=${GUIX:-guix}
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-out=${1:-$($guix_bin build -L "$channel_dir" --no-grafts flaghack)}
+out=${1:-$($guix_bin build -L "$channel_dir/guix" --no-grafts flaghack)}
 test -x "$out/bin/flaghack-server"
 test -x "$out/bin/flaghack"
 test -s "$out/share/doc/flaghack/LICENSE"

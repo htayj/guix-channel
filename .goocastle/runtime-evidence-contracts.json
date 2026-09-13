@@ -550,7 +550,7 @@
     {
       "issueNumber": 681,
       "packageName": "dragonslayer",
-      "packageModulePath": "tay/packages/dragonslayer.scm",
+      "packageModulePath": "guix/tay/packages/dragonslayer.scm",
       "artifactPath": ".goocastle/evidence/issue-681.png",
       "runtime": {
         "executable": "dragonslayer",
@@ -566,7 +566,7 @@
     {
       "issueNumber": 683,
       "packageName": "dungeon-monkey-unlimited",
-      "packageModulePath": "tay/packages/dungeon-monkey-unlimited.scm",
+      "packageModulePath": "guix/tay/packages/dungeon-monkey-unlimited.scm",
       "artifactPath": ".goocastle/evidence/issue-683.png",
       "runtime": {
         "executable": "dungeon-monkey-unlimited",
@@ -582,7 +582,7 @@
     {
       "issueNumber": 684,
       "packageName": "dynahack",
-      "packageModulePath": "tay/packages/dynahack.scm",
+      "packageModulePath": "guix/tay/packages/dynahack.scm",
       "artifactPath": ".goocastle/evidence/issue-684.png",
       "runtime": {
         "executable": "dynahack",
@@ -598,7 +598,7 @@
     {
       "issueNumber": 685,
       "packageName": "evilhack",
-      "packageModulePath": "tay/packages/evilhack.scm",
+      "packageModulePath": "guix/tay/packages/evilhack.scm",
       "artifactPath": ".goocastle/evidence/issue-685.png",
       "runtime": {
         "executable": "evilhack",
@@ -614,7 +614,7 @@
     {
       "issueNumber": 686,
       "packageName": "fiqhack",
-      "packageModulePath": "tay/packages/fiqhack.scm",
+      "packageModulePath": "guix/tay/packages/fiqhack.scm",
       "artifactPath": ".goocastle/evidence/issue-686.png",
       "runtime": {
         "executable": "fiqhack",
@@ -630,7 +630,7 @@
     {
       "issueNumber": 687,
       "packageName": "gearhead",
-      "packageModulePath": "tay/packages/gearhead.scm",
+      "packageModulePath": "guix/tay/packages/gearhead.scm",
       "artifactPath": ".goocastle/evidence/issue-687.png",
       "runtime": {
         "executable": "gearhead",
@@ -646,7 +646,7 @@
     {
       "issueNumber": 688,
       "packageName": "gearhead2",
-      "packageModulePath": "tay/packages/gearhead2.scm",
+      "packageModulePath": "guix/tay/packages/gearhead2.scm",
       "artifactPath": ".goocastle/evidence/issue-688.png",
       "runtime": {
         "executable": "gearhead2",
@@ -662,7 +662,7 @@
     {
       "issueNumber": 689,
       "packageName": "grippy-socks",
-      "packageModulePath": "tay/packages/grippy-socks.scm",
+      "packageModulePath": "guix/tay/packages/grippy-socks.scm",
       "artifactPath": ".goocastle/evidence/issue-689.png",
       "runtime": {
         "executable": "grippy-socks",
@@ -678,7 +678,7 @@
     {
       "issueNumber": 690,
       "packageName": "gruesome",
-      "packageModulePath": "tay/packages/gruesome.scm",
+      "packageModulePath": "guix/tay/packages/gruesome.scm",
       "artifactPath": ".goocastle/evidence/issue-690.png",
       "runtime": {
         "executable": "gruesome",
@@ -694,7 +694,7 @@
     {
       "issueNumber": 691,
       "packageName": "grunthack",
-      "packageModulePath": "tay/packages/grunthack.scm",
+      "packageModulePath": "guix/tay/packages/grunthack.scm",
       "artifactPath": ".goocastle/evidence/issue-691.png",
       "runtime": {
         "executable": "grunthack",
@@ -710,7 +710,7 @@
     {
       "issueNumber": 692,
       "packageName": "hack",
-      "packageModulePath": "tay/packages/hack.scm",
+      "packageModulePath": "guix/tay/packages/hack.scm",
       "artifactPath": ".goocastle/evidence/issue-692.png",
       "runtime": {
         "executable": "hack",
@@ -726,7 +726,7 @@
     {
       "issueNumber": 693,
       "packageName": "hackem",
-      "packageModulePath": "tay/packages/hackem.scm",
+      "packageModulePath": "guix/tay/packages/hackem.scm",
       "artifactPath": ".goocastle/evidence/issue-693.png",
       "runtime": {
         "executable": "hackem",
@@ -742,7 +742,7 @@
     {
       "issueNumber": 694,
       "packageName": "hellcrawl",
-      "packageModulePath": "tay/packages/hellcrawl.scm",
+      "packageModulePath": "guix/tay/packages/hellcrawl.scm",
       "artifactPath": ".goocastle/evidence/issue-694.png",
       "runtime": {
         "executable": "hellcrawl",
@@ -758,7 +758,7 @@
     {
       "issueNumber": 695,
       "packageName": "hunger-games",
-      "packageModulePath": "tay/packages/hunger-games.scm",
+      "packageModulePath": "guix/tay/packages/hunger-games.scm",
       "artifactPath": ".goocastle/evidence/issue-695.png",
       "runtime": {
         "executable": "hunger-games",
@@ -775,7 +775,7 @@
     {
       "issueNumber": 696,
       "packageName": "hydra-slayer",
-      "packageModulePath": "tay/packages/hydra-slayer.scm",
+      "packageModulePath": "guix/tay/packages/hydra-slayer.scm",
       "artifactPath": ".goocastle/evidence/issue-696.png",
       "runtime": {
         "executable": "hydra",
@@ -791,7 +791,7 @@
     {
       "issueNumber": 697,
       "packageName": "hydra-slayer",
-      "packageModulePath": "tay/packages/hydra-slayer.scm",
+      "packageModulePath": "guix/tay/packages/hydra-slayer.scm",
       "artifactPath": ".goocastle/evidence/issue-697.png",
       "runtime": {
         "executable": "hydra",
@@ -807,7 +807,7 @@
     {
       "issueNumber": 698,
       "packageName": "ighalsk",
-      "packageModulePath": "tay/packages/ighalsk.scm",
+      "packageModulePath": "guix/tay/packages/ighalsk.scm",
       "artifactPath": ".goocastle/evidence/issue-698.png",
       "runtime": {
         "executable": "ighalsk",
@@ -823,7 +823,7 @@
     {
       "issueNumber": 699,
       "packageName": "raelives",
-      "packageModulePath": "tay/packages/raelives.scm",
+      "packageModulePath": "guix/tay/packages/raelives.scm",
       "artifactPath": ".goocastle/evidence/issue-699.png",
       "runtime": {
         "executable": "raelives",
@@ -839,7 +839,7 @@
     {
       "issueNumber": 700,
       "packageName": "keeperrl",
-      "packageModulePath": "tay/packages/keeperrl.scm",
+      "packageModulePath": "guix/tay/packages/keeperrl.scm",
       "artifactPath": ".goocastle/evidence/issue-700.png",
       "runtime": {
         "executable": "keeper",
@@ -855,7 +855,7 @@
     {
       "issueNumber": 701,
       "packageName": "kimchi",
-      "packageModulePath": "tay/packages/kimchi.scm",
+      "packageModulePath": "guix/tay/packages/kimchi.scm",
       "artifactPath": ".goocastle/evidence/issue-701.png",
       "runtime": {
         "executable": "kimchi",
@@ -871,7 +871,7 @@
     {
       "issueNumber": 702,
       "packageName": "lambdahack",
-      "packageModulePath": "tay/packages/lambdahack.scm",
+      "packageModulePath": "guix/tay/packages/lambdahack.scm",
       "artifactPath": ".goocastle/evidence/issue-702.png",
       "runtime": {
         "executable": "lambdahack",
@@ -887,7 +887,7 @@
     {
       "issueNumber": 703,
       "packageName": "letter-hunt",
-      "packageModulePath": "tay/packages/letter-hunt.scm",
+      "packageModulePath": "guix/tay/packages/letter-hunt.scm",
       "artifactPath": ".goocastle/evidence/issue-703.png",
       "runtime": {
         "executable": "letter-hunt",
@@ -903,7 +903,7 @@
     {
       "issueNumber": 704,
       "packageName": "linerogue",
-      "packageModulePath": "tay/packages/linerogue.scm",
+      "packageModulePath": "guix/tay/packages/linerogue.scm",
       "artifactPath": ".goocastle/evidence/issue-704.png",
       "runtime": {
         "executable": "linerogue",
@@ -919,7 +919,7 @@
     {
       "issueNumber": 705,
       "packageName": "martins-dungeon-bash",
-      "packageModulePath": "tay/packages/martins-dungeon-bash.scm",
+      "packageModulePath": "guix/tay/packages/martins-dungeon-bash.scm",
       "artifactPath": ".goocastle/evidence/issue-705.png",
       "runtime": {
         "executable": "dungeonbash",
@@ -935,7 +935,7 @@
     {
       "issueNumber": 706,
       "packageName": "umoria",
-      "packageModulePath": "tay/packages/umoria.scm",
+      "packageModulePath": "guix/tay/packages/umoria.scm",
       "artifactPath": ".goocastle/evidence/issue-706.png",
       "runtime": {
         "executable": "umoria",
@@ -951,7 +951,7 @@
     {
       "issueNumber": 707,
       "packageName": "narwharl",
-      "packageModulePath": "tay/packages/narwharl.scm",
+      "packageModulePath": "guix/tay/packages/narwharl.scm",
       "artifactPath": ".goocastle/evidence/issue-707.png",
       "runtime": {
         "executable": "narwharl",
@@ -967,7 +967,7 @@
     {
       "issueNumber": 708,
       "packageName": "nhfourk",
-      "packageModulePath": "tay/packages/nhfourk.scm",
+      "packageModulePath": "guix/tay/packages/nhfourk.scm",
       "artifactPath": ".goocastle/evidence/issue-708.png",
       "runtime": {
         "executable": "nhfourk",
@@ -983,7 +983,7 @@
     {
       "issueNumber": 709,
       "packageName": "nitrohack",
-      "packageModulePath": "tay/packages/nitrohack.scm",
+      "packageModulePath": "guix/tay/packages/nitrohack.scm",
       "artifactPath": ".goocastle/evidence/issue-709.png",
       "runtime": {
         "executable": "nitrohack",
@@ -999,7 +999,7 @@
     {
       "issueNumber": 710,
       "packageName": "nlarn",
-      "packageModulePath": "tay/packages/nlarn.scm",
+      "packageModulePath": "guix/tay/packages/nlarn.scm",
       "artifactPath": ".goocastle/evidence/issue-710.png",
       "runtime": {
         "executable": "nlarn",
@@ -1015,7 +1015,7 @@
     {
       "issueNumber": 711,
       "packageName": "obumbrata",
-      "packageModulePath": "tay/packages/obumbrata.scm",
+      "packageModulePath": "guix/tay/packages/obumbrata.scm",
       "artifactPath": ".goocastle/evidence/issue-711.png",
       "runtime": {
         "executable": "obumbrata",
@@ -1031,7 +1031,7 @@
     {
       "issueNumber": 712,
       "packageName": "plomrogue",
-      "packageModulePath": "tay/packages/plomrogue.scm",
+      "packageModulePath": "guix/tay/packages/plomrogue.scm",
       "artifactPath": ".goocastle/evidence/issue-712.png",
       "runtime": {
         "executable": "plomrogue",
@@ -1047,7 +1047,7 @@
     {
       "issueNumber": 713,
       "packageName": "pyro",
-      "packageModulePath": "tay/packages/pyro.scm",
+      "packageModulePath": "guix/tay/packages/pyro.scm",
       "artifactPath": ".goocastle/evidence/issue-713.png",
       "runtime": {
         "executable": "pyro",
@@ -1063,7 +1063,7 @@
     {
       "issueNumber": 714,
       "packageName": "rapidbrogue",
-      "packageModulePath": "tay/packages/rapidbrogue.scm",
+      "packageModulePath": "guix/tay/packages/rapidbrogue.scm",
       "artifactPath": ".goocastle/evidence/issue-714.png",
       "runtime": {
         "executable": "rapidbrogue",
@@ -1079,7 +1079,7 @@
     {
       "issueNumber": 715,
       "packageName": "revengate",
-      "packageModulePath": "tay/packages/revengate.scm",
+      "packageModulePath": "guix/tay/packages/revengate.scm",
       "artifactPath": ".goocastle/evidence/issue-715.png",
       "runtime": {
         "executable": "revengate",
@@ -1097,7 +1097,7 @@
     {
       "issueNumber": 716,
       "packageName": "revengate",
-      "packageModulePath": "tay/packages/revengate.scm",
+      "packageModulePath": "guix/tay/packages/revengate.scm",
       "artifactPath": ".goocastle/evidence/issue-716.png",
       "runtime": {
         "executable": "revengate",
@@ -1115,7 +1115,7 @@
     {
       "issueNumber": 717,
       "packageName": "robotfindskitten",
-      "packageModulePath": "tay/packages/robotfindskitten.scm",
+      "packageModulePath": "guix/tay/packages/robotfindskitten.scm",
       "artifactPath": ".goocastle/evidence/issue-717.png",
       "runtime": {
         "executable": "robotfindskitten",
@@ -1131,7 +1131,7 @@
     {
       "issueNumber": 718,
       "packageName": "savescummer",
-      "packageModulePath": "tay/packages/savescummer.scm",
+      "packageModulePath": "guix/tay/packages/savescummer.scm",
       "artifactPath": ".goocastle/evidence/issue-718.png",
       "runtime": {
         "executable": "savescummer",
@@ -1147,7 +1147,7 @@
     {
       "issueNumber": 719,
       "packageName": "shamogu",
-      "packageModulePath": "tay/packages/shamogu.scm",
+      "packageModulePath": "guix/tay/packages/shamogu.scm",
       "artifactPath": ".goocastle/evidence/issue-719.png",
       "runtime": {
         "executable": "shamogu",
@@ -1163,7 +1163,7 @@
     {
       "issueNumber": 720,
       "packageName": "six-two-one",
-      "packageModulePath": "tay/packages/six-two-one.scm",
+      "packageModulePath": "guix/tay/packages/six-two-one.scm",
       "artifactPath": ".goocastle/evidence/issue-720.png",
       "runtime": {
         "executable": "six-two-one",
@@ -1179,7 +1179,7 @@
     {
       "issueNumber": 721,
       "packageName": "slashem",
-      "packageModulePath": "tay/packages/slashem.scm",
+      "packageModulePath": "guix/tay/packages/slashem.scm",
       "artifactPath": ".goocastle/evidence/issue-721.png",
       "runtime": {
         "executable": "slashem",
@@ -1195,7 +1195,7 @@
     {
       "issueNumber": 722,
       "packageName": "space-privateers",
-      "packageModulePath": "tay/packages/space-privateers.scm",
+      "packageModulePath": "guix/tay/packages/space-privateers.scm",
       "artifactPath": ".goocastle/evidence/issue-722.png",
       "runtime": {
         "executable": "space-privateers",
@@ -1211,7 +1211,7 @@
     {
       "issueNumber": 723,
       "packageName": "splicehack-rewrite",
-      "packageModulePath": "tay/packages/splicehack-rewrite.scm",
+      "packageModulePath": "guix/tay/packages/splicehack-rewrite.scm",
       "artifactPath": ".goocastle/evidence/issue-723.png",
       "runtime": {
         "executable": "splicehack-rewrite",
@@ -1227,7 +1227,7 @@
     {
       "issueNumber": 724,
       "packageName": "stoat-soup",
-      "packageModulePath": "tay/packages/stoat-soup.scm",
+      "packageModulePath": "guix/tay/packages/stoat-soup.scm",
       "artifactPath": ".goocastle/evidence/issue-724.png",
       "runtime": {
         "executable": "stoat-soup",
@@ -1243,7 +1243,7 @@
     {
       "issueNumber": 725,
       "packageName": "srogue",
-      "packageModulePath": "tay/packages/srogue.scm",
+      "packageModulePath": "guix/tay/packages/srogue.scm",
       "artifactPath": ".goocastle/evidence/issue-725.png",
       "runtime": {
         "executable": "srogue",
@@ -1259,7 +1259,7 @@
     {
       "issueNumber": 727,
       "packageName": "tetraworld",
-      "packageModulePath": "tay/packages/tetraworld.scm",
+      "packageModulePath": "guix/tay/packages/tetraworld.scm",
       "artifactPath": ".goocastle/evidence/issue-727.png",
       "runtime": {
         "executable": "tetraworld",
@@ -1275,7 +1275,7 @@
     {
       "issueNumber": 726,
       "packageName": "buzz",
-      "packageModulePath": "tay/packages/buzz.scm",
+      "packageModulePath": "guix/tay/packages/buzz.scm",
       "artifactPath": ".goocastle/evidence/issue-726.png",
       "runtime": {
         "executable": "buzz-desktop",

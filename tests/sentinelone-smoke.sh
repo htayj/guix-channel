@@ -6,7 +6,7 @@ work_dir=$(mktemp -d)
 trap 'rm -rf "$work_dir"' EXIT HUP INT TERM
 
 default_log="$work_dir/default-build.log"
-if guix build -L "$repo_dir" --no-grafts --no-substitutes sentinelone \
+if guix build -L "$repo_dir/guix" --no-grafts --no-substitutes sentinelone \
   >"$default_log" 2>&1; then
   printf '%s\n' 'default SentinelOne build unexpectedly succeeded' >&2
   exit 1
@@ -47,7 +47,7 @@ dpkg_deb=$(guix build dpkg)/bin/dpkg-deb
 "$dpkg_deb" --root-owner-group --build \
   "$fixture_root" "$work_dir/sentinelone-fixture.deb"
 
-output=$(guix build -L "$repo_dir" --no-grafts \
+output=$(guix build -L "$repo_dir/guix" --no-grafts \
   --with-source="sentinelone=$work_dir/sentinelone-fixture.deb" \
   sentinelone)
 

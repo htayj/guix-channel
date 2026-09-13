@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     kildclient_out=$1
 else
-    kildclient_out=$($guix_bin build -L "$channel_dir" kildclient)
+    kildclient_out=$($guix_bin build -L "$channel_dir/guix" kildclient)
 fi
 
 python_out=

@@ -13,7 +13,7 @@ fi
 if test "$#" -eq 1; then
     vt05_out=$1
 else
-    vt05_out=$($guix_bin build -L "$channel_dir" --no-grafts --no-substitutes vt05)
+    vt05_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes vt05)
 fi
 
 find_program_output() {
