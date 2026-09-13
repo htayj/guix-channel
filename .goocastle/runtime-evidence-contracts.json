@@ -1255,6 +1255,22 @@
         },
         "successMarker": "SROGUE_GUIX_SMOKE_OK"
       }
+    },
+    {
+      "issueNumber": 727,
+      "packageName": "tetraworld",
+      "packageModulePath": "tay/packages/tetraworld.scm",
+      "artifactPath": ".goocastle/evidence/issue-727.png",
+      "runtime": {
+        "executable": "tetraworld",
+        "invocation": {
+          "file": "tetraworld",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "TETRAWORLD_GUIX_SMOKE_OK"
+      }
     }
   ]
 }
