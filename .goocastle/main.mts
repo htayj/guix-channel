@@ -2351,7 +2351,52 @@ const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => 
       ? journal.reconciliation.reconciledBaseSha
       : journal.baseSha;
   if (journal.reconciliation?.state === "conflicted") {
-    throw new Error("Cannot resume #" + issueNumber + " while base reconciliation is conflicted. " + reconciliationRecovery(journal));
+    const reconciliation = journal.reconciliation;
+    const recoveryWorktree = resolve(reconciliation.recoveryWorktreePath);
+    const expectedPrefix = join(hostWorkTree, ".goocastle", "reconcile-");
+    let completedReplayHead;
+    try {
+      const info = lstatSync(recoveryWorktree);
+      const topLevel = gitAt(recoveryWorktree, ["rev-parse", "--show-toplevel"], { encoding: "utf8", maxBuffer: 64 * 1024 }).trim();
+      const commonDirectory = resolve(recoveryWorktree, gitAt(recoveryWorktree, ["rev-parse", "--git-common-dir"], { encoding: "utf8", maxBuffer: 64 * 1024 }).trim());
+      const expectedCommonDirectory = resolve(hostWorkTree, hostGit(["rev-parse", "--git-common-dir"], { encoding: "utf8", maxBuffer: 64 * 1024 }).trim());
+      const rebaseMerge = gitAt(recoveryWorktree, ["rev-parse", "--git-path", "rebase-merge"], { encoding: "utf8", maxBuffer: 64 * 1024 }).trim();
+      const rebaseApply = gitAt(recoveryWorktree, ["rev-parse", "--git-path", "rebase-apply"], { encoding: "utf8", maxBuffer: 64 * 1024 }).trim();
+      if (info.isSymbolicLink() || !info.isDirectory() || !recoveryWorktree.startsWith(expectedPrefix) ||
+          resolve(topLevel) !== recoveryWorktree || commonDirectory !== expectedCommonDirectory ||
+          existsSync(resolve(recoveryWorktree, rebaseMerge)) || existsSync(resolve(recoveryWorktree, rebaseApply)) ||
+          gitAt(recoveryWorktree, ["status", "--porcelain=v1", "--untracked-files=all"], { encoding: "utf8", maxBuffer: 1024 * 1024 }).trim() !== "") {
+        throw new Error("preserved replay is not a completed clean repository worktree");
+      }
+      if (currentBase !== reconciliation.reconciledBaseSha) {
+        throw new Error("base advanced again after the preserved replay started");
+      }
+      completedReplayHead = gitAt(recoveryWorktree, ["rev-parse", "HEAD"], { encoding: "utf8", maxBuffer: 64 * 1024 }).trim();
+      hostGit(["merge-base", "--is-ancestor", currentBase, completedReplayHead]);
+      if (hostGit(["rev-parse", reconciliation.backupBranch], { encoding: "utf8", maxBuffer: 64 * 1024 }).trim() !== reconciliation.taskHead ||
+          hostGit(["rev-parse", journal.branch], { encoding: "utf8", maxBuffer: 64 * 1024 }).trim() !== reconciliation.taskHead) {
+        throw new Error("task or backup branch changed while the preserved replay was being repaired");
+      }
+    } catch {
+      throw new Error("Cannot resume #" + issueNumber + " while base reconciliation is conflicted. " + reconciliationRecovery(journal));
+    }
+    const checkedOutWorktree = branchWorktreePath(journal.branch);
+    if (checkedOutWorktree === undefined) hostGit(["branch", "-f", journal.branch, completedReplayHead]);
+    else resetCheckedOutWorktreePreservingDirtyState(checkedOutWorktree, completedReplayHead, "completed manual base reconciliation");
+    const phases = journal.phases.map((phase) => {
+      if (phase.state !== "running" || !phase.startSha) return phase;
+      const commitCount = Number(hostGit(["rev-list", "--count", phase.startSha + ".." + reconciliation.taskHead], { encoding: "utf8" }).trim());
+      return commitCount === 0
+        ? { ...phase, startSha: completedReplayHead }
+        : { ...phase, state: "complete", commitCount, completedAt: new Date().toISOString() };
+    });
+    journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+      phases,
+      reconciliation: { ...reconciliation, state: "complete", rewrittenHead: completedReplayHead },
+    });
+    try { hostGit(["worktree", "remove", recoveryWorktree]); }
+    catch { console.error("Completed reconciliation worktree remains for later cleanup: " + recoveryWorktree); }
+    return journal;
   }
   if (journal.merge === "complete" || journal.push === "complete" || journal.issueClose === "complete") {
     if (currentBase === journal.integrationSha) return journal;
