@@ -2435,9 +2435,20 @@ const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => 
       { cause: error },
     );
   }
-  const replayBase = journal.reconciliation?.state === "complete"
-    ? journal.reconciliation.sourceBaseSha
-    : recordedBase;
+  let replayBase = recordedBase;
+  if (journal.reconciliation?.state === "complete") {
+    // Prefer the prior replay's actual destination when it is in the current
+    // task history.  Replaying again from its older source would duplicate
+    // integration commits and can manufacture conflicts in shared registries.
+    // Retain the source fallback for the documented equivalent-but-distinct
+    // base case, where that destination is not literally an ancestor.
+    try {
+      hostGit(["merge-base", "--is-ancestor", journal.reconciliation.reconciledBaseSha, taskHead]);
+      replayBase = journal.reconciliation.reconciledBaseSha;
+    } catch {
+      replayBase = journal.reconciliation.sourceBaseSha;
+    }
+  }
   // A task that has not produced commits is exactly its recorded base.  There
   // is nothing to replay: advance its checked-out worktree directly instead
   // of creating a rebase worktree that can fail during otherwise-idempotent
