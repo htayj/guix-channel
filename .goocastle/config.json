@@ -4,7 +4,13 @@
   "agent": "codex",
   "model": "gpt-5.6-terra",
   "effort": "high",
-  "issueTracker": "github",
+  "issueTracker": "forgejo",
+  "forgejo": {
+    "baseUrl": "https://192.168.7.121",
+    "repository": "tay/guix-channel",
+    "tokenEnvironment": "FORGEJO_TOKEN",
+    "caFile": ".goocastle/forgejo-ca.crt"
+  },
   "template": "sequential-reviewer",
   "taskLimits": {
     "maxTasks": 500,
