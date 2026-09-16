@@ -2368,11 +2368,9 @@ const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => 
           gitAt(recoveryWorktree, ["status", "--porcelain=v1", "--untracked-files=all"], { encoding: "utf8", maxBuffer: 1024 * 1024 }).trim() !== "") {
         throw new Error("preserved replay is not a completed clean repository worktree");
       }
-      if (currentBase !== reconciliation.reconciledBaseSha) {
-        throw new Error("base advanced again after the preserved replay started");
-      }
+      hostGit(["merge-base", "--is-ancestor", reconciliation.reconciledBaseSha, currentBase]);
       completedReplayHead = gitAt(recoveryWorktree, ["rev-parse", "HEAD"], { encoding: "utf8", maxBuffer: 64 * 1024 }).trim();
-      hostGit(["merge-base", "--is-ancestor", currentBase, completedReplayHead]);
+      hostGit(["merge-base", "--is-ancestor", reconciliation.reconciledBaseSha, completedReplayHead]);
       if (hostGit(["rev-parse", reconciliation.backupBranch], { encoding: "utf8", maxBuffer: 64 * 1024 }).trim() !== reconciliation.taskHead ||
           hostGit(["rev-parse", journal.branch], { encoding: "utf8", maxBuffer: 64 * 1024 }).trim() !== reconciliation.taskHead) {
         throw new Error("task or backup branch changed while the preserved replay was being repaired");
@@ -2396,7 +2394,11 @@ const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => 
     });
     try { hostGit(["worktree", "remove", recoveryWorktree]); }
     catch { console.error("Completed reconciliation worktree remains for later cleanup: " + recoveryWorktree); }
-    return journal;
+    // The integration checkout may have advanced while the operator repaired
+    // the preserved replay (for example, to install this recovery fix).  Run
+    // reconciliation again so the adopted replay is also based on the exact
+    // current integration tip before any phase continues.
+    return await reconcileBaseAdvance(journal, issueNumber, dispositionPolicy);
   }
   if (journal.merge === "complete" || journal.push === "complete" || journal.issueClose === "complete") {
     if (currentBase === journal.integrationSha) return journal;
