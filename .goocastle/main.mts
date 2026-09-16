@@ -256,7 +256,7 @@ const boundedValidationExposes = [
   { hostPath: boundedValidationDist, sandboxPath: "/opt/goocastle/dist" },
 ];
 const runtimeModule = await import(runtimeModuleUrl);
-const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, acquireManagedLock, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialManualRepairReceipt, createSequentialPredecessorWorkReceipt, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, guixPackageProofCommand, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, materializeRuntimeEvidenceContractEntry, parseGooflowDispositionResult, quarantineManagedStateHome, readInterTaskDelayState, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runtimeContractIssueDigest, runtimeEvidenceCaptureCommand, isRuntimeContractResolutionFailure, sequentialJournalActivity, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isCodexAuthenticationExpiry, isProviderInterruption, isRetryableCodexProviderError, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
+const { AGENT_PROVIDER_REGISTRY, DEFAULT_SEQUENTIAL_PHASE_LIVENESS, SEQUENTIAL_PHASE_FAILURE_HISTORY_LIMIT, SEQUENTIAL_PROVIDER_STATE_RECOVERY_MAX_EPOCHS, GENERATED_RUNNER_RUNTIME_API_VERSION: runtimeApiVersion, acquireManagedLock, commitSigningRecoveryCommand, createConfiguredAgent, createSandbox, createSequentialManualRepairReceipt, createSequentialPredecessorWorkReceipt, createSequentialTaskJournal, createWorktree, generatedRunnerRuntimeHandshake, gooflowDispositionImplementationTicket, gooflowDispositionLabels, gooflowImplementationTicketMarker, guixPackageProofCommand, inspectRuntimeEvidenceArtifact, isTerminalSequentialDisposition, issueTrackerArtifactUrl, materializeGooflowEvidence, materializeGooflowImplementationTicketBody, materializeGooflowImplementationTicketLabels, materializeRuntimeEvidenceContractEntry, parseGooflowDispositionResult, quarantineManagedStateHome, readInterTaskDelayState, reconcileRuntimeContractRecovery, reconcileStalledSequentialPhases, renderGooflowImplementationTicket, renderGooflowDispositionComment, renderRuntimeContractRecoveryComment, renderRuntimeEvidenceComment, resolveGooflowEvidence, runIssueTrackerCommand, runtimeContractIssueDigest, runtimeEvidenceCaptureCommand, isRuntimeContractResolutionFailure, sequentialJournalActivity, validateGooflowImplementationTicketRuntimeEvidence, validateRuntimeEvidenceCapture, isCodexRolloutThreadStateLoss, isCodexAuthenticationExpiry, isProviderInterruption, isRetryableCodexProviderError, isRetryableGitHubError, isTransientSequentialError, issueGooflowPhases, issueGooflowSetup, listSequentialTaskJournals, loadProjectConfig, parseGitHubIssueJson, parseGitHubIssueNumber, parseGitHubIssueReference, persistInterTaskDelay, preflightCommitSigning, reconcileInterTaskDelay, renderGitHubIssueContext, resolveIssueGooflow, retrySequential, runWorkflow, sequentialRetryDelay, snapshotGitHubIssue, transitionSequentialTaskJournal, validateGitHubIssueListPayload, validateGitHubIssuePayload, validateGitHubIssueStatePayload, validateIssueSpecification } = runtimeModule;
 const { removeManagedStateHome } = runtimeModule;
 const defaultSequentialPhaseLiveness = DEFAULT_SEQUENTIAL_PHASE_LIVENESS ?? Object.freeze({
   expectedPacingMs: 5 * 60_000,
@@ -299,9 +299,16 @@ if (projectConfig.template !== "sequential-reviewer") {
 if (projectConfig.sandbox !== "guix") {
   throw new Error("The generated workflow requires the registered guix sandbox provider");
 }
-if (projectConfig.issueTracker !== "github") {
-  throw new Error("The generated issue workflow requires the registered github issue tracker");
+if (projectConfig.issueTracker !== "github" && projectConfig.issueTracker !== "forgejo") {
+  throw new Error("The generated issue workflow requires a registered issue tracker");
 }
+const issueTrackerCommand = (args, options = {}) => {
+  if (typeof runIssueTrackerCommand === "function") return runIssueTrackerCommand(projectConfig, hostWorkTree, args, options);
+  if (projectConfig.issueTracker !== "github") {
+    throw new Error("This generated runner requires a newer Goocastle runtime for Forgejo; rebuild or upgrade the runtime and resume");
+  }
+  return execFileSync("gh", args, options);
+};
 
 // GitHub can intermittently return an authentication-shaped 401, rate-limit
 // response, or other transport failure. Delivery below is checkpointed and
@@ -415,7 +422,9 @@ const sandboxEnvironment = Object.fromEntries(
 );
 
 
-const forgeTokenEnvironment = "GH_TOKEN";
+const forgeTokenEnvironment = projectConfig.issueTracker === "forgejo"
+  ? projectConfig.forgejo.tokenEnvironment
+  : "GH_TOKEN";
 const workflowRequestsForgeAccess = (workflow) =>
   [...(workflow?.phases ?? []), ...(workflow?.setup ?? [])]
     .some((entry) => entry.capabilities?.environment?.includes(forgeTokenEnvironment) === true);
@@ -427,8 +436,8 @@ const sandboxAccessForWorkflow = (workflow) => {
   const requestsGuixDaemon = workflowRequestsGuixDaemon(workflow);
   if (requestsForgeAccess && !sandboxEnvironment[forgeTokenEnvironment]) {
     throw new Error(
-      "Gooflow requests GH_TOKEN for a sandbox phase, but no GH_TOKEN value is available. " +
-      "Set it in .goocastle/.env or the host environment, keep GH_TOKEN in secrets.environment, and retry after reviewing the phase trust boundary",
+      "Gooflow requests " + forgeTokenEnvironment + " for a sandbox phase, but no value is available. " +
+      "Set it in .goocastle/.env or the host environment, keep the variable in secrets.environment, and retry after reviewing the phase trust boundary",
     );
   }
   const environment = { ...sandboxEnvironment };
@@ -912,7 +921,7 @@ const ghRestIssueList = async (args) => {
   const issues = [];
   for (let page = 1; page <= Math.ceil(limit / 100); page += 1) {
     const endpoint = "repos/" + repository + "/issues?state=" + state + "&per_page=100&page=" + page;
-    const output = execFileSync("gh", ["api", endpoint], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+    const output = issueTrackerCommand(["api", endpoint], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
     const received = parseGitHubIssueJson(output, "gh api " + endpoint, ghRestIssuePage);
     issues.push(...received);
     if (received.length < 100) break;
@@ -923,7 +932,7 @@ const ghRestIssueView = async (args, validate) => {
   const number = parseGitHubIssueNumber(args[2], "GitHub REST issue view");
   const repository = githubRepositoryFromOrigin();
   const endpoint = "repos/" + repository + "/issues/" + number;
-  const output = execFileSync("gh", ["api", endpoint], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+  const output = issueTrackerCommand(["api", endpoint], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
   const issue = JSON.parse(output);
   if (issue === null || typeof issue !== "object" || Array.isArray(issue)) return validate(issue, "gh api " + endpoint);
   const fields = args[args.indexOf("--json") + 1]?.split(",") ?? [];
@@ -938,7 +947,7 @@ const ghRestIssueView = async (args, validate) => {
   const comments = [];
   for (let page = 1; page <= 10; page += 1) {
     const commentEndpoint = endpoint + "/comments?per_page=100&page=" + page;
-    const pageOutput = execFileSync("gh", ["api", commentEndpoint], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+    const pageOutput = issueTrackerCommand(["api", commentEndpoint], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
     const received = JSON.parse(pageOutput);
     if (!Array.isArray(received)) throw new Error("gh api " + commentEndpoint + " returned a malformed comments payload");
     comments.push(...received.map((comment) => ({ body: comment.body, author: comment.user === null ? null : { login: comment.user?.login }, createdAt: comment.created_at })));
@@ -953,7 +962,7 @@ const ghJson = async (args, validate) => {
     // transport retries here so a GraphQL-only authentication failure reaches
     // the REST fallback below immediately.  The fallback itself owns the
     // persistent GitHub recovery loop.
-    output = await retrySequential(() => execFileSync("gh", args, {
+    output = await retrySequential(() => issueTrackerCommand(args, {
       encoding: "utf8",
       maxBuffer: 16 * 1024 * 1024,
     }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
@@ -983,7 +992,7 @@ const selectedIssue = async (number) => await ghJson([
 // in the normal runner output. The recovery helper owns the retry boundary.
 const runRuntimeContractRecoveryMutation = (args) => {
   try {
-    execFileSync("gh", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1024 * 1024 });
+    issueTrackerCommand(args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1024 * 1024 });
   } catch (error) {
     const stderr = error !== null && typeof error === "object" && "stderr" in error
       ? (error as { readonly stderr?: unknown }).stderr
@@ -1540,7 +1549,7 @@ const applyDisposition = async (journal, issue) => {
               matches = existing;
               return;
             }
-            const output = execFileSync("gh", ["issue", "create", "--title", ticket.title, "--body", ticket.body], { encoding: "utf8" });
+            const output = issueTrackerCommand(["issue", "create", "--title", ticket.title, "--body", ticket.body], { encoding: "utf8" });
             const issueNumber = /\/issues\/([1-9][0-9]*)\/?\s*$/.exec(output)?.[1];
             if (issueNumber === undefined) throw new Error("gh issue create did not return an issue URL");
             const createdIssueNumber = Number(issueNumber);
@@ -1597,7 +1606,7 @@ const applyDisposition = async (journal, issue) => {
           const latest = await selectedIssue(ticket.issueNumber);
           if (latest.body === ticket.body) return;
           if (latest.body !== ticket.preContractBody) throw new Error("Implementation ticket #" + ticket.issueNumber + " changed before its runtime-evidence contract was materialized; restore its reviewed body and resume");
-          execFileSync("gh", ["issue", "edit", String(ticket.issueNumber), "--body", ticket.body], { stdio: "inherit" });
+          issueTrackerCommand(["issue", "edit", String(ticket.issueNumber), "--body", ticket.body], { stdio: "inherit" });
         });
       }
       if ((await selectedIssue(ticket.issueNumber)).body !== ticket.body) {
@@ -1625,7 +1634,7 @@ const applyDisposition = async (journal, issue) => {
         if (await hasLabel()) continue;
         await retryGitHub("implementation-ticket label delivery", async () => {
           if (await hasLabel()) return;
-          execFileSync("gh", ["issue", "edit", String(ticket.issueNumber), "--add-label", label], { stdio: "inherit" });
+          issueTrackerCommand(["issue", "edit", String(ticket.issueNumber), "--add-label", label], { stdio: "inherit" });
         });
       }
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
@@ -1648,7 +1657,7 @@ const applyDisposition = async (journal, issue) => {
       // the durable external receipt before every retry to avoid duplicates.
       await retryGitHub("disposition comment delivery", async () => {
         if (await commentAlreadyApplied()) return;
-        execFileSync("gh", ["issue", "comment", String(issue.number), "--body", comment], {
+        issueTrackerCommand(["issue", "comment", String(issue.number), "--body", comment], {
           stdio: "inherit",
         });
       });
@@ -1664,7 +1673,7 @@ const applyDisposition = async (journal, issue) => {
     const current = await selectedIssue(issue.number);
     for (const label of journal.disposition.labelsToAdd) {
       if (current.labels.some((entry) => entry.name === label)) continue;
-      await retryGitHub("disposition label delivery", () => execFileSync("gh", ["issue", "edit", String(issue.number), "--add-label", label], {
+      await retryGitHub("disposition label delivery", () => issueTrackerCommand(["issue", "edit", String(issue.number), "--add-label", label], {
         stdio: "inherit",
       }));
     }
@@ -1706,13 +1715,31 @@ const predecessorWorkReceiptFor = (phase, worktreePath) => {
 };
 const githubRepositoryFromOrigin = () => {
   const origin = hostGit(["config", "--get", "remote.origin.url"], { encoding: "utf8" }).trim();
+  if (projectConfig.issueTracker === "forgejo") {
+    const forgejo = projectConfig.forgejo;
+    const instance = new URL(forgejo.baseUrl);
+    const repository = forgejo.repository;
+    const accepted = new Set([
+      forgejo.baseUrl + "/" + repository,
+      forgejo.baseUrl + "/" + repository + ".git",
+      "ssh://git@" + instance.host + "/" + repository + ".git",
+      "git@" + instance.hostname + ":" + repository + ".git",
+    ]);
+    if (!accepted.has(origin)) {
+      throw new Error("Forgejo operations require remote.origin.url to match configured repository " + repository + " without credentials");
+    }
+    return repository;
+  }
   const match = /^(?:https:\/\/github\.com\/|ssh:\/\/git@github\.com\/|git@github\.com:)([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+?)(?:\.git)?$/.exec(origin);
   if (!match) throw new Error("Runtime evidence requires a GitHub remote.origin.url without credentials; configure origin as https://github.com/OWNER/REPOSITORY.git and resume");
   return match[1];
 };
 const runtimeEvidenceArtifactUrl = (integrationSha, artifactPath) => {
   const repository = githubRepositoryFromOrigin();
-  const encodedPath = artifactPath.split("/").map((segment) => encodeURIComponent(segment)).join("/");
+  if (typeof issueTrackerArtifactUrl === "function") {
+    return issueTrackerArtifactUrl(projectConfig, repository, integrationSha, artifactPath);
+  }
+  const encodedPath = artifactPath.split("/").map(encodeURIComponent).join("/");
   return "https://github.com/" + repository + "/blob/" + encodeURIComponent(integrationSha) + "/" + encodedPath + "?raw=1";
 };
 const runtimeEvidenceArtifactCommit = async (journal, evidenceConfig, capturePhase, taskWorktree, branch, issueNumber) => {
@@ -1957,7 +1984,7 @@ const postRuntimeEvidence = async (journal, evidenceConfig, integrationSha, phas
     // mutation is never repeated after an acknowledged comment.
     await retryGitHub("runtime-evidence comment delivery", async () => {
       if (await commentAlreadyApplied()) return;
-      execFileSync("gh", ["issue", "comment", String(issueNumber), "--body", comment], { stdio: "inherit" });
+      issueTrackerCommand(["issue", "comment", String(issueNumber), "--body", comment], { stdio: "inherit" });
     });
     const posted = await selectedIssue(issueNumber);
     if (!posted.comments.some((entry) => entry.body === comment)) throw new Error("GitHub did not expose the runtime evidence receipt after posting; issue remains open, retry with: " + resumeRecoveryCommand());
@@ -2950,7 +2977,7 @@ const reconcileReopenedRequiredCommandRepair = async (journal, issueNumber) => {
     const blocked = current.labels.some((label) => label.name === "state:blocked");
     const ready = current.labels.some((label) => label.name === "ready-for-agent");
     if (!blocked && ready) return;
-    execFileSync("gh", [
+    issueTrackerCommand([
       "issue", "edit", String(issueNumber),
       ...(blocked ? ["--remove-label", "state:blocked"] : []),
       ...(ready ? [] : ["--add-label", "ready-for-agent"]),
@@ -3079,10 +3106,10 @@ const reconcileBlockedRequiredCommandRepair = async (journal, issueNumber) => {
     const blocked = current.labels.some((label) => label.name === "state:blocked");
     const ready = current.labels.some((label) => label.name === "ready-for-agent");
     if (!current.comments.some((entry) => entry.body === comment)) {
-      execFileSync("gh", ["issue", "comment", String(issueNumber), "--body", comment], { stdio: "inherit" });
+      issueTrackerCommand(["issue", "comment", String(issueNumber), "--body", comment], { stdio: "inherit" });
     }
     if (!blocked || ready) {
-      execFileSync("gh", [
+      issueTrackerCommand([
         "issue", "edit", String(issueNumber),
         ...(blocked ? [] : ["--add-label", "state:blocked"]),
         ...(ready ? ["--remove-label", "ready-for-agent"] : []),
@@ -3119,10 +3146,10 @@ const reconcileBlockedProviderStateRecovery = async (journal, issueNumber) => {
     const blocked = current.labels.some((label) => label.name === "state:blocked");
     const ready = current.labels.some((label) => label.name === "ready-for-agent");
     if (!current.comments.some((entry) => entry.body === comment)) {
-      execFileSync("gh", ["issue", "comment", String(issueNumber), "--body", comment], { stdio: "inherit" });
+      issueTrackerCommand(["issue", "comment", String(issueNumber), "--body", comment], { stdio: "inherit" });
     }
     if (!blocked || ready) {
-      execFileSync("gh", [
+      issueTrackerCommand([
         "issue", "edit", String(issueNumber),
         ...(blocked ? [] : ["--add-label", "state:blocked"]),
         ...(ready ? ["--remove-label", "ready-for-agent"] : []),
@@ -4969,7 +4996,7 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
     if (journal.issueClose !== "complete") {
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, { issueClose: "started" });
       if ((await ghJson(["issue", "view", String(issue.number), "--json", "state"], validateGitHubIssueStatePayload)).state !== "CLOSED") {
-        await retryGitHub("issue closure", () => execFileSync("gh", ["issue", "close", String(issue.number), "--comment", "Completed by Goocastle"], { stdio: "inherit" }));
+        await retryGitHub("issue closure", () => issueTrackerCommand(["issue", "close", String(issue.number), "--comment", "Completed by Goocastle"], { stdio: "inherit" }));
       }
       if ((await ghJson(["issue", "view", String(issue.number), "--json", "state"], validateGitHubIssueStatePayload)).state !== "CLOSED") throw new Error("GitHub did not close #" + issue.number + "; retry with: " + shellDisplayCommand("gh", ["issue", "close", String(issue.number)]));
       journal = await transitionSequentialTaskJournal(gitCommonDir, journal, { issueClose: "complete" });
@@ -5236,13 +5263,13 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         // comment. Only the exact rendered host comment is an idempotent
         // receipt for this classification.
         if (!current.comments.some((entry) => entry.body === comment)) {
-          execFileSync("gh", ["issue", "comment", String(issue.number), "--body", comment], { stdio: "inherit" });
+          issueTrackerCommand(["issue", "comment", String(issue.number), "--body", comment], { stdio: "inherit" });
         }
         // Publish the blocking label only after the evidence receipt exists.
         // If the process stops between these host mutations, recovery can
         // still finish the label without skipping a missing comment.
         if (!blocked || ready) {
-          execFileSync("gh", [
+          issueTrackerCommand([
             "issue", "edit", String(issue.number),
             ...(blocked ? [] : ["--add-label", "state:blocked"]),
             ...(ready ? ["--remove-label", "ready-for-agent"] : []),
