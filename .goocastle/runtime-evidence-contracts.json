@@ -140,6 +140,7 @@
     {
       "issueNumber": 653,
       "packageName": "allure",
+      "packageModulePath": "guix/tay/packages/allure.scm",
       "artifactPath": ".goocastle/evidence/issue-653.png",
       "runtime": {
         "executable": "Allure",
@@ -175,6 +176,7 @@
     {
       "issueNumber": 654,
       "packageName": "alone-rl",
+      "packageModulePath": "guix/tay/packages/alone-rl.scm",
       "artifactPath": ".goocastle/evidence/issue-654.png",
       "runtime": {
         "executable": "alone-rl",
