@@ -812,7 +812,7 @@ if (hostStatus && !hostTransitionStillAuthorized) {
 const workflowRunLock = await acquireManagedLock(gitCommonDir, "workflow-runner:" + WORKFLOW_NAME);
 const runSequentialRunner = async () => {
 const codingStandards = await readFile(".goocastle/CODING_STANDARDS.md", "utf8");
-const codexBinDirectory = projectConfig.agent === "codex"
+const codexBinDirectory = projectConfig.agent === "codex" || projectConfig.agent === "omniroute"
   ? process.env.GOOCASTLE_CODEX_BIN_DIR
   : undefined;
 if (codexBinDirectory) {
@@ -844,7 +844,7 @@ const configuredAgent = () => createConfiguredAgent({
   provider: projectConfig.agent,
   model: projectConfig.model,
   effort: projectConfig.effort,
-  ...(projectConfig.agent === "codex" ? { command: codexCommand } : {}),
+  ...(projectConfig.agent === "codex" || projectConfig.agent === "omniroute" ? { command: codexCommand } : {}),
 });
 // Source issue labels are untrusted GitHub data. Only labels explicitly
 // configured as scheduler metadata may cross the research-to-delivery
@@ -1082,6 +1082,7 @@ const reportInvalidReadyIssue = (issue, error) => {
 };
 const requestedGooflowOverride = process.env.GOOCASTLE_GOOFLOW_OVERRIDE;
 const requestedGooflowFilter = process.env.GOOCASTLE_GOOFLOW_FILTER;
+const agentProvenanceOverride = process.env.GOOCASTLE_AGENT_PROVENANCE_OVERRIDE === "1";
 if (requestedGooflowOverride && process.env.GOOCASTLE_GOOFLOW_BYPASS === "1") {
   throw new Error("GOOCASTLE_GOOFLOW_OVERRIDE conflicts with GOOCASTLE_GOOFLOW_BYPASS; choose one explicit workflow selection");
 }
@@ -3514,12 +3515,26 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         (journal.gooflow.override !== undefined && journal.gooflow.override !== resolvedGooflow.selection.override) ||
         (journal.gooflow.agents !== undefined && JSON.stringify(journal.gooflow.agents) !== JSON.stringify(selectedAgents))
       );
-      if (gooflowChanged) {
+      if (gooflowChanged && !agentProvenanceOverride) {
         throw new Error(
           "Gooflow selection for #" + issue.number + " changed from " +
             JSON.stringify(journal.gooflow.workflow) + " (bypassed=" + String(journal.gooflow.bypassed) + ") to " +
-            JSON.stringify(selectedGooflow) + " (bypassed=" + String(resolvedGooflow.bypassed) + "). Review the journal with goocastle status, then restore the original standard or deliberately start a new task.",
+            JSON.stringify(selectedGooflow) + " (bypassed=" + String(resolvedGooflow.bypassed) + "). Review the journal with goocastle status, then restore the original standard or rerun with GOOCASTLE_AGENT_PROVENANCE_OVERRIDE=1 for an explicit audited routing migration.",
         );
+      }
+      if (gooflowChanged) {
+        console.warn("Refreshing agent provenance for issue #" + issue.number + " after explicit audited routing migration.");
+        journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
+          gooflow: {
+            workflow: selectedGooflow,
+            bypassed: resolvedGooflow.bypassed,
+            source: resolvedGooflow.selection.source,
+            ...(resolvedGooflow.selection.schemaVersion === undefined ? {} : { schemaVersion: resolvedGooflow.selection.schemaVersion }),
+            ...(resolvedGooflow.selection.override === undefined ? {} : { override: resolvedGooflow.selection.override }),
+            ...(selectedAgents.length === 0 ? {} : { agents: selectedAgents }),
+          },
+          status: journal.status,
+        });
       }
       const repairPhase = currentRepairWorkflow?.phases.find((phase) => phase.name === latestRepair?.phase);
       const canReopen = repairPhase?.type === "command" &&
@@ -3991,15 +4006,19 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
       (journal.gooflow.source === undefined || journal.gooflow.source === resolvedGooflow.selection.source) &&
       (journal.gooflow.schemaVersion === undefined || journal.gooflow.schemaVersion === resolvedGooflow.selection.schemaVersion) &&
       (journal.gooflow.override === undefined || journal.gooflow.override === resolvedGooflow.selection.override);
-    if (gooflowChanged && !cancelledAgentProvenanceRefresh) {
+    if (gooflowChanged && !cancelledAgentProvenanceRefresh && !agentProvenanceOverride) {
       throw new Error(
         "Gooflow selection for #" + issue.number + " changed from " +
         JSON.stringify(journal.gooflow.workflow) + " (bypassed=" + String(journal.gooflow.bypassed) + ") to " +
-        JSON.stringify(selectedGooflow) + " (bypassed=" + String(resolvedGooflow.bypassed) + "). Review the journal with goocastle status, then restore the original standard or deliberately start a new task.",
+        JSON.stringify(selectedGooflow) + " (bypassed=" + String(resolvedGooflow.bypassed) + "). Review the journal with goocastle status, then restore the original standard or rerun with GOOCASTLE_AGENT_PROVENANCE_OVERRIDE=1 for an explicit audited routing migration.",
       );
     }
     if (gooflowChanged) {
-      console.warn("Refreshing agent provenance for cancelled issue #" + issue.number + " after its unchanged Gooflow route was revalidated.");
+      console.warn(
+        agentProvenanceOverride
+          ? "Refreshing agent provenance for issue #" + issue.number + " after explicit audited routing migration."
+          : "Refreshing agent provenance for cancelled issue #" + issue.number + " after its unchanged Gooflow route was revalidated.",
+      );
     }
     journal = await transitionSequentialTaskJournal(gitCommonDir, journal, {
       specification,
