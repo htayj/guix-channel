@@ -9,6 +9,27 @@ cd "$channel_dir"
 
 # Deliberately allow GUIX to be a command prefix such as
 # "guix time-machine -C channels.guix --", not only an executable pathname.
+
+# The package owns its complete Kitty identity.  These checks deliberately
+# inspect the channel definition so a future Guix kitty update cannot alter it.
+kitty_module=$channel_dir/guix/tay/packages/kitty-bitmap.scm
+grep -F '(define %kitty-bitmap-version "0.48.2")' "$kitty_module" >/dev/null
+grep -F '(define %kitty-bitmap-commit "2cb1d95c3accadd536bd66ba6bda044973440177")' "$kitty_module" >/dev/null
+grep -F '(commit (string-append "v" %kitty-bitmap-version))' "$kitty_module" >/dev/null
+grep -F '(base32 "05861h7xyksphsbnkff8jphpk7xrjpsmcqxhklzwd6yckcz1bn58")' "$kitty_module" >/dev/null
+if grep -F '(package-source kitty)' "$kitty_module" >/dev/null; then
+  echo 'kitty-bitmap must not inherit the rolling Guix kitty source' >&2
+  exit 1
+fi
+
+evaluated_version=$($guix_tool show -L "$channel_dir/guix" kitty-bitmap | \
+  awk '/^version:/ { print $2; exit }')
+test "$evaluated_version" = 0.48.2
+
+for patch_name in kitty-bitmap-fonts.patch kitty-bitmap-charcell-fonts.patch \
+                  kitty-bitmap-raster-metrics.patch kitty-bitmap-meta-as-alt.patch; do
+  grep -F "\"tay/packages/patches/$patch_name\"" "$kitty_module" >/dev/null
+done
 source_tree=$($guix_tool build -L "$channel_dir/guix" --no-grafts -S kitty-bitmap)
 select_output() {
   program=$1

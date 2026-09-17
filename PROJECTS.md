@@ -134,9 +134,10 @@ check-sentinelone` runs only a synthetic smoke test: it needs no SentinelOne
 artifact or SentinelOne/vendor network access, although realizing free Guix
 dependencies may use configured substitutes.
 
-`kitty-bitmap` inherits the current Guix `kitty` package and its full upstream
-dependency graph; it does not replace the regular `kitty` package.  It carries
-the AUR `kitty-bitmap` Fontconfig-default change with recorded provenance,
+`kitty-bitmap` pins Kitty 0.48.2's source and version-sensitive build recipe
+while inheriting generic dependency packages from Guix; it does not replace
+the regular `kitty` package.  It carries the AUR `kitty-bitmap`
+Fontconfig-default change with recorded provenance,
 plus a separate channel-local child-encoding patch that turns raw XKB Meta
 into terminal Alt while leaving Kitty shortcut matching and physical Alt
 unchanged.  Bitmap-font verification is deliberately headless: Unscii PCF

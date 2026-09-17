@@ -1,6 +1,6 @@
 GUIX ?= guix
-# kitty-bitmap needs the current Kitty package definition.  Keep this separate
-# from GUIX so existing channel checks can still be run with a chosen Guix.
+# kitty-bitmap pins Kitty 0.48.2 internally.  The time-machine command supplies
+# the reviewed Guix API and dependency set used by its frozen build recipe.
 KITTY_BITMAP_GUIX ?= guix time-machine -C channels.guix --
 # Blightmud's v5.7.1 lockfile requires Rust 1.88 or newer, which is provided
 # by the authenticated channel pin but not every host Guix installation.

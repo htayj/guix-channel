@@ -109,7 +109,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `terminaldrome` | thafaker/TerminalDrome | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | larsbrinkhoff/image-tape | Magnetic-tape image reader with safe output handling |
 | `apout` | DoctorWkt/Apout 2.4.0 | PDP-11 Unix a.out user-mode emulator; supply a user-owned `APOUT_ROOT` |
-| `kitty-bitmap` | Kitty 0.46.2 | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
+| `kitty-bitmap` | Kitty 0.48.2 (pinned tag `v0.48.2`) | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
 | `axmud` | Axmud 2.0.0 | Perl/GTK3 graphical MUD client with GMCP and configurable scripting |
 | `aquarium-arena` | valrak/AquariumRL 0.4 | Underwater pygame arena roguelike with XDG high scores |
 | `atlas-warriors` | lkingsford/AtlasWarriors alpha-009 | Graphical fantasy roguelike with XDG state |
@@ -235,9 +235,12 @@ argv security smoke test is part of `make check`.  `dipc` and `xq` retain their
 reviewed, pinned Rust and Go dependency graphs and build without network
 resolution.
 
-`kitty-bitmap` inherits Guix's current `kitty` package rather than replacing
-it.  Its documented AUR-derived Fontconfig patch enables native BDF/PCF font
-selection by default.  Such fixed bitmap strikes do not zoom or scale cleanly;
+`kitty-bitmap` pins Kitty 0.48.2's upstream tag, commit, source hash, source
+snippet, and version-sensitive build phases inside this channel rather than
+following Guix's rolling `kitty` source.  Generic dependency packages remain
+inherited from Guix.  Its documented AUR-derived Fontconfig patch enables
+native BDF/PCF font selection by default.  Such fixed bitmap strikes do not
+zoom or scale cleanly;
 use an available native size and, if needed, an explicit line height.  Its
 separate channel patch translates the raw GLFW Meta bit to Alt only at the
 child-process encoding boundary: Kitty shortcut matching still sees Meta,
