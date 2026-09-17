@@ -1303,6 +1303,22 @@
         },
         "successMarker": "THE ROUGELIKE SMOKE OK: WAITED AND QUIT"
       }
+    },
+    {
+      "issueNumber": 729,
+      "packageName": "sewer-massacre",
+      "packageModulePath": "guix/tay/packages/sewer-massacre.scm",
+      "artifactPath": ".goocastle/evidence/issue-729.png",
+      "runtime": {
+        "executable": "sewer-massacre",
+        "invocation": {
+          "file": "sewer-massacre",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "SEWERS_SMOKE_OK"
+      }
     }
   ]
 }
