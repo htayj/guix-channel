@@ -1259,6 +1259,22 @@
       }
     },
     {
+      "issueNumber": 726,
+      "packageName": "buzz",
+      "packageModulePath": "guix/tay/packages/buzz.scm",
+      "artifactPath": ".goocastle/evidence/issue-726.png",
+      "runtime": {
+        "executable": "buzz-desktop",
+        "invocation": {
+          "file": "buzz-desktop",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "BUZZ_GUIX_SMOKE_OK"
+      }
+    },
+    {
       "issueNumber": 727,
       "packageName": "tetraworld",
       "packageModulePath": "guix/tay/packages/tetraworld.scm",
@@ -1275,19 +1291,17 @@
       }
     },
     {
-      "issueNumber": 726,
-      "packageName": "buzz",
-      "packageModulePath": "guix/tay/packages/buzz.scm",
-      "artifactPath": ".goocastle/evidence/issue-726.png",
+      "issueNumber": 728,
+      "packageName": "rouge",
+      "packageModulePath": "guix/tay/packages/rouge.scm",
+      "artifactPath": ".goocastle/evidence/issue-728.png",
       "runtime": {
-        "executable": "buzz-desktop",
+        "executable": "rouge-smoke",
         "invocation": {
-          "file": "buzz-desktop",
-          "args": [
-            "--guix-smoke"
-          ]
+          "file": "rouge-smoke",
+          "args": []
         },
-        "successMarker": "BUZZ_GUIX_SMOKE_OK"
+        "successMarker": "THE ROUGELIKE SMOKE OK: WAITED AND QUIT"
       }
     }
   ]
