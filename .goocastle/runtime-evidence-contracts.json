@@ -1319,6 +1319,22 @@
         },
         "successMarker": "SEWERS_SMOKE_OK"
       }
+    },
+    {
+      "issueNumber": 730,
+      "packageName": "the-smiths-hand",
+      "packageModulePath": "guix/tay/packages/smiths-hand.scm",
+      "artifactPath": ".goocastle/evidence/issue-730.png",
+      "runtime": {
+        "executable": "smith",
+        "invocation": {
+          "file": "smith",
+          "args": [
+            "--goocastle-smoke"
+          ]
+        },
+        "successMarker": "The Smith's Hand smoke ready"
+      }
     }
   ]
 }
