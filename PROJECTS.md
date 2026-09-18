@@ -136,7 +136,10 @@ dependencies may use configured substitutes.
 
 `kitty-bitmap` pins Kitty 0.48.2's source and version-sensitive build recipe
 while inheriting generic dependency packages from Guix; it does not replace
-the regular `kitty` package.  It carries the AUR `kitty-bitmap`
+the regular `kitty` package.  The two Go modules Kitty 0.48.2's `go.mod`
+needs that pre-2026-08-26 Guix revisions lack are supplied by the
+channel-private `kitty-bitmap-go-deps` module, keeping the build working on
+older and newer Guix alike.  It carries the AUR `kitty-bitmap`
 Fontconfig-default change with recorded provenance,
 plus a separate channel-local child-encoding patch that turns raw XKB Meta
 into terminal Alt while leaving Kitty shortcut matching and physical Alt

@@ -55,7 +55,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 .PHONY: check check-source-count check-sentinelone check-datamosh-security check-buzz \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-flex-launcher check-mmapper check-mudlet check-mudpuppy check-notion-river check-mushkin check-mushtato check-ocaml-irc-client check-potato \
-	check-kitty-bitmap check-lyntin check-pycat check-rune check-tinyfugue check-weidu lint lint-cve \
+	check-kitty-bitmap check-kitty-bitmap-oldguix check-lyntin check-pycat check-rune check-tinyfugue check-weidu lint lint-cve \
 	check-secretpathway check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-apout \
 	check-blincolnlights check-pdp10-its-disassembler \
 	check-itstar check-pdp11 check-azurra-gtk-theme check-pdp6 check-pdp10-xpl-pdp-10 check-faugus-launcher \
@@ -148,6 +148,12 @@ check-flex-launcher:
 
 check-kitty-bitmap:
 	GUIX="$(KITTY_BITMAP_GUIX)" tests/kitty-bitmap-smoke.sh
+
+# kitty-bitmap must also build against a Guix revision whose rolling `kitty'
+# predates Kitty 0.48.2's newest Go module requirements.  See
+# guix/tay/packages/kitty-bitmap-go-deps.scm.
+check-kitty-bitmap-oldguix:
+	sh tests/kitty-bitmap-clean-old-guix-build.sh
 
 check-lyntin:
 	GUIX="$(GUIX)" tests/lyntin-smoke.sh
@@ -330,7 +336,7 @@ check-emacs-aidermacs:
 
 check: check-source-count check-sentinelone check-datamosh-security \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
-	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
+	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-kitty-bitmap-oldguix check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
 	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-bell-labs-rogue7 check-astx check-acehack check-avanor check-bootrogue check-wanderers check-hack check-emacs-org-popup-posframe \

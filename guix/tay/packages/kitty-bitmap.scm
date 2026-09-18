@@ -7,7 +7,8 @@
   #:use-module (guix packages)
   #:use-module ((gnu packages) #:select (search-patches))
   #:use-module (gnu packages golang)
-  #:use-module (gnu packages terminals))
+  #:use-module (gnu packages terminals)
+  #:use-module (tay packages kitty-bitmap-go-deps))
 
 (define %kitty-bitmap-version "0.48.2")
 (define %kitty-bitmap-commit "2cb1d95c3accadd536bd66ba6bda044973440177")
@@ -124,9 +125,16 @@ extensions = [\n"))))))
 
 (define-public kitty-bitmap
   (package
-    ;; Generic dependency packages and metadata remain inherited.  The
-    ;; version, source, snippets, build system, outputs, and version-sensitive
+    ;; Version, source, snippet, build system, outputs, and version-sensitive
     ;; phases are frozen above and cannot follow a future Guix Kitty update.
+    ;;
+    ;; Kitty 0.48.2's go.mod requires go-github-com-emmansun-base64 and
+    ;; go-github-com-sgtdi-fswatcher.  Upstream Guix only added them to the
+    ;; `kitty' inputs on 2026-08-26, so older Guix revisions (where the
+    ;; rolling `kitty' is 0.46.2) leave kitty-bitmap's Go build unable to
+    ;; resolve them.  Supply channel-local definitions for both modules and
+    ;; drop any same-named inherited input first, so this stays correct when
+    ;; the consuming Guix eventually ships its own copies.
     (inherit kitty)
     (name "kitty-bitmap")
     (version %kitty-bitmap-version)
@@ -134,6 +142,12 @@ extensions = [\n"))))))
     (build-system go-build-system)
     (outputs '("out" "terminfo" "shell-integration" "kitten"))
     (arguments %kitty-bitmap-arguments)
+    (native-inputs
+     (modify-inputs (package-native-inputs kitty)
+       (delete "go-github-com-emmansun-base64"
+               "go-github-com-sgtdi-fswatcher")
+       (prepend kitty-bitmap-go-emmansun-base64
+                kitty-bitmap-go-sgtdi-fswatcher)))
     (properties
      `((kitty-upstream-tag . "v0.48.2")
        (kitty-upstream-commit . ,%kitty-bitmap-commit)
@@ -141,10 +155,12 @@ extensions = [\n"))))))
     (synopsis "GPU-based terminal emulator with native bitmap-font support")
     (description
      "This Kitty 0.48.2 variant has an explicitly pinned upstream source,
-source snippet, and version-sensitive build recipe while continuing to inherit
-Guix's generic dependency packages.  It changes Kitty's Fontconfig defaults so
-native non-scalable bitmap fonts, including PCF and BDF faces, may be selected
-for the primary terminal font.  Bitmap strikes are fixed-size and therefore do
+source snippet, version-sensitive build recipe, and the two Go modules its
+@code{go.mod} needs that pre-2026-08-26 Guix revisions lack, while continuing
+to inherit Guix's generic dependency packages.  It changes Kitty's Fontconfig
+defaults so native non-scalable bitmap fonts, including PCF and BDF faces, may
+be selected for the primary terminal font.
+Bitmap strikes are fixed-size and therefore do
 not zoom or scale cleanly; use an available native font size and, where needed,
 explicit line-height settings.
 

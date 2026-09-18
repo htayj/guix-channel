@@ -238,7 +238,12 @@ resolution.
 `kitty-bitmap` pins Kitty 0.48.2's upstream tag, commit, source hash, source
 snippet, and version-sensitive build phases inside this channel rather than
 following Guix's rolling `kitty` source.  Generic dependency packages remain
-inherited from Guix.  Its documented AUR-derived Fontconfig patch enables
+inherited from Guix, with one exception: the two Go modules Kitty 0.48.2's
+`go.mod` needs that pre-2026-08-26 Guix revisions lack
+(`emmansun/base64`, `sgtdi/fswatcher`) come from the channel-private
+`kitty-bitmap-go-deps` module, so the package builds on older and newer Guix
+alike without colliding with upstream's identically-named definitions.  Its
+documented AUR-derived Fontconfig patch enables
 native BDF/PCF font selection by default.  Such fixed bitmap strikes do not
 zoom or scale cleanly;
 use an available native size and, if needed, an explicit line height.  Its
@@ -307,6 +312,7 @@ make check-kbtin    # fresh-HOME loopback Telnet/parser smoke
 make check-kildclient # Guix Xvfb plus fresh-HOME loopback fake-MUD connection
 make check-kmuddy   # fresh-XDG Xvfb plus loopback Telnet/MCCP/MXP smoke
 make check-kitty-bitmap # channel-pinned Guix build plus source/key-encoding invariants and headless PCF rasterization
+make check-kitty-bitmap-oldguix # clean-clone build under a Guix pinned to the pre-2026-08-26 dependency graph
 make check-lyntin   # fresh-HOME version and loopback fake-MUD protocol smoke
 make check-mmapper  # fresh-XDG Qt plus namespaced local TLS-proxy smoke
 make check-mudlet   # namespaced Qt6, Lua modules, multimedia, and loopback Telnet smoke
@@ -332,7 +338,11 @@ make build-sources  # fetch and build all 629 source snapshots
 `check-kitty-bitmap` uses `guix time-machine -C channels.guix --` by default
 because the host Guix may have an older Kitty definition.  Override
 `KITTY_BITMAP_GUIX` with an equivalent current Guix command prefix when
-needed.
+needed.  `check-kitty-bitmap-oldguix` clones the channel at the committed
+HEAD (uncommitted work is invisible to it, so stage new files first) and
+builds `kitty-bitmap` under a Guix pinned to commit 21c3d67, the last
+revision whose rolling `kitty` predates the two Go modules the channel now
+supplies itself; override that commit with `OLD_GUIX_COMMIT`.
 
 The first signed commit authorizes subsequent channel commits through
 `.guix-authorizations`.  The authorized OpenPGP fingerprint is
