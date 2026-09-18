@@ -1335,6 +1335,20 @@
         },
         "successMarker": "The Smith's Hand smoke ready"
       }
+    },
+    {
+      "issueNumber": 731,
+      "packageName": "babel7drl",
+      "packageModulePath": "guix/tay/packages/babel7drl.scm",
+      "artifactPath": ".goocastle/evidence/issue-731.png",
+      "runtime": {
+        "executable": "babel7drl",
+        "invocation": {
+          "file": "babel7drl",
+          "args": []
+        },
+        "successMarker": "TOWER OF BABEL"
+      }
     }
   ]
 }
