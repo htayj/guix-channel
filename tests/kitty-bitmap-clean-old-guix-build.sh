@@ -37,7 +37,110 @@ guix_prefix="guix time-machine -C $workdir/old-guix-channel.scm --disable-authen
 
 echo "clean clone at $(git rev-parse --short HEAD); old guix $OLD_GUIX_COMMIT"
 
-# The two channel-private dependency packages must evaluate under the old Guix.
+# Realize each channel-private Go dependency on its own, before Kitty.  Going
+# through kitty-bitmap alone is too weak: a dependency that fails to build is
+# indistinguishable from Kitty failing for its own reasons, and the failing
+# derivation is only named deep inside Kitty's log.  Building them by name
+# pins the blame -- which is where go-github-com-sgtdi-fswatcher-kitty-bitmap
+# regressed on another machine.
+dep_roots=''
+for dep in go-github-com-emmansun-base64-kitty-bitmap \
+           go-github-com-sgtdi-fswatcher-kitty-bitmap; do
+  dep_out=$($guix_prefix build -L guix --no-grafts "$dep") || {
+    echo "channel-private dependency $dep failed to build" >&2
+    exit 1
+  }
+  # go-build-system installs sources; an empty output means the build silently
+  # produced nothing for Kitty's GOPATH to union in.
+  found_dep=
+  for candidate in $dep_out; do
+    if test -d "$candidate/src"; then
+      found_dep=$candidate
+      break
+    fi
+  done
+  test -n "$found_dep" || {
+    echo "$dep built no src/ output" >&2
+    exit 1
+  }
+  dep_roots="$dep_roots${dep_roots:+:}$found_dep"
+  echo "$dep -> $found_dep"
+done
+
+# fswatcher's own test suite is disabled in the channel (it drives live
+# inotify/fanotify syscalls against fixed sleeps, so it measures the builder's
+# kernel and scheduler rather than the code).  Replace it with the proof that
+# actually matters here: the package compiles from its installed source and
+# exports the exact API Kitty's tools/watch/api.go imports.  A compile error
+# or a renamed symbol fails here, named, instead of surfacing as an opaque
+# Kitty build failure.
+go_env=$($guix_prefix build -L guix --no-grafts go)
+go_bin=
+for candidate in $go_env; do
+  if test -x "$candidate/bin/go"; then
+    go_bin=$candidate/bin/go
+    break
+  fi
+done
+test -n "$go_bin" || {
+  echo 'no go toolchain found for the import proof' >&2
+  exit 1
+}
+
+sys_out=$($guix_prefix build -L guix --no-grafts go-golang-org-x-sys)
+for candidate in $sys_out; do
+  if test -d "$candidate/src"; then
+    dep_roots="$dep_roots:$candidate"
+    break
+  fi
+done
+
+mkdir -p "$workdir/importproof/src/kittyimportproof"
+# Mirrors, call for call, the fswatcher surface kitty's tools/watch/api.go
+# uses: the WatchEvent channel element type, a []WatcherOpt built from
+# WithCooldown and WithPath, WithDepth/WatchTopLevel as a nested PathOption,
+# New, and AddPath.
+cat > "$workdir/importproof/src/kittyimportproof/main.go" <<'EOF'
+package main
+
+import (
+	"time"
+
+	"github.com/sgtdi/fswatcher"
+)
+
+func main() {
+	events := make(chan fswatcher.WatchEvent)
+	_ = events
+
+	opts := []fswatcher.WatcherOpt{fswatcher.WithCooldown(time.Second)}
+	opts = append(opts,
+		fswatcher.WithPath("/tmp", fswatcher.WithDepth(fswatcher.WatchTopLevel)))
+
+	w, err := fswatcher.New(opts...)
+	if err != nil {
+		panic(err)
+	}
+	if err := w.AddPath("/tmp", fswatcher.WithDepth(fswatcher.WatchTopLevel)); err != nil {
+		panic(err)
+	}
+}
+EOF
+
+(
+  cd "$workdir/importproof"
+  GO111MODULE=off \
+  GOFLAGS= \
+  GOCACHE="$workdir/gocache" \
+  GOPATH="$workdir/importproof:$dep_roots" \
+    "$go_bin" build -o "$workdir/importproof/proof" kittyimportproof
+) || {
+  echo 'fswatcher does not compile or no longer exports the API kitty imports' >&2
+  exit 1
+}
+echo 'fswatcher compile/import proof passed'
+
+# The full kitty-bitmap graph must evaluate under the old Guix.
 $guix_prefix build -L guix --no-grafts -d kitty-bitmap >/dev/null
 
 # Source build proves the four channel patches still apply on the old graph.

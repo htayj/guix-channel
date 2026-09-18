@@ -6,9 +6,10 @@
 ;;; inputs on 2026-08-26 (after the 2026-08-17 Guix revision this channel's
 ;;; host first shipped), so a kitty-bitmap build against an older Guix fails
 ;;; with `cannot find package' for exactly these two modules.  These
-;;; channel-local definitions (copied verbatim from Guix 0bff26c, where
-;;; upstream first packaged them) let kitty-bitmap build against both older
-;;; and current Guix revisions.
+;;; channel-local definitions (copied from Guix 0bff26c, where upstream first
+;;; packaged them) let kitty-bitmap build against both older and current Guix
+;;; revisions.  They are verbatim apart from fswatcher's disabled tests and
+;;; dropped test-only input, documented at that package.
 ;;;
 ;;; The package `name' fields carry a distinct "-kitty-bitmap" suffix so the
 ;;; definitions cannot collide with upstream Guix's identically-named
@@ -23,7 +24,6 @@
   #:use-module (guix packages)
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (gnu packages golang-build)
-  #:use-module (gnu packages golang-check)
   #:export (kitty-bitmap-go-emmansun-base64
             kitty-bitmap-go-sgtdi-fswatcher))
 
@@ -70,9 +70,29 @@ while using architecture-specific SIMD implementations where available.")
     (build-system go-build-system)
     (arguments
      (list
-      #:import-path "github.com/sgtdi/fswatcher"))
-    (native-inputs
-     (list go-github-com-stretchr-testify))
+      #:import-path "github.com/sgtdi/fswatcher"
+      ;; Upstream's suite is a live file-system watcher test: it drives real
+      ;; inotify/fanotify syscalls, then asserts on events that arrive within
+      ;; fixed sleeps (`TestWatcher/Watch' performs 500 random operations and
+      ;; allows 6 seconds for every one of them to be observed).  What it
+      ;; actually measures is the builder's kernel, scheduler and inotify
+      ;; limits, so the same derivation passes on one machine and fails on
+      ;; another.  `TestFanotify_Backend' is the sharpest edge: it gates on
+      ;; `os.Getuid() != 0' rather than probing for CAP_SYS_ADMIN, so on a
+      ;; guix-daemon that builds as root it runs anyway and fails with
+      ;; "Should have received an event for the file using fanotify" -- the
+      ;; build container cannot resolve a path from a fanotify file handle.
+      ;;
+      ;; kitty-bitmap consumes this package purely as Go source on Kitty's
+      ;; GOPATH, so its runtime watch behaviour is never exercised here; only
+      ;; the code compiling and exposing the API Kitty imports matters.  The
+      ;; `build' phase still runs `go install', which type-checks the whole
+      ;; package, and tests/kitty-bitmap-clean-old-guix-build.sh adds the
+      ;; import proof that Kitty's own `tools/watch' can resolve it.
+      #:tests? #f))
+    ;; No native-inputs: upstream lists go-github-com-stretchr-testify only to
+    ;; run the suite disabled above, and dropping it keeps testify's own
+    ;; transitive closure out of this build.
     (propagated-inputs
      (list go-golang-org-x-sys))
     (home-page "https://github.com/sgtdi/fswatcher")
