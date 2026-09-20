@@ -967,6 +967,7 @@ const ghJson = async (args, validate) => {
       maxBuffer: 16 * 1024 * 1024,
     }), projectConfig.retryPolicy, { retryable: isTransientSequentialError });
   } catch (error) {
+    if (projectConfig.issueTracker === "forgejo") throw error;
     if (args[0] !== "issue") throw error;
     if (args[1] === "list") {
       console.error("GitHub GraphQL issue discovery failed; retrying the same bounded issue scan through the REST API.");
@@ -2344,6 +2345,26 @@ const resetCheckedOutWorktreePreservingDirtyState = (worktree, target, context) 
     }
   }
 };
+// A non-delivery Gooflow's task worktree is a research sandbox.  Its only
+// durable product is the disposition result, which the host has already
+// validated and consumed by this point; the branch carries no commits to
+// integrate.  Residual agent scratch must therefore never strand the queue on
+// a worktree that can only be finalized by hand, because the captured
+// disposition would be discarded and the same issue resumed forever.  Retain
+// that state as a labelled stash entry instead: finalization can complete and
+// no agent evidence is destroyed.
+const retainResidualDispositionWorktreeState = (worktree, issueNumber) => {
+  if (gitAt(worktree, ["status", "--porcelain=v1", "--untracked-files=all"], { encoding: "utf8" }).trim() === "") return false;
+  const message = "goocastle disposition residue for #" + issueNumber;
+  gitAt(worktree, ["stash", "push", "--include-untracked", "--message", message], {
+    encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1024 * 1024,
+  });
+  console.log(
+    "Retained residual research worktree state for #" + issueNumber + " as stash entry " + JSON.stringify(message) +
+    "; list it with: " + shellDisplayCommand("git", ["-C", hostWorkTree, "stash", "list"]),
+  );
+  return true;
+};
 const reconcileBaseAdvance = async (journal, issueNumber, dispositionPolicy) => {
   const currentBase = hostGit(["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
   const recordedBase = journal.reconciliation?.state === "started"
@@ -2664,7 +2685,20 @@ const incompleteJournal = async () => {
     // archived for scheduling purposes; preserve its journal as audit history
     // while preventing it from monopolizing an eligible open issue.
     for (const candidate of recoveryCandidates) {
-      const issue = await selectedIssue(candidate.issueNumber);
+      let issue;
+      try {
+        issue = await selectedIssue(candidate.issueNumber);
+      } catch (error) {
+        if (projectConfig.issueTracker !== "forgejo" ||
+            typeof runtimeModule.isForgejoIssueNotFound !== "function" ||
+            !runtimeModule.isForgejoIssueNotFound(error)) throw error;
+        await reconcileClosedRecoveryJournal(candidate, candidate.issueNumber);
+        console.log(
+          "Skipping issue #" + candidate.issueNumber +
+            " because it is absent from the configured Forgejo repository; its preserved journal is recorded complete without replay.",
+        );
+        continue;
+      }
       if (issue.state === "OPEN") return candidate;
       await reconcileClosedRecoveryJournal(candidate, candidate.issueNumber);
       console.log(
@@ -2844,7 +2878,20 @@ const reconcileAbandonedPhases = async () => {
   if (typeof reconcileStalledSequentialPhases !== "function") return;
   for (const candidate of await listSequentialTaskJournals(gitCommonDir, WORKFLOW_NAME)) {
     if (candidate.status === "complete") continue;
-    const issue = await selectedIssue(candidate.issueNumber);
+    let issue;
+    try {
+      issue = await selectedIssue(candidate.issueNumber);
+    } catch (error) {
+      if (projectConfig.issueTracker !== "forgejo" ||
+          typeof runtimeModule.isForgejoIssueNotFound !== "function" ||
+          !runtimeModule.isForgejoIssueNotFound(error)) throw error;
+      await reconcileClosedRecoveryJournal(candidate, candidate.issueNumber);
+      console.log(
+        "Skipping issue #" + candidate.issueNumber +
+          " because it is absent from the configured Forgejo repository; its preserved journal is recorded complete without replay.",
+      );
+      continue;
+    }
     if (issue.state === "OPEN" && hasTerminalDeferredLabel(issue)) {
       deferredJournalIssues.add(candidate.issueNumber);
       reportDeferredJournal(issue);
@@ -4932,6 +4979,12 @@ for (let task = reexecutionState.nextTask; task <= MAX_TASKS; task += 1) {
         closeResult = await sandbox.close();
         sandbox = undefined;
         if (closeResult.preservedWorktreePath) throw new Error("Uncommitted changes preserved at " + closeResult.preservedWorktreePath);
+      }
+      // The disposition is captured and validated at this point, and a
+      // non-delivery branch has no commits to integrate.  Park any residual
+      // agent scratch so finalization cannot strand the queue on this issue.
+      if (dispositionPolicy !== undefined && (capturedDisposition !== undefined || journal.disposition !== undefined)) {
+        retainResidualDispositionWorktreeState(taskWorktree.worktreePath, issue.number);
       }
       const taskWorktreeCloseResult = await taskWorktree.close();
       closeResult = taskWorktreeCloseResult;
