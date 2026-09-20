@@ -1395,6 +1395,22 @@
         },
         "successMarker": "WROGUE_SMOKE_OK"
       }
+    },
+    {
+      "issueNumber": 735,
+      "packageName": "xnethack",
+      "packageModulePath": "guix/tay/packages/xnethack.scm",
+      "artifactPath": ".goocastle/evidence/issue-735.png",
+      "runtime": {
+        "executable": "xnethack",
+        "invocation": {
+          "file": "xnethack",
+          "args": [
+            "--guix-smoke"
+          ]
+        },
+        "successMarker": "xnethack guix smoke passed"
+      }
     }
   ]
 }
