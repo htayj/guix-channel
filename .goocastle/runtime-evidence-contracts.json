@@ -1349,6 +1349,24 @@
         },
         "successMarker": "TOWER OF BABEL"
       }
+    },
+    {
+      "issueNumber": 732,
+      "packageName": "urogue",
+      "packageModulePath": "guix/tay/packages/ultrarogue.scm",
+      "artifactPath": ".goocastle/evidence/issue-732.png",
+      "runtime": {
+        "executable": "urogue",
+        "invocation": {
+          "file": "urogue",
+          "args": [
+            "-n",
+            "-mc",
+            "-s"
+          ]
+        },
+        "successMarker": "Top Ten Adventurers:"
+      }
     }
   ]
 }
