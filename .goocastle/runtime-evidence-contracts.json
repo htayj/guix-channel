@@ -1381,6 +1381,20 @@
         },
         "successMarker": "UNNETHACK SMOKE OK"
       }
+    },
+    {
+      "issueNumber": 734,
+      "packageName": "wrogue",
+      "packageModulePath": "gnu/packages/games.scm",
+      "artifactPath": ".goocastle/evidence/issue-734.png",
+      "runtime": {
+        "executable": "wrogue-smoke",
+        "invocation": {
+          "file": "wrogue-smoke",
+          "args": []
+        },
+        "successMarker": "WROGUE_SMOKE_OK"
+      }
     }
   ]
 }
