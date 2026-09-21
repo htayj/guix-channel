@@ -1427,6 +1427,20 @@
         },
         "successMarker": "Top 20 Adventurers:"
       }
+    },
+    {
+      "issueNumber": 737,
+      "packageName": "liveonce",
+      "packageModulePath": "guix/packages/games.scm",
+      "artifactPath": ".goocastle/evidence/issue-737.png",
+      "runtime": {
+        "executable": "liveonce-smoke",
+        "invocation": {
+          "file": "liveonce-smoke",
+          "args": []
+        },
+        "successMarker": "Done."
+      }
     }
   ]
 }
