@@ -1774,6 +1774,22 @@
         },
         "successMarker": "KEY_A"
       }
+    },
+    {
+      "issueNumber": 757,
+      "packageName": "llmrouter",
+      "packageModulePath": "guix/tay/packages/llmrouter.scm",
+      "artifactPath": ".goocastle/evidence/issue-757.png",
+      "runtime": {
+        "executable": "llmrouter",
+        "invocation": {
+          "file": "llmrouter",
+          "args": [
+            "list-routers"
+          ]
+        },
+        "successMarker": "AVAILABLE ROUTERS"
+      }
     }
   ]
 }
