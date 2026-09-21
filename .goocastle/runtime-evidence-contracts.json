@@ -1549,6 +1549,23 @@
         },
         "successMarker": "Mesh export as ply file:"
       }
+    },
+    {
+      "issueNumber": 744,
+      "packageName": "emacs-eaf-emacs-application-framework",
+      "packageModulePath": "guix/tay/packages/emacs-application-framework.scm",
+      "artifactPath": ".goocastle/evidence/issue-744.png",
+      "runtime": {
+        "executable": "eaf-emacs-application-framework",
+        "invocation": {
+          "file": "eaf-emacs-application-framework",
+          "args": [
+            "--goocastle-smoke",
+            "--missing-app=goocastle-local-stub"
+          ]
+        },
+        "successMarker": "GOOCASTLE_EAF_CORE_RUNTIME_OK"
+      }
     }
   ]
 }
