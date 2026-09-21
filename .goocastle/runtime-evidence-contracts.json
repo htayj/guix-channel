@@ -1493,6 +1493,23 @@
         },
         "successMarker": "Squad initialized."
       }
+    },
+    {
+      "issueNumber": 741,
+      "packageName": "pi-coding-agent",
+      "packageModulePath": "guix/tay/packages/pi-coding-agent.scm",
+      "artifactPath": ".goocastle/evidence/issue-741.png",
+      "runtime": {
+        "executable": "pi",
+        "invocation": {
+          "file": "pi",
+          "args": [
+            "--list-models",
+            "model"
+          ]
+        },
+        "successMarker": "provider model"
+      }
     }
   ]
 }
