@@ -1411,6 +1411,22 @@
         },
         "successMarker": "xnethack guix smoke passed"
       }
+    },
+    {
+      "issueNumber": 736,
+      "packageName": "xrogue",
+      "packageModulePath": "guix/tay/packages/xrogue.scm",
+      "artifactPath": ".goocastle/evidence/issue-736.png",
+      "runtime": {
+        "executable": "xrogue",
+        "invocation": {
+          "file": "xrogue",
+          "args": [
+            "-s"
+          ]
+        },
+        "successMarker": "Top 20 Adventurers:"
+      }
     }
   ]
 }
