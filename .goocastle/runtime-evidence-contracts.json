@@ -1634,6 +1634,22 @@
         },
         "successMarker": "SoundThread smoke: graph saved and loaded"
       }
+    },
+    {
+      "issueNumber": 749,
+      "packageName": "trial-by-combat",
+      "packageModulePath": "guix/tay/packages/trial-by-combat.scm",
+      "artifactPath": ".goocastle/evidence/issue-749.png",
+      "runtime": {
+        "executable": "trial-by-combat",
+        "invocation": {
+          "file": "trial-by-combat",
+          "args": [
+            "--smoke-host"
+          ]
+        },
+        "successMarker": "Trial by Combat listening on http://localhost:4178"
+      }
     }
   ]
 }
