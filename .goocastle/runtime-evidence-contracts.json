@@ -1650,6 +1650,22 @@
         },
         "successMarker": "Trial by Combat listening on http://localhost:4178"
       }
+    },
+    {
+      "issueNumber": 750,
+      "packageName": "gened",
+      "packageModulePath": "guix/tay/packages/gened.scm",
+      "artifactPath": ".goocastle/evidence/issue-750.png",
+      "runtime": {
+        "executable": "gened",
+        "invocation": {
+          "file": "gened",
+          "args": [
+            "--smoke"
+          ]
+        },
+        "successMarker": "GENED CLIM FRAME CREATED"
+      }
     }
   ]
 }
