@@ -1566,6 +1566,20 @@
         },
         "successMarker": "GOOCASTLE_EAF_CORE_RUNTIME_OK"
       }
+    },
+    {
+      "issueNumber": 745,
+      "packageName": "amstelvar",
+      "packageModulePath": "guix/tay/packages/amstelvar.scm",
+      "artifactPath": ".goocastle/evidence/issue-745.png",
+      "runtime": {
+        "executable": "amstelvar-smoke",
+        "invocation": {
+          "file": "amstelvar-smoke",
+          "args": []
+        },
+        "successMarker": "amstelvar: font metadata smoke passed"
+      }
     }
   ]
 }
