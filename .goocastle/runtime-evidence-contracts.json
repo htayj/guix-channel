@@ -1758,6 +1758,22 @@
         },
         "successMarker": "Hello, World!"
       }
+    },
+    {
+      "issueNumber": 756,
+      "packageName": "input-remapper",
+      "packageModulePath": "guix/tay/packages/input-remapper.scm",
+      "artifactPath": ".goocastle/evidence/issue-756.png",
+      "runtime": {
+        "executable": "input-remapper-control",
+        "invocation": {
+          "file": "input-remapper-control",
+          "args": [
+            "--symbol-names"
+          ]
+        },
+        "successMarker": "KEY_A"
+      }
     }
   ]
 }
