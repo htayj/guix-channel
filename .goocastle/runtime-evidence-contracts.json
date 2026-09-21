@@ -1690,6 +1690,27 @@
         },
         "successMarker": "✓"
       }
+    },
+    {
+      "issueNumber": 752,
+      "packageName": "modus",
+      "packageModulePath": "guix/tay/packages/modus.scm",
+      "artifactPath": ".goocastle/evidence/issue-752.png",
+      "runtime": {
+        "executable": "modus",
+        "invocation": {
+          "file": "modus",
+          "args": [
+            "--noinform",
+            "--no-userinit",
+            "--no-sysinit",
+            "--non-interactive",
+            "--eval",
+            "(+ 1 2)"
+          ]
+        },
+        "successMarker": "= 3"
+      }
     }
   ]
 }
