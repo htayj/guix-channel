@@ -1475,6 +1475,24 @@
         },
         "successMarker": "\"ok\": true"
       }
+    },
+    {
+      "issueNumber": 740,
+      "packageName": "squad",
+      "packageModulePath": "guix/tay/packages/squad.scm",
+      "artifactPath": ".goocastle/evidence/issue-740.png",
+      "runtime": {
+        "executable": "squad",
+        "invocation": {
+          "file": "squad",
+          "args": [
+            "init",
+            "--preset",
+            "default"
+          ]
+        },
+        "successMarker": "Squad initialized."
+      }
     }
   ]
 }
