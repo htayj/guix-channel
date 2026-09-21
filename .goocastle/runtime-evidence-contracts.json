@@ -1666,6 +1666,30 @@
         },
         "successMarker": "GENED CLIM FRAME CREATED"
       }
+    },
+    {
+      "issueNumber": 751,
+      "packageName": "kraken",
+      "packageModulePath": "guix/tay/packages/kraken.scm",
+      "artifactPath": ".goocastle/evidence/issue-751.png",
+      "runtime": {
+        "executable": "kraken",
+        "invocation": {
+          "file": "kraken",
+          "args": [
+            "--serializer",
+            "/tmp/goocastle-kraken-proof/marker.tmpl",
+            "-i",
+            "/tmp/goocastle-kraken-proof/input.png",
+            "/tmp/goocastle-kraken-proof/output.hocr",
+            "ocr",
+            "-m",
+            "/tmp/goocastle-kraken-proof/overfit.mlmodel",
+            "--no-segmentation"
+          ]
+        },
+        "successMarker": "✓"
+      }
     }
   ]
 }
