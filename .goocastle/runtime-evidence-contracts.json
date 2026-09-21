@@ -1510,6 +1510,22 @@
         },
         "successMarker": "provider model"
       }
+    },
+    {
+      "issueNumber": 742,
+      "packageName": "eca",
+      "packageModulePath": "guix/tay/packages/editor-code-assistant-eca.scm",
+      "artifactPath": ".goocastle/evidence/issue-742.png",
+      "runtime": {
+        "executable": "eca",
+        "invocation": {
+          "file": "eca",
+          "args": [
+            "server"
+          ]
+        },
+        "successMarker": "\"chat-welcome-message\""
+      }
     }
   ]
 }
