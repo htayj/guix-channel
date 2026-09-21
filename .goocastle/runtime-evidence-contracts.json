@@ -1614,6 +1614,26 @@
         },
         "successMarker": "Goocastle-local"
       }
+    },
+    {
+      "issueNumber": 748,
+      "packageName": "soundthread",
+      "packageModulePath": "guix/tay/packages/soundthread.scm",
+      "artifactPath": ".goocastle/evidence/issue-748.png",
+      "runtime": {
+        "executable": "soundthread",
+        "invocation": {
+          "file": "soundthread",
+          "args": [
+            "--smoke",
+            "--smoke-output",
+            ".goocastle/evidence/issue-128.thd",
+            "--screenshot",
+            ".goocastle/evidence/issue-128.png"
+          ]
+        },
+        "successMarker": "SoundThread smoke: graph saved and loaded"
+      }
     }
   ]
 }
