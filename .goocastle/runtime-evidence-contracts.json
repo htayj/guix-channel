@@ -1596,6 +1596,24 @@
         },
         "successMarker": "COTD-SMOKE-READY"
       }
+    },
+    {
+      "issueNumber": 747,
+      "packageName": "keymapper",
+      "packageModulePath": "guix/tay/packages/keymapper.scm",
+      "artifactPath": ".goocastle/evidence/issue-747.png",
+      "runtime": {
+        "executable": "keymapperctl",
+        "invocation": {
+          "file": "keymapperctl",
+          "args": [
+            "--print",
+            "Goocastle-local",
+            "--result"
+          ]
+        },
+        "successMarker": "Goocastle-local"
+      }
     }
   ]
 }
