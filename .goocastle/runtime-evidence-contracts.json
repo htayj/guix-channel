@@ -1580,6 +1580,22 @@
         },
         "successMarker": "amstelvar: font metadata smoke passed"
       }
+    },
+    {
+      "issueNumber": 746,
+      "packageName": "cotd",
+      "packageModulePath": "guix/tay/packages/cotd.scm",
+      "artifactPath": ".goocastle/evidence/issue-746.png",
+      "runtime": {
+        "executable": "cotd",
+        "invocation": {
+          "file": "cotd",
+          "args": [
+            "--cotd-smoke"
+          ]
+        },
+        "successMarker": "COTD-SMOKE-READY"
+      }
     }
   ]
 }
