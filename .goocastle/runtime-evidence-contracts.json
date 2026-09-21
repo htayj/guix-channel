@@ -1441,6 +1441,23 @@
         },
         "successMarker": "Done."
       }
+    },
+    {
+      "issueNumber": 738,
+      "packageName": "aiwnios",
+      "packageModulePath": "guix/tay/packages/aiwnios.scm",
+      "artifactPath": ".goocastle/evidence/issue-738.png",
+      "runtime": {
+        "executable": "aiwnios",
+        "invocation": {
+          "file": "aiwnios",
+          "args": [
+            "-c",
+            "/tmp/goocastle-issue-086/hello.HC"
+          ]
+        },
+        "successMarker": "AIWNIOS_HELLO_OK"
+      }
     }
   ]
 }
