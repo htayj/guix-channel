@@ -1725,6 +1725,25 @@
         },
         "successMarker": "liquid smoke proof: fixture rendered successfully"
       }
+    },
+    {
+      "issueNumber": 754,
+      "packageName": "noctalia",
+      "packageModulePath": "guix/tay/packages/noctalia.scm",
+      "artifactPath": ".goocastle/evidence/issue-754.png",
+      "runtime": {
+        "executable": "noctalia",
+        "invocation": {
+          "file": "noctalia",
+          "args": [
+            "theme",
+            "--list-templates",
+            "--config",
+            "/tmp/goocastle-noctalia-empty.toml"
+          ]
+        },
+        "successMarker": "Template config"
+      }
     }
   ]
 }
