@@ -1458,6 +1458,23 @@
         },
         "successMarker": "AIWNIOS_HELLO_OK"
       }
+    },
+    {
+      "issueNumber": 739,
+      "packageName": "oh-my-opencode-slim",
+      "packageModulePath": "guix/tay/packages/oh-my-opencode-slim.scm",
+      "artifactPath": ".goocastle/evidence/issue-739.png",
+      "runtime": {
+        "executable": "oh-my-opencode-slim",
+        "invocation": {
+          "file": "oh-my-opencode-slim",
+          "args": [
+            "doctor",
+            "--json"
+          ]
+        },
+        "successMarker": "\"ok\": true"
+      }
     }
   ]
 }
