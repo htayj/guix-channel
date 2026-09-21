@@ -1744,6 +1744,20 @@
         },
         "successMarker": "Template config"
       }
+    },
+    {
+      "issueNumber": 755,
+      "packageName": "qiling",
+      "packageModulePath": "guix/tay/packages/qiling.scm",
+      "artifactPath": ".goocastle/evidence/issue-755.png",
+      "runtime": {
+        "executable": "qiling-smoke",
+        "invocation": {
+          "file": "qiling-smoke",
+          "args": []
+        },
+        "successMarker": "Hello, World!"
+      }
     }
   ]
 }
