@@ -1526,6 +1526,29 @@
         },
         "successMarker": "\"chat-welcome-message\""
       }
+    },
+    {
+      "issueNumber": 743,
+      "packageName": "dicom2mesh",
+      "packageModulePath": "guix/tay/packages/dicom2mesh.scm",
+      "artifactPath": ".goocastle/evidence/issue-743.png",
+      "runtime": {
+        "executable": "dicom2mesh",
+        "invocation": {
+          "file": "dicom2mesh",
+          "args": [
+            "-ipng",
+            "[slice1.png,slice2.png,slice3.png]",
+            "-sxyz",
+            "1.0",
+            "1.0",
+            "1.0",
+            "-o",
+            "mesh.ply"
+          ]
+        },
+        "successMarker": "Mesh export as ply file:"
+      }
     }
   ]
 }
