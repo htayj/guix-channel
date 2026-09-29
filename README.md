@@ -205,6 +205,28 @@ corrected contract uses `keymapper --check --no-notify --config valid.conf`
 with a generated temporary fixture and `The configuration is valid` marker;
 no runtime semantics were patched to manufacture success.
 
+## Liquid terminal editor
+
+`liquid` packages the EPL-1.0 editor at commit
+`045f587b3914485baf85d9eae4f97f968cbfafaa` (`2.1.2-0.045f587`).  It is AOT
+compiled with Guix's source-built Clojure 1.12.4 and data.json 2.5.2 on IcedTea,
+not downloaded Maven jars.  These replace upstream's older dependency pins;
+the upstream suite and real editor smoke cover the used APIs.  Help resources
+and the required AOT `user` namespace classes are included.
+
+```sh
+guix build -L guix --no-grafts liquid
+make check-liquid
+liquid
+```
+
+On 2026-09-29, build, reproducibility rebuild and offline lint passed.  The
+network-disabled private HOME/XDG smoke launched the installed editor in an
+80×24 PTY, opened a deterministic Clojure fixture, checked its four rendered
+lines, then quit normally and verified terminal restoration, unchanged fixture,
+no leaked state and immutable store output.  The unmodified PTY capture,
+replayed in a real terminal, is `.goocastle/evidence/issue-753.png`.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and

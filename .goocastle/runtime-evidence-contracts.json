@@ -1716,7 +1716,7 @@
     {
       "issueNumber": 753,
       "packageName": "liquid",
-      "packageModulePath": "guix/tay/packages/starred-i-m.scm",
+      "packageModulePath": "guix/tay/packages/liquid.scm",
       "artifactPath": ".goocastle/evidence/issue-753.png",
       "runtime": {
         "executable": "liquid-smoke",
