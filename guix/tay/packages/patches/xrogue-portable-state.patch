@@ -1,0 +1,291 @@
+Make XRogue's state handling portable and keep it in ROGUEHOME.
+
+Upstream stores 32-bit integers in score and save files, but its long and
+unsigned long readers read those four bytes into an uninitialised 8-byte host
+long on LP64 systems, so the upper bytes of every score are garbage.  Read and
+write exactly 32 bits and widen or narrow them explicitly.
+
+rogue.h declares d_list and f_list as arrays of a structure that is only
+defined in daemon.c and state.c; declare them where the type is complete.
+
+Let an explicit ROGUEHOME govern saved games as well as the score file, and
+refuse a ROGUEHOME (or home directory) whose save and score file names would
+not fit in their LINELEN buffers instead of overflowing or truncating them,
+and keep the message line within its buffer when a prompt names such a path.
+md_getroguedir copied ROGUEHOME with a PATH_MAX bound into a 1024-byte buffer,
+which strncpy padding overruns on every call; copy only a directory that fits
+the buffer together with the score file suffix.
+Guard all three passwd lookups against a missing entry, and open the score
+file read-only for "xrogue -s" so that listing scores never creates or
+rewrites it and works when the file is not writable.
+
+diff --git a/io.c b/io.c
+index d0e2136..3fe29d7 100644
+--- a/io.c
++++ b/io.c
+@@ -130,7 +130,8 @@ endmsg()
+         wmove(msgw, 0, 0);
+         huh[0] = '\0';
+     }
+-    strcat(huh, msgbuf);
++    /* huh is LINELEN bytes; a message naming a long save path is longer. */
++    strncat(huh, msgbuf, LINELEN - 1 - strlen(huh));
+     mvwaddstr(msgw, 0, 0, huh);
+     getyx(msgw, y, x);
+     mpos = newpos;
+diff --git a/main.c b/main.c
+index a685c11..6bd7fdd 100644
+--- a/main.c
++++ b/main.c
+@@ -29,6 +29,7 @@ char **argv;
+ char **envp;
+ {
+     register char *env;
++    const char *what;
+     time_t now;
+ 
+     md_init();
+@@ -37,7 +38,26 @@ char **envp;
+      * get home and options from environment
+      */
+ 
+-    strncpy(home, md_gethomedir(), LINELEN);
++    /*
++     * The save file name is this directory followed by "xrogue.sav", and the
++     * score file name is ROGUEHOME followed by "/xrogue.scr"; both are held
++     * in LINELEN-byte buffers.  Refuse a directory whose file names would not
++     * fit instead of overflowing the buffers or truncating the directory,
++     * which would split the save and score locations.
++     */
++    what = "ROGUEHOME";
++    if ((env = getenv("ROGUEHOME")) == NULL || *env == '\0') {
++        what = "the home directory";
++        env = md_gethomedir();
++    }
++    if (strlen(env) + sizeof("/xrogue.sav") > LINELEN) {
++        fprintf(stderr, "xrogue: %s is too long (at most %d bytes)\n",
++                what, (int) (LINELEN - sizeof("/xrogue.sav")));
++        exit(1);
++    }
++    strcpy(home, env);
++    if (*home && home[strlen(home) - 1] != '/')
++        strcat(home, "/");
+ 
+     /* Get default save file */
+     strcpy(file_name, home);
+diff --git a/rip.c b/rip.c
+index e5a2e67..d995ba9 100644
+--- a/rip.c
++++ b/rip.c
+@@ -182,7 +182,13 @@ short monst;
+      * Open file and read list
+      */
+ 
+-    if ((outf = fopen(score_file, "rb+")) == NULL)
++    /*
++     * Listing scores (rogue -s) only reads the file: open it read-only and
++     * do not create it, so a missing or read-only score file still lists.
++     */
++    if (flags == SCOREIT)
++        outf = fopen(score_file, "rb");
++    else if ((outf = fopen(score_file, "rb+")) == NULL)
+     {
+         if ((outf = fopen(score_file, "wb+")) == NULL)
+         {
+@@ -222,8 +228,10 @@ short monst;
+ 
+     /* Read the score and convert it to a compatible format */
+ 
+-    fseek(outf, 0, SEEK_SET);
+-    rs_read_scorefile(outf, top_ten, NUMSCORE);
++    if (outf != NULL) {
++        fseek(outf, 0, SEEK_SET);
++        rs_read_scorefile(outf, top_ten, NUMSCORE);
++    }
+ 
+     /* Get some values if this is an update */
+     if (flags == UPDATE) {
+@@ -502,6 +510,9 @@ short monst;
+         }
+ /*      if (prflags == EDITSCORE) endwin();*/     /* End editing windowing */
+     }
++    if (outf == NULL)
++        return;
++
+     fseek(outf, 0L, SEEK_SET);
+ 
+     if (flags != SCOREIT)
+diff --git a/rogue.h b/rogue.h
+index d6235c6..9123887 100644
+--- a/rogue.h
++++ b/rogue.h
+@@ -927,8 +927,6 @@
+ #define MAXDAEMONS      10
+ #define MAXFUSES        20
+ 
+-extern struct delayed_action d_list[MAXDAEMONS];
+-extern struct delayed_action f_list[MAXFUSES];
+ extern int demoncnt;        /* number of active daemons */
+ extern int fusecnt;
+ 
+diff --git a/state.c b/state.c
+index d69595d..5124d42 100644
+--- a/state.c
++++ b/state.c
+@@ -200,40 +200,14 @@ rs_write_int(FILE *savef, int c)
+ 
+ rs_write_ulong(FILE *savef, unsigned long c)
+ {
+-    char bytes[4];
+-    char *buf = (char *)&c;
+-    
+-    if (big_endian)
+-    {
+-        bytes[3] = buf[0];
+-        bytes[2] = buf[1];
+-        bytes[1] = buf[2];
+-        bytes[0] = buf[3];
+-        buf = bytes;
+-    }
+-    
+-    rs_write(savef, buf, 4);
+-
+-    return(WRITESTAT);
++    /* The file stores 32 bits, independent of the host long width. */
++    return(rs_write_uint(savef, (unsigned int) c));
+ }
+ 
+ rs_write_long(FILE *savef, long c)
+ {
+-    char bytes[4];
+-    char *buf = (char *)&c;
+-    
+-    if (big_endian)
+-    {
+-        bytes[3] = buf[0];
+-        bytes[2] = buf[1];
+-        bytes[1] = buf[2];
+-        bytes[0] = buf[3];
+-        buf = bytes;
+-    }
+-    
+-    rs_write(savef, buf, 4);
+-
+-    return(WRITESTAT);
++    /* The file stores 32 bits, independent of the host long width. */
++    return(rs_write_int(savef, (int) c));
+ }
+ 
+ rs_write_boolean(FILE *savef, bool c)
+@@ -296,43 +270,21 @@ rs_read_uint(int inf, unsigned int *i)
+ 
+ rs_read_ulong(int inf, unsigned long *i)
+ {
+-    char bytes[4];
+-    unsigned long input;
+-    char *buf = (char *) &input;
+-    
+-    rs_read(inf, &input, 4);
++    unsigned int input = 0;
+ 
+-    if (big_endian)
+-    {
+-        bytes[3] = buf[0];
+-        bytes[2] = buf[1];
+-        bytes[1] = buf[2];
+-        bytes[0] = buf[3];
+-        buf = bytes;
+-    }
+-    
+-    *i = *((unsigned long *) buf);
++    /* The file stores 32 bits; widen them without reading past them. */
++    rs_read_uint(inf, &input);
++    *i = input;
+     return(READSTAT);
+ }
+ 
+ rs_read_long(int inf, long *i)
+ {
+-    char bytes[4];
+-    long input;
+-    char *buf = (char *) &input;
+-    
+-    rs_read(inf, &input, 4);
++    int input = 0;
+ 
+-    if (big_endian)
+-    {
+-        bytes[3] = buf[0];
+-        bytes[2] = buf[1];
+-        bytes[1] = buf[2];
+-        bytes[0] = buf[3];
+-        buf = bytes;
+-    }
+-    
+-    *i = *((long *) buf);
++    /* The file stores 32 bits; sign-extend them to the host long. */
++    rs_read_int(inf, &input);
++    *i = input;
+     return(READSTAT);
+ }
+ 
+@@ -969,6 +921,9 @@ struct delayed_action {
+     int d_time;
+ };
+ 
++extern struct delayed_action d_list[MAXDAEMONS];
++extern struct delayed_action f_list[MAXFUSES];
++
+ rs_write_daemons(FILE *savef, struct delayed_action *d_list,int count)
+ {
+     int i = 0;
+@@ -3003,7 +2958,8 @@ md_getusername()
+ 
+     pw = getpwuid(getuid());
+ 
+-    l = pw->pw_name;
++    if (pw != NULL)
++        l = pw->pw_name;
+ #endif
+ 
+     if ((l == NULL) || (*l == '\0'))
+@@ -3034,9 +2990,10 @@ md_gethomedir()
+     struct passwd *pw;
+     pw = getpwuid(getuid());
+ 
+-    h = pw->pw_dir;
++    if (pw != NULL)
++        h = pw->pw_dir;
+ 
+-    if (strcmp(h,"/") == 0)
++    if ((h != NULL) && (strcmp(h,"/") == 0))
+         h = NULL;
+ #endif
+     homedir[0] = 0;
+@@ -3091,9 +3048,14 @@ md_getroguedir()
+ 
+     if ( (home = getenv("ROGUEHOME")) != NULL)
+     {
+-        if (*home)
++        /*
++         * Only use a directory that fits in path together with the
++         * "/xrogue.scr" suffix the caller appends; main() has already
++         * refused a longer ROGUEHOME.
++         */
++        if (*home && strlen(home) + sizeof("/xrogue.scr") <= sizeof(path))
+         {
+-            strncpy(path, home, PATH_MAX - 20);
++            strcpy(path, home);
+ 
+             end = &path[strlen(path)-1];
+ 
+@@ -3133,7 +3095,8 @@ md_getshell()
+     char *def = "/bin/sh";
+     struct passwd *pw;
+     pw = getpwuid(getuid());
+-    s = pw->pw_shell;
++    if (pw != NULL)
++        s = pw->pw_shell;
+ #endif
+     if ((s == NULL) || (*s == '\0'))
+         if ( (s = getenv("COMSPEC")) == NULL) 

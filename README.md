@@ -146,6 +146,35 @@ remained unchanged.  `make check-trial-by-combat` explicitly regenerates
 `.goocastle/evidence/issue-749.png` via `--evidence`, rather than accepting an
 old image.  The final proof uses OMP calls, not the legacy Goocastle adapter.
 
+## XRogue
+
+`xrogue` 8.0.3 is built from Roguelike Restoration Project commit
+`544e05aa5ff86884f87569fd5c8810005e8ea6e8` with ncurses.  The installed
+`LICENSE.TXT` preserves all incorporated notices, including XRogue/Advanced
+Rogue naming restrictions; it is not represented as unqualified BSD-3-Clause.
+Save and score files live under `$XDG_DATA_HOME/xrogue`, falling back to
+`~/.local/share/xrogue` when XDG_DATA_HOME is absent or relative.
+
+```sh
+guix build -L guix --no-grafts xrogue
+make check-xrogue
+xrogue
+xrogue -s
+```
+
+The package fixes LP64 reads/writes of the 32-bit save format, missing passwd
+entries, unsafe state-path copies and read-only score listing.  State paths
+over 244 bytes are rejected instead of truncated.  The research fixture's
+score layout was incorrect: records use 10-byte system and 9-byte login fields,
+five 16-bit fields and per-field XOR encoding, not raw 80-byte strings.
+
+On 2026-09-29, local build and reproducibility rebuild passed; offline lint
+reported only the existing relative patch-resolution warnings.  The isolated
+non-root, network-disabled smoke verified seeded score decoding, an unwritable
+score file, real gameplay/inventory/save/restore/quit, relative-XDG fallback,
+244/245-byte path boundaries and unchanged read-only store output.  The actual
+`xrogue -s` terminal screenshot is `.goocastle/evidence/issue-736.png`.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
