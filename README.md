@@ -86,6 +86,37 @@ the REPL, and offline quickload from an unrelated directory using the known
 SHA-1 of `abc`.  HOME/XDG and store integrity checks passed.  The real PTY
 result is captured in `.goocastle/evidence/issue-752.png`.
 
+## Amstelvar variable fonts
+
+`amstelvar` installs the Roman and Italic v1.001 TTFs from upstream commit
+`f44f670affec72a37c69a1bf103bddc044020f49`, with all accompanying OFL notices.
+These are the licensed upstream release fonts, **not a claimed source rebuild**.
+The issue explicitly permits this fallback: the historical fontmake/ufoLib
+toolchain is incompatible with the available Python stack, the build references
+missing source directories, and the v1.001 metadata fixes exist only in the
+committed fonts.  The complete pinned source remains available through
+`googlefonts-amstelvar-source`.
+
+The repository rename to `googlefonts/amstelvar-beta` changed the codeload
+archive's root directory and thus its byte hash.  The snapshot hash was updated
+after comparing the extracted tree with the same pinned Git revision; no source
+revision or font bytes changed.
+
+```sh
+guix build -L guix --no-grafts amstelvar
+make check-amstelvar
+amstelvar-smoke --specimen /tmp/amstelvar.png
+```
+
+On 2026-09-29, build, reproducibility rebuild, offline lint and network-isolated
+runtime proof passed.  The helper loads both installed fonts, validates their
+names and variable axes, and exercises actual outline/advance changes and
+FreeType rendering.  `.goocastle/evidence/issue-745.png` shows Roman and Italic
+weight/width/optical-size specimens.  Store NAR and read-only checks passed;
+no font was installed into a user profile.  Copyright 2016 The Amstelvar Project
+Authors; SIL OFL 1.1, with no Reserved Font Name declared.  Notices are under
+`share/doc/amstelvar-1.001`.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and

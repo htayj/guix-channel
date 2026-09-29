@@ -318,7 +318,7 @@
 
 (define-public googlefonts-amstelvar-source
   (make-github-source-snapshot "googlefonts-amstelvar-source" "googlefonts" "googlefonts" "amstelvar"
-                               "f44f670affec72a37c69a1bf103bddc044020f49" "0njfmqj0y4xljbwm5yzyrw2w5rcvabbvvs45majkym33hxhm5mkn"
+                               "f44f670affec72a37c69a1bf103bddc044020f49" "1mwsgv3mm3a6wil4xp80jxzw4yq2v2ny7y81l87lqznx4xvr7z1z"
                                "source snapshot of googlefonts/amstelvar" "https://github.com/googlefonts/amstelvar"
                                license:silofl1.1))
 

@@ -28,7 +28,7 @@ EXPECTED_SOURCE_PACKAGE_COUNT := 629
 SOURCE_PACKAGE_COUNT := $(words $(SOURCE_PACKAGES))
 RELEASE_FONT_PACKAGES := cadr-fonts-latin cadr-fonts-symbols dec-fonts \
 	genera-fonts-latin genera-fonts-symbols
-FONT_PACKAGES := atarist-font $(RELEASE_FONT_PACKAGES)
+FONT_PACKAGES := atarist-font amstelvar $(RELEASE_FONT_PACKAGES)
 PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	computer-builder rust-computus custom-nix-pkgs databases-team75 dorxng-mcp buzz \
 	hyprland-preview-share-picker dank-material-shell-shell-only sbcl-ivory-key manna-cadet sbcl-qbcl \
@@ -332,6 +332,10 @@ check-dicom2mesh:
 check-modus:
 	GUIX="$(GUIX)" tests/modus-smoke.sh
 
+.PHONY: check-amstelvar
+check-amstelvar:
+	GUIX="$(GUIX)" tests/amstelvar-smoke.sh
+
 check-fontra:
 	GUIX="$(GUIX)" tests/fontra-smoke.sh
 
@@ -354,7 +358,7 @@ check-emacs-aidermacs:
 	GUIX="$(GUIX)" tests/emacs-aidermacs-smoke.sh
 
 check: check-source-count check-sentinelone check-datamosh-security check-dicom2mesh \
-	check-modus \
+	check-modus check-amstelvar \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-kitty-bitmap-oldguix check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
