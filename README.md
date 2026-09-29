@@ -175,6 +175,36 @@ score file, real gameplay/inventory/save/restore/quit, relative-XDG fallback,
 244/245-byte path boundaries and unchanged read-only store output.  The actual
 `xrogue -s` terminal screenshot is `.goocastle/evidence/issue-736.png`.
 
+## Keymapper
+
+`keymapper` packages fixed revision `2ddd5cc3957f5faabb5232c13cb0c18f86d933cf`
+as `5.6.0-0.2ddd5cc` (two commits after upstream 5.6.0, not an exact release
+tag).  It installs `keymapper`, `keymapperd` and `keymapperctl` with explicit
+X11, Wayland, D-Bus and tray support.  Licensing is GPL-3.0-only, Boost-1.0 for
+the test framework, and the bundled Wayland protocol's HPND grant.
+
+Installation activates nothing.  The autostart file is an inert template at
+`share/keymapper/xdg/autostart/keymapper.desktop`, not on XDG_CONFIG_DIRS.
+The systemd unit is supplied but not enabled; device access and service/session
+activation are explicit administrator/user actions.  No udev rule is installed.
+
+```sh
+guix build -L guix --no-grafts keymapper
+make check-keymapper
+keymapper --check --no-notify --config /path/to/keymapper.conf
+```
+
+On 2026-09-29, the local build, 4326 assertions in 201 upstream test cases,
+reproducibility rebuild and offline lint passed.  The isolated network/PID
+namespace smoke accepts a real valid mapping and rejects an invalid mapping
+with a located error, while proving no active autostart or store mutation.
+`.goocastle/evidence/issue-747.png` captures the actual checker output.
+The research's `keymapperctl --print` proposal was not device-free: it connects
+to the client before processing requests and can wait indefinitely.  The
+corrected contract uses `keymapper --check --no-notify --config valid.conf`
+with a generated temporary fixture and `The configuration is valid` marker;
+no runtime semantics were patched to manufacture success.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and

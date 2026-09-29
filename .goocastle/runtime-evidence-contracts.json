@@ -1603,16 +1603,17 @@
       "packageModulePath": "guix/tay/packages/keymapper.scm",
       "artifactPath": ".goocastle/evidence/issue-747.png",
       "runtime": {
-        "executable": "keymapperctl",
+        "executable": "keymapper",
         "invocation": {
-          "file": "keymapperctl",
+          "file": "keymapper",
           "args": [
-            "--print",
-            "Goocastle-local",
-            "--result"
+            "--check",
+            "--no-notify",
+            "--config",
+            "valid.conf"
           ]
         },
-        "successMarker": "Goocastle-local"
+        "successMarker": "The configuration is valid"
       }
     },
     {
