@@ -20,6 +20,20 @@ inventory retains its archived `tv11` source snapshot, but archived material is
 source-only and not an issue candidate.  See [`PROJECTS.md`](PROJECTS.md) for
 the collection-level scope, exclusions, and overlap handling.
 
+## Runtime evidence corrections
+
+Diabaig issue #675: the package's smoke runner preserves the unmodified
+80×34 PTY dungeon redraw and the following movement update.  Capture it with
+`GOOCASTLE_RUNTIME_RAW_CAPTURE=/absolute/path/diabaig.raw` when running
+`tests/diabaig-smoke.sh`; the variable is a capture destination, not a dependency
+on Goocastle.  Replay those bytes in an 80×34 terminal for a faithful screenshot;
+the historical 80×24 renderer loses cursor positioning and must not be used for
+this proof.  `.goocastle/evidence/issue-675.png` shows the actual post-move dungeon,
+one player glyph, controls and live floor/HP status.  On 2026-09-29, the local
+build, `--check` reproducibility rebuild, offline lint and network-isolated
+save/load smoke passed using OMP tooling.  Runtime output was
+`DIABAIG_RUNTIME_OK`; no user game state or installed profile was changed.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and

@@ -62,21 +62,6 @@ def visible(stream):
                  for byte in stream)
 
 
-def evidence_frame(stream):
-    """Make the real dungeon stream consumable by the evidence renderer."""
-    # The shared renderer models a 24-row terminal and handles absolute H
-    # addresses.  Diabaig emits the same real screen using absolute d
-    # addresses on a 34-row terminal; normalize only those control sequences
-    # and omit the trailing row that cannot fit in the rendered artifact.
-    stream = stream.split(b"\x1b[33d", 1)[0]
-
-    def absolute_row(match):
-        row = min(int(match.group(1)), 24)
-        return b"\x1b[%d;1H" % row
-
-    return re.sub(rb"\x1b\[([0-9]+)d", absolute_row, stream)
-
-
 def stop_child(pid):
     try:
         os.kill(pid, signal.SIGTERM)
@@ -173,19 +158,23 @@ while True:
         state_name = "game"
     elif (state_name == "game" and b"floor:" in text and b"hp:" in text
           and b"@" in text):
-        # Capture only the first complete dungeon redraw after class
-        # selection.  Later curses updates may contain only changed cells,
-        # while queued startup bytes may precede the full-screen clear.
+        # Start the evidence at the first full dungeon redraw after class
+        # selection.  Queued startup bytes may precede that clear, and they
+        # must not leak the class menu into the rendered frame.
         redraw = stage.rfind(b"\x1b[H\x1b[2J")
         if redraw < 0:
             fail("Diabaig PTY smoke did not capture a fresh dungeon redraw",
                  pid, master)
-        raw_frame.extend(evidence_frame(stage[redraw:]))
-        del raw_frame[:-65536]
+        raw_frame.extend(stage[redraw:])
+        stage.clear()
         send(b"l")
         sent_move = True
         state_name = "moved"
-    elif state_name == "moved" and b"floor:" in text and b"hp:" in text:
+    elif state_name == "moved" and b"@" in text:
+        # curses answers the move with only the changed cells.  Append those
+        # contiguous PTY bytes so the evidence shows the live dungeon after
+        # the player moved, not the initial placement.
+        raw_frame.extend(stage)
         send(b"i")
         sent_inventory = True
         stage.clear()

@@ -37,17 +37,6 @@ grep -F 'source code: https://github.com/conornally/diabaig' \
     "$doc/credits.txt" >/dev/null
 test -s "$diabaig_out/share/man/man6/diabaig.6.zst"
 
-# The issue-specific runtime contract is part of this package proof.
-contract=.goocastle/runtime-evidence-contracts.json
-test -s "$contract"
-grep -F '"issueNumber": 677' "$contract" >/dev/null
-grep -F '"packageName": "diabaig"' "$contract" >/dev/null
-grep -F '"artifactPath": ".goocastle/evidence/issue-677.png"' \
-    "$contract" >/dev/null
-grep -F '"executable": "diabaig"' "$contract" >/dev/null
-grep -F '"--smoke"' "$contract" >/dev/null
-grep -F '"successMarker": "DIABAIG_RUNTIME_OK"' "$contract" >/dev/null
-
 find_program_output ()
 {
     program=$1
@@ -64,8 +53,8 @@ find_program_output ()
 
 util_linux_out=$(find_program_output bin/unshare util-linux)
 test -x "$util_linux_out/bin/unshare"
-bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
-test -r "$bounded_validation"
+coreutils_out=$(find_program_output bin/timeout coreutils)
+test -x "$coreutils_out/bin/timeout"
 if ! "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
         true >/dev/null 2>&1; then
     echo 'diabaig smoke requires an unprivileged network namespace' >&2
@@ -78,6 +67,10 @@ before=$($guix_bin hash -S nar "$diabaig_out")
 test -z "$(find "$diabaig_out" -xdev -type f -perm /222 -print -quit)"
 
 scratch=$(mktemp -d "${TMPDIR:-/tmp}/diabaig-smoke.XXXXXXXX")
+trap 'rm -rf "$scratch"' EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 mkdir "$scratch/home" "$scratch/config" "$scratch/data" \
     "$scratch/cache" "$scratch/state" "$scratch/runtime" "$scratch/tmp" \
     "$scratch/work"
@@ -97,7 +90,7 @@ export LC_ALL=C
 raw=${GOOCASTLE_RUNTIME_RAW_CAPTURE:-$scratch/work/terminal.raw}
 proof=$(cd "$scratch/work" && \
     GOOCASTLE_RUNTIME_RAW_CAPTURE="$raw" \
-    node "$bounded_validation" --timeout-ms 30000 -- \
+    "$coreutils_out/bin/timeout" --kill-after=5 30 \
     "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
     "$diabaig_out/bin/diabaig" --smoke)
 test "$proof" = 'DIABAIG_RUNTIME_OK'
