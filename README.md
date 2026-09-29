@@ -227,6 +227,32 @@ lines, then quit normally and verified terminal restoration, unchanged fixture,
 no leaked state and immutable store output.  The unmodified PTY capture,
 replayed in a real terminal, is `.goocastle/evidence/issue-753.png`.
 
+## Input Remapper
+
+`input-remapper` packages revision `3b519a18fc39c4d3b4b3074ca96fbcd46585a9ac`
+as `2.2.1-0.3b519a1`, under the upstream GPL-3.0-or-later declaration.
+Python and GObject typelib paths are wrapped to store inputs; translations
+are compiled from source.  D-Bus policy, polkit, systemd and udev integration
+files are supplied but not activated.  The autoload desktop entry is an inert
+template under `share/input-remapper/xdg/autostart`, not active XDG configuration.
+Device permissions and host service integration remain administrator actions;
+`pkexec` must come from the host's privileged setup.
+
+```sh
+guix build -L guix --no-grafts input-remapper
+make check-input-remapper
+input-remapper-control --symbol-names
+```
+
+On 2026-09-29, local build, reproducibility rebuild and offline lint passed.
+The upstream unit suite ran 525 tests with five exclusions: one requires the
+system D-Bus and four impose wall-clock timing bounds.  Isolated network-disabled
+runtime proof enumerated 641 real symbols including `KEY_A`, without opening
+input devices or activating a daemon, and checked empty HOME/XDG state plus
+immutable store output.  `.goocastle/evidence/issue-756.png` contains verbatim
+symbol output, not a generated success caption.  GUI/device remapping was not
+exercised against the live desktop.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
