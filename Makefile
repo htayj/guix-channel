@@ -44,7 +44,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	clojure-roguelike astx acehack bell-labs-rogue7 aquarium-arena atlas-warriors \
 	bcrawl avanor bootrogue brogue brogue-lite chessrogue corerl cryptrover \
 	cutlassrl dhack diabaig dnethack dragonslayer grippy-socks gruesome hack hunger-games hydra-slayer \
-	martins-dungeon-bash nlarn robotfindskitten fontra \
+	martins-dungeon-bash nlarn robotfindskitten fontra dicom2mesh \
 	caelestia-shell caelestia-cli quickshell-for-caelestia libcava m3shapes \
 	dart-sass gpu-screen-recorder font-rubik font-material-symbols-rounded \
 	font-nerd-caskaydia-cove
@@ -324,6 +324,10 @@ check-nlarn:
 check-robotfindskitten:
 	GUIX="$(GUIX)" tests/robotfindskitten-smoke.sh
 
+.PHONY: check-dicom2mesh
+check-dicom2mesh:
+	GUIX="$(GUIX)" tests/dicom2mesh-smoke.sh
+
 check-fontra:
 	GUIX="$(GUIX)" tests/fontra-smoke.sh
 
@@ -345,7 +349,7 @@ check-emacs-forth-mode:
 check-emacs-aidermacs:
 	GUIX="$(GUIX)" tests/emacs-aidermacs-smoke.sh
 
-check: check-source-count check-sentinelone check-datamosh-security \
+check: check-source-count check-sentinelone check-datamosh-security check-dicom2mesh \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-kitty-bitmap-oldguix check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \

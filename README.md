@@ -34,6 +34,33 @@ build, `--check` reproducibility rebuild, offline lint and network-isolated
 save/load smoke passed using OMP tooling.  Runtime output was
 `DIABAIG_RUNTIME_OK`; no user game state or installed profile was changed.
 
+## DicomToMesh command-line conversion
+
+`dicom2mesh` packages the MIT-licensed upstream revision
+`c552b4fd6c6776dab7437f83fb06cb6264f5e831` (version `0.823-0.c552b4f`),
+built from source against Guix VTK.  The Qt GUI and optional VTK-DICOM backend
+are disabled.  Upstream's GoogleTest FetchContent targets are disabled to keep
+the build offline; the package-specific smoke tests real conversion instead.
+
+```sh
+guix build -L guix --no-grafts dicom2mesh
+make check-dicom2mesh
+dicom2mesh -ipng '[slice1.png,slice2.png,slice3.png]' -sxyz 1.0 1.0 1.0 -o mesh.ply
+```
+
+On 2026-09-29, the local build, reproducibility rebuild, offline lint and
+network-isolated smoke passed.  Three generated grayscale slices produced
+48 vertices and 92 triangles with the expected bounds and closed-surface
+topology; a missing slice failed without producing a mesh.  HOME/XDG state and
+the immutable store remained unchanged.  The real terminal capture is
+`.goocastle/evidence/issue-743.png`.  The correct runtime marker includes the
+output filename: `Mesh export as ply file: mesh.ply`, not the incomplete marker
+in the original research contract.  No medical data or live display was used.
+The OMP capture runs the installed command in a disposable working directory
+containing those generated slices.  The legacy Goocastle adapter does not stage
+them and is not the proof runner; do not put fixtures or mesh outputs in the
+repository root to accommodate it.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and

@@ -1547,7 +1547,7 @@
             "mesh.ply"
           ]
         },
-        "successMarker": "Mesh export as ply file:"
+        "successMarker": "Mesh export as ply file: mesh.ply"
       }
     },
     {
