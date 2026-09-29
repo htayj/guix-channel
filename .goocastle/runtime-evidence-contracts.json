@@ -1706,7 +1706,7 @@
             "--no-sysinit",
             "--non-interactive",
             "--eval",
-            "(+ 1 2)"
+            "(format t \"= ~D~%\" (+ 1 2))"
           ]
         },
         "successMarker": "= 3"

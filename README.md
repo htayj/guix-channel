@@ -61,6 +61,31 @@ containing those generated slices.  The legacy Goocastle adapter does not stage
 them and is not the proof runner; do not put fixtures or mesh outputs in the
 repository root to accommodate it.
 
+## Hosted Modus Lisp
+
+`modus` is the x86_64-linux hosted CLI built with SBCL from
+`modus-lisp/modus` commit `501f2ee2069e98210627e53ce487f23eabca9032`
+(`0.2.0-0.501f2ee`).  It uses upstream's documented `MODUS_NO_JIT=1`
+interpreter build, not a bare-metal image.  The executable contains no SBCL
+runtime dependency; the installed offline quickload assets include the
+Apache-2.0 SHA-1 system alongside Modus's MIT license.
+
+```sh
+guix build -L guix --no-grafts modus
+make check-modus
+modus --noinform --no-userinit --no-sysinit --non-interactive \
+  --eval '(format t "= ~D~%" (+ 1 2))'
+```
+
+The result is `= 3`.  Bare `--eval '(+ 1 2)'` intentionally prints nothing;
+the research contract was corrected to request output through the evaluator's
+own `format`, without changing runtime semantics.  On 2026-09-29, local build,
+reproducibility rebuild and offline lint passed.  Network-isolated smoke
+verified silent evaluation, computed output, true/false assertion exit status,
+the REPL, and offline quickload from an unrelated directory using the known
+SHA-1 of `abc`.  HOME/XDG and store integrity checks passed.  The real PTY
+result is captured in `.goocastle/evidence/issue-752.png`.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
