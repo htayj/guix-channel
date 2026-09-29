@@ -1,0 +1,47 @@
+Respect disabled external GTK/Qt theming without changing DMS's own icon setting.
+Never purge user caches or signal other GTK applications when changing icons.
+
+--- a/quickshell/Common/SettingsData.qml
++++ b/quickshell/Common/SettingsData.qml
+@@ -354,6 +354,8 @@
+     }
+ 
+     function updateGtkIconTheme() {
++        if (!gtkThemingEnabled || Quickshell.env("DMS_DISABLE_MATUGEN") === "1" || Quickshell.env("DMS_DISABLE_MATUGEN") === "true") return
++
+         const gtkThemeName = (iconTheme === "System Default") ? systemDefaultIconTheme : iconTheme
+         if (gtkThemeName === "System Default" || gtkThemeName === "") return
+ 
+@@ -378,19 +380,17 @@
+     else
+         echo -e '[Settings]\\ngtk-icon-theme-name=${gtkThemeName}' > "$settings_file"
+     fi
+-done
+-
+-rm -rf ~/.cache/icon-cache ~/.cache/thumbnails 2>/dev/null || true
+-pkill -HUP -f 'gtk' 2>/dev/null || true`
++done`
+ 
+         Quickshell.execDetached(["sh", "-lc", configScript])
+     }
+ 
+     function updateQtIconTheme() {
++        if (!qtThemingEnabled || Quickshell.env("DMS_DISABLE_MATUGEN") === "1" || Quickshell.env("DMS_DISABLE_MATUGEN") === "true") return
++
+         const qtThemeName = (iconTheme === "System Default") ? "" : iconTheme
+         if (!qtThemeName) return
+ 
+-        const home = _homeUrl.replace("file://", "").replace(/'/g, "'\\''")
+         const qtThemeNameEscaped = qtThemeName.replace(/'/g, "'\\''")
+ 
+         const script = `mkdir -p ${_configDir}/qt5ct ${_configDir}/qt6ct ${_configDir}/environment.d 2>/dev/null || true
+@@ -412,8 +412,7 @@
+   fi
+ }
+ update_qt_icon_theme ${_configDir}/qt5ct/qt5ct.conf '${qtThemeNameEscaped}'
+-update_qt_icon_theme ${_configDir}/qt6ct/qt6ct.conf '${qtThemeNameEscaped}'
+-rm -rf '${home}'/.cache/icon-cache '${home}'/.cache/thumbnails 2>/dev/null || true`
++update_qt_icon_theme ${_configDir}/qt6ct/qt6ct.conf '${qtThemeNameEscaped}'`
+ 
+         Quickshell.execDetached(["sh", "-lc", script])
+     }

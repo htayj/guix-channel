@@ -1,5 +1,5 @@
 GUIX ?= guix
-# kitty-bitmap pins Kitty 0.48.2 internally.  The time-machine command supplies
+# kitty-bitmap pins Kitty 0.49.1 internally.  The time-machine command supplies
 # the reviewed Guix API and dependency set used by its frozen build recipe.
 KITTY_BITMAP_GUIX ?= guix time-machine -C channels.guix --
 # Blightmud's v5.7.1 lockfile requires Rust 1.88 or newer, which is provided
@@ -31,20 +31,23 @@ RELEASE_FONT_PACKAGES := cadr-fonts-latin cadr-fonts-symbols dec-fonts \
 FONT_PACKAGES := atarist-font $(RELEASE_FONT_PACKAGES)
 PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	computer-builder rust-computus custom-nix-pkgs databases-team75 dorxng-mcp buzz \
-	hyprland-preview-share-picker sbcl-ivory-key manna-cadet sbcl-qbcl \
+	hyprland-preview-share-picker dank-material-shell-shell-only sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
 	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a emacs-aidermacs \
-	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq apout kitty-bitmap opencode \
+	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq apout kitty-bitmap shader-slang opencode \
 	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin shadow-over-darkmoor \
 	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy notion-river mushkin mushtato ocaml-irc-client \
-	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl \
+	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl halloy \
 	kbredir potato pycat rune secretpathway tinyfugue trebuchet tapeutils heroic-gogdl \
 	vt05 weidu blincolnlights pdp10-its-disassembler itstar pdp11 pdp6 uc-explorer \
 	azurra-gtk-theme pdp10-xpl-pdp-10 faugus-launcher react-blessed wanderers \
 	clojure-roguelike astx acehack bell-labs-rogue7 aquarium-arena atlas-warriors \
 	bcrawl avanor bootrogue brogue brogue-lite chessrogue corerl cryptrover \
 	cutlassrl dhack diabaig dnethack dragonslayer grippy-socks gruesome hack hunger-games hydra-slayer \
-	martins-dungeon-bash nlarn robotfindskitten
+	martins-dungeon-bash nlarn robotfindskitten fontra \
+	caelestia-shell caelestia-cli quickshell-for-caelestia libcava m3shapes \
+	dart-sass gpu-screen-recorder font-rubik font-material-symbols-rounded \
+	font-nerd-caskaydia-cove
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -87,6 +90,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-hack \
 	check-nlarn \
 	check-robotfindskitten \
+	check-fontra build-fontra \
 	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs build build-sources
 
 check-source-count:
@@ -150,8 +154,9 @@ check-kitty-bitmap:
 	GUIX="$(KITTY_BITMAP_GUIX)" tests/kitty-bitmap-smoke.sh
 
 # kitty-bitmap must also build against a Guix revision whose rolling `kitty'
-# predates Kitty 0.48.2's newest Go module requirements.  See
-# guix/tay/packages/kitty-bitmap-go-deps.scm.
+# predates Kitty 0.49.1's newest Go module requirements.  The check realizes
+# the channel-private Go modules and the shader-slang compiler by name first.
+# See guix/tay/packages/kitty-bitmap-go-deps.scm and shader-slang.scm.
 check-kitty-bitmap-oldguix:
 	sh tests/kitty-bitmap-clean-old-guix-build.sh
 
@@ -319,6 +324,12 @@ check-nlarn:
 check-robotfindskitten:
 	GUIX="$(GUIX)" tests/robotfindskitten-smoke.sh
 
+check-fontra:
+	GUIX="$(GUIX)" tests/fontra-smoke.sh
+
+build-fontra:
+	$(GUIX) build -L guix --no-grafts --no-offload fontra
+
 check-hack:
 	GUIX="$(GUIX)" tests/hack-smoke.sh
 
@@ -340,7 +351,7 @@ check: check-source-count check-sentinelone check-datamosh-security \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
 	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-bell-labs-rogue7 check-astx check-acehack check-avanor check-bootrogue check-wanderers check-hack check-emacs-org-popup-posframe \
-	check-emacs-forth-mode check-emacs-aidermacs check-aquarium-arena check-atlas-warriors check-bcrawl check-chessrogue check-corerl check-cutlassrl check-dhack check-cryptrover check-dnethack check-dragonslayer check-grippy-socks check-hunger-games check-gruesome check-hydra-slayer check-martins-dungeon-bash check-nlarn check-robotfindskitten
+	check-emacs-forth-mode check-emacs-aidermacs check-aquarium-arena check-atlas-warriors check-bcrawl check-chessrogue check-corerl check-cutlassrl check-dhack check-cryptrover check-dnethack check-dragonslayer check-grippy-socks check-hunger-games check-gruesome check-hydra-slayer check-martins-dungeon-bash check-nlarn check-robotfindskitten check-fontra
 	$(GUIX) build -L guix --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L guix --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)

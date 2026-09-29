@@ -119,6 +119,15 @@ argv-based FFmpeg calls to prevent shell injection, with a dedicated security
 smoke test.  `dipc` and `xq` keep their exact pinned offline Rust and Go
 dependency graphs.
 
+`fontra` adds the browser-based font editor and local conversion/workflow
+commands, pinned to tag `2026.9.0` at commit
+`cc0a3b40bcd9860d8b6382df1faf6122ec306a5b`.  Its locked frontend builds offline
+from fixed-hash npm archives, retaining pinned precompiled upstream WASM
+rather than claiming a complete source rebuild.  Upstream licenses and npm
+notices are installed with the package.  See the README for usage, dependency
+test exceptions, and the verified local `--no-grafts --no-offload` build path;
+this addition does not configure a host service or install a user profile.
+
 `sentinelone` is the exception to the default build inventory: it is checked
 for enumeration, dry-run, and lint, but its authorized proprietary source must
 be supplied locally.  The channel's package-definition code is
@@ -134,12 +143,15 @@ check-sentinelone` runs only a synthetic smoke test: it needs no SentinelOne
 artifact or SentinelOne/vendor network access, although realizing free Guix
 dependencies may use configured substitutes.
 
-`kitty-bitmap` pins Kitty 0.48.2's source and version-sensitive build recipe
+`kitty-bitmap` pins Kitty 0.49.1's source and version-sensitive build recipe
 while inheriting generic dependency packages from Guix; it does not replace
-the regular `kitty` package.  The two Go modules Kitty 0.48.2's `go.mod`
-needs that pre-2026-08-26 Guix revisions lack are supplied by the
-channel-private `kitty-bitmap-go-deps` module, keeping the build working on
-older and newer Guix alike.  It carries the AUR `kitty-bitmap`
+the regular `kitty` package.  Go modules Kitty 0.49.1's `go.mod` needs that
+Guix does not reliably provide (`emmansun/base64` and `sgtdi/fswatcher`,
+absent before 2026-08-26, and the unpackaged `kovidgoyal/go-shm/v2`) are
+supplied by the channel-private `kitty-bitmap-go-deps` module, keeping the
+build working on older and newer Guix alike.  Its build-time shader compiler,
+`slangc`, comes from the channel's new `shader-slang` package (Slang
+2026.14.1, the version Kitty's own bundle builds pin).  It carries the AUR `kitty-bitmap`
 Fontconfig-default change with recorded provenance,
 plus a separate channel-local child-encoding patch that turns raw XKB Meta
 into terminal Alt while leaving Kitty shortcut matching and physical Alt
@@ -162,10 +174,13 @@ failure; and Pycat checks safe sibling imports and live world reload.
 | Package | Upstream | Installed contents |
 | --- | --- | --- |
 | `atarist-font` | ntwk/atarist-font | Atari ST 8x16 Unicode BDF and generated PCF font |
+| `fontra` | `fontra/fontra` 2026.9.0 | Browser-based font editor, local server, conversion and workflow commands |
 | `hyprland-preview-share-picker` | `WhySoBad/hyprland-preview-share-picker` | GTK4 Hyprland screencast picker with window previews |
 | `terminaldrome` | `thafaker/TerminalDrome` | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | `larsbrinkhoff/image-tape` | Magnetic-tape image reader with safe output handling |
 | `kitty-bitmap` | `kovidgoyal/kitty` | Native bitmap-font Kitty variant with XKB Meta-to-terminal-Alt encoding |
+| `halloy` | `squidowl/halloy` 2026.8 | Graphical IRC client from the pinned upstream Linux release |
+| `shader-slang` | `shader-slang/slang` | `slangc` shader compiler; build dependency of `kitty-bitmap` |
 | `axmud` | `axcore/axmud` | Perl/GTK3 graphical MUD client with GMCP and configurable scripting |
 | `blightmud` | `Blightmud/Blightmud` | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `durthang` | `Pommersche92/durthang` | Rust TUI MUD client with TLS, GMCP, automapping, and Secret Service integration |

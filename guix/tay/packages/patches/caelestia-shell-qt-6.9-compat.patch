@@ -1,0 +1,344 @@
+Build Caelestia shell 2.5.0 with Qt 6.9.
+
+* QJsonObject::asKeyValueRange() is new in Qt 6.10, so iterate the object
+  explicitly instead.
+* Include <ranges> where std::views is used rather than relying on it
+  arriving transitively.
+* DoubleSpinBox is new in Qt 6.10 and SpinBox is integer-only, so
+  StyledSpinBox becomes a SpinBox over the value scaled by 10^decimals, with
+  a DoubleValidator and locale-aware textFromValue/valueFromText; StepperRow
+  passes real from/to/stepSize/value through and reports the real value.
+* RectangularShadow gained per-corner radii in Qt 6.10, so Elevation becomes
+  an Item that keeps the upstream properties and, when the corner radii
+  differ, composes the shadow from four clipped quadrants each using its own
+  corner radius.
+* `char` is a reserved word for the Qt 6.9 QML parser, so rename the
+  `id: char` in the lock screen input field.
+
+Upstream status: Not submitted.
+
+--- a/components/controls/StyledSpinBox.qml
++++ b/components/controls/StyledSpinBox.qml
+@@ -4,33 +4,59 @@
+ import qs.components
+ import qs.services
+ 
+-DoubleSpinBox {
++// Qt 6.9 has no DoubleSpinBox (added in Qt 6.10), and SpinBox is
++// integer-only.  Hold the real value scaled by 10^decimals so fractional
++// ranges and step sizes keep working, and format/parse it as a real number
++// in the control's locale.
++SpinBox {
+     id: root
+ 
++    property real realFrom: 0
++    property real realTo: 99
++    property real realStepSize: 1
++    property real realValue: 0
++    readonly property int decimals: realStepSize < 1 ? Math.max(1, Math.ceil(-Math.log10(realStepSize))) : 0
++    readonly property real factor: Math.pow(10, decimals)
++    readonly property real currentValue: value / factor
++
+     property int repeatRate: 400
+     property int repeatDecay: 50
+     property int cLayer: 1
+ 
++    // Integer arithmetic on the scaled value replaces the upstream
++    // floating point rounding to `decimals`.
+     function increase(): void {
+-        let newValue = Math.min(to, value + stepSize);
+-        // Round to avoid floating point precision errors
+-        const decimals = stepSize < 1 ? Math.max(1, Math.ceil(-Math.log10(stepSize))) : 0;
+-        newValue = Math.round(newValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+-        value = newValue;
++        value = Math.min(to, value + stepSize);
+         valueModified();
+     }
+ 
+     function decrease(): void {
+-        let newValue = Math.max(from, value - stepSize);
+-        // Round to avoid floating point precision errors
+-        const decimals = stepSize < 1 ? Math.max(1, Math.ceil(-Math.log10(stepSize))) : 0;
+-        newValue = Math.round(newValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+-        value = newValue;
++        value = Math.max(from, value - stepSize);
+         valueModified();
+     }
+ 
++    from: Math.round(realFrom * factor)
++    to: Math.round(realTo * factor)
++    stepSize: Math.max(1, Math.round(realStepSize * factor))
++    value: Math.round(realValue * factor)
++
++    textFromValue: (value, locale) => Number(value / root.factor).toLocaleString(locale, "f", root.decimals)
++    valueFromText: (text, locale) => {
++        try {
++            return Math.round(Number.fromLocaleString(locale, text) * root.factor);
++        } catch (e) {
++            return root.value;
++        }
++    }
++    validator: DoubleValidator {
++        bottom: Math.min(root.realFrom, root.realTo)
++        top: Math.max(root.realFrom, root.realTo)
++        decimals: root.decimals
++        notation: DoubleValidator.StandardNotation
++        locale: root.locale.name
++    }
++
+     editable: true
+-    decimals: stepSize < 1 ? Math.max(1, Math.ceil(-Math.log10(stepSize))) : 0
+     spacing: Tokens.spacing.small
+ 
+     implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
+--- a/components/effects/Elevation.qml
++++ b/components/effects/Elevation.qml
+@@ -3,18 +3,79 @@
+ import qs.components
+ import qs.services
+ 
+-RectangularShadow {
++// Qt 6.9's RectangularShadow only has a uniform `radius`; per-corner radii
++// arrived in Qt 6.10.  When the corners differ, draw each quadrant with a
++// full-size shadow using that corner's radius, clipped to the quadrant.  The
++// quadrants meet on the centre lines of the (offset) shadow, where the shadow
++// of a rounded rectangle does not depend on the corner radius, so the pieces
++// join without seams.
++Item {
++    id: root
++
+     property int level
+     property real dp: [0, 1, 3, 6, 8, 12][level]
+ 
+-    color: Qt.alpha(Colours.palette.m3shadow, 0.7)
+-    blur: (dp * 5) ** 0.7
+-    spread: -dp * 0.3 + (dp * 0.1) ** 2
+-    offset.y: dp / 2
++    property color color: Qt.alpha(Colours.palette.m3shadow, 0.7)
++    property real blur: (dp * 5) ** 0.7
++    property real spread: -dp * 0.3 + (dp * 0.1) ** 2
++    property vector2d offset: Qt.vector2d(0, dp / 2)
++
++    property real radius
++    property real topLeftRadius: radius
++    property real topRightRadius: radius
++    property real bottomLeftRadius: radius
++    property real bottomRightRadius: radius
++
++    readonly property bool uniformCorners: topLeftRadius === topRightRadius && topLeftRadius === bottomLeftRadius && topLeftRadius === bottomRightRadius
++    readonly property real shadowMargin: blur * 2 + Math.abs(spread) + Math.abs(offset.x) + Math.abs(offset.y) + 2
++    readonly property real splitX: width / 2 + offset.x
++    readonly property real splitY: height / 2 + offset.y
+ 
+     Behavior on dp {
+         Anim {
+             type: Anim.SlowEffects
+         }
+     }
++
++    RectangularShadow {
++        anchors.fill: parent
++        visible: root.uniformCorners
++
++        radius: root.topLeftRadius
++        color: root.color
++        blur: root.blur
++        spread: root.spread
++        offset: root.offset
++    }
++
++    Repeater {
++        model: root.uniformCorners ? 0 : 4
++
++        Item {
++            id: quadrant
++
++            required property int index
++            readonly property bool isLeft: index % 2 === 0
++            readonly property bool isTop: index < 2
++
++            x: isLeft ? -root.shadowMargin : root.splitX
++            y: isTop ? -root.shadowMargin : root.splitY
++            width: isLeft ? root.splitX + root.shadowMargin : root.width - root.splitX + root.shadowMargin
++            height: isTop ? root.splitY + root.shadowMargin : root.height - root.splitY + root.shadowMargin
++            clip: true
++
++            RectangularShadow {
++                x: -quadrant.x
++                y: -quadrant.y
++                width: root.width
++                height: root.height
++
++                radius: quadrant.isTop ? (quadrant.isLeft ? root.topLeftRadius : root.topRightRadius) : (quadrant.isLeft ? root.bottomLeftRadius : root.bottomRightRadius)
++                color: root.color
++                blur: root.blur
++                spread: root.spread
++                offset: root.offset
++            }
++        }
++    }
+ }
+--- a/modules/lock/center/InputField.qml
++++ b/modules/lock/center/InputField.qml
+@@ -121,7 +121,7 @@
+     }
+ 
+     component CharItem: Item {
+-        id: char
++        id: charItem
+ 
+         required property int index
+         property real nonAnimWidthScale: 1
+@@ -140,28 +140,28 @@
+ 
+             ParallelAnimation {
+                 Anim {
+-                    target: char
++                    target: charItem
+                     property: "opacity"
+                     from: 0
+                     to: 1
+                     type: Anim.DefaultEffects
+                 }
+                 Anim {
+-                    target: char
++                    target: charItem
+                     property: "scale"
+                     from: 0
+                     to: 1
+                     type: Anim.FastSpatial
+                 }
+                 Anim {
+-                    target: char
++                    target: charItem
+                     property: "implicitWidth"
+                     from: charList.implicitHeight
+                     to: charList.implicitHeight * 1.3
+                     type: Anim.DefaultEffects
+                 }
+                 PropertyAction {
+-                    target: char
++                    target: charItem
+                     property: "nonAnimWidthScale"
+                     value: 1.5
+                 }
+@@ -182,13 +182,13 @@
+                     type: Anim.FastSpatial
+                 }
+                 Anim {
+-                    target: char
++                    target: charItem
+                     property: "implicitWidth"
+                     to: charList.implicitHeight
+                     type: Anim.DefaultEffects
+                 }
+                 PropertyAction {
+-                    target: char
++                    target: charItem
+                     property: "nonAnimWidthScale"
+                     value: 1
+                 }
+@@ -199,25 +199,25 @@
+             id: removeAnim
+ 
+             PropertyAction {
+-                target: char
++                target: charItem
+                 property: "ListView.delayRemove"
+                 value: true
+             }
+             ParallelAnimation {
+                 Anim {
+                     type: Anim.DefaultEffects
+-                    target: char
++                    target: charItem
+                     property: "opacity"
+                     to: 0
+                 }
+                 Anim {
+-                    target: char
++                    target: charItem
+                     property: "scale"
+                     to: 0.5
+                 }
+             }
+             PropertyAction {
+-                target: char
++                target: charItem
+                 property: "ListView.delayRemove"
+                 value: false
+             }
+@@ -228,7 +228,7 @@
+ 
+             anchors.centerIn: parent
+             implicitSize: charList.implicitHeight * 1.5
+-            shape: root.shapeQueue[char.index % root.shapeQueue.length] ?? MaterialShape.Circle
++            shape: root.shapeQueue[charItem.index % root.shapeQueue.length] ?? MaterialShape.Circle
+             color: Colours.palette.m3onSurface
+ 
+             opacity: root.showPassword ? 0 : 1
+@@ -253,7 +253,7 @@
+             asynchronous: true
+ 
+             sourceComponent: StyledText {
+-                text: root.buffer[char.index]
++                text: root.buffer[charItem.index]
+             }
+ 
+             Behavior on opacity {
+--- a/modules/nexus/common/StepperRow.qml
++++ b/modules/nexus/common/StepperRow.qml
+@@ -55,12 +55,12 @@
+         }
+ 
+         StyledSpinBox {
+-            from: root.from
+-            to: root.to
+-            stepSize: root.stepSize
+-            value: root.value
++            realFrom: root.from
++            realTo: root.to
++            realStepSize: root.stepSize
++            realValue: root.value
+             cLayer: 2
+-            onValueModified: root.moved(value)
++            onValueModified: root.moved(currentValue)
+         }
+     }
+ }
+--- a/plugin/src/Caelestia/Components/lazylistview.cpp
++++ b/plugin/src/Caelestia/Components/lazylistview.cpp
+@@ -4,6 +4,7 @@
+ #include <qtimer.h>
+ 
+ #include <algorithm>
++#include <ranges>
+ 
+ namespace {
+ 
+--- a/plugin/src/Caelestia/Settings/listnode.cpp
++++ b/plugin/src/Caelestia/Settings/listnode.cpp
+@@ -3,6 +3,8 @@
+ #include <qjsonarray.h>
+ #include <qjsonobject.h>
+ 
++#include <ranges>
++
+ #include "util/i18n.hpp"
+ 
+ namespace caelestia::settings {
+--- a/plugin/src/Caelestia/Settings/objectnode.cpp
++++ b/plugin/src/Caelestia/Settings/objectnode.cpp
+@@ -118,8 +118,10 @@
+     quarantineKey(key, v);                                                                                             \
+     continue
+ 
+-    for (const auto [k, v] : json.asKeyValueRange()) {
+-        const auto key = k.toString();
++    // QJsonObject::asKeyValueRange() needs Qt 6.10; Guix provides Qt 6.9.
++    for (auto it = json.constBegin(); it != json.constEnd(); ++it) {
++        const auto key = it.key();
++        const QJsonValue v = it.value();
+         const auto* desc = schema().get(key);
+ 
+         if (!desc) {

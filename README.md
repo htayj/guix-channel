@@ -97,11 +97,23 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `custom-nix-pkgs` | custom-nix-pkgs | Preserved Nix expressions plus a snapshot validator |
 | `databases-team75` | Databases-Team75 | Preserved legacy client source and documentation |
 | `dorxng-mcp` | dorxng-mcp | MCP server and its packaged Python dependencies |
+| `fontra` | fontra/fontra 2026.9.0 | Browser-based font editor, local server, conversion and workflow commands |
 | `opencode` | anomalyco/opencode 1.18.18 | Coding-agent command-line interface and terminal UI |
 | `opencode-desktop` | anomalyco/opencode desktop 1.18.18 | Electron graphical client with a bundled local backend |
 | `claude-code` | Anthropic Claude Code 2.1.233 | Proprietary agentic coding command-line interface |
 | `claude-desktop` | Anthropic Claude Desktop 1.30096.1 | Proprietary Electron client for Claude on Linux |
 | `hyprland-preview-share-picker` | WhySoBad/hyprland-preview-share-picker | GTK4 Hyprland screencast picker with window previews |
+| `dank-material-shell-shell-only` | DankMaterialShell 0.5.1 | Full upstream shell with external GTK/Qt icon mutation guarded by the user's settings and `DMS_DISABLE_MATUGEN` |
+| `caelestia-shell` | caelestia-dots/shell 2.5.0 | Quickshell desktop shell, `Caelestia` QML plugin, and `caelestia-shell` launcher |
+| `caelestia-cli` | caelestia-dots/cli 1.1.3 | `caelestia` shell control, colour scheme, screenshot, recording, and picker command |
+| `quickshell-for-caelestia` | Quickshell 0.3.1 + 10 commits (`2d3b3e9`) | `qs`/`quickshell` at the commit pinned by Caelestia shell 2.5.0 |
+| `libcava` | LukashonakV/cava 1.0.0 | CAVA audio visualizer as a shared library |
+| `m3shapes` | soramanew/m3shapes (`32ad9ce`) | Material 3 Expressive shape QML module |
+| `dart-sass` | sass 1.105.0 (npm) | Reference Sass compiler with the module system, run on Node.js |
+| `gpu-screen-recorder` | GPU Screen Recorder 6.1.3 | VA-API/Vulkan screen recorder and `gsr-kms-server` |
+| `font-rubik` | googlefonts/rubik 2.300 | Rubik variable font |
+| `font-material-symbols-rounded` | material-design-icons 2.972 | Material Symbols Rounded variable icon font |
+| `font-nerd-caskaydia-cove` | Nerd Fonts 3.5.1 | CaskaydiaCove Nerd Font |
 | `sbcl-ivory-key` | ivory-key | Declarative keyboard-layout compiler |
 | `manna-cadet` | manna-cadet | Space Cadet keyboard layouts and helper tools |
 | `sbcl-qbcl` | qbcl | qBittorrent command-line controller |
@@ -109,7 +121,9 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `terminaldrome` | thafaker/TerminalDrome | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | larsbrinkhoff/image-tape | Magnetic-tape image reader with safe output handling |
 | `apout` | DoctorWkt/Apout 2.4.0 | PDP-11 Unix a.out user-mode emulator; supply a user-owned `APOUT_ROOT` |
-| `kitty-bitmap` | Kitty 0.48.2 (pinned tag `v0.48.2`) | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
+| `kitty-bitmap` | Kitty 0.49.1 (pinned tag `v0.49.1`) | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
+| `halloy` | squidowl/halloy 2026.8 | Upstream x86_64 Linux desktop IRC client release with Wayland/X11 runtime libraries |
+| `shader-slang` | shader-slang/slang 2026.14.1 | `slangc` Slang shader compiler and libraries; build dependency of `kitty-bitmap` |
 | `axmud` | Axmud 2.0.0 | Perl/GTK3 graphical MUD client with GMCP and configurable scripting |
 | `aquarium-arena` | valrak/AquariumRL 0.4 | Underwater pygame arena roguelike with XDG high scores |
 | `atlas-warriors` | lkingsford/AtlasWarriors alpha-009 | Graphical fantasy roguelike with XDG state |
@@ -167,6 +181,56 @@ data packages, not replacements for a native application.  `bell-museum` does
 not package its Inferno submodule; use its renderer with an independently
 acquired checkout when source artwork is required.
 
+`fontra` pins upstream tag `2026.9.0` at commit
+`cc0a3b40bcd9860d8b6382df1faf6122ec306a5b`.  The Python package and frontend
+are built offline after Guix acquires their fixed-hash inputs.  The frontend
+uses 329 individual pinned npm archives and `npm ci --offline --ignore-scripts`
+with optional packages omitted, not a fetched `node_modules` bundle.  The
+unused npm 12 development subtree and optional native TypeScript compilers
+are pruned; missing lock metadata is filled without changing retained
+versions or workspace links.  Guix's Node/npm and Babel/Webpack compile the
+frontend.  This is not a fully source-rebuilt npm/WASM closure: `harfbuzzjs`,
+`build-shaper-font`, and build-time `source-map` WASM remain precompiled,
+pinned upstream artifacts.  Their redistribution notices are packaged under
+`share/doc/fontra/npm`; Fontra's GPL-3.0 license is under `share/doc/fontra`.
+
+Channel dependency variants provide the required FontTools, Unicode data,
+UFO tooling, Skia path operations, Pillow, aiohttp, and Watchfiles versions;
+Guix supplies cattrs, PyYAML, and the build/test tools.  Fontra's actual
+`test-py` pytest suite and JavaScript `npm test` suite are retained.  Pillow's
+two memory-heavy WebP tests (`test_write_encoding_error_message` and
+`test_write_encoding_error_bad_dimension`) are excluded; its adversarial
+fuzz cases run with a temporary 256 MiB address-space limit, restored for
+normal tests.  UFOMerge's own suite is disabled because its `fontFeatures`
+test dependency is absent from Guix; Fontra's workflow tests remain enabled.
+
+From a channel clone, normal installation is `guix install -L guix fontra`.
+For the verified local build and smoke path:
+
+```sh
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 fontra
+make check-fontra   # project creation, UFO roundtrip, workflow and HTTP assets
+# Or reuse an existing output without building it again:
+FONTRA_PACKAGE=/gnu/store/…-fontra-2026.9.0 make check-fontra
+fontra new /path/to/fonts/example.fontra
+fontra --host 127.0.0.1 --http-port 8000 filesystem /path/to/fonts
+fontra-copy /path/to/fonts/input.ufo /path/to/fonts/output.fontra
+fontra-workflow /path/to/workflow.yaml
+```
+
+Open `http://127.0.0.1:8000/` in a browser.  Use a user-owned font directory;
+the channel installs no persistent server or profile automatically.
+Local font editing and shaping work without external network access, but
+optional remote glyphset presets (including GF Latin Kernel from jsDelivr)
+require network access; the entire runtime is not claimed offline.  Chromium
+verification exercised the project overview and Glyph Editor with a local
+triangle glyph and text shaping enabled.
+`make build-fontra` also uses `--no-grafts --no-offload`.  The verified local
+closure used those flags: a default graft-enabled attempt hit an unrelated
+Python 3.12 graft build test failure, so normal graft-enabled builds are not
+claimed verified.  Initial source/dependency acquisition may use the network;
+the package build does not resolve dependencies online.
+
 `opencode` packages the official Bun-compiled release executable because the
 channel's Guix revision does not provide Bun and upstream's build performs
 additional network installs of platform-specific dependencies.  The package
@@ -178,6 +242,28 @@ with the package.  The executable embeds the Bun runtime, JavaScript bundle,
 web UI, and native dependencies selected by upstream; they are not rebuilt or
 separately audited by this channel.  Provider credentials and services,
 downloaded language servers, and optional integrations remain runtime concerns.
+
+`dank-material-shell-shell-only` inherits the complete upstream
+DankMaterialShell 0.5.1 package from Guix, keeping every helper, and exports
+the unique shell variant.  External GTK and Qt icon configuration writes run
+only when the respective `gtkThemingEnabled` or `qtThemingEnabled` setting is
+enabled and `DMS_DISABLE_MATUGEN` is neither `1` nor `true`.  Icon changes never
+purge user caches or signal unrelated GTK applications.  The shell's own
+`iconTheme` setting and normal icon resolution are retained; application icon
+rendering follows the shell process's Qt platform theme.  The source patch
+uses exact context (`--fuzz=0`) and fails if that upstream context drifts.
+Because both
+packages install the same QML paths, migrate from a previous
+`dank-material-shell` installation with a single transaction from a clone:
+
+```sh
+guix package -L ~/projects/guix-channel/guix \
+  --remove=dank-material-shell --install=dank-material-shell-shell-only
+```
+
+A fresh installation uses `guix install -L ~/projects/guix-channel/guix
+dank-material-shell-shell-only`.  The explicit package expression is
+`(@ (tay packages dank-material-shell) dank-material-shell-shell-only)`.
 
 `opencode-desktop` uses the official architecture-specific Debian release
 bundle.  A source build is not currently reproducible in this channel: Guix
@@ -235,14 +321,21 @@ argv security smoke test is part of `make check`.  `dipc` and `xq` retain their
 reviewed, pinned Rust and Go dependency graphs and build without network
 resolution.
 
-`kitty-bitmap` pins Kitty 0.48.2's upstream tag, commit, source hash, source
+`kitty-bitmap` pins Kitty 0.49.1's upstream tag, commit, source hash, source
 snippet, and version-sensitive build phases inside this channel rather than
 following Guix's rolling `kitty` source.  Generic dependency packages remain
-inherited from Guix, with one exception: the two Go modules Kitty 0.48.2's
-`go.mod` needs that pre-2026-08-26 Guix revisions lack
-(`emmansun/base64`, `sgtdi/fswatcher`) come from the channel-private
-`kitty-bitmap-go-deps` module, so the package builds on older and newer Guix
-alike without colliding with upstream's identically-named definitions.  Its
+inherited from Guix, with one exception: Go modules Kitty 0.49.1's `go.mod`
+needs that Guix does not reliably provide come from the channel-private
+`kitty-bitmap-go-deps` module.  `emmansun/base64` and `sgtdi/fswatcher` are
+missing from pre-2026-08-26 Guix revisions, and `kovidgoyal/go-shm/v2` is not
+packaged by Guix at all, so the package builds on older and newer Guix alike
+without colliding with upstream's identically-named definitions.  Kitty 0.49
+also compiles its shaders with `slangc` at build time, so the channel's
+`shader-slang` package, Slang 2026.14.1 as pinned by Kitty's own bundle
+builds, is a native input.  It builds only the compiler and `slang-glslang`
+from source, taking miniz and unordered-dense from Guix and keeping the
+SPIRV-Headers, SPIRV-Tools, glslang and lz4 submodules bundled because Guix's
+versions are too old or lack a CMake config.  Its
 documented AUR-derived Fontconfig patch enables
 native BDF/PCF font selection by default.  Such fixed bitmap strikes do not
 zoom or scale cleanly;
@@ -251,10 +344,23 @@ separate channel patch translates the raw GLFW Meta bit to Alt only at the
 child-process encoding boundary: Kitty shortcut matching still sees Meta,
 while legacy terminal applications receive ESC-prefixed Alt chords and the
 extended keyboard protocol reports Alt.  Physical Alt/XKB bindings are not
-changed.  The `check-kitty-bitmap` smoke uses Unscii's non-scalable PCF face
-and Kitty's native Fontconfig calls through `kitty +runpy`, without a display
-server.  It verifies selection and nonempty glyph-cell rasterization, but not
-a live GUI window.
+changed.  The `check-kitty-bitmap` smoke checks that both the evaluated
+package and the built program report Kitty 0.49.1, then uses Kitty's native
+key encoder, Unscii's non-scalable PCF face, and Kitty's native Fontconfig
+calls through `kitty +runpy`, without a display server.  It verifies raw-Meta
+shortcut matching, Meta-to-Alt child encoding, font selection, and nonempty
+glyph-cell rasterization, but not a live GUI window.
+
+Verified on 2026-09-28 with host Guix `21c3d67`: a local `guix build
+--no-offload --no-grafts --cores=2 --max-jobs=1 kitty-bitmap` (building
+`shader-slang` from source) produced
+`/gnu/store/3yn35mdxl2y0aj8z72416dliwbiwdp1m-kitty-bitmap-0.49.1`, and the
+smoke passed against it.  `guix lint` is clean for `shader-slang`; for
+`kitty-bitmap` it reports only the inherited `bash-minimal` suggestion and
+relative patch-path warnings.  The verification is headless only: no live GUI
+window was opened and the package was not installed into a profile.  At run
+time Kitty needs `slangc` only for user custom shaders; `shader-slang` is a
+build-time input, so install it separately if you use those.
 
 The twenty-one MUD clients cover distinct local interfaces.  `axmud`, `frostbite`,
 `kildclient`, `kmuddy`, `mmapper`, `mudlet`, `mushkin`, `mushtato`, `potato`,
@@ -295,6 +401,137 @@ it in the repository or store.  Running the agent requires a privileged system
 service and persistent state; this channel does not configure or validate that
 runtime deployment.
 
+### Caelestia shell
+
+The Caelestia desktop is packaged as ordinary versioned Guix packages rather
+than through upstream's Arch installer.  `caelestia-shell` pins shell commit
+`d999d48` (2.5.0) and `caelestia-cli` pins tag `v1.1.3`; the other packages
+above are their native, QML, compiler, recorder, and font dependencies.  Guix
+already has `quickshell` 0.3.0, but the shell requires the development commit
+pinned by its 2.5.0 `flake.lock`, so `quickshell-for-caelestia` builds exactly
+that commit with the Qt image-format plugins and `m3shapes` on its QML and
+plugin search paths.  Nothing assumes pacman, AUR helpers, `/usr` or
+`/etc/xdg` layouts, or systemd units; nothing is started automatically.
+
+The builds are memory-intensive; build locally one job at a time:
+
+```sh
+guix build -L ~/projects/guix-channel/guix --cores=1 --max-jobs=1 \
+  caelestia-shell caelestia-cli
+guix install -L ~/projects/guix-channel/guix caelestia-shell caelestia-cli
+```
+
+The compiled shell (QML, plugin, assets, and PAM stacks) is immutable under
+`/gnu/store/…-caelestia-shell-2.5.0/share/caelestia-shell`; do not copy it into
+`~/.config/quickshell`.  User settings live separately, as upstream intends,
+in `~/.config/caelestia/shell.json` (and optional
+`~/.config/caelestia/monitors/<monitor>/shell.json`).  Upstream does not create
+that file and uses defaults for omitted keys, so keep only the options you
+change there, for example in selectively managed dotfiles, rather than
+copying upstream's complete example configuration.
+
+`caelestia-shell` is a wrapper that runs the pinned `qs -p` on the store
+configuration, with the plugin, M3Shapes, and Qt image plugins on
+`QML_IMPORT_PATH`/`QT_PLUGIN_PATH`, the three fonts on `XDG_DATA_DIRS`, a
+default `FONTCONFIG_FILE` from Guix's fontconfig (an existing value is kept),
+and the shell's helper commands appended to `PATH` so the user's compositor
+tools and the system's setuid/pkexec programs take precedence.  Other
+arguments are passed to Quickshell, so `caelestia-shell ipc show` and
+`caelestia-shell list` work.  Normal control goes through the CLI, which calls
+that wrapper:
+
+```sh
+caelestia shell -d            # start detached (e.g. from Hyprland exec-once)
+caelestia shell -s            # list IPC targets
+caelestia shell drawers toggle launcher
+caelestia shell -l            # print the shell log
+caelestia shell -k            # stop it
+caelestia scheme set -n caelestia -f default -m dark
+caelestia wallpaper -f ~/Pictures/Wallpapers/example.png
+```
+
+Patches, all applied with `--fuzz=0` so upstream context drift fails the build:
+
+- `caelestia-shell-qt-6.9-compat.patch`: Guix provides Qt 6.9.2, while shell
+  2.5.0 targets Qt 6.10.  It replaces `QJsonObject::asKeyValueRange()` with
+  explicit iteration and includes `<ranges>` where `std::views` is used; it
+  replaces Qt 6.10's `DoubleSpinBox` in `StyledSpinBox`/`StepperRow` with a
+  scaled integer `SpinBox` that keeps fractional ranges, steps, decimals, and
+  locale formatting; it rebuilds `Elevation` so per-corner radii work with Qt
+  6.9's single-radius `RectangularShadow`; and it renames the lock-screen
+  `id: char`, which Qt 6.9's QML parser rejects.
+- `caelestia-shell-guix-pam.patch`: the lock screen's password stack includes
+  the system `/etc/pam.d/login` (pam_unix through the setuid `unix_chkpwd`)
+  instead of unprivileged `pam_faillock`/`pam_unix`; the optional fprintd and
+  howdy stacks load modules from `/run/current-system/profile/lib/security`.
+- `caelestia-shell-weather-toggle.patch`: adds the global shell option
+  `services.weatherEnabled` (default `true`, keeping upstream behaviour).
+  Upstream geolocates through ip-api.com whenever `services.weatherLocation`
+  is empty, from startup, the dashboard, and the lock screen's 15-minute
+  timer, and `dashboard.showWeather` only hides a tab.  With `false`, no
+  ip-api, Nominatim, or Open-Meteo request is made, in-flight replies are
+  ignored, fetched weather is cleared, and the lock-screen weather card and
+  dashboard weather tab are hidden.
+- `caelestia-cli-guix-integration.patch`: accepts Guix's Python 3.12, starts
+  and messages the shell through `caelestia-shell` instead of `qs -c
+  caelestia`, and finds the shell's `version` helper beside that launcher or
+  via `CAELESTIA_LIB_DIR` instead of `/usr/lib/caelestia`.
+
+Build phases also replace `/usr/share/X11/xkb` paths and the terminal-helper
+shebang with store paths.  `caelestia-cli` wraps `caelestia` with its runtime
+commands (Dart Sass, grim, slurp, fuzzel, cliphist, gpu-screen-recorder, …)
+appended to `PATH`; its build check compiles a module-based SCSS theme with
+`dart-sass`, which `sassc` cannot parse.
+
+Limitations and cautions:
+
+- Do not run `caelestia install` or `caelestia update`.  They are upstream
+  dotfiles operations: they manage Arch packages through pacman/AUR helpers
+  and clone, back up, and overwrite `~/.config` content.  They are not Guix
+  upgrades and must not run against Guix-managed or dotfile-managed
+  configuration.  Upgrade with `guix pull`/`guix package -u` or by bumping this
+  channel's pins.
+- Caelestia draws its own bar, notifications, OSDs, and lock screen and claims
+  the notification D-Bus name.  Do not launch it alongside an existing shell or
+  notification daemon (such as DankMaterialShell, mako, or dunst); stop that
+  one first.  Switching an existing live session to Caelestia has not been
+  done.
+- The lock screen UI locks and unlocks over IPC, but password (PAM)
+  authentication has not been tested; fprintd and howdy were disabled.
+- Power-profile controls use Quickshell's `PowerProfiles` service, which talks
+  to `power-profiles-daemon` over the system D-Bus.  The daemon is optional,
+  is not installed or configured by these packages, and was absent in testing;
+  without it those controls have no effect.
+- Direct KMS monitor capture in `gpu-screen-recorder` runs `gsr-kms-server`,
+  which needs `CAP_SYS_ADMIN` and otherwise is started through `pkexec`.  That
+  requires system configuration (a polkit policy/agent or a privileged
+  program in the Guix System configuration); the packages do not install one.
+  Portal and window capture do not need it.  NVIDIA encoding needs the
+  proprietary driver libraries, which are not provided.
+- Runtime verification is a passing isolated smoke test, not a live session.
+  The unmodified built package
+  `/gnu/store/m5sf2h8g8gvaab1mmbn81vrafnbpl1sc-caelestia-shell-2.5.0`, with
+  `caelestia-cli` 1.1.3 and its real wrapper, ran under labwc 0.20.1 (headless)
+  and a nested Hyprland 0.55.4 at 1920x1080.  It had a private HOME, XDG
+  directories, and session D-Bus, with no system bus or PipeWire.  `caelestia
+  shell -d` started one instance and `caelestia shell -k` stopped it.  The
+  bar, screen frame, sidebar, launcher, dashboard, toasts, Nexus settings
+  window, and lock screen rendered, confirmed by screenshots of the headless
+  output, with no missing-glyph boxes.  `caelestia shell drawers toggle
+  sidebar|launcher|dashboard`, `toaster info`, `nexus open`, and
+  `lock lock`/`unlock` worked over IPC.  A fractional settings stepper
+  (0.5–10, step 0.5) changed, clamped at its minimum, and saved to
+  `shell.json`.  With `FONTCONFIG_FILE` unset there was no Fontconfig error.
+  `caelestia --version` reports shell 2.5.0 revision `d999d48…` distributed by
+  GNU Guix (tay channel); Quickshell shows as not on PATH because `qs` is
+  reached only through the wrapper.  Warnings seen came from the isolated
+  setup: no system bus (UPower, Bluetooth, power profiles), no PipeWire, no
+  `~/.face`, missing launcher application icons without an icon theme, and a
+  `qt.svg` warning about the `guix-icon.svg` system asset.  Not tested:
+  password/PAM authentication, fprintd/howdy, notifications on the user's real
+  session bus, clipboard, audio/brightness/network backends, physical input or
+  a DRM seat, and live cutover.
+
 ## Validate
 
 ```sh
@@ -303,6 +540,8 @@ make check-datamosh-security # package build plus argv-injection smoke test
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
+make check-fontra   # local no-graft build plus conversion/workflow/HTTP smoke
+make build-fontra   # local --no-grafts --no-offload build
 APOUT_FIXTURE=/path/to/cleared-v7-echo APOUT_FIXTURE_PROVENANCE='recorded source' APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE=yes make check-apout
 make check-durthang  # headless keyring failure plus loopback Telnet/GMCP map smoke
 make check-frostbite # namespaced Xvfb, XDG state, Ruby API, and loopback MUD smoke
@@ -311,7 +550,7 @@ make check-godisc   # fresh-HOME tmux workspace plus loopback Telnet smoke
 make check-kbtin    # fresh-HOME loopback Telnet/parser smoke
 make check-kildclient # Guix Xvfb plus fresh-HOME loopback fake-MUD connection
 make check-kmuddy   # fresh-XDG Xvfb plus loopback Telnet/MCCP/MXP smoke
-make check-kitty-bitmap # channel-pinned Guix build plus source/key-encoding invariants and headless PCF rasterization
+make check-kitty-bitmap # channel-pinned Guix build plus runtime version, Meta/Alt key-encoding, and headless PCF rasterization
 make check-kitty-bitmap-oldguix # clean-clone build under a Guix pinned to the pre-2026-08-26 dependency graph
 make check-lyntin   # fresh-HOME version and loopback fake-MUD protocol smoke
 make check-mmapper  # fresh-XDG Qt plus namespaced local TLS-proxy smoke
@@ -341,8 +580,10 @@ because the host Guix may have an older Kitty definition.  Override
 needed.  `check-kitty-bitmap-oldguix` clones the channel at the committed
 HEAD (uncommitted work is invisible to it, so stage new files first) and
 builds `kitty-bitmap` under a Guix pinned to commit 21c3d67, the last
-revision whose rolling `kitty` predates the two Go modules the channel now
-supplies itself; override that commit with `OLD_GUIX_COMMIT`.
+revision whose rolling `kitty` predates `emmansun/base64` and
+`sgtdi/fswatcher`, after realizing every channel-private Go module and
+`shader-slang` by name;
+override that commit with `OLD_GUIX_COMMIT`.
 
 The first signed commit authorizes subsequent channel commits through
 `.guix-authorizations`.  The authorized OpenPGP fingerprint is

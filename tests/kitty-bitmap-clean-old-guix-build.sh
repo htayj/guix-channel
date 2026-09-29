@@ -2,10 +2,13 @@
 # Regression: kitty-bitmap must build under a Guix revision that predates
 # upstream's 2026-08-26 addition of go-github-com-emmansun-base64 and
 # go-github-com-sgtdi-fswatcher to the rolling `kitty' inputs.  kitty-bitmap
-# pins Kitty 0.48.2's source but inherits its dependency graph, so without the
+# pins Kitty 0.49.1's source but inherits its dependency graph, so without the
 # channel-private kitty-bitmap-go-deps module the Go build fails with
-# `cannot find package' for exactly those two modules.  The build runs in a
-# disposable clean clone so uncommitted or local files cannot leak in.
+# `cannot find package' for those two modules and for go-shm/v2, which no Guix
+# revision packages.  Kitty 0.49 also compiles its shaders with `slangc' at
+# build time, which only the channel's shader-slang package supplies.  The
+# build runs in a disposable clean clone so uncommitted or local files cannot
+# leak in.
 set -eu
 
 # Pin the OLD side explicitly: plain `guix' is whatever this machine happens
@@ -45,7 +48,8 @@ echo "clean clone at $(git rev-parse --short HEAD); old guix $OLD_GUIX_COMMIT"
 # regressed on another machine.
 dep_roots=''
 for dep in go-github-com-emmansun-base64-kitty-bitmap \
-           go-github-com-sgtdi-fswatcher-kitty-bitmap; do
+           go-github-com-sgtdi-fswatcher-kitty-bitmap \
+           go-github-com-kovidgoyal-go-shm-v2-kitty-bitmap; do
   dep_out=$($guix_prefix build -L guix --no-grafts "$dep") || {
     echo "channel-private dependency $dep failed to build" >&2
     exit 1
@@ -66,6 +70,27 @@ for dep in go-github-com-emmansun-base64-kitty-bitmap \
   dep_roots="$dep_roots${dep_roots:+:}$found_dep"
   echo "$dep -> $found_dep"
 done
+
+# shader-slang is a long C++ build that kitty-bitmap needs natively for its
+# shader compilation.  Realize it by name for the same blame-pinning reason and
+# prove the installed compiler runs under the old graph.
+slang_out=$($guix_prefix build -L guix --no-grafts shader-slang) || {
+  echo 'channel dependency shader-slang failed to build' >&2
+  exit 1
+}
+slangc=
+for candidate in $slang_out; do
+  if test -x "$candidate/bin/slangc"; then
+    slangc=$candidate/bin/slangc
+    break
+  fi
+done
+test -n "$slangc" || {
+  echo 'shader-slang built no bin/slangc' >&2
+  exit 1
+}
+"$slangc" -version
+echo "shader-slang -> $slangc"
 
 # fswatcher's own test suite is disabled in the channel (it drives live
 # inotify/fanotify syscalls against fixed sleeps, so it measures the builder's

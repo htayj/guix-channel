@@ -1,0 +1,199 @@
+Add a services.weatherEnabled option (default true) to Caelestia shell 2.5.0.
+Upstream always geolocates through ip-api.com when services.weatherLocation is
+empty, from shell startup, the dashboard, and the lock screen's 15-minute
+timer; dashboard.showWeather only hides a dashboard tab.  With
+weatherEnabled false, the Weather service makes no ip-api, Nominatim, or
+Open-Meteo request, ignores replies still in flight, clears fetched data, and
+the lock screen weather card and dashboard weather tab are hidden.  Setting it
+back to true resumes the upstream flow.
+
+Upstream status: Not submitted; local privacy option.
+
+--- a/README.md
++++ b/README.md
+@@ -236,7 +236,7 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
+ > - `nexus`: `networkRescanInterval`
+ > - `notifs`: `actionOnClick`, `defaultExpireTimeout`, `expire`, `fullscreen`, `fullscreenExpireTimeout`
+ > - `paths`: `lyricsDir`, `wallpaperDir`
+-> - `services`: `audioIncrement`, `brightnessIncrement`, `clockFormat`, `dataUnits`, `defaultPlayer`, `gpuType`, `lyricsBackend`, `maxVolume`, `playerAliases`, `sensorUnits`, `smartScheme`, `visualiserBars`, `weatherLocation`, `weatherUnits`
++> - `services`: `audioIncrement`, `brightnessIncrement`, `clockFormat`, `dataUnits`, `defaultPlayer`, `gpuType`, `lyricsBackend`, `maxVolume`, `playerAliases`, `sensorUnits`, `smartScheme`, `visualiserBars`, `weatherEnabled`, `weatherLocation`, `weatherUnits`
+ > - `utilities`: `toasts.*`, `vpn.*`
+ >
+ > </details>
+@@ -740,6 +740,7 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
+         "enableMicrophone": false
+     },
+     "services": {
++        "weatherEnabled": true,
+         "weatherLocation": "",
+         "weatherUnits": "Auto",
+         "sensorUnits": "Celsius",
+--- a/modules/dashboard/Content.qml
++++ b/modules/dashboard/Content.qml
+@@ -40,7 +40,7 @@ Item {
+                 component: weatherComponent,
+                 iconName: "cloud",
+                 text: Tr.tr("Weather"),
+-                enabled: Config.dashboard.showWeather
++                enabled: Config.dashboard.showWeather && GlobalConfig.services.weatherEnabled
+             }
+         ];
+         return allTabs.filter(tab => tab.enabled);
+--- a/modules/lock/Content.qml
++++ b/modules/lock/Content.qml
+@@ -17,6 +17,7 @@ RowLayout {
+ 
+         WeatherInfo {
+             Layout.fillWidth: true
++            visible: GlobalConfig.services.weatherEnabled
+             rootHeight: root.height
+         }
+ 
+--- a/modules/lock/WeatherInfo.qml
++++ b/modules/lock/WeatherInfo.qml
+@@ -20,7 +20,7 @@ StyledRect {
+     color: Colours.tPalette.m3surfaceContainer
+ 
+     Timer {
+-        running: true
++        running: GlobalConfig.services.weatherEnabled
+         triggeredOnStart: true
+         repeat: true
+         interval: 900000 // 15 minutes
+--- a/plugin/src/Caelestia/Config/serviceconfig.hpp
++++ b/plugin/src/Caelestia/Config/serviceconfig.hpp
+@@ -23,6 +23,8 @@ CONFIG_LIST_TYPE(PlayerAlias, PlayerAliasList)
+ class ServiceConfig : public settings::ObjectNode {
+     CONFIG_NODE(ServiceConfig, settings::ObjectNode)
+ 
++    // Guix: false disables all location and weather network requests
++    CONFIG_GLOBAL_PROPERTY(bool, weatherEnabled, true)
+     CONFIG_GLOBAL_PROPERTY(QString, weatherLocation, {})
+     // Auto guesses based on locale
+     CONFIG_GLOBAL_ENUM_PROPERTY(TemperatureUnit, weatherUnits, TemperatureUnit::Auto)
+--- a/services/Weather.qml
++++ b/services/Weather.qml
+@@ -11,6 +11,9 @@ import qs.utils
+ Singleton {
+     id: root
+ 
++    // Guix: services.weatherEnabled gates every location and weather request.
++    readonly property bool weatherEnabled: GlobalConfig.services.weatherEnabled
++
+     property string city
+     property string loc
+     property var cc
+@@ -40,6 +43,9 @@ Singleton {
+     }
+ 
+     function reload(): void {
++        if (!weatherEnabled)
++            return;
++
+         const configLocation = GlobalConfig.services.weatherLocation;
+ 
+         if (configLocation) {
+@@ -58,7 +64,7 @@ Singleton {
+ 
+                 // Protect against stale responses overwriting the manually-set location,
+                 // in case the config was updated while this request was in-flight.
+-                if (GlobalConfig.services.weatherLocation)
++                if (!root.weatherEnabled || GlobalConfig.services.weatherLocation)
+                     return;
+ 
+                 let response;
+@@ -164,6 +170,9 @@ Singleton {
+     }
+ 
+     function fetchCityFromCoords(coords: string): void {
++        if (!weatherEnabled)
++            return;
++
+         if (cachedCities.has(coords)) {
+             city = cachedCities.get(coords);
+             return;
+@@ -184,6 +193,9 @@ Singleton {
+         };
+ 
+         Requests.get(nominatimUrl, text => {
++            if (!root.weatherEnabled)
++                return;
++
+             let geo;
+             try {
+                 geo = JSON.parse(text).features?.[0]?.properties.geocoding;
+@@ -205,16 +217,25 @@ Singleton {
+             console.warn(lc, "No locality in nominatim response");
+             city = Tr.trCtx("Unknown city", "weather location unavailable");
+         }, error => {
++            if (!root.weatherEnabled)
++                return;
++
+             console.warn(lc, `Nominatim request failed: ${error}`);
+             city = Tr.trCtx("Unknown city", "weather location unavailable");
+         }, nominatimHeaders);
+     }
+ 
+     function fetchCoordsFromCity(cityName: string): void {
++        if (!weatherEnabled)
++            return;
++
+         const lang = Qt.locale().name.split("_")[0] || "en";
+         const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=${lang}&format=json`;
+ 
+         Requests.get(url, text => {
++            if (!root.weatherEnabled)
++                return;
++
+             const json = JSON.parse(text);
+             if (json.results && json.results.length > 0) {
+                 const result = json.results[0];
+@@ -228,11 +249,14 @@ Singleton {
+     }
+ 
+     function fetchWeatherData(): void {
+-        const url = getWeatherUrl();
++        const url = weatherEnabled ? getWeatherUrl() : "";
+         if (url === "")
+             return;
+ 
+         Requests.get(url, text => {
++            if (!root.weatherEnabled)
++                return;
++
+             const json = JSON.parse(text);
+             if (!json.current || !json.daily)
+                 return;
+@@ -325,6 +349,23 @@ Singleton {
+         return conditions[code] || Tr.trCtx("Unknown", "weather condition");
+     }
+ 
++    // Drop fetched data so disabled weather never shows stale values.  In-flight
++    // replies are discarded by their callbacks; rate-limit state is kept.
++    function clear(): void {
++        pendingCoords = "";
++        city = "";
++        loc = "";
++        cc = null;
++        forecast = [];
++        hourlyForecast = [];
++    }
++
++    onWeatherEnabledChanged: {
++        if (weatherEnabled)
++            reload();
++        else
++            clear();
++    }
+     onLocChanged: fetchWeatherData()
+     onCitiesLoadedChanged: {
+         if (!citiesLoaded || !pendingCoords)
+@@ -345,7 +386,7 @@ Singleton {
+ 
+     Timer {
+         interval: 3600000 // 1 hour
+-        running: true
++        running: root.weatherEnabled
+         repeat: true
+         onTriggered: fetchWeatherData()
+     }

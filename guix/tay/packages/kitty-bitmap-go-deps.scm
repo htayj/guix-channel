@@ -1,6 +1,6 @@
 ;;; Channel-private Go module dependencies for kitty-bitmap.
 ;;;
-;;; kitty-bitmap pins Kitty 0.48.2's source, but inherits its dependency
+;;; kitty-bitmap pins Kitty 0.49.1's source, but inherits its dependency
 ;;; graph from the rolling Guix `kitty' package.  Upstream Guix added
 ;;; go-github-com-emmansun-base64 and go-github-com-sgtdi-fswatcher as kitty
 ;;; inputs on 2026-08-26 (after the 2026-08-17 Guix revision this channel's
@@ -10,6 +10,12 @@
 ;;; packaged them) let kitty-bitmap build against both older and current Guix
 ;;; revisions.  They are verbatim apart from fswatcher's disabled tests and
 ;;; dropped test-only input, documented at that package.
+;;;
+;;; Kitty 0.49.1 also moved from github.com/kovidgoyal/go-shm to its new
+;;; major-version import path github.com/kovidgoyal/go-shm/v2, which no Guix
+;;; revision packages yet.  The go-shm/v2 definition below follows the shape
+;;; of Guix's go-github-com-kovidgoyal-go-shm (v1.0.0).  The inherited v1
+;;; package is still needed: go-github-com-kovidgoyal-imaging imports it.
 ;;;
 ;;; The package `name' fields carry a distinct "-kitty-bitmap" suffix so the
 ;;; definitions cannot collide with upstream Guix's identically-named
@@ -25,6 +31,7 @@
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (gnu packages golang-build)
   #:export (kitty-bitmap-go-emmansun-base64
+            kitty-bitmap-go-kovidgoyal-go-shm-v2
             kitty-bitmap-go-sgtdi-fswatcher))
 
 (define kitty-bitmap-go-emmansun-base64
@@ -52,6 +59,34 @@
 @url{https://rfc-editor.org/rfc/rfc4648.html, RFC 4648}.  This package keeps
 the same public API and behavior as Go's standard @code{encoding/base64},
 while using architecture-specific SIMD implementations where available.")
+    (license license:bsd-3)))
+
+(define kitty-bitmap-go-kovidgoyal-go-shm-v2
+  (package
+    (name "go-github-com-kovidgoyal-go-shm-v2-kitty-bitmap")
+    (version "2.0.1")
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+              (url "https://github.com/kovidgoyal/go-shm")
+              (commit (string-append "v" version))))
+       (file-name (git-file-name name version))
+       (sha256
+        (base32 "0lkkqc6cxkkjrpb6b3bpfv7rgna50rdajrsvq4kzv5p3wl23fg8s"))))
+    (build-system go-build-system)
+    (arguments
+     (list
+      #:import-path "github.com/kovidgoyal/go-shm/v2"))
+    (propagated-inputs
+     (list go-golang-org-x-sys))
+    (home-page "https://github.com/kovidgoyal/go-shm")
+    (synopsis "POSIX shared memory across various Unix flavors")
+    (description
+     "Tools to create and manage shared memory (POSIX shared memory) across
+all Unix variants.  Pure Go, no external dependencies.  Implements Go versions
+of @code{shm_open()} and @code{shm_unlink()} that interoperate with the libc
+versions.")
     (license license:bsd-3)))
 
 (define kitty-bitmap-go-sgtdi-fswatcher

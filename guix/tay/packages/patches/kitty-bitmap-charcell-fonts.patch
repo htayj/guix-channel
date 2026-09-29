@@ -6,10 +6,10 @@ that spacing class in Kitty's primary monospace font map so a configured
 Unscii family is not silently replaced by DejaVu Sans Mono.
 
 diff --git a/kitty/fonts/fontconfig.py b/kitty/fonts/fontconfig.py
-index b6ed506..2789470 100644
+index 4c50aafa..25d359f7 100644
 --- a/kitty/fonts/fontconfig.py
 +++ b/kitty/fonts/fontconfig.py
-@@ -8,6 +8,7 @@ from functools import lru_cache
+@@ -7,6 +7,7 @@
  from typing import Literal, NamedTuple, Optional, cast
  
  from kitty.fast_data_types import (
@@ -17,7 +17,7 @@ index b6ed506..2789470 100644
      FC_DUAL,
      FC_MONO,
      FC_SLANT_ITALIC,
-@@ -47,7 +48,7 @@ def create_font_map(all_fonts: tuple[FontConfigPattern, ...]) -> FontMap:
+@@ -55,7 +56,7 @@ def clear_caches() -> None:
  @lru_cache(maxsize=2)
  def all_fonts_map(monospaced: bool = True) -> FontMap:
      if monospaced:
@@ -26,7 +26,7 @@ index b6ed506..2789470 100644
      else:
          # allow non-monospaced and bitmapped fonts as these are used for
          # symbol_map
-@@ -56,7 +57,7 @@ def all_fonts_map(monospaced: bool = True) -> FontMap:
+@@ -64,7 +65,7 @@ def all_fonts_map(monospaced: bool = True) -> FontMap:
  
  
  def is_monospace(descriptor: FontConfigPattern) -> bool:
@@ -35,7 +35,7 @@ index b6ed506..2789470 100644
  
  
  def is_variable(descriptor: FontConfigPattern) -> bool:
-@@ -139,7 +140,7 @@ class FCScorer(Scorer):
+@@ -149,7 +150,7 @@ def score(self, candidate: Descriptor) -> Score:
          italic_score = abs((FC_SLANT_ITALIC if self.italic else FC_SLANT_ROMAN) - candidate['slant'])
          monospace_match = 0
          if self.monospaced:
