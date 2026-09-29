@@ -117,6 +117,35 @@ no font was installed into a user profile.  Copyright 2016 The Amstelvar Project
 Authors; SIL OFL 1.1, with no Reserved Font Name declared.  Notices are under
 `share/doc/amstelvar-1.001`.
 
+## Trial by Combat
+
+`trial-by-combat` packages upstream `0.1.0` at commit
+`4263df6da017acfe3240288266de4a9400d904a4`.  Its 70 runtime npm archives are
+fixed-hash inputs matching the lockfile; development-only Biome is omitted.
+Pixi.js 8.2.6 and the OFL-licensed Press Start 2P font are served locally,
+without a CDN.  MIT/ISC/BSD dependency notices and the font's OFL grant are
+installed under `share/doc/trial-by-combat`.
+
+```sh
+guix build -L guix --no-grafts trial-by-combat
+make check-trial-by-combat
+PORT=4178 trial-by-combat
+```
+
+Open `http://localhost:4178/?player=spectate` or `?player=admin`.  Match logging
+defaults to `TBC_MATCH_LOG=0`, avoiding writes into the installed source tree.
+The upstream server has no provider/model requirement; no service is activated
+by installation.
+
+On 2026-09-29, local build, all 129 upstream tests, reproducibility rebuild and
+offline lint passed.  Isolated loopback-only runtime proof exercised player
+join/ready, a real match turn, spectator WebSocket updates, admin pause/resume,
+and clean shutdown.  Chromium rendered both spectator and admin pages using
+the vendored renderer/font, with no page errors or failed loads; output NAR
+remained unchanged.  `make check-trial-by-combat` explicitly regenerates
+`.goocastle/evidence/issue-749.png` via `--evidence`, rather than accepting an
+old image.  The final proof uses OMP calls, not the legacy Goocastle adapter.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
