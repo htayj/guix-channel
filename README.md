@@ -451,6 +451,34 @@ UTF-8 byte limits are checked.  Output NAR and read-only checks pass.
 `.goocastle/evidence/issue-732.png` shows actual terminal gameplay; the image
 alone is not the evidence for save/restore, which is asserted by the PTY runner.
 
+## Letter Hunt
+
+`letter-hunt` 002 builds the pinned `letterhunt002.tar.gz` source archive
+(SHA-256 `c53398658812dc6aa9300748f5fa0f89665d692ee15dafa8af464ff08a6f5059`)
+as the curses port only.  The source snippet removes the prebuilt Linux and
+Windows programs and libraries, the unclearly licensed bitmap fonts, and the
+SDL port; the installed output contains no SDL references.  `LICENSE.TXT`
+(the game's BSD-style notice, the complete MT19937 notice, and the
+public-domain dedications of the maps and word list) and `README.TXT` are
+installed, and the unmodified upstream data files are checked by hash.  The
+launcher keeps the save and high scores in `$XDG_STATE_HOME/letter-hunt`
+(fallback `~/.local/state/letter-hunt`), never in the store.
+
+On 2026-09-30, source build, reproducibility rebuild (`--check`) and offline
+lint passed (relative patch-resolution warnings remain).
+`make check-letter-hunt` runs `letter-hunt --guix-smoke` from `PATH` in a
+fresh HOME/XDG tree inside an unprivileged network namespace and requires
+`LETTER_HUNT_RUNTIME_OK`.  The first PTY session takes a turn, shows the
+character sheet and saves; the second, reaching the same directory through
+the HOME fallback, must consume the save (the game unlinks it after loading,
+before drawing the first screen), shows the character sheet and saves again.
+The re-save must match the first byte-for-byte through the avatar, score,
+captured words, letter buffer and dungeon map header.  The output NAR stays
+unchanged, is read-only, and receives no save or score files.
+`.goocastle/evidence/issue-703.png` shows the actual restored game's maze,
+`Shields:` status line and character sheet; the image alone is not the
+save/restore evidence, which is asserted by the PTY runner.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
