@@ -302,6 +302,32 @@ loaded-game frame before quitting, not the blank alternate-screen restoration.
 The exported raw stream is a byte-identical prefix of the complete successful
 session.  No user save or installed profile is touched.
 
+## xNetHack
+
+`xnethack` 10.0 builds the TTY game from upstream commit
+`6eef39403f16f65e13f5d57242ee8d036307687a`, statically linked with Guix's Lua
+5.4.8.  The NGPL and Lua MIT notices are installed.  The release `linux.500`
+build hint replaces the research's debug-only hint; no PDCurses or unneeded
+submodules are fetched.  Immutable data lives in `share/xnethack`, while save,
+lock and score files use `$XDG_STATE_HOME/xnethack` (fallback
+`~/.local/state/xnethack`).  Playground paths over 128 bytes fail before writes.
+
+```sh
+guix build -L guix --no-grafts xnethack
+make check-xnethack
+xnethack
+```
+
+Local build, reproducibility rebuild and offline lint passed on 2026-09-29.
+The network-isolated PTY smoke moves a configured character until the turn
+counter advances, saves, restores the same turn, and quits cleanly.  It also
+checks UTF-8 byte-length boundaries and unchanged read-only store contents.
+Runtime proof exposed a real game-end crash when dump-log paths are unset;
+the package guards the nullable paths before calling the upstream nonnull
+formatter instead of enabling writes to `/tmp`.  The actual restored dungeon
+and `T:2` status appear in `.goocastle/evidence/issue-735.png`.  No host game
+state or installed profile changed.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
