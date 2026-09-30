@@ -31,7 +31,7 @@ RELEASE_FONT_PACKAGES := cadr-fonts-latin cadr-fonts-symbols dec-fonts \
 FONT_PACKAGES := atarist-font amstelvar $(RELEASE_FONT_PACKAGES)
 PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	computer-builder rust-computus custom-nix-pkgs databases-team75 dorxng-mcp buzz \
-	hyprland-preview-share-picker dank-material-shell-shell-only sbcl-ivory-key manna-cadet sbcl-qbcl \
+	hyprland-preview-share-picker hy3 dank-material-shell-shell-only sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
 	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a emacs-aidermacs \
 	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq apout kitty-bitmap shader-slang opencode \
@@ -46,7 +46,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	cutlassrl dhack diabaig dnethack dragonslayer grippy-socks gruesome hack hunger-games hydra-slayer \
 	martins-dungeon-bash nlarn robotfindskitten fontra dicom2mesh modus \
 	trial-by-combat xrogue keymapper liquid input-remapper emacs-cl \
-	liveonce xnethack qiling ai-code-interface-el \
+	liveonce xnethack qiling ai-code-interface-el chatgpt-el \
 	caelestia-shell caelestia-cli quickshell-for-caelestia libcava m3shapes \
 	dart-sass gpu-screen-recorder font-rubik font-material-symbols-rounded \
 	font-nerd-caskaydia-cove
@@ -378,6 +378,10 @@ check-qiling:
 check-ai-code-interface-el:
 	GUIX="$(GUIX)" tests/ai-code-interface-el-smoke.sh
 
+.PHONY: check-chatgpt-el
+check-chatgpt-el:
+	GUIX="$(GUIX)" tests/chatgpt-el-smoke.sh
+
 check-fontra:
 	GUIX="$(GUIX)" tests/fontra-smoke.sh
 
@@ -402,7 +406,7 @@ check-emacs-aidermacs:
 check: check-source-count check-sentinelone check-datamosh-security check-dicom2mesh \
 	check-modus check-amstelvar check-trial-by-combat check-xrogue check-keymapper \
 	check-liquid check-input-remapper check-emacs-cl check-liveonce check-xnethack \
-	check-qiling check-ai-code-interface-el \
+	check-qiling check-ai-code-interface-el check-chatgpt-el \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-kitty-bitmap-oldguix check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \

@@ -390,6 +390,24 @@ unchanged store contents.  `.goocastle/evidence/issue-662.png` was regenerated
 from that framebuffer.  The tiny boot-sector game's sparse symbols and HUD
 are expected; the execution proof comes from QEMU interaction, not image text.
 
+## ChatGPT.el
+
+`chatgpt-el` packages the GPL-3.0 client at revision
+`51c658aa40a106a4ee3afe4376f5ed3d6024c8a9` (`0.2-0.51c658a`) with Polymode.
+It is an Emacs frontend for a separately supplied `lwe` executable, not the
+OpenAI desktop application.  CLI discovery uses `executable-find`, avoiding
+upstream's broken shell-error default when `which` is absent.
+
+`make check-chatgpt-el` tests the installed client in a fresh network-disabled
+environment: missing-key rejection, slash completion, a real subprocess pipe,
+and `cg-query` sending a multiline request.  The local fixture computes 43 from
+the supplied expression and the client receives a fenced response.  This is
+client/transport proof, **not a provider/model response claim**.  Source build,
+reproducibility rebuild and offline lint passed on 2026-09-30; upstream Emacs
+and Polymode warnings remain visible.  `.goocastle/evidence/issue-642.png`
+shows the actual captured client buffer.  Real provider use requires the user's
+external CLI and credentials; no profile or account was changed.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
@@ -473,6 +491,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `claude-code` | Anthropic Claude Code 2.1.233 | Proprietary agentic coding command-line interface |
 | `claude-desktop` | Anthropic Claude Desktop 1.30096.1 | Proprietary Electron client for Claude on Linux |
 | `hyprland-preview-share-picker` | WhySoBad/hyprland-preview-share-picker | GTK4 Hyprland screencast picker with window previews |
+| `hy3` | outfoxxed/hy3 (`d7e0c58`, matched to Hyprland 0.55.4) | Manual tree layout and tabbed groups, `lib/hyprland/libhy3.so` |
 | `dank-material-shell-shell-only` | DankMaterialShell 0.5.1 | Full upstream shell with external GTK/Qt icon mutation guarded by the user's settings and `DMS_DISABLE_MATUGEN` |
 | `caelestia-shell` | caelestia-dots/shell 2.5.0 | Quickshell desktop shell, `Caelestia` QML plugin, and `caelestia-shell` launcher |
 | `caelestia-cli` | caelestia-dots/cli 1.1.3 | `caelestia` shell control, colour scheme, screenshot, recording, and picker command |
@@ -770,6 +789,32 @@ and never publish them.  Never supply a management token at build time or place
 it in the repository or store.  Running the agent requires a privileged system
 service and persistent state; this channel does not configure or validate that
 runtime deployment.
+
+### hy3 layout plugin
+
+`(tay packages hy3)` pins `d7e0c58a1116df3d79f24a225f17b988112ca1ad`,
+the upstream `hyprpm.toml` match for Hyprland 0.55.4 (`a0136d8c`).
+It uses GCC 15 and the compositor's header dependency versions, builds in
+Release mode, and retains the plugin's runtime ABI check. The recipe rejects
+a different Hyprland package version: update the source pin and rebuild
+together with compositor upgrades. Guix's Hyprland package omits hyprpm.
+
+```sh
+guix build -L ~/projects/guix-channel/guix hy3 --cores=1 --max-jobs=1
+guix install -L ~/projects/guix-channel/guix hy3
+```
+
+Load with `plugin = ~/.guix-profile/lib/hyprland/libhy3.so` in hyprland.conf.
+Use `workspace = N, layout:hy3` for an individual workspace rather than
+changing every workspace's default. The basedbox dotfiles provide active
+workspace selection and layout-aware navigation; the package itself does
+not alter user configuration.
+
+Verified 2026-09-30: Release build, scoped install and live ABI-checked load;
+temporary-window IPC exercise of hy3 tabs, focus, movement and group actions.
+Selected offline metadata/derivation lint passed; full lint timed out fetching
+the CVE database. The initial debug compilation was terminated; Release
+succeeded. Physical key-event and visual layout verification are not claimed.
 
 ### Caelestia shell
 
