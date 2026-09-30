@@ -328,6 +328,31 @@ formatter instead of enabling writes to `/tmp`.  The actual restored dungeon
 and `T:2` status appear in `.goocastle/evidence/issue-735.png`.  No host game
 state or installed profile changed.
 
+## Qiling binary emulation framework
+
+`qiling` 1.4.10 packages revision `da210f0757f3581de7e607b2b826b26eaa5aef66`
+with the `qltool` CLI and its Python dependency closure, including Unicorn
+2.1.3.  The pinned README explicitly grants GPL-2.0-or-later, correcting the
+research brief's GPL-2.0-only classification.  No unlicensed rootfs submodule,
+firmware or prebuilt example guest is included.  The package assembles its own
+freestanding x86-64 ELF fixture from installed assembly source; this recipe
+currently supports x86_64-linux hosts because it uses native x86-64 binutils.
+
+```sh
+guix build -L guix --no-grafts qiling
+make check-qiling
+qiling-smoke
+```
+
+Local build, reproducibility rebuild and offline lint passed on 2026-09-29.
+Thirteen upstream tests cover CPU models and real inline shellcode emulation
+on x86, x86-64, MIPS, ARM, Thumb and ARM64.  Tests requiring the excluded rootfs
+are not claimed.  The isolated installed `qiling-smoke` invokes real `qltool`
+on the source-built guest and emits exactly `Hello, World!` on stdout, with
+write/exit emulation traces on stderr.  Store-integrity and no-state-leak checks
+passed.  `.goocastle/evidence/issue-755.png` captures that actual execution;
+Qiling is an emulator, not a security sandbox for arbitrary untrusted samples.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
