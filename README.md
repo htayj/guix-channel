@@ -408,6 +408,30 @@ and Polymode warnings remain visible.  `.goocastle/evidence/issue-642.png`
 shows the actual captured client buffer.  Real provider use requires the user's
 external CLI and credentials; no profile or account was changed.
 
+## ECA Emacs client
+
+`eca-emacs` packages Apache-2.0 revision
+`f1455057000612a8ef5f9ba0b4eebf3368b0f0fd` as `0.0.1-0.f145505`.
+It installs the Elisp client only: provide `eca` on PATH or set
+`eca-custom-command`.  The package removes automatic server downloading,
+updating and removal; a missing server produces an explicit install/provide
+error.  Opening an ordinary chat does not synchronously probe server versions.
+
+On 2026-09-30, source build, reproducibility rebuild, 417 Buttercup specs and
+offline lint passed (relative patch-path warnings remain).  `make check-eca-emacs`
+uses a private local JSON-RPC fixture process, not a provider: real client
+initialize/chat/completion requests, controlled error replies, malformed frames,
+early exit, shutdown and process cleanup are asserted.  Network access and
+download commands are denied, HOME/XDG are temporary, and output integrity is
+checked.  Removed downloader specs are replaced by custom/PATH/missing-server
+coverage rather than excluding the entire process test file.
+
+`.goocastle/evidence/issue-640.png` shows the actual Emacs buffers and handled
+`FAKE_COMPLETION_ERROR`.  Its unchanged terminal-stream prefix ends before
+terminal restoration.  This proves client error handling, not model inference.
+The runtime is Emacs loading the installed library; no nonexistent package
+executable or legacy capture-adapter compatibility is claimed.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
