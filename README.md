@@ -624,6 +624,39 @@ another turn and saves again.  The output NAR is unchanged and read-only.
 restore session that was inspected: it shows the welcome-back message,
 `Time: 3.0`, `Health: 18/18` and the map.
 
+## LineRogue
+
+`linerogue` 2 builds Chris Morris's pinned `linerogue2-src.tgz` source
+release (an unmodified Internet Archive capture of the author's archive)
+with the channel's private, source-built Kaya 0.4.4 compiler, using Kaya's
+seed mode so the build is reproducible.  The GPL-2.0-or-later `COPYING` and
+`GPL-2`, the PCRE notice and the notices of the statically linked Kaya
+runtime are installed.  The launcher keeps the high-score table in
+`$XDG_DATA_HOME/linerogue` (fallback `~/.local/share/linerogue`); nothing is
+setuid or setgid.
+
+On 2026-09-30, source build, reproducibility rebuild (`--check`) and offline
+lint passed cleanly.  The runtime check passed after the test stopped
+searching for literal map rows, which curses splits with colour escapes, and
+searched for the HUD, player, trail and wall glyphs instead.
+`make check-linerogue` runs `linerogue --smoke` from `PATH` in a fresh
+HOME/XDG tree under a timeout and private user, network and PID namespaces.
+The first PTY session steers the bike through at least ten verified moves,
+each checked against the drawn position, then reverses into its own trail
+to crash and declines another game; the high-score file it writes must
+decode to the table it displayed.  Because such a short game usually scores
+0 and leaves the default table unchanged, the test then replaces only the
+five integer scores in that task-owned, game-written file with the distinct
+sentinel table 9105, 7304, 5203, 3102, 1001, keeping the executable's
+marshalling header and layout.  This is an explicit fixture, not naturally
+earned scores.  A second process must load it, display the expected top five
+on its Game Over screen and rewrite the file with that table.  Its own
+low score does not prove that a new score is inserted into the top five.  No
+other files are written and the output NAR is unchanged.
+`.goocastle/evidence/issue-704.png` shows actual gameplay: the map with the
+player and its trail, and the `Power: 3` / `Score: 0` HUD.  The high-score
+persistence is asserted by the PTY runner, not shown in the image.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
