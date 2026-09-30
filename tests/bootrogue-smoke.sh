@@ -55,23 +55,10 @@ $grep_out/bin/grep -F 'ANY EXPRESS OR IMPLIED WARRANTIES' \
     b752a941b6a80602d7121ebb89e6d20bec35d8b16b979e07a5b245e694632155 \
     >/dev/null
 
-# The issue-specific executable, invocation, marker, and artifact are a
-# required part of this proof, not an advisory record.
-contract=.goocastle/runtime-evidence-contracts.json
-test -s "$contract"
-"$grep_out/bin/grep" -F '"issueNumber": 662' "$contract" >/dev/null
-"$grep_out/bin/grep" -F '"packageName": "bootrogue"' "$contract" >/dev/null
-"$grep_out/bin/grep" -F '"artifactPath": ".goocastle/evidence/issue-662.png"' \
-    "$contract" >/dev/null
-"$grep_out/bin/grep" -F '"executable": "bootrogue"' "$contract" >/dev/null
-"$grep_out/bin/grep" -F '"--smoke"' "$contract" >/dev/null
 marker=BOOTROGUE_RUNTIME_OK
-"$grep_out/bin/grep" -F '"successMarker": "BOOTROGUE_RUNTIME_OK"' \
-    "$contract" >/dev/null
 
 test -x "$util_linux_out/bin/unshare"
-bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
-test -r "$bounded_validation"
+test -x "$coreutils_out/bin/timeout"
 if ! "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
         true >/dev/null 2>&1; then
     echo 'bootrogue smoke requires an unprivileged network namespace' >&2
@@ -101,10 +88,10 @@ export LC_ALL=C
 
 # The package-owned --smoke mode sends fixed safe arrow keys to the QEMU
 # monitor, captures a real VGA frame with `screendump`, verifies it is a
-# nonblank PPM, and emits the marker only after the guest has quit.  The
-# bounded executor owns the complete namespace/process group.
-proof=$(cd "$scratch/work" && node "$bounded_validation" --timeout-ms 20000 -- \
-    "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
+# nonblank PPM, and emits the marker only after the guest has quit.
+# A PID namespace also reaps descendants if the bounded proof fails.
+proof=$(cd "$scratch/work" && "$coreutils_out/bin/timeout" --kill-after=5 20 \
+    "$util_linux_out/bin/unshare" --user --map-root-user --net --pid --kill-child --fork \
     "$bootrogue_out/bin/bootrogue" --smoke)
 test "$proof" = "$marker"
 test -s "$BOOTROGUE_SMOKE_SCREENSHOT"

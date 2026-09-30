@@ -3,7 +3,7 @@
 (define-module (tay packages bootrogue)
   #:use-module (guix build-system gnu)
   #:use-module (guix build utils)
-  #:use-module (guix download)
+  #:use-module (guix git-download)
   #:use-module (guix gexp)
   #:use-module (guix packages)
   #:use-module ((guix licenses) #:prefix license:)
@@ -23,14 +23,13 @@
     (version "0-118e1cb")
     (source
      (origin
-       (method url-fetch)
-       (uri (string-append
-             "https://github.com/nanochess/bootRogue/archive/"
-             %bootrogue-commit ".tar.gz"))
-       (file-name (string-append name "-" version ".tar.gz"))
-       ;; SHA-256: 06999ef0fd01d17b5eb8812f4951bd7ee9fc0cb493ddafdde0b7ea9f36b16040
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/nanochess/bootRogue")
+             (commit %bootrogue-commit)))
+       (file-name (git-file-name name version))
        (sha256
-        (base32 "0h30n4v9zsmpw3fszpcknh6grsbypm8ljbw1p1g7pl81zpq9x686"))))
+        (base32 "107p7bbb8229fvp47pa52vrrnci053f4afk4vkp99gx403v669rp"))))
     (build-system gnu-build-system)
     (arguments
      (list
