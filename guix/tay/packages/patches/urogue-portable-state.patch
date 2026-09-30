@@ -1,0 +1,63 @@
+Keep all mutable state under the HOME that the urogue launcher points at
+the user's XDG data directory.  Upstream first tries a host-wide score file
+under /usr/local and only falls back to HOME when that file is
+inaccessible, so listing or recording a score could read or write outside
+the user's state.  Also reject a HOME too long for the game's fixed 80-byte
+pathname buffers instead of overflowing them; leave room for the longest
+suffix, /rogue.save (or /.rog_score).
+
+--- a/rogue/main.c
++++ b/rogue/main.c
+@@ -226,15 +226,20 @@
+ 	strcpy(home, ".");
+     strcat(home, "/");
+ #else
+-    /* get home from environment */
+-    if ((env = getenv("HOME")) != NULL)
+-	strcpy(home, env);
++    /* File names append a slash and up to ten characters to home. */
++    env = getenv("HOME");
+ #ifdef __ANDROID__
+-    else if (strlen(home) < 5)  /* airplane mode */
+-	strcpy(home, "/data/user/0/com.example.urogue/app_flutter");
+-#endif
+-    else
+-	strcpy(home, ".");
++    if (env == NULL)
++        env = "/data/user/0/com.example.urogue/app_flutter";
++#endif
++    if (env == NULL)
++        env = ".";
++    if (strlen(env) > LINELEN - sizeof("/rogue.save")) {
++        fprintf(stderr, "urogue: HOME is too long (at most %zu bytes)\n",
++                LINELEN - sizeof("/rogue.save"));
++        exit(1);
++    }
++    strcpy(home, env);
+     strcat(home, "/");
+ #endif
+ 
+--- a/rogue/rip.c
++++ b/rogue/rip.c
+@@ -368,15 +368,15 @@
+     /*
+      * Score file
+      */
+-    strcpy(score_file, SCOREDIR);
+-    if (access(score_file, R_OK | W_OK) != 0) {
+-	strcpy(score_file, home);
++    /* Keep scores with this player's saves.  A host-wide file under
++     * /usr/local may be writable on non-Guix systems, and listing scores
++     * must not read somebody else's data or write outside XDG state. */
++    strcpy(score_file, home);
+ #ifdef _WIN32
+-	strcat(score_file, "rogue.score");
++    strcat(score_file, "rogue.score");
+ #else
+-	strcat(score_file, ".rog_score");
++    strcat(score_file, ".rog_score");
+ #endif
+-    }
+ 
+     /*
+      * Open file and read list of top scores

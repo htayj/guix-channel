@@ -432,6 +432,25 @@ terminal restoration.  This proves client error handling, not model inference.
 The runtime is Emacs loading the installed library; no nonexistent package
 executable or legacy capture-adapter compatibility is claimed.
 
+## UltraRogue
+
+`urogue` 1.0.8 builds pinned revision
+`0cebe8a805d64e9593fd4e84790e9c0b2353f169` from source with ncurses.
+The complete custom redistribution license is installed, including attribution,
+advertising and derived-name conditions; it is not mislabeled as plain BSD.
+The wrapper confines saves and scores to `$XDG_DATA_HOME/urogue` (fallback
+`~/.local/share/urogue`) and rejects state paths exceeding 68 bytes before
+creating directories, including under UTF-8 locales.
+
+On 2026-09-30, source build, reproducibility rebuild and offline lint passed
+(relative patch-resolution warnings remain).  `make check-urogue` exercises
+real character creation, a turn-consuming food action, inventory, save,
+restore and score recording in a private non-root network/PID namespace.
+The seeded read-only score file rejects writes; valid/overlong state paths and
+UTF-8 byte limits are checked.  Output NAR and read-only checks pass.
+`.goocastle/evidence/issue-732.png` shows actual terminal gameplay; the image
+alone is not the evidence for save/restore, which is asserted by the PTY runner.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
