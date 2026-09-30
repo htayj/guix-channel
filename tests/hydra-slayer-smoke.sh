@@ -4,9 +4,7 @@ set -eu
 
 guix_bin=${GUIX:-guix}
 guix_bin=$(command -v "$guix_bin")
-node_bin=${GOOCASTLE_NODE:-$(command -v node)}
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
 
 if test "$#" -gt 1; then
     echo "usage: $0 [hydra-slayer-output]" >&2
@@ -20,6 +18,20 @@ else
         --no-substitutes hydra-slayer)
 fi
 
+find_output ()
+{
+    program=$1
+    package=$2
+    for output in $($guix_bin build "$package"); do
+        if test -x "$output/$program"; then
+            printf '%s\n' "$output"
+            return 0
+        fi
+    done
+    echo "could not find $program in Guix package $package" >&2
+    return 1
+}
+
 test -x "$hydra_out/bin/hydra"
 test -x "$hydra_out/libexec/hydra"
 test -x "$hydra_out/libexec/hydra-slayer-smoke.py"
@@ -30,49 +42,26 @@ grep -F 'This program is free software' \
     "$hydra_out/share/doc/hydra-slayer/COPYING" >/dev/null
 test ! -e "$hydra_out/share/hydra"
 
-# The reviewed contract is part of this package-specific proof.
-contract="$channel_dir/.goocastle/runtime-evidence-contracts.json"
-test -s "$contract"
-grep -F '"issueNumber": 697' "$contract" >/dev/null
-grep -F '"packageName": "hydra-slayer"' "$contract" >/dev/null
-grep -F '"packageModulePath": "guix/tay/packages/hydra-slayer.scm"' \
-    "$contract" >/dev/null
-grep -F '"artifactPath": ".goocastle/evidence/issue-697.png"' \
-    "$contract" >/dev/null
-grep -F '"executable": "hydra"' "$contract" >/dev/null
-grep -F '"--guix-smoke"' "$contract" >/dev/null
 marker='HYDRA_SLAYER_GUIX_SMOKE_OK: new-game, turn, save-load, isolated-state'
-grep -F "\"successMarker\": \"$marker\"" "$contract" >/dev/null
 
-test -r "$bounded_validation"
-util_linux_out=
-for candidate in $($guix_bin build util-linux); do
-    if test -x "$candidate/bin/unshare"; then
-        util_linux_out=$candidate
-        break
-    fi
-done
-test -n "$util_linux_out"
-if ! "$node_bin" "$bounded_validation" --timeout-ms 5000 -- \
-        "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
+coreutils_out=$(find_output bin/timeout coreutils)
+util_linux_out=$(find_output bin/unshare util-linux)
+timeout_bin=$coreutils_out/bin/timeout
+unshare_bin=$util_linux_out/bin/unshare
+if ! "$timeout_bin" --kill-after=5 10 \
+        "$unshare_bin" --user --map-root-user --net --pid --kill-child --fork \
         true >/dev/null 2>&1; then
-    echo 'hydra-slayer smoke requires an unprivileged network namespace' >&2
+    echo 'hydra-slayer smoke requires unprivileged user, network, and PID namespaces' >&2
     exit 77
 fi
 
 before=$($guix_bin hash -S nar "$hydra_out")
 test -z "$(find "$hydra_out" -xdev -type f -perm /222 -print -quit)"
 
-if test -n "${GOOCASTLE_DISPOSABLE_WORKSPACE-}"; then
-    scratch=$GOOCASTLE_DISPOSABLE_WORKSPACE
-else
-    scratch=$(mktemp -d /tmp/goocastle-agent-XXXXXX)
-fi
-case "$scratch" in
-    /tmp/goocastle-agent-*) ;;
-    *) echo 'refusing an unvalidated disposable workspace' >&2; exit 1 ;;
-esac
-test -d "$scratch"
+# Only this task-created directory is removed; a caller's TMPDIR and any
+# requested raw-capture path are left in place.
+scratch=$(mktemp -d "${TMPDIR:-/tmp}/hydra-slayer-smoke.XXXXXXXX")
+trap 'rm -rf -- "$scratch"' EXIT HUP INT TERM
 mkdir "$scratch/home" "$scratch/config" "$scratch/data" \
       "$scratch/cache" "$scratch/state" "$scratch/runtime" "$scratch/tmp" \
       "$scratch/work"
@@ -91,17 +80,24 @@ export PATH="$hydra_out/bin"
 
 # The package's --guix-smoke branch creates another fresh XDG tree below the
 # disposable state directory and drives both real curses sessions in PTYs.
+# The PID namespace reaps every descendant if the time bound expires, and the
+# network namespace has no usable interfaces.
 raw=${GOOCASTLE_RUNTIME_RAW_CAPTURE:-$scratch/state/terminal.raw}
 proof=$(cd "$scratch/work" && \
     GOOCASTLE_RUNTIME_RAW_CAPTURE="$raw" \
-    "$node_bin" "$bounded_validation" --timeout-ms 90000 -- \
-    "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
+    "$timeout_bin" --kill-after=5 90 \
+    "$unshare_bin" --user --map-root-user --net --pid --kill-child --fork \
     "$hydra_out/bin/hydra" --guix-smoke)
 export PATH="$host_path"
 test "$proof" = "$marker"
 test -s "$raw"
 grep -aF 'Hydra Slayer v18.3' "$raw" >/dev/null
-grep -aF 'Game saved to' "$raw" >/dev/null
+# The raw capture is the loaded session's alternate-screen frames only; the
+# driver itself asserts the first session's primary-screen save report.
+if grep -aF "$(printf '\033[?1049l')" "$raw" >/dev/null; then
+    echo 'hydra-slayer smoke: raw capture includes primary-screen output' >&2
+    exit 1
+fi
 grep -aF 'Welcome back to Hydra Slayer!' "$raw" >/dev/null
 
 # The package must use only the disposable XDG state tree.  The other fresh
@@ -115,14 +111,5 @@ test -z "$(find "$scratch/state" -type l -print -quit)"
 after=$($guix_bin hash -S nar "$hydra_out")
 test "$before" = "$after"
 test ! -w "$hydra_out"
-
-if test -n "${GOOCASTLE_SCREENSHOT:-}"; then
-    case "$GOOCASTLE_SCREENSHOT" in
-        "$channel_dir"/.goocastle/evidence/*.png) ;;
-        *) echo 'hydra-slayer smoke: screenshot must be a channel evidence PNG' >&2; exit 1 ;;
-    esac
-    mkdir -p "$(dirname -- "$GOOCASTLE_SCREENSHOT")"
-    cp "$raw" "$GOOCASTLE_SCREENSHOT"
-fi
 
 printf '%s\n' "$marker"

@@ -163,7 +163,13 @@ def main():
 
     raw_capture = os.environ.get("GOOCASTLE_RUNTIME_RAW_CAPTURE")
     if raw_capture:
-        Path(raw_capture).write_bytes(first + second)
+        # Hand over only the loaded game's alternate-screen frames: the second
+        # session up to its first endwin (rmcup), before any primary-screen
+        # printf output, so the evidence is one real curses frame sequence.
+        frame_end = second.find(b"\x1b[?1049l")
+        if frame_end < 0:
+            raise RuntimeError("the second session never left the alternate screen")
+        Path(raw_capture).write_bytes(second[:frame_end])
     else:
         (smoke_root / "terminal.raw").write_bytes(first + second)
 

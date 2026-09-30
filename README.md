@@ -479,6 +479,52 @@ unchanged, is read-only, and receives no save or score files.
 `Shields:` status line and character sheet; the image alone is not the
 save/restore evidence, which is asserted by the PTY runner.
 
+## Pyrosimple
+
+`pyrosimple` builds pinned upstream revision
+`d24655a708059d322633e361e2e204983e51f491` (16 commits after v2.14.2) with
+its missing Python helpers (`bencode.py`, `parsimonious`, `lockfile`), each
+installing its exact upstream notice; the complete GPLv3 `COPYING` is
+installed.  pyrotorque needs the lockfile-backed PID API (`is_locked`,
+`read_pid`), which Guix's filelock-patched `python-daemon` lacks, so a private
+variant uses the unpatched upstream 3.1.2 release with its declared `lockfile`
+dependency.  A build phase passes mktor's `--no-date` through to
+`Metafile.from_path`, so the option really omits `creation date`.  A
+`pyrosimple` command runs `rtcontrol`.
+
+On 2026-09-30, the build with its test suite (374 passed; the 4 live rTorrent
+tests skipped), reproducibility rebuild (`--check`) and offline lint passed.
+`make check-pyrosimple` loads all eight commands and, with an empty `PATH`, a
+fresh HOME/XDG tree and networking unshared, uses `mktor` to create the same
+two-file private metainfo twice byte-for-byte (pinned digest), checks its
+pieces with an independent decoder, verifies good and corrupted payloads with
+`lstor --check-data`, and edits the comment with `chtor` without changing the
+info hash.  `pyrotorque --status` reports no daemon.  The output stays
+unchanged and read-only.  `.goocastle/evidence/issue-643.png` shows the actual
+`lstor` listing of that metainfo.
+
+This is a local-only proof: no rTorrent instance, XML-RPC endpoint, seedbox or
+running pyrotorque daemon was exercised, and nothing was deployed.
+
+## Hydra Slayer
+
+`hydra-slayer` 18.3 builds the standalone ncurses console game from pinned
+NotEye revision `55bb69d716a9fb269c6364f9df89d4bc260cb1a1`, without NotEye's
+graphical frontend or assets, and installs the complete GPL notice.  The
+launcher keeps the game's files in `$XDG_STATE_HOME/hydra-slayer` (fallback
+`~/.local/state/hydra-slayer`).
+
+On 2026-09-30, source build, reproducibility rebuild and offline lint passed.
+`make check-hydra-slayer` runs `hydra --guix-smoke` directly under a
+90-second `timeout` and `unshare` with private user, network and PID
+namespaces.  The full lifecycle is asserted: the first PTY session starts a new
+game, takes a turn and must report and create the save; the second must load
+it (`Welcome back to Hydra Slayer!`) and quit without recording a score.  All
+state stays in the disposable XDG tree, and the output NAR is unchanged and
+read-only.  `.goocastle/evidence/issue-697.png` shows a genuine
+alternate-screen prefix of the loaded session, up to its first leave of the
+alternate screen; it supersedes the earlier mixed-screen image.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
