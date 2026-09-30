@@ -253,6 +253,31 @@ immutable store output.  `.goocastle/evidence/issue-756.png` contains verbatim
 symbol output, not a generated success caption.  GUI/device remapping was not
 exercised against the live desktop.
 
+## Common Lisp implemented in Emacs Lisp
+
+`emacs-cl` packages `larsbrinkhoff/emacs-cl` revision
+`19e950e73a336aad476b0d051819a682863a2eff` as `0-19e950e`, under GPL-2.0-only.
+The compatibility patch supports Emacs 30.2 by renaming conflicting local
+implementation symbols and adapting evaluator/compiler representations; it
+does not override Emacs's global compiler or macroexpansion internals.
+The installed library is loaded through its `load-cl.el`, not Emacs's own
+deprecated `cl` compatibility library.
+
+```sh
+guix build -L guix --no-grafts emacs-cl
+make check-emacs-cl
+```
+
+On 2026-09-29, local build and reproducibility rebuild passed with the complete
+upstream suite: 180 passes and zero evaluation, compilation or execution
+failures.  Offline lint had only relative patch-resolution warnings.  The
+installed, network-isolated evaluator smoke passed arithmetic, functions,
+keyword arguments, loops, integer parsing/formatting, bignums, compilation,
+closures, mixed nested backquotes, condition handling and bounded debugger EOF
+exit; store files remained unchanged/read-only.  Upstream obsolete-alias
+warnings remain visible, not suppressed.  `.goocastle/evidence/issue-606.png`
+shows the actual result `(42)` of defining and calling a Common Lisp function.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
