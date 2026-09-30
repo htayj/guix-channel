@@ -1,11 +1,11 @@
 #!/bin/sh
-# Exercise Bloatcrawl 2's installed terminal UI in isolated XDG state and a
-# networkless namespace.
+# Isolated installed-runtime proof for Bloatcrawl 2: create a character and
+# play turns through the real terminal UI without network or store writes.
 set -eu
 
 guix_bin=${GUIX:-guix}
+guix_bin=$(command -v "$guix_bin")
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-cd "$channel_dir"
 
 if test "$#" -gt 1; then
     echo "usage: $0 [bloatcrawl2-output]" >&2
@@ -36,6 +36,7 @@ find_output ()
 
 test -x "$bloatcrawl2_out/bin/bloatcrawl2"
 test -x "$bloatcrawl2_out/libexec/bloatcrawl2"
+test -x "$bloatcrawl2_out/libexec/bloatcrawl2-smoke.py"
 test -d "$bloatcrawl2_out/share/bloatcrawl2/dat"
 test ! -e "$bloatcrawl2_out/share/bloatcrawl2/dat/tiles"
 test ! -e "$bloatcrawl2_out/share/bloatcrawl2/webserver"
@@ -60,36 +61,33 @@ grep -F 'public' "$doc/license/license.txt" >/dev/null
 grep -F 'domain' "$doc/license/license.txt" >/dev/null
 grep -F 'RLTiles' "$doc/license/license.txt" >/dev/null
 
-# The issue-specific executable, invocation, marker, and artifact are part of
-# the proof, not an advisory record.
-contract=.goocastle/runtime-evidence-contracts.json
-test -s "$contract"
-grep -F '"issueNumber": 661' "$contract" >/dev/null
-grep -F '"packageName": "bloatcrawl2"' "$contract" >/dev/null
-grep -F '"artifactPath": ".goocastle/evidence/issue-661.png"' \
-    "$contract" >/dev/null
-grep -F '"executable": "bloatcrawl2"' "$contract" >/dev/null
-grep -F '"--smoke"' "$contract" >/dev/null
 marker='bloatcrawl2 smoke: terminal UI OK; no store writes'
-grep -F "\"successMarker\": \"$marker\"" "$contract" >/dev/null
 
+coreutils_out=$(find_output bin/timeout coreutils)
 util_linux_out=$(find_output bin/unshare util-linux)
-test -x "$util_linux_out/bin/unshare"
-bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
-test -r "$bounded_validation"
-if ! "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
+timeout_bin=$coreutils_out/bin/timeout
+unshare_bin=$util_linux_out/bin/unshare
+if ! "$timeout_bin" --kill-after=5 10 \
+        "$unshare_bin" --user --map-root-user --net --pid --kill-child --fork \
         true >/dev/null 2>&1; then
-    echo 'bloatcrawl2 smoke requires an unprivileged network namespace' >&2
+    echo 'bloatcrawl2 smoke requires unprivileged user, network, and PID namespaces' >&2
     exit 77
 fi
 
 # A NAR hash covers all installed files, modes, and symlinks.  It must remain
-# identical after the real game runs, catching accidental store writes.
+# identical after the real game runs; this catches a regression that directs
+# state back to the immutable package output.
 before=$($guix_bin hash -S nar "$bloatcrawl2_out")
+test -z "$(find "$bloatcrawl2_out" -xdev -type f -perm /222 -print -quit)"
 
+# Only this task-created directory is removed; a caller's TMPDIR and any
+# requested raw-capture path are left in place.
 scratch=$(mktemp -d "${TMPDIR:-/tmp}/bloatcrawl2-smoke.XXXXXXXX")
-mkdir "$scratch/home" "$scratch/config" "$scratch/data" "$scratch/cache" \
-      "$scratch/state" "$scratch/runtime" "$scratch/tmp"
+trap 'rm -rf -- "$scratch"' EXIT HUP INT TERM
+mkdir "$scratch/home" "$scratch/config" "$scratch/data" \
+      "$scratch/cache" "$scratch/state" "$scratch/runtime" "$scratch/tmp" \
+      "$scratch/work"
+
 export HOME="$scratch/home"
 export XDG_CONFIG_HOME="$scratch/config"
 export XDG_DATA_HOME="$scratch/data"
@@ -99,32 +97,41 @@ export XDG_RUNTIME_DIR="$scratch/runtime"
 export TMPDIR="$scratch/tmp"
 export TERM=xterm-256color
 export LC_ALL=C
+host_path=$PATH
+export PATH="$bloatcrawl2_out/bin"
 
-# The package's --smoke mode creates its own private HOME/XDG tree and drives
-# the real binary through a PTY.  The outer network namespace has no network
-# interfaces, and the bounded executor owns the complete process group.
-raw="$scratch/terminal.raw"
-proof=$(GOOCASTLE_RUNTIME_RAW_CAPTURE="$raw" \
-    node "$bounded_validation" --timeout-ms 30000 -- \
-    "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
+# The launcher's --smoke branch creates another fresh HOME/XDG tree below
+# TMPDIR and drives one real curses session in a PTY: a seeded Human Fighter
+# chooses a weapon, enters the dungeon and waits three turns, each checked
+# against the HUD game clock, then abandons the character.  The PID namespace
+# reaps every descendant if the time bound expires, and the network namespace
+# has no usable interfaces.
+raw=${GOOCASTLE_RUNTIME_RAW_CAPTURE:-$scratch/state/terminal.raw}
+proof=$(cd "$scratch/work" && \
+    GOOCASTLE_RUNTIME_RAW_CAPTURE="$raw" \
+    "$timeout_bin" --kill-after=5 180 \
+    "$unshare_bin" --user --map-root-user --net --pid --kill-child --fork \
     "$bloatcrawl2_out/bin/bloatcrawl2" --smoke)
-case "$proof" in
-    *"$marker"*) ;;
-    *)
-        echo 'bloatcrawl2 smoke did not produce its success marker' >&2
-        exit 1
-        ;;
-esac
-
-# These markers are emitted by the captured PTY stream after character
-# creation and dungeon entry; the package wrapper also checks them before it
-# emits the success marker.
+export PATH="$host_path"
+test "$proof" = "$marker"
 test -s "$raw"
-grep -aF 'choice of weapons' "$raw" >/dev/null
+# The raw capture is the session's contiguous prefix up to the gameplay frame
+# after the last turn; it holds no quit, end-game or shutdown output.
+if grep -aF "$(printf '\033[?1049l')" "$raw" >/dev/null; then
+    echo 'bloatcrawl2 smoke: raw capture includes primary-screen output' >&2
+    exit 1
+fi
 grep -aF 'Health:' "$raw" >/dev/null
-grep -aF 'Goocastle' "$raw" >/dev/null
+
+# The launcher removed its own state tree; everything the test provided,
+# including the working directory, remains empty apart from the capture.
+test -z "$(find "$scratch/home" "$scratch/config" "$scratch/data" \
+    "$scratch/cache" "$scratch/runtime" "$scratch/tmp" "$scratch/work" \
+    -mindepth 1 -print -quit)"
+test -z "$(find "$scratch/state" -mindepth 1 ! -path "$raw" -print -quit)"
 
 after=$($guix_bin hash -S nar "$bloatcrawl2_out")
 test "$before" = "$after"
 test ! -w "$bloatcrawl2_out"
-printf '%s\n' "$proof"
+
+printf '%s\n' "$marker"

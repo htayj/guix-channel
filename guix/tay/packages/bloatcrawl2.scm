@@ -1,6 +1,7 @@
 ;;; GNU Guix package for the Bloatcrawl 2 terminal roguelike.
 
 (define-module (tay packages bloatcrawl2)
+  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system gnu)
   #:use-module (guix gexp)
   #:use-module (guix git-download)
@@ -18,6 +19,9 @@
   #:use-module (gnu packages python)
   #:use-module (gnu packages python-xyz)
   #:use-module (gnu packages sqlite))
+
+(define bloatcrawl2-smoke-script
+  (local-file (search-tay-package-file "bloatcrawl2-smoke.py")))
 
 (define-public bloatcrawl2
   (package
@@ -93,7 +97,7 @@ class Species(MutableMapping):"))))
                      (bin (string-append #$output "/bin"))
                      (program (string-append libexec "/bloatcrawl2"))
                      (smoke-runner (string-append libexec
-                                    "/bloatcrawl2-smoke-runner.py"))
+                                    "/bloatcrawl2-smoke.py"))
                      (launcher (string-append bin "/bloatcrawl2")))
                 ;; Upstream install also manages mutable paths.  install-data
                 ;; only copies the immutable console assets and documentation.
@@ -115,105 +119,8 @@ class Species(MutableMapping):"))))
                 (mkdir-p doc)
                 (install-file "crawl" libexec)
                 (rename-file (string-append libexec "/crawl") program)
-                (call-with-output-file smoke-runner
-                  (lambda (port)
-                    (display "#!" port)
-                    (display #$(file-append python "/bin/python3") port)
-                    (display "\nimport errno\nimport os\nimport pty\n" port)
-                    (display "import select\nimport signal\nimport sys\n" port)
-                    (display "import time\n\n" port)
-                    (display "program, *args = sys.argv[1:]\n" port)
-                    (display "pid, master = pty.fork()\n" port)
-                    (display "if pid == 0:\n    os.execv(program," port)
-                    (display " [program, *args])\n\n" port)
-                    (display "sent_weapon = False\nsent_begin = False\n" port)
-                    (display "sent_play = False\n" port)
-                    (display "sent_quit = False\nsent_more = False\n" port)
-                    (display "sent_inventory = False\nsent_goodbye = False\n" port)
-                    (display "seen = b''\n" port)
-                    (display "quit_after = None
-deadline = time.monotonic() + 20
-" port)
-                    (display "while True:\n" port)
-                    (display "    remaining = deadline - time.monotonic()
-" port)
-                    (display "    if remaining <= 0:\n" port)
-                    (display "        os.kill(pid, signal.SIGTERM)\n" port)
-                    (display "        os.waitpid(pid, 0)
-        sys.exit(1)
-" port)
-                    (display "    timeout = min(remaining, 0.25)\n" port)
-                    (display
-                     "    ready, _, _ = select.select([master], [], [], timeout)
-"
-                     port)
-                    (display "    if ready:\n" port)
-                    (display "        try:
-            data = os.read(master, 4096)
-" port)
-                    (display "        except OSError as error:\n" port)
-                    (display "            if error.errno == errno.EIO:
-" port)
-                    (display "                break\n            raise\n" port)
-                    (display "        if not data:\n            break\n" port)
-                    (display "        os.write(1, data)\n" port)
-                    (display "        seen = (seen + data)[-16384:]\n" port)
-                    (display "        if (not sent_weapon and " port)
-                    (display "b'choice of weapons' in seen):\n" port)
-                    (display "            os.write(master, b'a')\n" port)
-                    (display "            sent_weapon = True\n" port)
-                    (display "        if (sent_weapon and not sent_begin and "
-                     port)
-                    (display "b'[Enter] Begin!' in seen):\n" port)
-                    (display "            os.write(master, b'\\r')\n" port)
-                    (display "            sent_begin = True\n" port)
-                    (display "        if (sent_begin and not sent_play and "
-                             port)
-                    (display "b'Health:' in seen):\n" port)
-                    ;; A rest and a movement command prove that the new
-                    ;; character has entered the playable dungeon state.
-                    (display "            os.write(master, b'.l')\n" port)
-                    (display "            sent_play = True\n" port)
-                    (display "            quit_after = time.monotonic() + 0.25
-"
-                     port)
-                    (display "    if (sent_play and not sent_quit and " port)
-                    (display
-                     "quit_after is not None and time.monotonic() >= quit_after):
-"
-                     port)
-                    ;; Ctrl-Q is the documented no-save quit command.  This
-                    ;; release asks for the literal word "yes" before Enter.
-                    (display "        os.write(master, b'\\x11yes\\r')\n" port)
-                    (display "        sent_quit = True\n\n" port)
-                    ;; Quitting shows the end-game pager, inventory summary,
-                    ;; and final goodbye screen in this release.
-                    (display "    if (sent_quit and not sent_more and " port)
-                    (display "b'--more--' in seen):\n" port)
-                    (display "        os.write(master, b' ')\n" port)
-                    (display "        sent_more = True\n" port)
-                    (display "    if (sent_more and not sent_inventory and " port)
-                    (display "b'Inventory:' in seen):\n" port)
-                    (display "        os.write(master, b'\\x1b')\n" port)
-                    (display "        sent_inventory = True\n" port)
-                    (display "    if (sent_inventory and not sent_goodbye and " port)
-                    (display "b'Goodbye, Goocastle.' in seen):\n" port)
-                    (display "        os.write(master, b'\\r')\n" port)
-                    (display "        sent_goodbye = True\n\n" port)
-                    (display "_, status = os.waitpid(pid, 0)\n" port)
-                    (display
-                     "if (not sent_weapon or not sent_begin or not sent_play
-"
-                     port)
-                    (display "        or not sent_quit or not sent_more\n" port)
-                    (display "        or not sent_inventory or not sent_goodbye\n" port)
-                    (display "        or b'choice of weapons' not in seen " port)
-                    (display "or b'Health:' not in seen\n" port)
-                    (display
-                     "        or not os.WIFEXITED(status) or os.WEXITSTATUS(status)):
-"
-                     port)
-                    (display "    sys.exit(1)\n" port)))
+                ;; The PTY driver creates a character and plays turns.
+                (copy-file #$bloatcrawl2-smoke-script smoke-runner)
                 (chmod smoke-runner #o555)
                 ;; LICENSE applies to the program as a whole.  CREDITS and
                 ;; the compatible component notices cover installed assets.
@@ -233,10 +140,11 @@ deadline = time.monotonic() + 20
                     (format port "program=~s~%output=~s~%" program
                             #$output)
                     (format port
-                            "cp=~s~%mkdir=~s~%mktemp=~s~%find=~s~%"
+                            "cp=~s~%mkdir=~s~%mktemp=~s~%rm=~s~%find=~s~%"
                             #$(file-append coreutils-minimal "/bin/cp")
                             #$(file-append coreutils-minimal "/bin/mkdir")
                             #$(file-append coreutils-minimal "/bin/mktemp")
+                            #$(file-append coreutils-minimal "/bin/rm")
                             #$(file-append findutils "/bin/find"))
                     (format port "python=~s~%runner=~s~%"
                             #$(file-append python "/bin/python3") smoke-runner)
@@ -264,38 +172,34 @@ deadline = time.monotonic() + 20
                     (display "if test \"${1:-}\" = --smoke" port)
                     (display " && test \"$#\" -eq 1; then\n" port)
                     (display "  scratch=$(\"$mktemp\" -d" port)
-                    (display " \"${TMPDIR:-/tmp}/bloatcrawl2-smoke.XXXXXXXX\")
-"
+                    (display " \"${TMPDIR:-/tmp}/bloatcrawl2-smoke.XXXXXXXX\")\n"
                              port)
-                    (display
-                     "  \"$mkdir\" -p \"$scratch/home\" \"$scratch/config\""
-                     port)
-                    (display " \"$scratch/cache\" \"$scratch/data\"\n" port)
-                    (display
-                     "  \"$mkdir\" -p \"$scratch/state\" \"$scratch/runtime\"
-"
-                     port)
-                    (display "  export HOME=\"$scratch/home\"\n" port)
-                    (display "  XDG_CONFIG_HOME=\"$scratch/config\"\n" port)
-                    (display "  XDG_CACHE_HOME=\"$scratch/cache\"\n" port)
-                    (display "  XDG_DATA_HOME=\"$scratch/data\"\n" port)
-                    (display "  XDG_STATE_HOME=\"$scratch/state\"\n" port)
-                    (display "  XDG_RUNTIME_DIR=\"$scratch/runtime\"\n" port)
-                    (display
-                     "  export XDG_CONFIG_HOME XDG_CACHE_HOME XDG_DATA_HOME"
-                     port)
-                    (display " XDG_STATE_HOME XDG_RUNTIME_DIR\n" port)
-                    (display "  export TERM=xterm-256color LC_ALL=C\n" port)
+                    (display "  trap '\"$rm\" -rf \"$scratch\"' EXIT HUP INT TERM\n"
+                             port)
+                    (display "  \"$mkdir\" -p \"$scratch/home\" \"$scratch/config\""
+                             port)
+                    (display " \"$scratch/cache\" \"$scratch/data\"" port)
+                    (display " \"$scratch/state\"" port)
+                    (display " \"$scratch/runtime\" \"$scratch/work\"\n" port)
+                    (display "  export HOME=\"$scratch/home\"" port)
+                    (display " XDG_CONFIG_HOME=\"$scratch/config\"" port)
+                    (display " XDG_CACHE_HOME=\"$scratch/cache\"" port)
+                    (display " XDG_DATA_HOME=\"$scratch/data\"" port)
+                    (display " XDG_STATE_HOME=\"$scratch/state\"" port)
+                    (display " XDG_RUNTIME_DIR=\"$scratch/runtime\"" port)
+                    (display " TERM=xterm-256color LC_ALL=C\n" port)
                     (display "  prepare_environment\n" port)
-                    ;; Capture the actual PTY stream for the runtime screenshot
-                    ;; adapter while retaining the isolated tree for inspection.
-                    (display "  cd \"$scratch\"\n" port)
-                    (display
-                             "  \"$python\" \"$runner\" \"$program\" -seed 285"
+                    ;; The PTY driver creates a seeded character, plays turns
+                    ;; on the HUD clock and quits.  It writes the session's
+                    ;; raw prefix, up to the last gameplay frame, to ui.raw.
+                    (display "  cd \"$scratch/work\"\n" port)
+                    (display "  pty_proof=$(\"$python\" \"$runner\" \"$program\""
                              port)
-                    (display " -no-save -name Goocastle -species Hu" port)
-                    (display " -background Fi >\"$scratch/ui.raw\"\n" port)
+                    (display " \"$scratch/ui.raw\")\n" port)
+                    (display "  test \"$pty_proof\" = BLOATCRAWL2_PTY_OK\n" port)
                     (display "  test -s \"$scratch/ui.raw\"\n" port)
+                    ;; Evidence capture receives the real PTY stream before
+                    ;; cleanup, so its PNG renders the terminal UI itself.
                     (display
                      "  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}\";"
                      port)
@@ -303,16 +207,17 @@ deadline = time.monotonic() + 20
                     (display "    \"$cp\" \"$scratch/ui.raw\"" port)
                     (display " \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n" port)
                     (display "  fi\n" port)
+                    ;; Scores, morgues and macros stay in the XDG data tree.
                     (display "  test -z \"$(\"$find\" \"$scratch/home\"" port)
                     (display " \"$scratch/config\" \"$scratch/cache\"" port)
                     (display " \"$scratch/state\" \"$scratch/runtime\"" port)
-                    (display " -mindepth 1 -print -quit)\"\n" port)
-                    (display "  test -d \"$scratch/data/bloatcrawl2\"\n" port)
-                    (display "  test ! -w \"$output\"\n" port)
+                    (display " \"$scratch/work\" -mindepth 1 -print -quit)\"\n"
+                             port)
+                    (display "  test -d \"$CRAWL_DIR\" && test ! -w \"$output\"\n"
+                             port)
                     (display "  printf '%s\\n'" port)
                     (display
-                     " 'bloatcrawl2 smoke: terminal UI OK; no store writes'
-"
+                     " 'bloatcrawl2 smoke: terminal UI OK; no store writes'\n"
                      port)
                     (display "  exit 0\nfi\n" port)
                     (display "run_game \"$@\"\n" port)))

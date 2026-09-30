@@ -657,6 +657,39 @@ other files are written and the output NAR is unchanged.
 player and its trail, and the `Power: 3` / `Score: 0` HUD.  The high-score
 persistence is asserted by the PTY runner, not shown in the image.
 
+## Bloatcrawl 2
+
+`bloatcrawl2` 2.2.0 builds the Bloatcrawl 2.2.0 tag (published 2020-01-01)
+from `https://github.com/Hellmonk/bloatcrawl2`, pinned to commit
+`ff89137ce52d26b891517517c0aec9013ed8bea5`, as a console-only build (empty
+`TILES`, so no SDL, fonts, sound or tile sources).  Two build patches adapt
+the release to current tools: `util/species-gen.py` uses Python 3.11's
+`collections.abc.MutableMapping`, and `ui.cc` includes `<cwctype>` for
+current libstdc++.  The upstream test suite is not run.  The GPL `LICENSE`,
+`CREDITS.txt` and the bundled component notices (CC0, LGPL, libpng, Lua,
+PCRE, Worley and the public-domain RLTiles notice) are installed under
+`share/doc/bloatcrawl2`.  The launcher keeps all game state in
+`$XDG_DATA_HOME/bloatcrawl2` (fallback `~/.local/share/bloatcrawl2`) as
+`CRAWL_DIR`, and points `HOME` there so the game's legacy `.crawl`
+directory stays in that tree too.
+
+On 2026-09-30, source build, reproducibility rebuild (`--check`), offline
+lint and the runtime check passed.  The successful build log still shows
+existing upstream compiler and Yacc warnings and the install step's `cc` and
+`git` probes; neither stopped the build.
+`make check-bloatcrawl2` runs `bloatcrawl2 --smoke` directly under a timeout
+with private user, network and PID namespaces, a fresh HOME/XDG tree and
+`PATH` limited to the package output.  The PTY runner starts a seeded Human
+Fighter, answers the real weapon-choice and Game Modifiers prompts, requires
+the new-character welcome, then waits three turns, each of which must advance
+the HUD `Time:` clock.  It then quits cleanly through the abandon
+confirmation, death pager, inventory and goodbye screens with exit status 0.
+The caller's directories stay empty and the output NAR is unchanged and
+read-only.  The proof is a seeded `-no-save` session, not proof of normal
+scoring or of saving and restoring a game.
+`.goocastle/evidence/issue-661.png` shows the actual dungeon map with
+`Health: 18/18` and `Time: 3.0`; its HUD also visibly includes `*WIZARD*`.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
