@@ -870,6 +870,45 @@ authentication, game download, cloud synchronization or credentials were used.
 Authentication remains the caller's explicit `--auth-config-path` token-file
 contract; no account, service or installed profile was changed.
 
+## Pinned Forth mode for Emacs
+
+The channel's `emacs-forth-mode` `0-4450a3a` packages GPL-3.0-only revision
+`4450a3a5629b579f5d2045d0d8aec84193e9a31f`, whose upstream header declares
+0.3.  Select the module explicitly: a bare `emacs-forth-mode` lookup currently
+selects Guix's separate 0.3 package, not this pinned channel build.
+
+```sh
+guix build -L guix --no-grafts \
+  -e '(@ (tay packages forth-mode) emacs-forth-mode)'
+make check-emacs-forth-mode
+```
+
+The package includes the major/block/interaction modes and nested interpreter
+backends, including the SwiftForth helper.  Guix generates its autoloads; the
+upstream build helper and test-generated autoload file are not installed.
+`run-forth` uses the absolute store path of the packaged Gforth interpreter,
+without a PATH-dependent wrapper.
+
+On 2026-09-30, the explicitly selected source build, reproducibility rebuild
+(`--check`), offline lint and installed editor/runtime proof passed.  The build
+ERT run, including compilation, reports 28 tests: 27 expected results, one
+network-dependent skip and zero unexpected results.  The separate ERT run
+reports 27 tests: 26 expected results, the same skip and zero unexpected
+results.  Only the live Forth-standard index retrieval test is skipped;
+Gforth-backed completion remains exercised.  Existing byte-compilation and
+Gforth load-path warnings remain visible, not suppressed.
+
+With private HOME/XDG, no user init files, an empty PATH and networking disabled,
+the installed mode visits copied upstream text/block fixtures and edits a real
+`.fth` buffer by inserting `*`.  It checks two-space indentation, comment/string/
+definition-name faces, definition and sexp navigation and the Imenu word index.
+The actual packaged Gforth backend evaluates the edited `square` definition at
+7 to produce 49, completes `2c` to `2Constant`, and exits normally with status 0
+after `bye`.  The installed output fingerprint is unchanged and store files
+remain read-only; no user source file, interpreter setup or installed profile
+was changed.  `.goocastle/evidence/issue-44.png` was visually inspected and shows
+the actual edited Forth buffer and the `Forth finished` runtime sentinel.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and

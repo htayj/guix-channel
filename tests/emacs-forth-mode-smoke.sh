@@ -14,7 +14,7 @@ if test "$#" -eq 1; then
     package_out=$1
 else
     package_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes \
-        emacs-forth-mode@0-4450a3a)
+        -e '(@ (tay packages forth-mode) emacs-forth-mode)')
 fi
 
 find_program_output() {
@@ -87,44 +87,80 @@ unshare_out=$(find_program_output bin/unshare util-linux)
 unshare_bin=$unshare_out/bin/unshare
 test -x "$unshare_bin"
 
-"$unshare_bin" --user --map-root-user --net --fork \
-    env -i HOME="$temporary/home" XDG_CONFIG_HOME="$temporary/config" \
-    XDG_DATA_HOME="$temporary/data" XDG_CACHE_HOME="$temporary/cache" \
-    XDG_STATE_HOME="$temporary/state" XDG_RUNTIME_DIR="$temporary/runtime" \
-    TMPDIR="$temporary" LC_ALL=C.UTF-8 PATH='' \
-    "$emacs_bin" --batch -Q -L "$lisp_dir" \
-    --eval "(let ((default-directory \"$fixtures/\")
-                  (create-lockfiles nil))
-              (require 'forth-mode)
-              (require 'forth-block-mode)
-              (require 'forth-interaction-mode)
-              (unless (string= forth-executable \"$gforth_bin\")
-                (error \"forth-executable was not set to packaged Gforth\"))
-              (dolist (fixture '(\"test/noblock.fth\" \"test/block1.fth\" \"test/block2.fth\"))
-                (find-file fixture)
-                (unless (eq major-mode 'forth-mode)
-                  (error \"forth-mode was not selected for %s\" fixture))
-                (if (string= fixture \"test/noblock.fth\")
-                    (when (bound-and-true-p forth-block-mode)
-                      (error \"ordinary source unexpectedly enabled block mode\"))
-                  (unless (bound-and-true-p forth-block-mode)
-                    (error \"Forth block fixture did not enable block mode\")))
-                (kill-buffer))
-              (run-forth)
-              (let ((process (get-buffer-process forth-interaction-buffer))
-                    (deadline (+ (float-time) 5)))
-                (while (and (not forth-implementation) (< (float-time) deadline))
-                  (accept-process-output process 0.1))
-                (unless (eq forth-implementation 'gforth)
-                  (error \"installed Gforth backend was not loaded\"))
-                (unless (string-match-p \"4\" (forth-interaction-send \"2 2 + .\"))
-                  (error \"packaged Gforth did not evaluate input\"))
-                (forth-kill)
-                (setq deadline (+ (float-time) 5))
-                (while (and (process-live-p process) (< (float-time) deadline))
-                  (accept-process-output process 0.1))
-                (when (process-live-p process)
-                  (error \"Gforth process was not killed cleanly\"))))"
+run_isolated() {
+    "$unshare_bin" --user --map-root-user --net --fork \
+        env -i HOME="$temporary/home" XDG_CONFIG_HOME="$temporary/config" \
+        XDG_DATA_HOME="$temporary/data" XDG_CACHE_HOME="$temporary/cache" \
+        XDG_STATE_HOME="$temporary/state" XDG_RUNTIME_DIR="$temporary/runtime" \
+        TMPDIR="$temporary" LC_ALL=C.UTF-8 PATH='' \
+        FORTH_SMOKE_FIXTURES="$fixtures" FORTH_SMOKE_GFORTH="$gforth_bin" \
+        "$@"
+}
+
+run_isolated "$emacs_bin" --batch -Q -L "$lisp_dir" \
+    -l "$channel_dir/tests/emacs-forth-mode-smoke.el" \
+    --eval '(forth-mode-smoke-run)'
+
+# Capture the real terminal Emacs scene, not a substitute display command.
+# The byte boundary written after redisplay keeps the exported PTY prefix
+# inside the final alternate screen, before Emacs restores the terminal.
+raw_capture=${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}
+if test -n "$raw_capture"; then
+    script_out=$(find_program_output bin/script util-linux)
+    stty_out=$(find_program_output bin/stty coreutils)
+    head_out=$(find_program_output bin/head coreutils)
+    script_bin=$script_out/bin/script
+    stty_bin=$stty_out/bin/stty
+    head_bin=$head_out/bin/head
+    test -x "$script_bin"
+    test -x "$stty_bin"
+    test -x "$head_bin"
+    script_log=$temporary/tty.script
+    # Isolated init files are read before terminal setup, unlike -Q, so
+    # xterm query replies cannot be injected by a replaying terminal.
+    mkdir -p "$temporary/home/.emacs.d"
+    printf '(setq package-enable-at-startup nil)\n' \
+        >"$temporary/home/.emacs.d/early-init.el"
+    printf '(setq inhibit-default-init t xterm-extra-capabilities nil)\n' \
+        >"$temporary/home/.emacs.d/init.el"
+    run_isolated TERM=xterm-256color FORTH_SMOKE_TTY_LOG="$script_log" \
+        FORTH_SMOKE_EVIDENCE="$temporary" \
+        "$script_bin" -q -f -e \
+        -c "$stty_bin rows 24 cols 80; exec $emacs_bin -nw \
+            --no-site-file --no-site-lisp --no-splash --no-x-resources \
+            -L $lisp_dir -l $channel_dir/tests/emacs-forth-mode-smoke.el \
+            --eval '(forth-mode-smoke-tty-scene)'" \
+        "$script_log" </dev/null >/dev/null || {
+        cat "$temporary/tty-scene.err" >&2 2>/dev/null || true
+        exit 1
+    }
+    test -f "$temporary/tty-scene.ok"
+    test ! -e "$temporary/tty-scene.err"
+    frame_bytes=$(cat "$temporary/tty-frame.bytes")
+    case $frame_bytes in
+        ''|*[!0-9]*) echo 'forth-mode smoke: invalid frame byte count' >&2; exit 1 ;;
+    esac
+    # Drop only script(1)'s leading banner from the recorded frame prefix.
+    "$head_bin" -c "$frame_bytes" "$script_log" |
+        sed -e '1{/^Script started on /d;}' >"$raw_capture"
+    esc=$(printf '\033')
+    last_enter=$(grep -abo "$esc\[?1049h" "$raw_capture" | sed -n '$s/:.*//p')
+    test -n "$last_enter"
+    last_leave=$(grep -abo "$esc\[?1049l" "$raw_capture" | sed -n '$s/:.*//p')
+    if test -n "$last_leave" && test "$last_leave" -gt "$last_enter"; then
+        echo 'forth-mode smoke: exported frame includes terminal restore' >&2
+        exit 1
+    fi
+    for proof in 'OMP Forth editing proof' 'square' 'Forth'; do
+        last_proof=$(grep -abo "$proof" "$raw_capture" | sed -n '$s/:.*//p')
+        test -n "$last_proof"
+        test "$last_proof" -gt "$last_enter"
+    done
+    if grep -aq "$esc\[>0c\|$esc]11;?" "$raw_capture"; then
+        echo 'forth-mode smoke: exported frame contains terminal queries' >&2
+        exit 1
+    fi
+fi
 
 after_fingerprint=$(output_fingerprint)
 test "$before_fingerprint" = "$after_fingerprint"
