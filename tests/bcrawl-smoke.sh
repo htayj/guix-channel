@@ -1,8 +1,10 @@
 #!/bin/sh
-# Exercise Bcrawl's installed terminal UI in isolated XDG and network state.
+# Isolated installed-runtime proof for Bcrawl: play, save and restore a
+# character through the real terminal UI without network or store writes.
 set -eu
 
 guix_bin=${GUIX:-guix}
+guix_bin=$(command -v "$guix_bin")
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 
 if test "$#" -gt 1; then
@@ -13,14 +15,15 @@ fi
 if test "$#" -eq 1; then
     bcrawl_out=$1
 else
-    bcrawl_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes bcrawl)
+    bcrawl_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts \
+        --no-substitutes bcrawl)
 fi
 
 find_output ()
 {
     program=$1
     package=$2
-    for output in $($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes "$package"); do
+    for output in $($guix_bin build "$package"); do
         if test -x "$output/$program"; then
             printf '%s\n' "$output"
             return 0
@@ -32,6 +35,7 @@ find_output ()
 
 test -x "$bcrawl_out/bin/bcrawl"
 test -x "$bcrawl_out/libexec/bcrawl"
+test -x "$bcrawl_out/libexec/bcrawl-smoke.py"
 test -d "$bcrawl_out/share/bcrawl/dat"
 test ! -e "$bcrawl_out/share/bcrawl/dat/tiles"
 
@@ -52,26 +56,16 @@ grep -F 'Lua is licensed under the terms of the MIT license' \
     "$doc/license/lualicense.txt" >/dev/null
 grep -F 'PCRE LICENCE' "$doc/license/pcre_license.txt" >/dev/null
 
-# The issue-specific executable, invocation, and marker are a required part
-# of the proof, not an advisory record.
-contract=$channel_dir/.goocastle/runtime-evidence-contracts.json
-test -s "$contract"
-grep -F '"issueNumber": 660' "$contract" >/dev/null
-grep -F '"packageName": "bcrawl"' "$contract" >/dev/null
-grep -F '"artifactPath": ".goocastle/evidence/issue-660.png"' "$contract" >/dev/null
-grep -F '"executable": "bcrawl"' "$contract" >/dev/null
-grep -F '"args": [' "$contract" >/dev/null
-grep -F '"--smoke"' "$contract" >/dev/null
 marker='bcrawl smoke: terminal UI OK; no store writes'
-grep -F "\"successMarker\": \"$marker\"" "$contract" >/dev/null
 
+coreutils_out=$(find_output bin/timeout coreutils)
 util_linux_out=$(find_output bin/unshare util-linux)
-test -x "$util_linux_out/bin/unshare"
-bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
-test -r "$bounded_validation"
-if ! "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
+timeout_bin=$coreutils_out/bin/timeout
+unshare_bin=$util_linux_out/bin/unshare
+if ! "$timeout_bin" --kill-after=5 10 \
+        "$unshare_bin" --user --map-root-user --net --pid --kill-child --fork \
         true >/dev/null 2>&1; then
-    echo 'bcrawl smoke requires an unprivileged network namespace' >&2
+    echo 'bcrawl smoke requires unprivileged user, network, and PID namespaces' >&2
     exit 77
 fi
 
@@ -79,20 +73,59 @@ fi
 # identical after the real game runs; this catches a regression that directs
 # state back to the immutable package output.
 before=$($guix_bin hash -S nar "$bcrawl_out")
+test -z "$(find "$bcrawl_out" -xdev -type f -perm /222 -print -quit)"
 
-# The launcher creates a new HOME/XDG tree and drives the actual terminal UI
-# through a PTY.  The outer bounded executor owns the complete process group,
-# while the namespace has no network interfaces.
-proof=$(node "$bounded_validation" --timeout-ms 30000 -- \
-    "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
+# Only this task-created directory is removed; a caller's TMPDIR and any
+# requested raw-capture path are left in place.
+scratch=$(mktemp -d "${TMPDIR:-/tmp}/bcrawl-smoke.XXXXXXXX")
+trap 'rm -rf -- "$scratch"' EXIT HUP INT TERM
+mkdir "$scratch/home" "$scratch/config" "$scratch/data" \
+      "$scratch/cache" "$scratch/state" "$scratch/runtime" "$scratch/tmp" \
+      "$scratch/work"
+
+export HOME="$scratch/home"
+export XDG_CONFIG_HOME="$scratch/config"
+export XDG_DATA_HOME="$scratch/data"
+export XDG_CACHE_HOME="$scratch/cache"
+export XDG_STATE_HOME="$scratch/state"
+export XDG_RUNTIME_DIR="$scratch/runtime"
+export TMPDIR="$scratch/tmp"
+export TERM=xterm-256color
+export LC_ALL=C
+host_path=$PATH
+export PATH="$bcrawl_out/bin"
+
+# The launcher's --smoke branch creates another fresh HOME/XDG tree below
+# TMPDIR and drives two real curses sessions in PTYs: a seeded new game that
+# takes turns and saves, then a restore that checks the saved game clock,
+# takes a turn and saves again.  The PID namespace reaps every descendant if
+# the time bound expires, and the network namespace has no usable interfaces.
+raw=${GOOCASTLE_RUNTIME_RAW_CAPTURE:-$scratch/state/terminal.raw}
+proof=$(cd "$scratch/work" && \
+    GOOCASTLE_RUNTIME_RAW_CAPTURE="$raw" \
+    "$timeout_bin" --kill-after=5 180 \
+    "$unshare_bin" --user --map-root-user --net --pid --kill-child --fork \
     "$bcrawl_out/bin/bcrawl" --smoke)
-case "$proof" in
-    *"$marker"*) ;;
-    *)
-        echo 'bcrawl smoke did not produce its success marker' >&2
-        exit 1
-        ;;
-esac
+export PATH="$host_path"
+test "$proof" = "$marker"
+test -s "$raw"
+# The raw capture is the restore session's alternate-screen frames only, up to
+# the restored gameplay screen; it holds no quit, save or shutdown output.
+if grep -aF "$(printf '\033[?1049l')" "$raw" >/dev/null; then
+    echo 'bcrawl smoke: raw capture includes primary-screen output' >&2
+    exit 1
+fi
+grep -aF 'Welcome back, Goocastle the Human Fighter.' "$raw" >/dev/null
+
+# The launcher removed its own state tree; everything the test provided,
+# including the working directory, remains empty apart from the capture.
+test -z "$(find "$scratch/home" "$scratch/config" "$scratch/data" \
+    "$scratch/cache" "$scratch/runtime" "$scratch/tmp" "$scratch/work" \
+    -mindepth 1 -print -quit)"
+test -z "$(find "$scratch/state" -mindepth 1 ! -path "$raw" -print -quit)"
 
 after=$($guix_bin hash -S nar "$bcrawl_out")
 test "$before" = "$after"
+test ! -w "$bcrawl_out"
+
+printf '%s\n' "$marker"

@@ -1,6 +1,7 @@
 ;;; GNU Guix package for the bcrawl terminal roguelike.
 
 (define-module (tay packages bcrawl)
+  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system gnu)
   #:use-module (guix gexp)
   #:use-module (guix git-download)
@@ -19,6 +20,9 @@
   #:use-module (gnu packages python)
   #:use-module (gnu packages python-xyz)
   #:use-module (gnu packages sqlite))
+
+(define bcrawl-smoke-script
+  (local-file (search-tay-package-file "bcrawl-smoke.py")))
 
 (define-public bcrawl
   (package
@@ -70,8 +74,7 @@
                      (libexec (string-append #$output "/libexec"))
                      (bin (string-append #$output "/bin"))
                      (program (string-append libexec "/bcrawl"))
-                     (smoke-runner
-                      (string-append libexec "/bcrawl-smoke-runner.py"))
+                     (smoke-runner (string-append libexec "/bcrawl-smoke.py"))
                      (launcher (string-append bin "/bcrawl")))
                 ;; Upstream install also manages mutable paths.  install-data
                 ;; only copies immutable console assets and documentation.
@@ -89,45 +92,8 @@
                 (mkdir-p doc)
                 (install-file "crawl" libexec)
                 (rename-file (string-append libexec "/crawl") program)
-                (call-with-output-file smoke-runner
-                  (lambda (port)
-                    (display "#!" port)
-                    (display #$(file-append python "/bin/python3") port)
-                    (display "\nimport errno\nimport os\nimport pty\n" port)
-                    (display "import select\nimport signal\nimport sys\n" port)
-                    (display "import time\n\n" port)
-                    (display "program, *args = sys.argv[1:]\n" port)
-                    (display "pid, master = pty.fork()\n" port)
-                    (display "if pid == 0:\n    os.execv(program," port)
-                    (display " [program, *args])\n\n" port)
-                    (display "sent_quit = False\nseen = b''\n" port)
-                    (display "deadline = time.monotonic() + 15\nwhile True:\n" port)
-                    (display "    remaining = deadline - time.monotonic()\n" port)
-                    (display "    if remaining <= 0:\n" port)
-                    (display "        os.kill(pid, signal.SIGTERM)\n" port)
-                    (display "        os.waitpid(pid, 0)\n        sys.exit(1)\n" port)
-                    (display "    ready, _, _ = select.select(" port)
-                    (display "[master], [], [], remaining)\n" port)
-                    (display "    if not ready:\n        continue\n" port)
-                    (display "    try:\n        data = os.read(master, 4096)\n" port)
-                    (display "    except OSError as error:\n" port)
-                    (display "        if error.errno == errno.EIO:\n" port)
-                    (display "            break\n        raise\n" port)
-                    (display "    if not data:\n        break\n" port)
-                    (display "    os.write(1, data)\n" port)
-                    (display "    seen = (seen + data)[-4096:]\n" port)
-                    (display "    if not sent_quit and " port)
-                    (display "b'choice of weapons:' in seen:\n" port)
-                    ;; Ctrl-Q is Bcrawl's normal immediate-quit command; y
-                    ;; confirms it if the current UI asks for confirmation.
-                    (display "        os.write(master, b'\\x11y')\n" port)
-                    (display "        sent_quit = True\n\n" port)
-                    (display "_, status = os.waitpid(pid, 0)\n" port)
-                    (display "if (not sent_quit or not os.WIFEXITED(status)\n"
-                             port)
-                    (display "        or os.WEXITSTATUS(status)):\n"
-                             port)
-                    (display "    sys.exit(1)\n" port)))
+                ;; The PTY driver plays, saves and restores a character.
+                (copy-file #$bcrawl-smoke-script smoke-runner)
                 (chmod smoke-runner #o555)
                 ;; LICENSE applies to the program as a whole.  CREDITS and
                 ;; the compatible component notices cover installed assets.
@@ -167,7 +133,7 @@
                     (display "  \"$mkdir\" -p \"$scratch/home\" \"$scratch/config\"" port)
                     (display " \"$scratch/cache\" \"$scratch/data\"" port)
                     (display " \"$scratch/state\"" port)
-                    (display " \"$scratch/runtime\"\n" port)
+                    (display " \"$scratch/runtime\" \"$scratch/work\"\n" port)
                     (display "  export HOME=\"$scratch/home\"" port)
                     (display " XDG_CONFIG_HOME=\"$scratch/config\"" port)
                     (display " XDG_CACHE_HOME=\"$scratch/cache\"" port)
@@ -176,13 +142,13 @@
                     (display " XDG_RUNTIME_DIR=\"$scratch/runtime\"" port)
                     (display " TERM=xterm-256color LC_ALL=C\n" port)
                     (display "  prepare_environment\n" port)
-                    ;; Launch the real terminal frontend with a deterministic
-                    ;; character selection.  The PTY runner observes its
-                    ;; interactive weapon page before using normal quit.
-                    (display "  cd \"$scratch\"\n" port)
-                    (display "  \"$python\" \"$runner\" \"$program\" -seed 285" port)
-                    (display " -no-save -name Goocastle -species Hu" port)
-                    (display " -background Fi >\"$scratch/ui.raw\"\n" port)
+                    ;; The PTY driver plays a seeded character, saves it,
+                    ;; restores it in a second session and saves again.  It
+                    ;; writes the restore session's raw prefix to ui.raw.
+                    (display "  cd \"$scratch/work\"\n" port)
+                    (display "  pty_proof=$(\"$python\" \"$runner\" \"$program\"" port)
+                    (display " \"$CRAWL_DIR\" \"$scratch/ui.raw\")\n" port)
+                    (display "  test \"$pty_proof\" = BCRAWL_PTY_OK\n" port)
                     (display "  test -s \"$scratch/ui.raw\"\n" port)
                     ;; Evidence capture receives the real PTY stream before
                     ;; cleanup, so its PNG renders the terminal UI itself.
@@ -191,11 +157,12 @@
                     (display "    \"$cp\" \"$scratch/ui.raw\"" port)
                     (display " \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n" port)
                     (display "  fi\n" port)
+                    ;; Saves, dumps and macros stay in the XDG data tree.
                     (display "  test -z \"$(\"$find\" \"$scratch/home\"" port)
                     (display " \"$scratch/config\" \"$scratch/cache\"" port)
                     (display " \"$scratch/state\" \"$scratch/runtime\"" port)
-                    (display " -mindepth 1 -print -quit)\"\n" port)
-                    (display "  test -d \"$scratch/data/bcrawl\"" port)
+                    (display " \"$scratch/work\" -mindepth 1 -print -quit)\"\n" port)
+                    (display "  test -s \"$CRAWL_DIR/saves/Goocastle.cs\"" port)
                     (display " && test ! -w \"$output\"\n" port)
                     (display "  printf '%s\\n'" port)
                     (display " 'bcrawl smoke: terminal UI OK; no store writes'\n" port)

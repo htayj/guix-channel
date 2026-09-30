@@ -603,6 +603,27 @@ score files.  `.goocastle/evidence/issue-725.png` shows actual gameplay: the
 restored game's map with `Hp: 9(12)`; the pack comparison is asserted by
 the PTY runner, not shown in the image.
 
+## Bcrawl
+
+`bcrawl` 1.42.1 builds the pinned `bcrawl-1.42.1` tag
+(`d9800d219b5e0ab840c8065e44f875fa19dd63ff`) as a console-only game, without
+SDL, fonts or tiles.  The GPL `LICENSE`, `CREDITS.txt` and the bundled
+component notices are installed.  Game state lives in
+`$XDG_DATA_HOME/bcrawl` (fallback `~/.local/share/bcrawl`).
+
+On 2026-09-30, source build, reproducibility rebuild (`--check`), offline
+lint and runtime check passed.  The successful build log still shows
+existing upstream compiler warnings and the install step's `cc`/`git`
+probes.  `make check-bcrawl` runs `bcrawl --smoke` directly under `timeout`
+and `unshare` with private user, network and PID namespaces; no Node-based
+executor is involved.  Two real PTY sessions run: the first creates a seeded
+Human Fighter, advances the game clock three turns, saves and exits; the
+second restores the character, must show the same game clock, then takes
+another turn and saves again.  The output NAR is unchanged and read-only.
+`.goocastle/evidence/issue-660.png` is an independent xterm rendering of the
+restore session that was inspected: it shows the welcome-back message,
+`Time: 3.0`, `Health: 18/18` and the map.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
