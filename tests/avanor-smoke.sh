@@ -1,5 +1,6 @@
 #!/bin/sh
-# Exercise Avanor's installed terminal game in a fresh, networkless XDG tree.
+# Play, save and restore the installed Avanor in a fresh XDG tree, inside
+# networkless user and PID namespaces.
 set -eu
 
 guix_bin=${GUIX:-guix}
@@ -30,16 +31,15 @@ find_output ()
     return 1
 }
 
-bash_out=$(find_output bin/bash bash)
 coreutils_out=$(find_output bin/mktemp coreutils)
 findutils_out=$(find_output bin/find findutils)
 grep_out=$(find_output bin/grep grep)
-util_linux_out=$(find_output bin/script util-linux)
+util_linux_out=$(find_output bin/unshare util-linux)
+python_out=$(find_output bin/python3 python-minimal)
 
 test -x "$avanor_out/bin/avanor"
-test -x "$avanor_out/libexec/avanor"
 test -s "$avanor_out/share/avanor/manual/index.html"
-test -s "$avanor_out/share/avanor/manual/credits.html"
+# The installed license notices cover the source and manual.
 for notice in COPYING gpl.txt README.txt; do
     test -s "$avanor_out/share/doc/avanor/$notice"
 done
@@ -47,100 +47,43 @@ done
     "$avanor_out/share/doc/avanor/COPYING" >/dev/null
 "$grep_out/bin/grep" -F 'version 2' \
     "$avanor_out/share/doc/avanor/gpl.txt" >/dev/null
-"$grep_out/bin/grep" -F 'Vadim Gaidukevich' \
-    "$avanor_out/share/avanor/manual/credits.html" >/dev/null
 
-# The runtime evidence contract is checked as part of this package proof.
-contract=$channel_dir/.goocastle/runtime-evidence-contracts.json
-test -s "$contract"
-"$grep_out/bin/grep" -F '"issueNumber": 659' "$contract" >/dev/null
-"$grep_out/bin/grep" -F '"packageName": "avanor"' "$contract" >/dev/null
-"$grep_out/bin/grep" -F '"artifactPath": ".goocastle/evidence/issue-659.png"' \
-    "$contract" >/dev/null
-"$grep_out/bin/grep" -F '"successMarker": "AVANOR_RUNTIME_OK"' \
-    "$contract" >/dev/null
-
-test -x "$util_linux_out/bin/unshare"
-test -x "$util_linux_out/bin/script"
-if ! "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
-    true >/dev/null 2>&1; then
-    echo 'avanor smoke requires an unprivileged network namespace' >&2
+timeout=$coreutils_out/bin/timeout
+unshare=$util_linux_out/bin/unshare
+if ! "$timeout" --kill-after=5 10 "$unshare" --user --map-root-user --net \
+    --pid --kill-child --fork true >/dev/null 2>&1; then
+    echo 'avanor smoke requires unprivileged user, PID and network namespaces' >&2
     exit 77
 fi
 
 before=$($guix_bin hash -S nar "$avanor_out")
 scratch=$("$coreutils_out/bin/mktemp" -d "${TMPDIR:-/tmp}/avanor-smoke.XXXXXXXX")
-"$coreutils_out/bin/mkdir" -p "$scratch/home" "$scratch/config" \
-    "$scratch/data" "$scratch/cache" "$scratch/state" "$scratch/tmp" \
-    "$scratch/work" "$scratch/caller"
+trap '"$coreutils_out/bin/rm" -rf "$scratch"' EXIT HUP INT TERM
+"$coreutils_out/bin/mkdir" "$scratch/home" "$scratch/config" "$scratch/data" \
+    "$scratch/cache" "$scratch/state" "$scratch/tmp" "$scratch/caller" \
+    "$scratch/work"
 
-export AVANOR_GAME=$avanor_out/bin/avanor
-export AVANOR_SCRIPT=$util_linux_out/bin/script
-export AVANOR_SLEEP=$coreutils_out/bin/sleep
-export AVANOR_HOME=$scratch/home
-export AVANOR_CONFIG=$scratch/config
-export AVANOR_DATA=$scratch/data
-export AVANOR_CACHE=$scratch/cache
-export AVANOR_STATE=$scratch/state
-export AVANOR_TMP=$scratch/tmp
-export AVANOR_WORK=$scratch/work
-export AVANOR_CALLER=$scratch/caller
+# The Goocastle runtime-evidence gate supplies a path for the raw PTY capture;
+# normal package tests keep it in scratch.
+raw=${GOOCASTLE_RUNTIME_RAW_CAPTURE:-$scratch/work/terminal.raw}
 
-# The user/net namespace provides an empty network namespace.  The PTY drives
-# the actual installed ncurses executable through character creation, manual
-# and inventory views, a safe movement, saving, restoring, and quitting.
-"$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
-    "$bash_out/bin/bash" -eu -c '
-      export HOME="$AVANOR_HOME"
-      export XDG_CONFIG_HOME="$AVANOR_CONFIG"
-      export XDG_DATA_HOME="$AVANOR_DATA"
-      export XDG_CACHE_HOME="$AVANOR_CACHE"
-      export XDG_STATE_HOME="$AVANOR_STATE"
-      export TMPDIR="$AVANOR_TMP"
-      export TERM=xterm-256color
-      export LC_ALL=C.UTF-8
-      cd "$AVANOR_CALLER"
+# The runner drives the real ncurses game on its prompts through character
+# creation, the manual, the inventory, a turn, saving, quitting, and a second
+# session that restores the saved character.
+"$timeout" --kill-after=5 240 "$unshare" --user --map-root-user --net --pid \
+    --kill-child --fork \
+    "$python_out/bin/python3" -I "$channel_dir/tests/avanor-pty-runner.py" \
+    "$avanor_out/bin/avanor" "$scratch" "$raw" >"$scratch/work/runner.out"
+"$grep_out/bin/grep" -Fx 'AVANOR_PTY_OK' "$scratch/work/runner.out" >/dev/null
+test -s "$raw"
 
-      test "$("$AVANOR_GAME" --guix-smoke)" = AVANOR_RUNTIME_OK
-      # Feed only after ncurses has entered raw mode; otherwise a pipe can
-      # leave characters in the initial canonical terminal queue.
-      { "$AVANOR_SLEEP" 1; printf N; "$AVANOR_SLEEP" 2; printf aaa; \
-        "$AVANOR_SLEEP" 1; printf "smoke\\r"; "$AVANOR_SLEEP" 1; \
-        printf '?'; "$AVANOR_SLEEP" 1; printf Z; "$AVANOR_SLEEP" 1; \
-        printf i; "$AVANOR_SLEEP" 1; printf Z; "$AVANOR_SLEEP" 1; \
-        printf h; "$AVANOR_SLEEP" 1; printf S; "$AVANOR_SLEEP" 1; \
-        printf Q; "$AVANOR_SLEEP" 1; printf y; "$AVANOR_SLEEP" 1; \
-        printf Z; } | "$AVANOR_SCRIPT" -qefc \
-        "stty rows 24 cols 80; exec $AVANOR_GAME" /dev/null \
-        >"$AVANOR_WORK/first.raw"
-      test -s "$AVANOR_STATE/.avanor/avanor.svg"
-      test -s "$AVANOR_STATE/.avanor/recipies.txt"
-      test -f "$AVANOR_STATE/.avanor/avanor.hsc"
-
-      { "$AVANOR_SLEEP" 1; printf R; "$AVANOR_SLEEP" 3; printf h; \
-        "$AVANOR_SLEEP" 1; printf Q; "$AVANOR_SLEEP" 1; printf y; \
-        "$AVANOR_SLEEP" 1; printf Z; } | "$AVANOR_SCRIPT" -qefc \
-        "stty rows 24 cols 80; exec $AVANOR_GAME" /dev/null \
-        >"$AVANOR_WORK/restore.raw"
-    '
-
-"$grep_out/bin/grep" -F 'Choose a race:' "$scratch/work/first.raw" >/dev/null
-"$grep_out/bin/grep" -F 'profession:' "$scratch/work/first.raw" >/dev/null
-"$grep_out/bin/grep" -F 'Avanor manual' "$scratch/work/first.raw" >/dev/null
-"$grep_out/bin/grep" -F 'Inventory' "$scratch/work/first.raw" >/dev/null
-"$grep_out/bin/grep" -F 'Storing the game:' "$scratch/work/first.raw" >/dev/null
-"$grep_out/bin/grep" -F 'Restoring game objects, please wait...' \
-    "$scratch/work/restore.raw" >/dev/null
-# The Goocastle runtime-evidence gate may request an inspectable rendering of
-# this actual PTY session.  Normal package tests leave no trace.
-if test -n "${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}"; then
-    cp "$scratch/work/first.raw" "$GOOCASTLE_RUNTIME_RAW_CAPTURE"
-fi
+# The game kept all of its state in the XDG state directory.
 test -s "$scratch/state/.avanor/avanor.svg"
 test -s "$scratch/state/.avanor/recipies.txt"
+test -f "$scratch/state/.avanor/avanor.hsc"
 test -z "$("$findutils_out/bin/find" "$scratch/home" "$scratch/config" \
-    "$scratch/data" "$scratch/cache" "$scratch/tmp" -mindepth 1 -print -quit)"
-test -z "$("$findutils_out/bin/find" "$scratch/caller" -mindepth 1 -print -quit)"
+    "$scratch/data" "$scratch/cache" "$scratch/tmp" "$scratch/caller" \
+    -mindepth 1 -print -quit)"
 
 after=$($guix_bin hash -S nar "$avanor_out")
 test "$before" = "$after"

@@ -1,0 +1,157 @@
+Build Save Scummer 002 as a curses-only program on GNU/Linux.
+
+The upstream linuxport Makefile builds the SDL port: it compiles gfx_sdl.cpp,
+queries sdl-config, and links SDL.  As macport/BUILD.TXT describes, the curses
+port is selected with -DUSE_CURSES and linked with ncurses only; the SDL port
+and its bitmap fonts are not built.  premake no longer assumes enummaker is on
+PATH, and both Makefiles honour CXX and CXXFLAGS.
+
+Read text.txt and rooms/piecelist.map from SAVESCUMMER_DATADIR (".." by
+default, as upstream) so that the read-only data can live in the store while
+savescummer.sav and hiscore.txt are still written relative to the working
+directory.
+
+Include <unistd.h> and <string.h> for usleep, sleep, unlink, memcpy, memmove,
+strcpy, strncpy, and strcmp, which current glibc and GCC no longer declare
+implicitly.
+
+The upstream sources use CRLF line endings; this patch preserves them.
+
+--- a/src/gfx_curses.cpp
++++ b/src/gfx_curses.cpp
+@@ -51,12 +51,15 @@
+ using namespace std;
+ 
+ #include <assert.h>
++#include <string.h>
+ 
+ // Windows specific code
+ #ifdef WIN32
+ #include <windows.h>
+ #define usleep(x) Sleep((x)/1000)
+ #define sleep(x) Sleep((x))
++#else
++#include <unistd.h>
+ #endif
+ 
+ #include <curses.h>
+--- a/src/hiscore.cpp
++++ b/src/hiscore.cpp
+@@ -20,6 +20,7 @@
+ #include "avatar.h"
+ #include "glbdef.h"
+ 
++#include <string.h>
+ #include <fstream>
+ #include <iostream>
+ using namespace std;
+--- a/src/linuxport/Makefile
++++ b/src/linuxport/Makefile
+@@ -1,8 +1,14 @@
+ TARGET = savescummer
+ 
++CXX ?= g++
++CXXFLAGS ?= -O3
++SAVESCUMMER_DATADIR ?= ..
++ENUMMAKER ?= support/enummaker/enummaker
++GAME_CPPFLAGS = -DUSE_CURSES '-DSAVESCUMMER_DATADIR="$(SAVESCUMMER_DATADIR)"'
++
+ OFILES = linuxport.o \
+ 	 ../gfxengine.o \
+-	 ../gfx_sdl.o \
++	 ../gfx_curses.o \
+ 	 ../grammar.o \
+ 	 ../avatar.o \
+ 	 ../ai.o \
+@@ -22,12 +28,12 @@
+ 	 ../glbdef.o
+ 
+ .cpp.o:
+-	g++ -O3 `sdl-config --cflags` -c $< -o $@
++	$(CXX) $(CXXFLAGS) $(GAME_CPPFLAGS) -c $< -o $@
+ 
+ all: $(TARGET)
+ 
+ $(TARGET): $(OFILES)
+-	g++ -O3 -o $(TARGET) $(OFILES) `sdl-config --libs`
++	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OFILES) -lncurses
+ 
+ clean:
+ 	rm -f *.o
+@@ -35,4 +41,4 @@
+ 	rm -f $(TARGET)
+ 
+ premake:
+-	cd .. ; ./support/enummaker/enummaker source.txt
++	cd .. && $(ENUMMAKER) source.txt
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -14,6 +14,9 @@
+ #include <stdio.h>
+ #include <assert.h>
+ #include <time.h>
++#ifndef WIN32
++#include <unistd.h>
++#endif
+ 
+ #include "gfxengine.h"
+ #include "glbdef.h"
+--- a/src/map.cpp
++++ b/src/map.cpp
+@@ -236,7 +236,7 @@
+ PIECEDICT::PIECEDICT()
+ {
+     char		buf[100];
+-    ifstream		is("../rooms/piecelist.map");
++    ifstream		is(SAVESCUMMER_DATADIR "/rooms/piecelist.map");
+     u8			map[5][5];
+     int			x, y, i;
+ 
+--- a/src/support/enummaker/Makefile
++++ b/src/support/enummaker/Makefile
+@@ -1,15 +1,18 @@
+ TARGET = enummaker
+ 
++CXX ?= g++
++CXXFLAGS ?= -O3
++
+ OFILES = enummaker.o \
+ 	 StdAfx.o
+ 
+ .cpp.o:
+-	g++ -O3 -c $< -o $@
++	$(CXX) $(CXXFLAGS) -c $< -o $@
+ 
+ all: $(TARGET)
+ 
+ $(TARGET): $(OFILES)
+-	g++ -O3 -o $(TARGET) $(OFILES)
++	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OFILES)
+ 
+ clean:
+ 	rm -f *.o
+--- a/src/text.cpp
++++ b/src/text.cpp
+@@ -53,7 +53,7 @@
+ void
+ text_init()
+ {
+-    ifstream	is("../text.txt");
++    ifstream	is(SAVESCUMMER_DATADIR "/text.txt");
+     char	line[500];
+     bool	hasline = false;
+     char	*text;
+--- a/src/text.h
++++ b/src/text.h
+@@ -13,6 +13,11 @@
+ #ifndef __text__
+ #define __text__
+ 
++// Directory holding text.txt and rooms/piecelist.map.
++#ifndef SAVESCUMMER_DATADIR
++#define SAVESCUMMER_DATADIR ".."
++#endif
++
+ void text_init();
+ void text_shutdown();
+ 

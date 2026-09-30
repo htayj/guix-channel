@@ -525,6 +525,54 @@ read-only.  `.goocastle/evidence/issue-697.png` shows a genuine
 alternate-screen prefix of the loaded session, up to its first leave of the
 alternate screen; it supersedes the earlier mixed-screen image.
 
+## Save Scummer
+
+`savescummer` 002 builds the pinned `savescummer002.tar.gz` source archive
+(SHA-256 `793cc9cc9d486a22709714ba20d73826656083f829e2c5f2d6d3aa4074bf0ace`)
+as the curses port only.  The source snippet removes the prebuilt Linux,
+Windows and Mac programs, the bundled DLLs and PDCurses libraries, the bitmap
+fonts and the SDL and Windows ports; the installed output contains no SDL
+references.  `LICENSE.TXT` (BSD-style terms for the sources and text, the
+public-domain room pieces, and the complete MT19937 notice) and `README.TXT`
+are installed, and the unmodified upstream data files are checked by hash.
+Nine sources keep a stale "PROPRIETARY INFORMATION" template header; the
+archive-wide `LICENSE.TXT` by the same author covers them.  The launcher keeps
+the save and high scores in `$XDG_STATE_HOME/savescummer` (fallback
+`~/.local/state/savescummer`), never in the store.
+
+On 2026-09-30, source build, reproducibility rebuild (`--check`) and offline
+lint passed (relative patch-resolution warnings remain).  The build shows an
+upstream compiler warning that `getAvatarMap` can reach its end without
+returning a value; it is disclosed here, not suppressed.
+`make check-savescummer` runs `savescummer --smoke` from `PATH` in a fresh
+HOME/XDG tree inside an unprivileged network namespace and requires
+`SAVESCUMMER_RUNTIME_OK`.  The first PTY session accepts a character, advances
+turns, writes backup slot 0, advances again, restores that slot, shows the
+character sheet and saves.  A new process, reaching the same directory through
+the HOME fallback, must load and consume the save (`Welcome back to Save
+Scummer!`), show the character sheet and save again.  The re-save must match
+the first byte-for-byte through the score, avatar, HP distribution and dungeon
+map header.  The output NAR stays unchanged, is read-only, and receives no
+save or score files.  `.goocastle/evidence/issue-718.png` shows the restored
+game's welcome-back message and character sheet; the image alone is
+not the save/restore evidence, which is asserted by the PTY runner.
+
+## Avanor
+
+`avanor` remains the existing 0.5.8 package built from the SourceForge
+source release with ncurses; its saves, recipes and high scores stay in
+`$XDG_STATE_HOME/.avanor`.  On 2026-09-30, a refreshed source build,
+reproducibility rebuild, offline lint and runtime check passed; the build
+still shows legacy `-Wwrite-strings` warnings from upstream code.
+`make check-avanor` now drives the game with an event-driven PTY runner in
+private user, PID and network namespaces: every key is sent only after the
+screen that consumes it is drawn.  The first session creates the character
+`smoke`, opens the manual and inventory, passes a turn, saves and quits; the
+second restores the game and must show the restored hero's named status
+line.  `.goocastle/evidence/issue-659.png` renders the exact raw byte prefix
+of that restore session, ending before the quit prompt and before curses
+leaves the alternate screen.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
