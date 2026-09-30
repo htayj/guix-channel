@@ -826,6 +826,50 @@ inspected with all three lines readable: `VT05 OFFLINE RENDER`,
 `0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ` and `REAL PTY OUTPUT`, without visible
 errors or clipping.
 
+## Heroic GOGDL offline helper proof
+
+`heroic-gogdl` 1.3.0 builds release revision
+`4fe373914d625cbce75973e92f6c5c4faf9815e2`, recursively including xdelta
+`0525275fe4b553a10f38e455d30c60dc6ed9b45d`.  The installed command remains
+`gogdl`; its `gogdl_xdelta3` C extension is compiled from source, not a
+downloaded binary.  Guix's Python wrapper includes the installed module and
+Requests dependency.  The parent GPL-3.0-only and bundled xdelta Apache-2.0
+notices are installed under `share/doc/heroic-gogdl`.
+
+```sh
+guix build -L guix --no-grafts heroic-gogdl
+make check-heroic-gogdl
+gogdl lang-match en
+```
+
+On 2026-09-30, source build, reproducibility rebuild (`--check`) and the revised
+installed-runtime smoke passed.  Offline lint retains the `python-wheel`
+native-input advisory: upstream `pyproject.toml` explicitly requires wheel and
+the build system does not supply it, so the input remains.  Existing legacy
+xdelta C compiler warnings remain visible in the successful build log.
+
+The credential-free smoke runs in private user/network namespaces with fresh
+HOME/XDG/GOGDL state and an empty inherited environment.  Actual CLI calls
+check version/help, English and unknown-language matching, the missing-import
+path parser error and a synthetic Linux installer import reporting version
+`1.2.3`.  Local v2 manifest checks cover selected DLC, normalized languages,
+download/disk sizes and serialization; chunk comparison checks reuse at the
+correct old byte offset and distinguishes a new chunk.  File checks cross the
+checksum reader's 16 KiB boundary, resolve an actual case-insensitive path and
+verify `SyncFile`'s deterministic gzip checksum and UTC timestamp metadata.
+The installed xdelta decoder applies a real VCDIFF COPY-plus-ADD patch and
+produces exactly `hello world\n`, leaving its source bytes unchanged.  Fresh
+state directories remain empty and the installed output digest is unchanged
+and non-writable.
+
+`.goocastle/evidence/issue-622.png` was visually inspected and contains the
+actual language JSON, expected missing-path error and fixture import JSON
+with platform `linux` and version `1.2.3`.  These are local CLI/file proofs,
+not evidence of current GOG service compatibility: no live GOG account,
+authentication, game download, cloud synchronization or credentials were used.
+Authentication remains the caller's explicit `--auth-config-path` token-file
+contract; no account, service or installed profile was changed.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
