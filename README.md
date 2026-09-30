@@ -278,6 +278,30 @@ exit; store files remained unchanged/read-only.  Upstream obsolete-alias
 warnings remain visible, not suppressed.  `.goocastle/evidence/issue-606.png`
 shows the actual result `(42)` of defining and calling a Common Lisp function.
 
+## You Only Live Once
+
+`liveonce` 005 builds the original game's curses port from the pinned Zincland
+source archive.  Prebuilt programs, DLLs, the SDL port and the bitmap font with
+unclear licensing are excluded.  The upstream BSD-style/MT19937 notices and
+public-domain map declaration are preserved.  Immutable game data stays in
+the store; only `valley.sav` is written beneath `$XDG_DATA_HOME/liveonce`
+(fallback `~/.local/share/liveonce`).
+
+```sh
+guix build -L guix --no-grafts liveonce
+make check-liveonce
+liveonce
+```
+
+Local build and reproducibility rebuild passed on 2026-09-29; offline lint
+reported only relative patch-resolution warnings.  A non-root, network-isolated
+two-session PTY proof creates a save, restores and consumes it, then saves again,
+checks confinement and unchanged store NAR, and prints `Done.`.  Evidence
+`.goocastle/evidence/issue-737.png` is a real 80×30 terminal replay of the
+loaded-game frame before quitting, not the blank alternate-screen restoration.
+The exported raw stream is a byte-identical prefix of the complete successful
+session.  No user save or installed profile is touched.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and

@@ -1431,7 +1431,7 @@
     {
       "issueNumber": 737,
       "packageName": "liveonce",
-      "packageModulePath": "guix/packages/games.scm",
+      "packageModulePath": "guix/tay/packages/liveonce.scm",
       "artifactPath": ".goocastle/evidence/issue-737.png",
       "runtime": {
         "executable": "liveonce-smoke",
