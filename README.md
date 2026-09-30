@@ -690,6 +690,142 @@ scoring or of saving and restoring a game.
 `.goocastle/evidence/issue-661.png` shows the actual dungeon map with
 `Health: 18/18` and `Time: 3.0`; its HUD also visibly includes `*WIZARD*`.
 
+## Kbredir keyboard-event tools
+
+`kbredir` 0.9 builds the GPL-2.0-only source at revision
+`9b82cf66a60842a97a5b6ffac219e59bcd9f069a`, using Guix X11/XTEST libraries
+and Linux headers.  It installs `read_vt220`, `read_linux_console`, `read_xev`,
+`write_vt220`, `write_xsendevent` and `write_xtest`, plus `COPYING` under
+`share/doc/kbredir`.  The package removes the legacy `/usr/X11R6/lib` build
+path and explicitly uses GNU C89; it installs no wrapper, privilege escalation,
+device rule or service.
+
+```sh
+guix build -L guix --no-grafts kbredir
+make check-kbredir
+```
+
+The tools exchange `<key> down`/`<key> up` lines.  The four non-X-writer
+programs have no conventional help option: arguments are rejected with
+`<program> takes no options`.  The X writers require an authorized display,
+optionally selected with `--display` and `--window`.  `read_linux_console`
+changes its controlling console tty to `K_MEDIUMRAW` and can activate a virtual
+terminal; do not run it on an unintended host tty.
+
+On 2026-09-30, source build, reproducibility rebuild (`--check`), offline lint
+and the installed-runtime smoke passed.  In private user, mount, network and
+PID namespaces, the smoke checks VT220 pipe round trips, Control-c encoding,
+and a real raw-mode PTY session with terminal restoration.  A private Xvfb
+receives actual XTEST `a`/F6 and XSendEvent `b` press/release events; `read_xev`
+decodes the receiver's report back to the exact protocol sequence.  HOME/XDG
+state stays confined and the output NAR is unchanged and read-only.
+`.goocastle/evidence/issue-608.png` was visually inspected and shows the actual
+PTY protocol for `a`, Shift-modified `b`, F6 and Home; the X11 delivery claim
+comes from the runtime assertions, not that terminal image.  No host keyboard,
+console or live X display was exercised, and no installed profile was changed.
+Existing legacy compiler warnings remain visible in the successful build log.
+
+## PDP-10 ITS disassembler and utilities
+
+`pdp10-its-disassembler` `0-c745bb5` builds revision
+`c745bb51e6b38f89b2d0ce95edb45833dbdd937d`, recursively fetching the pinned
+LodePNG submodule `34628e89e80cd007179b25b0b2695e6af0f57fac` used by `tvpic`.
+The installed suite includes `dis10`, `itsarc`, word-format and tape/dump
+utilities, with `mini-dumper` and `failsafe` retained as distinct invoked names
+because their basenames select formats.  The GPL-2.0-only and LodePNG zlib
+notices are installed under `share/doc/pdp10-its-disassembler`.  Non-default
+`ast` and the external-tool-dependent `harscntopdf` helper are not included.
+
+```sh
+guix build -L guix --no-grafts pdp10-its-disassembler
+make check-pdp10-its-disassembler
+dis10 -r -Wbin -mkl10 /path/to/program.bin
+```
+
+On 2026-09-30, source build, reproducibility rebuild (`--check`), offline lint
+and the installed-runtime smoke passed.  The package check phase runs upstream
+`check.sh` and explicitly compares every expected transcript and scrambling
+round trip, rather than relying on the script's permissive exit status.  The
+separate smoke runs installed `dis10` in real PTYs with private HOME/XDG,
+network and PID namespaces: a hand-encoded 14-word program matches exact KL10
+and KA10 listings, including decoding `adjbp 3, 14` only on KL10.  Upstream's
+MIDAS-assembled SBLK sample also matches `-Sall` and `-Sddt` symbol-mode
+expectations.  The installed `itsarc -t` archive proof also passed: upstream's
+included `samples/arc.code` produces the complete nine-member listing matching
+the expected names, word counts, timestamps and byte sizes.  HOME/XDG stays
+empty and the store output is unchanged and read-only.
+`.goocastle/evidence/issue-611.png` was visually inspected and shows
+the actual 14-word KL10 listing.  This proves disassembly, not execution on a
+PDP-10; no hardware, network service or live profile was changed.  Existing
+legacy compiler warnings remain visible in the successful build log.
+
+## Tapeutils local tape-image tools
+
+`tapeutils` `0.6-0.84a3a78` builds the GPL-2.0-only upstream revision
+`84a3a78d2c028d7a4e2e68b89be0411cebd94563`.  A bounded GNU-make portability
+change replaces the BSD `UNAME != uname` assignment.  It installs `tapecopy`,
+`tapedump`, `taperead`, `tapewrite`, `t10backup`, `read20` and `tapex`, with
+`COPYING` under `share/doc/tapeutils`; no service, device rule, remote setup or
+runtime wrapper is installed.  Use explicit local filenames for image-only
+operation: `/dev/` paths select hardware, colon-containing names select remote
+`rmt`, and omitting the name can consult `TAPE`.
+
+```sh
+guix build -L guix --no-grafts tapeutils
+make check-tapeutils
+```
+
+On 2026-09-30, source build, reproducibility rebuild (`--check`), offline lint
+and the installed-runtime smoke passed.  With an empty environment apart from
+private HOME/XDG settings and networking disabled, `tapewrite -n 80` creates a
+Wilson image containing two files and five 80-byte records.  The smoke compares
+the complete image with independently framed expected bytes, checks every
+`tapedump` record and payload, copies it with `tapecopy`, and extracts both files
+byte-for-byte with `taperead`.  It also checks the copy's extra tape mark and
+upstream's empty end-of-tape extraction file.  A deliberately mismatched
+trailing record length is rejected with exit status 1 and `?Corrupt tape image`
+before any record is listed.  HOME/XDG remains empty; all generated images and
+extracted files stay in the disposable working tree.  The before/after output
+NAR comparison and absence of writable store files passed, preserving the
+immutable-store invariant.
+`.goocastle/evidence/issue-614.png` was visually inspected and shows the actual
+listing: file 0 has three records/240 bytes, file 1 has two records/160 bytes,
+then `end of tape`.  No tape hardware, remote tape server or installed profile
+was used or changed.  Existing legacy compiler warnings remain visible in the
+successful build log.
+
+## VT05 classic terminal emulators
+
+`vt05` `0.1-1.934fe88` builds the MIT-licensed revision
+`934fe8898bd656749b323abbdab62939148cfe3e` from `aap/vt05`, linked with Guix
+SDL2.  It installs `vt05`, `vt50`, `vt52`, `dp3300`, `gecon` and `dm2500`, plus
+`LICENSE` under `share/doc/vt05`.  Each emulator opens an SDL window and starts
+the supplied command on a POSIX PTY; `vt50`/`vt52` set `TERM=vt52`, while the
+others set `TERM=dumb`.  No runtime wrapper or service is installed.
+
+```sh
+guix build -L guix --no-grafts vt05
+make check-vt05
+vt52 sh
+```
+
+On 2026-09-30, source build, reproducibility rebuild (`--check`), offline lint
+and the installed-runtime rendering smoke passed.  All six actual emulators
+receive three fixture lines through their own PTY, with the expected `TERM`;
+their SDL windows visibly change from the blank baseline.  Terminal-specific
+clear/home sequences then erase the text, leaving zero changed pixels in the
+compared screen region.  This is actual window rendering and erase behavior,
+not a window-title or child-marker-only check.  The screen comparison excludes
+the blinking cursor and uses a cropped region containing the fixture text.
+The smoke uses software SDL rendering, a private Xvfb with private X sockets
+and no TCP listener, user/mount/network/IPC/PID namespaces and fresh HOME/XDG
+state.  The output NAR is unchanged and store files remain read-only; no host
+display, terminal hardware, service or installed profile was changed.
+`.goocastle/evidence/issue-616.png` is an actual VT52-window capture, visually
+inspected with all three lines readable: `VT05 OFFLINE RENDER`,
+`0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ` and `REAL PTY OUTPUT`, without visible
+errors or clipping.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and

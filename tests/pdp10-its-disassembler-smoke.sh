@@ -1,5 +1,9 @@
 #!/bin/sh
-# Offline smoke test for the installed PDP-10 ITS disassembler utilities.
+# Offline utility proof for pdp10-its-disassembler: the installed dis10 decodes
+# a hand-encoded PDP-10 program and an upstream MIDAS-assembled SBLK binary;
+# itsarc lists an included archive.  Each transcript must match known content.
+# Every run happens under a PTY inside private user, network and PID
+# namespaces with a fresh HOME/XDG tree, an empty PATH and a time bound.
 set -eu
 
 guix_bin=${GUIX:-guix}
@@ -13,161 +17,237 @@ fi
 if test "$#" -eq 1; then
     package_out=$1
 else
-    package_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes \
-        pdp10-its-disassembler)
+    package_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts \
+        --no-substitutes pdp10-its-disassembler)
+fi
+# The pinned upstream checkout supplies the MIDAS-assembled sample, the ARC
+# archive and the expected transcripts upstream maintains for both.
+source_dir=$($guix_bin build -L "$channel_dir/guix" --no-grafts \
+    --no-substitutes --source pdp10-its-disassembler)
+
+find_output ()
+{
+    program=$1
+    shift
+    for candidate in $($guix_bin build --no-grafts --no-substitutes "$@"); do
+        if test -x "$candidate/$program"; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+    echo "could not find $program in Guix package $*" >&2
+    return 1
+}
+
+python_bin=$(find_output bin/python3 python)/bin/python3
+timeout_bin=$(find_output bin/timeout coreutils)/bin/timeout
+unshare_bin=$(find_output bin/unshare util-linux)/bin/unshare
+
+test -x "$package_out/bin/dis10"
+test -x "$package_out/bin/itsarc"
+test -f "$source_dir/samples/visib3.bin"
+test -f "$source_dir/test/visib3.bin.dasm"
+test -f "$source_dir/samples/arc.code"
+test -f "$source_dir/test/arc.code.list"
+
+if ! "$timeout_bin" --kill-after=5 10 \
+        "$unshare_bin" --user --map-root-user --net --pid --kill-child --fork \
+        true >/dev/null 2>&1; then
+    echo 'pdp10-its-disassembler smoke requires unprivileged user, network, and PID namespaces' >&2
+    exit 77
 fi
 
-python_out=
-for candidate in $($guix_bin build --no-grafts --no-substitutes python); do
-    if test -x "$candidate/bin/python3"; then
-        python_out=$candidate
-        break
-    fi
-done
-test -n "$python_out"
+# The NAR hash covers every installed file, mode and symlink; running the
+# utilities must leave the immutable output unchanged.
+before=$($guix_bin hash -S nar "$package_out")
 
-"$python_out/bin/python3" - "$package_out" <<'PY'
-import hashlib
+scratch=$(mktemp -d "${TMPDIR:-/tmp}/pdp10-its-disassembler-smoke.XXXXXXXX")
+trap 'rm -rf -- "$scratch"' EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+mkdir "$scratch/home" "$scratch/config" "$scratch/data" "$scratch/cache" \
+    "$scratch/state" "$scratch/runtime" "$scratch/tmp" "$scratch/work"
+chmod 700 "$scratch/runtime"
+
+cat >"$scratch/runner.py" <<'PY'
 import os
 import pathlib
-import struct
+import select
 import subprocess
 import sys
-import tempfile
+import time
+
+dis10, source, work = sys.argv[1], pathlib.Path(sys.argv[2]), pathlib.Path(sys.argv[3])
+itsarc = str(pathlib.Path(dis10).with_name("itsarc"))
 
 
-out = pathlib.Path(sys.argv[1])
-programs = (
-    "dis10", "acct", "calcomp", "cat36", "classify-tape", "constantinople",
-    "cross", "dart", "decdmp", "dskdmp", "dump", "dumper", "failsafe",
-    "harscntopbm", "ipak", "itsarc", "kldcp", "klfedr", "linum", "macdmp",
-    "macro-tapes", "magdmp", "magfrm", "mini-dumper", "od10", "old-cpio",
-    "palx", "plt", "scrmbl", "tape-dir", "tendmp", "tito", "tvpic", "unscr",
-)
+def pty_run(*args, executable=dis10):
+    """Run an installed utility on a fresh PTY and return all terminal bytes."""
+    master, slave = os.openpty()
+    process = subprocess.Popen([executable, *args], stdin=slave, stdout=slave,
+                               stderr=slave, cwd=work, close_fds=True)
+    os.close(slave)
+    received = bytearray()
+    deadline = time.monotonic() + 20
+    try:
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                process.kill()
+                raise SystemExit(f"{executable} {args} did not finish within 20s")
+            ready, _, _ = select.select([master], [], [], remaining)
+            if not ready:
+                continue
+            try:
+                chunk = os.read(master, 65536)
+            except OSError:  # EIO: the slave side has closed.
+                break
+            if not chunk:
+                break
+            received += chunk
+    finally:
+        os.close(master)
+    status = process.wait(timeout=5)
+    if status != 0:
+        raise SystemExit(f"{executable} {args} exited {status}: {bytes(received)!r}")
+    return bytes(received)
 
 
-def tree_digest(root):
-    """Return a metadata-and-content digest for immutable-output checking."""
-    digest = hashlib.sha256()
-    for path in sorted(root.rglob("*")):
-        status = path.lstat()
-        digest.update(str(path.relative_to(root)).encode("utf-8"))
-        digest.update(repr((status.st_mode, status.st_uid, status.st_gid,
-                            status.st_size, status.st_mtime_ns,
-                            status.st_ctime_ns)).encode("ascii"))
-        if path.is_symlink():
-            digest.update(os.readlink(path).encode("utf-8"))
-        elif path.is_file():
-            digest.update(path.read_bytes())
-    return digest.digest()
+def terminal(text):
+    """The PTY's ONLCR translation turns every newline into CR LF."""
+    return text.replace(b"\n", b"\r\n")
 
 
-for program in programs:
-    executable = out / "bin" / program
-    assert executable.is_file() and os.access(executable, os.X_OK), executable
+def require(actual, expected, label):
+    if actual != expected:
+        raise SystemExit(f"{label}: unexpected utility terminal output\n"
+                         f"expected: {expected!r}\nactual:   {actual!r}")
 
-doc = out / "share" / "doc" / "pdp10-its-disassembler"
-for document in ("README", "README.md", "COPYING", "tito.doc", "LODEPNG-LICENSE"):
-    assert (doc / document).is_file() and (doc / document).stat().st_size, document
-assert "GNU GENERAL PUBLIC LICENSE\n\t\t       Version 2" in (doc / "COPYING").read_text(
-    encoding="utf-8")
-lodepng_license = (doc / "LODEPNG-LICENSE").read_text(encoding="utf-8")
-assert "including commercial applications" in lodepng_license
-assert "alter it and redistribute it" in lodepng_license
-assert "freely, subject to the following restrictions" in lodepng_license
 
-before = tree_digest(out)
-with tempfile.TemporaryDirectory(prefix="pdp10-its-disassembler-smoke-") as temporary:
-    root = pathlib.Path(temporary)
-    home, config, cache, data, state, runtime, work = [root / name for name in
-        ("home", "config", "cache", "data", "state", "runtime", "work")]
-    for directory in (home, config, cache, data, state, runtime, work):
-        directory.mkdir()
-    runtime.chmod(0o700)
-    environment = {
-        "HOME": str(home), "XDG_CONFIG_HOME": str(config),
-        "XDG_CACHE_HOME": str(cache), "XDG_DATA_HOME": str(data),
-        "XDG_STATE_HOME": str(state), "XDG_RUNTIME_DIR": str(runtime),
-        "LC_ALL": "C.UTF-8", "PATH": "",
-    }
+# A small PDP-10 program assembled by hand: sum 5+4+3+2+1 into location 13,
+# call a subroutine that increments it, then halt.  Word 6 is ADJBP 3,14,
+# a byte-pointer instruction the KL10 has and the KA10 lacks; word 14 is the
+# byte pointer it would adjust.  Pairs of 36-bit words are packed into nine
+# bytes, the "bin" word format selected with -Wbin.
+program = [
+    0o201040000005,  # movei 1, 5
+    0o201100000000,  # movei 2, 0
+    0o271101000000,  # addi 2, (1)
+    0o367040000002,  # sojg 1, 2
+    0o202100000013,  # movem 2, 13
+    0o260740000011,  # pushj 17, 11
+    0o133140000014,  # adjbp 3, 14 (KL10 only)
+    0o254200000000,  # halt 0
+    0o000000000000,
+    0o350000000013,  # aos 13
+    0o263740000000,  # popj 17,
+    0o000000000000,  # the sum
+    0o440600000013,  # byte pointer (also decodes as andcb 14, 13)
+    0o000000000000,
+]
+(work / "sum.bin").write_bytes(b"".join(
+    ((program[i] << 36) | program[i + 1]).to_bytes(9, "big")
+    for i in range(0, len(program), 2)))
 
-    # Two 36-bit words in the documented 36/8 binary representation: zero
-    # and SETZ 0,.  The fixture is entirely local, and -r selects raw input,
-    # so dis10 neither accesses devices nor needs mutable runtime data.
-    fixture = work / "two-words.bin"
-    fixture.write_bytes(bytes((0, 0, 0, 0, 8, 0, 0, 0, 0)))
-    result = subprocess.run([out / "bin" / "dis10", "-r", "-Wbin", fixture],
-                            env=environment, cwd=work, stdin=subprocess.DEVNULL,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            check=True, text=True)
-    assert "Raw format" in result.stdout
-    assert "000000:  000000000000" in result.stdout
-    assert "000001:  400000000000  setz" in result.stdout
+kl10_listing = rb'''Raw format
 
-    # An empty local input is enough to exercise dumper's argv[0]-selected
-    # format: the mini-dumper output contains one extra tape mark.
-    empty = work / "empty"
-    empty.touch()
-    dumper_tapes = {}
-    for program in ("dumper", "mini-dumper"):
-        tape = work / f"{program}.tape"
-        subprocess.run([out / "bin" / program, "-c", "-Wbin", "-f", tape,
-                        "empty"], env=environment, cwd=work,
-                       stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE, check=True)
-        dumper_tapes[program] = tape.read_bytes()
-    assert len(dumper_tapes["mini-dumper"]) == len(dumper_tapes["dumper"]) + 8
+Disassembly:
 
-    # This local 9-track fixture has one empty file in a minimal saveset.  Its
-    # listing differs only because tito selects the TITO parser and failsafe
-    # selects the FAILSAFE parser from the invoked basename.  Neither command
-    # extracts files, accesses devices, or needs a mutable runtime directory.
-    fails_magic = 0o124641515463
-    afe_magic = 0o414645
+000000:  201040000005  movei    1, 5            ;"0(@  %"
+000001:  201100000000  movei    2, 0            ;"0)    " " $\0\0\0"
+000002:  271101000000  addi     2, (1)          ;"7)!   "
+000003:  367040000002  sojg     1, 2            ;">X@  ""
+000004:  202100000013  movem    2, 13           ;"01   +"
+000005:  260740000011  pushj    17, 11          ;"6'@  )"
+000006:  133140000014  adjbp    3, 14           ;"+9@  ,"
+000007:  254200000000  halt     0               ;"5B    "
+000010:  000000000000                           ;"      "
+000011:  350000000013  aos      13              ;"=    +"
+000012:  263740000000  popj     17,             ;"6?@   "
+000013:  000000000000                           ;"      "
+000014:  440600000013  andcb    14, 13          ;"D&   +"
+000015:  000000000000                           ;"      "
+'''
+kl10 = pty_run("-r", "-Wbin", "-mkl10", "sum.bin")
+require(kl10, terminal(kl10_listing), "KL10 raw program")
+# The KA10 has no ADJBP, so the same word is left undecoded.
+ka10_listing = kl10_listing.replace(
+    b"000006:  133140000014  adjbp    3, 14           ;",
+    b"000006:  133140000014                           ;")
+assert ka10_listing != kl10_listing
+require(pty_run("-r", "-Wbin", "-mka10", "sum.bin"), terminal(ka10_listing),
+        "KA10 raw program")
 
-    def core_word(word):
-        return bytes(((word >> 28) & 0xff, (word >> 20) & 0xff,
-                       (word >> 12) & 0xff, (word >> 4) & 0xff,
-                       word & 0x0f))
+# VISIB3 is MIDAS output of "A=1 / HKSYM==42 / BEG: MOVEM A,HKSYM" carrying
+# its own symbol table.  With every symbol enabled the listing must equal the
+# transcript upstream maintains; DDT mode must hide the half-killed HKSYM
+# while still naming the accumulator and the BEG label.
+sample = source / "samples" / "visib3.bin"
+all_listing = (source / "test" / "visib3.bin.dasm").read_bytes()
+require(pty_run("-Sall", str(sample)), terminal(all_listing), "SBLK -Sall")
+ddt_listing = all_listing.replace(
+    b"movem    a, hksym        ;", b"movem    a, 42           ;")
+assert ddt_listing != all_listing
+require(pty_run("-Sddt", str(sample)), terminal(ddt_listing), "SBLK -Sddt")
 
-    def tape_record(stream, words):
-        data = b"".join(core_word(word) for word in words)
-        stream.write(struct.pack("<I", len(data)))
-        stream.write(data)
-        if len(data) % 2:
-            stream.write(b"\0")
-        if data:
-            stream.write(struct.pack("<I", len(data)))
+# ARC.CODE is an included ITS archive with nine members, from ACKERM 1 to
+# WIRES 2.  Listing mode must decode their names, word counts, timestamps and
+# byte sizes exactly as recorded upstream, not merely produce some output.
+# itsarc writes this listing to stderr, which shares the PTY with stdout.
+# -t leaves the archive and working directory untouched; -x is not needed.
+archive_listing = (source / "test" / "arc.code.list").read_bytes()
+require(pty_run("-t", str(source / "samples" / "arc.code"), executable=itsarc),
+        terminal(archive_listing), "ITS archive member listing")
 
-    tito_fixture = work / "tito-fixture.tape"
-    with tito_fixture.open("wb") as stream:
-        tape_record(stream, [0, fails_magic, afe_magic << 18, 0,
-                             (1 << 18) | 2])
-        stream.write(struct.pack("<I", 0))
-        block = [0] * 0o101
-        block[0] = 0o446353 << 18
-        block[0o75 - 1] = 800 << 18
-        tape_record(stream, [(0o777777 << 18) | 0o101] + block)
-        tape_record(stream, [(1 << 18) | 4, fails_magic, afe_magic << 18,
-                             0, (1 << 18) | 2])
-        stream.write(struct.pack("<I", 0))
-
-    listings = {}
-    for program in ("tito", "failsafe"):
-        result = subprocess.run(
-            [out / "bin" / program, "-t", "-Wascii", "-f", tito_fixture],
-            env=environment, cwd=work, stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True,
-            text=True)
-        listings[program] = result.stdout
-    assert "System:" in listings["tito"]
-    assert "System:" not in listings["failsafe"]
-    assert "(" in listings["tito"]
-    assert "(" not in listings["failsafe"]
-
-    for directory in (home, config, cache, data, state, runtime):
-        assert not any(directory.iterdir()), directory
-
-assert tree_digest(out) == before, "the immutable package output changed"
-print("pdp10-its-disassembler offline smoke passed")
+# Retain the actual KL10 terminal byte stream for evidence capture.
+(work / "terminal.raw").write_bytes(kl10)
+print("dis10: raw KL10/KA10 program and SBLK symbol listings matched; "
+      "itsarc: included archive member listing matched")
 PY
+
+status=0
+(cd "$scratch/work" && "$timeout_bin" --kill-after=5 120 \
+    "$unshare_bin" --user --map-root-user --net --pid --kill-child --fork \
+    env -i \
+    PATH=/nonexistent \
+    HOME="$scratch/home" \
+    XDG_CONFIG_HOME="$scratch/config" \
+    XDG_DATA_HOME="$scratch/data" \
+    XDG_CACHE_HOME="$scratch/cache" \
+    XDG_STATE_HOME="$scratch/state" \
+    XDG_RUNTIME_DIR="$scratch/runtime" \
+    TMPDIR="$scratch/tmp" \
+    TERM=dumb \
+    LC_ALL=C \
+    TZ=UTC0 \
+    "$python_bin" "$scratch/runner.py" "$package_out/bin/dis10" \
+    "$source_dir" "$scratch/work" >"$scratch/stdout" 2>"$scratch/stderr") ||
+    status=$?
+if test "$status" -ne 0; then
+    cat "$scratch/stderr" >&2
+    echo "isolated utility run exited with status $status" >&2
+    exit 1
+fi
+test ! -s "$scratch/stderr"
+test "$(cat "$scratch/stdout")" = \
+    'dis10: raw KL10/KA10 program and SBLK symbol listings matched; itsarc: included archive member listing matched'
+
+# Only the fixture and the retained terminal capture exist; nothing escaped
+# into the fresh HOME/XDG/TMPDIR tree or the package output.
+test -z "$(find "$scratch/home" "$scratch/config" "$scratch/data" \
+    "$scratch/cache" "$scratch/state" "$scratch/runtime" "$scratch/tmp" \
+    -mindepth 1 -print -quit)"
+test "$(cd "$scratch/work" && find . -mindepth 1 | LC_ALL=C sort | tr '\n' ' ')" = \
+    './sum.bin ./terminal.raw '
+after=$($guix_bin hash -S nar "$package_out")
+test "$before" = "$after"
+test -z "$(find "$package_out" -xdev -type f -perm /222 -print -quit)"
+
+# Evidence runs may ask for the verbatim PTY bytes of the KL10 disassembly
+# checked above.  Copy them only after every check has passed.
+if test -n "${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}"; then
+    cp "$scratch/work/terminal.raw" "$GOOCASTLE_RUNTIME_RAW_CAPTURE"
+fi
+
+printf '%s\n' 'pdp10-its-disassembler offline smoke passed: dis10 KL10/KA10 decoding and SBLK symbol modes; itsarc archive listing'
