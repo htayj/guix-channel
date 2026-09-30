@@ -909,6 +909,43 @@ remain read-only; no user source file, interpreter setup or installed profile
 was changed.  `.goocastle/evidence/issue-44.png` was visually inspected and shows
 the actual edited Forth buffer and the `Forth finished` runtime sentinel.
 
+## Pinned Mentor Emacs client
+
+`emacs-mentor-pinned` `0.5-0.ed42ae8` builds revision
+`ed42ae8333d801c841ecf80fb5e4957badb99b51`, 21 commits beyond release 0.5.
+This scoped, distinctly named variant includes the added `mentor-trackers.el`
+library and does not shadow Guix's existing `emacs-mentor` release package.
+It inherits the Async, URL-SCGI and XML-RPC Emacs dependencies, but neither
+includes nor starts rTorrent.  The shipped libraries explicitly grant
+GPL-3.0-or-later; the source snapshot's license declaration was corrected to
+match, rather than retaining the research record's ambiguous GPL-3.0 label.
+`COPYING` is installed under `share/doc/emacs-mentor-pinned`.
+
+```sh
+guix build -L guix --no-grafts emacs-mentor-pinned
+make check-emacs-mentor-pinned
+```
+
+On 2026-09-30, source build, reproducibility rebuild (`--check`), offline lint
+and both installed-runtime ERT tests passed.  The package's normal autoload
+file activates the tracker library only after Mentor loads.  The smoke uses
+private user/network namespaces, fresh HOME/XDG, no user init files and an
+empty PATH, with explicit guards rejecting process startup and RPC/network I/O.
+It exercises local endpoint normalization and temporary configuration-file
+generation without creating a daemon, download directory, session or socket.
+
+A fixed local rTorrent-shaped data fixture exercises the actual client parser,
+item storage, tracker-name display, sorting, navigation, marking/unmarking and
+sparse refresh behavior, including preservation of an existing name and
+rejection of an uninitialized new item.  `.goocastle/evidence/issue-166.png`
+was visually inspected and shows the actual offline Mentor view: Alpha at
+25%, Zulu at 50%, with Zulu marked and the `no RPC` mode line.  The installed
+output fingerprint is unchanged and store files remain read-only.  This proves
+local client/configuration behavior, **not torrent operations, daemon startup,
+SCGI/XML-RPC integration or live tracker actions**.  No torrent, rTorrent
+instance, credentials, user configuration or installed profile was used or
+changed.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
@@ -1008,6 +1045,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `manna-cadet` | manna-cadet | Space Cadet keyboard layouts and helper tools |
 | `sbcl-qbcl` | qbcl | qBittorrent command-line controller |
 | `sbcl-rplaca` | rplaca | Lisp-native LLM chat interface |
+| `emacs-mentor-pinned` | skangas/mentor 0.5 + 21 commits (`ed42ae8`) | Distinct pinned Emacs rTorrent frontend with the post-0.5 tracker library; no daemon activation |
 | `terminaldrome` | thafaker/TerminalDrome | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | larsbrinkhoff/image-tape | Magnetic-tape image reader with safe output handling |
 | `apout` | DoctorWkt/Apout 2.4.0 | PDP-11 Unix a.out user-mode emulator; supply a user-owned `APOUT_ROOT` |

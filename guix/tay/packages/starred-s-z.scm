@@ -134,7 +134,7 @@
   (make-github-source-snapshot "skangas-mentor-source" "skangas" "skangas" "mentor"
                                "ed42ae8333d801c841ecf80fb5e4957badb99b51" "1ywsxvais8h2px4hha78k4caw4rklbb4g5z03vc60mnf1wp9vby0"
                                "source snapshot of skangas/mentor" "https://github.com/skangas/mentor"
-                               license:gpl3))
+                               license:gpl3+))
 
 (define-public slburson-fset-source
   (make-github-source-snapshot "slburson-fset-source" "slburson" "slburson" "fset"

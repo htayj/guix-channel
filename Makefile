@@ -33,7 +33,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	computer-builder rust-computus custom-nix-pkgs databases-team75 dorxng-mcp buzz \
 	hyprland-preview-share-picker hy3 dank-material-shell-shell-only sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
-	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a emacs-aidermacs \
+	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a emacs-aidermacs emacs-mentor-pinned \
 	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq apout kitty-bitmap shader-slang opencode \
 	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin shadow-over-darkmoor \
 	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy notion-river mushkin mushtato ocaml-irc-client \
@@ -93,7 +93,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-nlarn \
 	check-robotfindskitten \
 	check-fontra build-fontra \
-	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs build build-sources
+	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs check-emacs-mentor-pinned build build-sources
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -435,6 +435,9 @@ check-emacs-forth-mode:
 check-emacs-aidermacs:
 	GUIX="$(GUIX)" tests/emacs-aidermacs-smoke.sh
 
+check-emacs-mentor-pinned:
+	GUIX="$(GUIX)" tests/emacs-mentor-pinned-smoke.sh
+
 check: check-source-count check-sentinelone check-datamosh-security check-dicom2mesh \
 	check-modus check-amstelvar check-trial-by-combat check-xrogue check-keymapper \
 	check-liquid check-input-remapper check-emacs-cl check-liveonce check-xnethack \
@@ -444,7 +447,7 @@ check: check-source-count check-sentinelone check-datamosh-security check-dicom2
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
 	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-bell-labs-rogue7 check-astx check-acehack check-avanor check-bootrogue check-wanderers check-hack check-emacs-org-popup-posframe \
-	check-emacs-forth-mode check-emacs-aidermacs check-aquarium-arena check-atlas-warriors check-bcrawl check-chessrogue check-corerl check-cutlassrl check-dhack check-cryptrover check-dnethack check-dragonslayer check-grippy-socks check-hunger-games check-gruesome check-hydra-slayer check-martins-dungeon-bash check-nlarn check-robotfindskitten check-fontra
+	check-emacs-forth-mode check-emacs-aidermacs check-emacs-mentor-pinned check-aquarium-arena check-atlas-warriors check-bcrawl check-chessrogue check-corerl check-cutlassrl check-dhack check-cryptrover check-dnethack check-dragonslayer check-grippy-socks check-hunger-games check-gruesome check-hydra-slayer check-martins-dungeon-bash check-nlarn check-robotfindskitten check-fontra
 	$(GUIX) build -L guix --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L guix --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
