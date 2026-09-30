@@ -573,6 +573,36 @@ line.  `.goocastle/evidence/issue-659.png` renders the exact raw byte prefix
 of that restore session, ending before the quit prompt and before curses
 leaves the alternate screen.
 
+## Super-Rogue
+
+`srogue` 9.0 builds Super-Rogue from the pinned Roguelike Gallery
+`early-roguelike-rel2021.03-src.tgz` collection release; the source snippet
+keeps only its `srogue/` tree.  The custom `LICENSE.TXT` is installed and
+labelled as such: BSD-style terms plus Super-Rogue endorsement and naming
+conditions, with the complete notices for the Rogue 3.6, save/restore and
+FreeSec portions; it is not labelled as plain BSD.  The game is built
+without setgid or host-wide score, log and save files.  The launcher keeps
+saves and the personal score list in `$XDG_DATA_HOME/srogue` (fallback
+`~/.local/share/srogue`) and rejects state directories longer than 68 bytes
+before creating anything, counting bytes under UTF-8 locales.  The patch
+also bounds the game's own HOME, message and save-path buffers, and reads
+saved long values as 4-byte integers so restored games on LP64 systems no
+longer pick up garbage upper halves.
+
+On 2026-09-30, source build, reproducibility rebuild and offline lint passed
+(relative patch-resolution warnings remain).  `make check-srogue` runs
+`srogue --guix-smoke` from `PATH` in a fresh HOME/XDG tree inside an
+unprivileged network namespace: the first PTY session eats starting food,
+which takes a turn, and saves; the second, through the HOME fallback,
+restores and consumes the save, and its pack must match the first
+session's.  A second non-root runner lists and preserves a read-only seeded
+score file, decodes the recorded score of a real game, ignores a relative
+`XDG_DATA_HOME`, and checks the 68-byte and UTF-8 path bounds of both the
+launcher and the game.  The output NAR is unchanged and receives no save or
+score files.  `.goocastle/evidence/issue-725.png` shows actual gameplay: the
+restored game's map with `Hp: 9(12)`; the pack comparison is asserted by
+the PTY runner, not shown in the image.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
