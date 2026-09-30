@@ -353,6 +353,31 @@ write/exit emulation traces on stderr.  Store-integrity and no-state-leak checks
 passed.  `.goocastle/evidence/issue-755.png` captures that actual execution;
 Qiling is an emulator, not a security sandbox for arbitrary untrusted samples.
 
+## AI Code Interface for Emacs
+
+`ai-code-interface-el` 1.930 packages Apache-2.0 source revision
+`9d046a302c2902fa819d988309078361a6aef9fe`, including runtime prompts and
+snippets.  The launcher uses explicit store load paths for Emacs and Magit
+dependencies.  Provider CLIs, credentials and model access remain user-supplied;
+installation starts no backend.
+
+```sh
+guix build -L guix --no-grafts ai-code-interface-el
+make check-ai-code-interface-el
+```
+
+On 2026-09-30, build, reproducibility rebuild and offline lint passed.  The
+upstream ERT suite ran 1342 tests: 1329 expected results, zero unexpected,
+and 13 upstream skips for optional integrations.  Running it exposed a real
+Guix incompatibility in the generated editor helper's `/bin/sh` shebang;
+the package now uses the store shell rather than skipping those tests.
+The bounded, network/PID-isolated smoke loads the installed interface with an
+empty PATH, verifies its menu and backend selection, and checks no leaked
+state or output mutation.  `.goocastle/evidence/issue-647.png` captures the
+actual `AI_CODE_RUNTIME_OK` output, including the expected with-editor warning
+that an empty PATH provides no Emacsclient.  Provider sessions are not claimed
+as tested; no user profile changed.
+
 ## License
 
 The channel-authored Scheme package definitions, channel metadata, build and
