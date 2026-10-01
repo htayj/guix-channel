@@ -722,6 +722,84 @@ scoring or of saving and restoring a game.
 `.goocastle/evidence/issue-661.png` shows the actual dungeon map with
 `Health: 18/18` and `Time: 3.0`; its HUD also visibly includes `*WIZARD*`.
 
+## Ighalsk
+
+`ighalsk` 0.1.16 runs the original Python 2/Tk application from the fixed
+SourceForge source release (embedded SVN metadata identifies
+`release_0_1_16`, revision 380).  It is a graphical Tk game, not a curses
+port.  The build runs all 644 upstream tests before applying the state/data
+integration patch, and makes upstream test failures fatal rather than relying
+on `TestAll.py`'s exit status.  Source headers and `COPYING` grant
+GPL-3.0-or-later despite SourceForge's GPLv2 metadata.  `COPYING`, `CREDITS`
+and the upstream documentation are installed; embedded SVN state and the
+unlicensed Windows-only `igh2exe.py` helper are excluded.
+
+The launcher keeps saves, scores and editor output under
+`$XDG_DATA_HOME/ighalsk` (fallback `~/.local/share/ighalsk`), while dictionaries,
+quests and other game data remain immutable in the store.  The original level
+and monster editors are available through `--level-editor` and
+`--monster-editor`.  Saves retain upstream's legacy Python pickle format:
+**loading an untrusted save is unsafe and can execute arbitrary Python code**.
+The state-directory integration does not make this format safe.
+
+On 2026-10-01, local source build, reproducibility rebuild (`--check`), offline
+lint and actual Tk runtime proof passed.  `make check-ighalsk` launches
+`ighalsk --guix-smoke` with a private Xvfb and fresh HOME/XDG directories under
+a timeout in private user, mount, network, IPC and PID namespaces; X sockets
+are private and Xvfb has no TCP listener.  The real UI creates the Mighty
+`GuixHero`, accepts a palace quest, enters dungeon level one, moves to a
+traversable adjacent square, and saves.  A fresh Tk session uses the ordinary
+load menu.  The runner compares the live pre-save, serialized and loaded
+compressed hero/quest/level state, requires the load to consume the save, and
+checks that the output NAR is unchanged and store files stay read-only.
+The same real Tk proof edits a monster's HP, saves `GuixHerd` and reloads the
+changed HP while requiring the shipped monster dictionary to remain unchanged.
+It also loads the shipped TOLD level template, edits and saves a user template
+under the same name, and reloads its changed geometry while requiring the
+shipped template to remain unchanged.  The package's `--guix-smoke` mode runs
+these checks on a supplied display even without the optional capture variables;
+it does not provision its own display.  The outer smoke passed both captured
+and no-capture runs.
+`.goocastle/evidence/issue-698.png` is a native capture of the restored Tk
+window, showing the hero with `HP = 19/19`, `Tunnels of Lost Dreams` and
+`Depth = 1`; it is not a rendered terminal approximation.
+
+## A Quest Too Far
+
+`aquesttoofar` 1.3 builds Geoffrey White's original C++/SDL game and bundled
+CharLib from the fixed `AQuestTooFar1.3-091010.zip` upstream source release.
+The measured archive SHA-256 is
+`377b99a0b59b85c966c85b7f0dc287db09293db39a157c7af1889fadddc79b9c`, whose
+correct Guix base32 encoding is
+`174vqzfsv7w8y5x7q5csncyjj2fvhz10szsvr1kck1cvnnh9jyrp`; the preliminary
+research encoding was incorrect.  Upstream `readme.txt` grants
+GPL-3.0-or-later for the game and its bitmap assets; it and the complete
+`gpl-3.0.txt` are installed.  Bundled Windows executables and DLLs are removed,
+and SDL is supplied by Guix's SDL 1.2 compatibility input.  The build places
+libraries after objects in the link command, selects the C++ compiler and
+disables parallel make to avoid upstream's Build-directory prerequisite race.
+No gameplay source changes are needed and upstream provides no test target.
+
+On 2026-10-01, local source build, reproducibility rebuild (`--check`), offline
+lint and actual SDL runtime proof passed.  `make check-aquesttoofar` runs the
+installed launcher under a timeout with fresh HOME/XDG directories and private
+user, mount, network and PID namespaces.  A private Xvfb uses private X
+sockets and no TCP listener; the runner sends actual X11 keys to the game.
+It enters from the intro, opens help and returns to the same dungeon/HUD,
+then rests three times.  Each rest must change the rendered decline-counter
+field while preserving the decline label and dungeon-level HUD.  The runner
+recognizes the real highlighted SPACE prompt and acknowledges queued messages
+before the next rest; it does not count ignored keys as turns.  Native X11
+window dumps and unmodified PNGs supply the visual proof.
+`.goocastle/evidence/issue-649.png` shows the actual dungeon with `hp:50/50`
+and `dlvl:1`.  Caller state stays empty and the output NAR remains unchanged
+and read-only.  This game has no save/configuration writes, and the help-return
+check is **not** a claim of saved-game restoration.
+
+Both packages are verified locally only.  Publication remains pending because
+the Forgejo remote reports corrupt/empty Git objects; these changes are not
+represented as published channel state.
+
 ## Kbredir keyboard-event tools
 
 `kbredir` 0.9 builds the GPL-2.0-only source at revision
@@ -1087,6 +1165,8 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `axmud` | Axmud 2.0.0 | Perl/GTK3 graphical MUD client with GMCP and configurable scripting |
 | `aquarium-arena` | valrak/AquariumRL 0.4 | Underwater pygame arena roguelike with XDG high scores |
 | `atlas-warriors` | lkingsford/AtlasWarriors alpha-009 | Graphical fantasy roguelike with XDG state |
+| `ighalsk` | Ighalsk 0.1.16 | Original Python 2/Tk dungeon adventure with XDG saves and editors |
+| `aquesttoofar` | A Quest Too Far 1.3 | Source-built C++/SDL dungeon adventure starring an aging hero |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
@@ -1527,6 +1607,8 @@ make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
 make check-fontra   # local no-graft build plus conversion/workflow/HTTP smoke
+make check-ighalsk  # private Xvfb Tk creation/quest/move/save/load state proof
+make check-aquesttoofar # private Xvfb SDL intro/help-return/three decline turns
 make build-fontra   # local --no-grafts --no-offload build
 APOUT_FIXTURE=/path/to/cleared-v7-echo APOUT_FIXTURE_PROVENANCE='recorded source' APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE=yes make check-apout
 make check-durthang  # headless keyring failure plus loopback Telnet/GMCP map smoke
