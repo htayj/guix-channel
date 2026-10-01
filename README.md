@@ -34,6 +34,72 @@ build, `--check` reproducibility rebuild, offline lint and network-isolated
 save/load smoke passed using OMP tooling.  Runtime output was
 `DIABAIG_RUNTIME_OK`; no user game state or installed profile was changed.
 
+## Umoria original-game runtime proof
+
+`umoria` packages the full original **Umoria 5.7.15** terminal game, the
+maintained restoration of Moria, not a replacement game or prebuilt executable.
+The source is pinned to
+[`624a051dd368d19e86cc0c0908d658a7876809b3`](https://github.com/dungeons-of-moria/umoria/tree/624a051dd368d19e86cc0c0908d658a7876809b3),
+the peeled `v5.7.15` release commit, with Guix recursive NAR SHA256 base32
+`0hr90nbnvdrpr3j4zv20wgk8mz7w6lwh5ajf6grw8lgp9n810gnn`.
+This release is **GPL-3.0-or-later**, superseding issue #706's original GPL-2.0
+claim: upstream `AUTHORS` records the 2008 relicense, and
+[`CHANGELOG.md`](https://github.com/dungeons-of-moria/umoria/blob/624a051dd368d19e86cc0c0908d658a7876809b3/CHANGELOG.md)
+records the 5.7.15 correction of an accidentally reverted license.
+Historical GPLv2 and public-domain contributor credits are retained in
+`AUTHORS`; the release license, authors, changelog, historical documentation
+and `THIRD-PARTY-NOTICES` are installed under `share/doc/umoria`.
+
+The original C++/ncurses game is compiled from source.  Its complete generated
+ASCII help, splash and death-screen data and license use absolute immutable
+store paths under `share/umoria`.  The launcher redirects only scores and the
+default `game.sav` to `${XDG_STATE_HOME:-$HOME/.local/state}/umoria`, initializing
+a private writable `scores.dat` from the packaged score file when absent.
+It does not change the caller's working directory: explicit save arguments,
+including relative paths with subdirectories, and native character-description
+export paths retain their upstream meaning.  The private directory creation
+uses `umask 077` in a subshell; the game inherits the caller's original umask.
+Normal command-line options and the original interactive game remain intact.
+
+```sh
+guix build -L guix --no-grafts umoria
+make check-umoria
+umoria
+```
+
+On 2026-10-01, local source build, reproducibility rebuild (`--check`), offline
+lint and isolated runtime smoke passed for
+`/gnu/store/pxd60ny82krfs1rdw3p08l3znir4nhrp-umoria-5.7.15` using OMP tooling.
+`tests/umoria-smoke.sh` drives the real game through
+`tests/umoria-pty-runner.py` in fresh HOME/XDG directories and isolated user,
+network and PID namespaces.  Three scenarios exercise the XDG default save,
+HOME-fallback default save and caller-relative `saves/explicit.sav`.
+Each created an original Human Warrior, moved the live player from
+`(19, 22)` to `(19, 23)` (zero-based terminal row/column), and used the original
+Ctrl-X save action.  The helper waits for and acknowledges the real `-more-`
+prompt before waiting for `Rank` and acknowledging the scoreboard; it does not
+skip those original UI transitions.  A separate OS process resumed each native
+save at the same moved coordinate, exported an exactly identical native
+character description (identity, stats, equipment and inventory), and saved
+again.  Scores and default saves stayed in user state, custom saves and exports
+stayed relative to the caller, and installed-file hashes were unchanged.
+The runtime marker was `UMORIA-SMOKE: actual-movement-save-resume-native-character-ok`.
+
+Set `OMP_RUNTIME_RAW_CAPTURE=/absolute/path` when running the smoke to retain
+the exact resumed 80×24 gameplay PTY bytes before the second save;
+`OMP_RUNTIME_TEXT_CAPTURE`, `OMP_RUNTIME_NATIVE_CAPTURE` and
+`OMP_RUNTIME_TRANSCRIPT` optionally retain the decoded frame, original native
+character-description export and complete pair of XDG-scenario PTY sessions.
+The native export is a character sheet, **not** a native dungeon screenshot.
+`.goocastle/evidence/issue-706.png` is the inspected xterm rendering of that
+exact resumed raw gameplay capture: Warrior, MHP 19, CHP 19, the live town map
+and `Town level` are visible.  It is OMP-produced visual gameplay evidence,
+not a Goocastle execution or by itself the persistence proof.
+The upstream CMake deprecation warning remains visible and unsuppressed.
+This proves the exercised movement and persistence paths, not a full campaign.
+No user profile, existing game state or deployed system changed; no OKF catalog
+update applies to this repository-only addition.
+
 ## Six Two One original-game runtime proof
 
 `six-two-one` packages Jeff Lait's original **Six Two One 2016-03-06**
@@ -1566,6 +1632,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `rouge` | The Rougelike! 1.61 | Original curses Wikipedia-satire roguelike with XDG controls and high scores |
 | `sewer-massacre` | The Sewer Massacre 1.0 | Original Common Lisp curses roguelike with ASDF FASLs and XDG save state |
 | `six-two-one` | Six Two One 2016-03-06 | Original source-built C++/SDL word-puzzle roguelike with libtcod and XDG configuration/saves |
+| `umoria` | Umoria 5.7.15 (`624a051`) | Full original source-built C++/ncurses Moria with immutable data and XDG scores/default save |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
@@ -2012,6 +2079,7 @@ make check-talmudifier # two isolated real XeLaTeX renders, notices and store in
 make check-rouge    # four real curses PTYs, controls, score reload/MD5 and store integrity
 make check-sewer-massacre # original curses game-model movement, CL-STORE restoration and NAR integrity
 make check-six-two-one # isolated original SDL arrows, native second-process restore and NAR integrity
+make check-umoria   # three real PTY movement/Ctrl-X saves, separate-process resume and exact native character exports
 make check-rapidbrogue # fresh evidence, original SDL/terminal native save/resume and NAR integrity
 make build-fontra   # local --no-grafts --no-offload build
 APOUT_FIXTURE=/path/to/cleared-v7-echo APOUT_FIXTURE_PROVENANCE='recorded source' APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE=yes make check-apout
