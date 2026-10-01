@@ -1,5 +1,7 @@
 #!/bin/sh
-# Exercise FreeLarn in an isolated PTY with no host state or network access.
+# Exercise the original FreeLarn in real PTYs with isolated HOME/XDG state.
+# Main validation owns source realization, --check and lint; this smoke never
+# runs Guix or resolves dependencies inside the network namespace.
 set -eu
 
 guix_bin=${GUIX:-guix}
@@ -15,92 +17,53 @@ if test "$#" -eq 1; then
 else
     freelarn_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes freelarn)
 fi
+freelarn_out=$(CDPATH= cd -- "$freelarn_out" && pwd)
 
-find_program_output() {
+find_program() {
     program=$1
     shift
-    for candidate in $($guix_bin build "$@"); do
+    for candidate in $($guix_bin build --no-grafts "$@"); do
         if test -x "$candidate/$program"; then
-            printf '%s\n' "$candidate"
+            printf '%s\n' "$candidate/$program"
             return 0
         fi
     done
     return 1
 }
 
-util_linux_out=$(find_program_output bin/script util-linux)
-unshare_out=$(find_program_output bin/unshare util-linux)
-iproute_out=$(find_program_output bin/ip iproute2 || \
-              find_program_output sbin/ip iproute2)
-if test -x "$iproute_out/bin/ip"; then
-    ip_bin=$iproute_out/bin/ip
-else
-    ip_bin=$iproute_out/sbin/ip
-fi
+# Explicit executable overrides allow already-realized dependencies to be used
+# during the offline proof without invoking a daemon.  Otherwise resolve all
+# three before entering the fresh network namespace.
+python_bin=${PYTHON:-$(find_program bin/python3 python)}
+unshare_bin=${UNSHARE:-$(find_program bin/unshare util-linux)}
+timeout_bin=${TIMEOUT:-$(find_program bin/timeout coreutils-minimal)}
+test -x "$python_bin"
+test -x "$unshare_bin"
+test -x "$timeout_bin"
 
 test -x "$freelarn_out/bin/freelarn"
 test -x "$freelarn_out/libexec/freelarn"
 test ! -e "$freelarn_out/bin/stub"
-test -s "$freelarn_out/share/doc/freelarn/LICENSE"
-test -s "$freelarn_out/share/doc/freelarn/docs/LICENSE"
-test -s "$freelarn_out/share/doc/freelarn/README.md"
-test -s "$freelarn_out/share/doc/freelarn/docs/HISTORY"
-test -s "$freelarn_out/share/doc/freelarn/docs/CHANGELOG"
+for file in LICENSE docs/LICENSE README.md docs/HISTORY docs/CHANGELOG; do
+    test -s "$freelarn_out/share/doc/freelarn/$file"
+done
 grep -q 'Apache License' "$freelarn_out/share/doc/freelarn/LICENSE"
-grep -q 'Apache License' "$freelarn_out/share/doc/freelarn/docs/LICENSE"
+grep -q 'Licensed under the Apache License, Version 2.0' \
+    "$freelarn_out/share/doc/freelarn/docs/LICENSE"
 grep -q 'C++11 compiler' "$freelarn_out/share/doc/freelarn/README.md"
-test -x "$util_linux_out/bin/script"
-test -x "$unshare_out/bin/unshare"
-test -x "$ip_bin"
-
-# A fresh user/network namespace exposes no host network.  Bring its loopback
-# interface up solely to make the isolation explicit; FreeLarn has no service.
-if test "${FREELARN_SMOKE_IN_NETNS:-}" != 1; then
-    if ! "$unshare_out/bin/unshare" --user --map-root-user --net --fork \
-            sh -c '"$1" link set lo up' sh "$ip_bin"; then
-        echo "freelarn-smoke: user and network namespaces are required" >&2
-        exit 1
-    fi
-    exec env FREELARN_SMOKE_IN_NETNS=1 GUIX="$guix_bin" \
-        "$unshare_out/bin/unshare" --user --map-root-user --net --fork \
-        sh -c '"$1" link set lo up; exec "$2" "$3"' \
-        sh "$ip_bin" "$0" "$freelarn_out"
-fi
 
 temporary=$(mktemp -d "${TMPDIR:-/tmp}/freelarn-smoke.XXXXXX")
 trap 'rm -rf "$temporary"' EXIT HUP INT TERM
-home=$temporary/home
-state=$temporary/state
-work=$temporary/work
-mkdir -p "$home" "$state" "$work"
-
-test "$("$ip_bin" -o link show | wc -l)" -eq 1
-"$ip_bin" -o link show | grep -q ' lo:'
-
-# The first session creates all three cwd-relative game files in XDG state and
-# saves the game.  The empty caller directory proves the launcher changes cwd.
 before=$(find "$freelarn_out" -xdev -type f -exec sha256sum {} \; | sort)
-(
-    cd "$work"
-    env HOME="$home" XDG_STATE_HOME="$state" PATH= TERM=xterm \
-        "$util_linux_out/bin/script" -qefc \
-        "printf '\\nsmoke\\nS' | '$freelarn_out/bin/freelarn'" /dev/null
-)
-test -f "$state/freelarn/fl_scorefile.dat"
-test -f "$state/freelarn/fl_messages.txt"
-test -f "$state/freelarn/fl_savefile.dat"
-test -z "$(find "$work" -mindepth 1 -print -quit)"
-test "$before" = "$(find "$freelarn_out" -xdev -type f -exec sha256sum {} \; | sort)"
 
-# A second run consumes the saved game before quitting, proving restore works.
-(
-    cd "$work"
-    env HOME="$home" XDG_STATE_HOME="$state" PATH= TERM=xterm \
-        "$util_linux_out/bin/script" -qefc \
-        "printf 'Qy' | '$freelarn_out/bin/freelarn'" /dev/null
-)
-test ! -e "$state/freelarn/fl_savefile.dat"
-test -z "$(find "$work" -mindepth 1 -print -quit)"
-test "$before" = "$(find "$freelarn_out" -xdev -type f -exec sha256sum {} \; | sort)"
+# The runner waits on welcome/name/status/inventory/restore/quit prompts, never
+# pipes preloaded input to the child.  Both explicit XDG state and HOME fallback
+# receive independent new-game/save/restore sessions.  The external timeout and
+# PID namespace bound all descendants even if an upstream UI call blocks.
+"$timeout_bin" --kill-after=5 100 \
+    "$unshare_bin" --user --map-root-user --net --pid --fork --kill-child \
+    "$python_bin" "$channel_dir/tests/freelarn-pty-runner.py" \
+    "$freelarn_out/bin/freelarn" "$temporary"
 
-printf '%s\n' 'freelarn isolated PTY, XDG state, save/restore, and license smoke passed'
+test "$before" = "$(find "$freelarn_out" -xdev -type f -exec sha256sum {} \; | sort)"
+printf '%s\n' 'freelarn isolated event-driven PTY, XDG/fallback, save/restore, and license smoke passed'

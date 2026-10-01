@@ -32,7 +32,11 @@
               ;; Its warning policy predates supported GCC and Clang versions,
               ;; so retain its portability flags but do not make warnings fatal.
               (invoke "make"
-                      "CC_FLAGS=-std=c++11 -Winline -fno-elide-constructors -pipe -Wall -pedantic-errors -Wpointer-arith -Woverloaded-virtual -Wshadow -Wmissing-declarations -fomit-frame-pointer -DNIX_LOCAL")))
+                      (string-append
+                       "CC_FLAGS=-std=c++11 -Winline -fno-elide-constructors "
+                       "-pipe -Wall -pedantic-errors -Wpointer-arith "
+                       "-Woverloaded-virtual -Wshadow -Wmissing-declarations "
+                       "-fomit-frame-pointer -DNIX_LOCAL"))))
           (replace 'install
             (lambda _
               (let* ((out #$output)

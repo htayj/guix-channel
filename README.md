@@ -34,6 +34,50 @@ build, `--check` reproducibility rebuild, offline lint and network-isolated
 save/load smoke passed using OMP tooling.  Runtime output was
 `DIABAIG_RUNTIME_OK`; no user game state or installed profile was changed.
 
+## FreeLarn original-game runtime proof
+
+`freelarn` preserves the original Apache-2.0-licensed `atsb/freelarn` source
+at commit `8cd18cbaef70b9763a9f76cdfa11b78524ebcf5e` (version `0-8cd18cb`),
+not a replacement game or stub.  The installed documentation retains upstream
+`LICENSE`, `docs/LICENSE`, `README.md`, `docs/HISTORY` and `docs/CHANGELOG`.
+The launcher runs the actual C++11/ncurses game from `libexec/freelarn` and
+keeps mutable files under `${XDG_STATE_HOME:-$HOME/.local/state}/freelarn`.
+
+```sh
+guix build -L guix --no-grafts freelarn
+make check-freelarn
+```
+
+On 2026-10-01, local build, reproducibility rebuild, offline lint and the
+network-isolated runtime smoke passed.
+`tests/freelarn-smoke.sh` drives actual 80×24 PTYs through event-driven
+welcome/name/status/inventory prompts, new-game save (`S`), restoration in a
+second process, and confirmed quit (`Q`, `y`); it does not pipe preloaded
+keystrokes or substitute a rendered scene.  Independent disposable sessions
+exercise both explicit `XDG_STATE_HOME` and the `$HOME/.local/state` fallback
+with `XDG_STATE_HOME` unset.  HOME and the other XDG directories are isolated;
+the caller's working directory stays empty, and package-file hashes confirm
+that the immutable store is unchanged.  No host profile or user game state
+was changed.
+
+Restore proof checks the save's actual 20-byte player-name record for
+`OMP Smoke`, observes `Restoring . . .` and the named live HP/SPL/cave-level
+status without new-character prompts, verifies that restoration consumes
+`fl_savefile.dat`, exercises restored inventory, and confirms that quitting
+does not recreate a save.  Nonempty score and message files are also checked.
+Runtime output includes `FREELARN_RUNTIME_OK` and the smoke pass message.
+`.goocastle/evidence/issue-633.png` shows the actual restored live game
+(`OMP Smoke`, 10/10 HP, level 1, Cave Level and map); this screenshot is visual
+evidence, not by itself proof of save/restore.  Set
+`GOOCASTLE_RUNTIME_RAW_CAPTURE=/absolute/path/freelarn.raw` for the exact raw
+PTY prefix ending at the restored screen before inventory/quit/teardown.
+
+Legacy upstream compiler warnings remain visible and unsuppressed:
+`-Waddress` for the always-nonnull `potionname`/`scrollname` arrays, and
+`-Wmismatched-new-delete` for `free` applied to `operator new` storage in
+`FLPlayerSpells.cpp:447`.  Successful smoke does not establish that these
+unexercised legacy paths are safe.
+
 ## DicomToMesh command-line conversion
 
 `dicom2mesh` packages the MIT-licensed upstream revision
