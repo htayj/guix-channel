@@ -34,6 +34,64 @@ build, `--check` reproducibility rebuild, offline lint and network-isolated
 save/load smoke passed using OMP tooling.  Runtime output was
 `DIABAIG_RUNTIME_OK`; no user game state or installed profile was changed.
 
+## Atrogue original-game runtime proof
+
+`atrogue` packages the original **Atrogue 0.3.0** GPL-3.0-or-later source,
+not a replacement game or prebuilt executable.  The canonical pinned archive is
+[`atrogue-0.3.0.tar.gz`](https://downloads.sourceforge.net/project/atrogue/atrogue/atrogue-0.3.0/atrogue-0.3.0.tar.gz),
+with SHA256 `279847b357da5a2840c91f304ac0b9007671bb3e154d762367b8e56f37517999`
+and verified Guix base32
+`16bra4vnzrdqcwipck8m7sxp2xh0p704lc0zr502hnnsayrlg617`.
+The package retains `COPYING`, `README`, `INSTALL`, upstream `docu` and the
+manual page.  Its serial source build uses GNU89 inline linkage semantics.
+The `key2dir` direction string is changed from a fully occupied 32-byte array
+to an unsized array that includes its terminating NUL, fixing the `strchr`
+overread for non-movement commands rather than suppressing the warning.
+
+The launcher runs the actual ncurses executable from `libexec/atrogue` in
+`${XDG_DATA_HOME:-$HOME/.local/share}/atrogue`, with a private write umask.
+It changes to that directory and exports `HOME=.` for the game: upstream
+rejects HOME paths longer than 50 bytes and would otherwise fall back to the
+caller's working directory.  Relative HOME keeps native filename buffers
+bounded while supporting long external HOME/XDG paths.  Mutable files are
+native text screenshots and an optional message log; logging stays disabled
+by default.  **Upstream does not implement dungeon save/load**: quitting ends
+the current game, and screenshot/log persistence is not saved-game restoration.
+
+```sh
+guix build -L guix --no-grafts atrogue
+make check-atrogue
+atrogue
+```
+
+On 2026-10-01, local source build, reproducibility rebuild (`--check`), offline
+lint and the network-isolated runtime smoke passed.  `tests/atrogue-smoke.sh`
+drives three actual event-driven 80×24 PTY sessions with isolated HOME/XDG
+directories, not preloaded key input or a substitute renderer.  It enters the
+real preferences/game screens, sends movement commands and proves a player
+coordinate change from upstream's native screenshots, then rests until the
+displayed dungeon tick advances.  Two sessions share explicit XDG data state:
+the first proves default logging is off, and the second enables logging and
+checks that a real in-game version message reaches the private log.  Existing
+native screenshot bytes survive the second process without being overwritten.
+A third session exercises the HOME fallback with `XDG_DATA_HOME` unset.
+All use paths longer than upstream's 50-byte limit; runtime writes stay in the
+launcher-owned directory, the caller's working directory stays empty, and
+installed file hashes confirm unchanged immutable output.  No user profile
+or existing game state was changed.  The success marker is
+`ATROGUE-SMOKE: actual-gameplay-native-state-ok; no dungeon save/load upstream`.
+
+`.goocastle/evidence/issue-658.png` shows the inspected actual live dungeon,
+including the player `@`, room walls/floor and status `L:a1`, `H:n12/12`,
+`T:1`.  This is visual gameplay evidence, not dungeon save/restore proof.
+Set `OMP_RUNTIME_RAW_CAPTURE=/absolute/path/atrogue.raw` and
+`OMP_RUNTIME_NATIVE_CAPTURE=/absolute/path/atrogue.txt` when running the smoke
+to retain the live PTY bytes before quitting and the original game's native
+text screenshot, respectively.  Legacy compiler warnings remain visible and
+unsuppressed: `-Wpointer-to-int-cast` in `object.c:1969` (`MY_POINTER_TO_INT`)
+and `-Wint-to-pointer-cast` in `object.c:2011` (`MY_INT_TO_POINTER`).  The
+exercised paths do not establish safety of every legacy pointer/integer path.
+
 ## The Sewer Massacre original-game runtime proof
 
 `sewer-massacre` packages the original **The Sewer Massacre 1.0** Common Lisp
