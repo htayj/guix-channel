@@ -1,0 +1,35 @@
+Six Two One, original 7DRL release (2016-03-06)
+================================================
+Canonical source: http://www.zincland.com/7drl/sixtwoone/sixtwoone7drl.zip
+SHA-256: c3597321994f25a092e2b66cbeee0bf044331af4961bc434ec688770a63d6843
+
+Game C++ source, generated enums, configuration and text: Jeff Lait,
+BSD-3-Clause.  The embedded mt19937ar.c is copyright Makoto Matsumoto and
+Takuji Nishimura under its three-clause BSD terms.  The complete notices
+for both are reproduced in LICENSE.TXT.
+
+rooms/village.map and wordlist/wordlist.txt (Moby Project): public domain,
+as explicitly declared in LICENSE.TXT.
+
+linux/terminal.png is the game's Oxygen Mono glyph image (despite the
+.png suffix it has a BMP header).  Oxygen Mono is copyright 2012 Vernon
+Adams, with Reserved Font Name Oxygen.  Its SIL Open Font License 1.1 and
+copyright notice are reproduced in OFL.txt.  No other libtcod demo fonts
+are installed.
+
+libtcod 1.5.0, rebuilt from the same archive and linked into the game:
+copyright 2008,2009,2010 Jice, BSD-3-Clause.  See LIBTCOD-LICENSE.txt and
+LIBTCOD-CREDITS.txt.  No upstream executable/shared library is reused.
+
+The game links dynamically to separately packaged Guix SDL 1.2 compatibility,
+libpng and zlib libraries.  SDL12-compat and its SDL2 backend use the zlib
+license; libpng uses the libpng license; zlib uses the zlib license.  Their
+source and licenses are provided by their respective Guix packages.  The
+historic LGPL SDL redistribution notice from the archive is retained as
+README-SDL.txt and in LICENSE.TXT; it describes the old upstream binaries,
+not the replacement SDL12-compat shipped by Guix.
+
+Audio is disabled in upstream main.cpp (USE_AUDIO is commented out).
+SDL_mixer and the unused music directory are not linked or redistributed.
+Windows DLLs, opaque Linux executables, bundled SDL/libtcod shared libraries,
+UPX tooling, demos and their data/font assets are not installed.

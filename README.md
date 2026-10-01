@@ -34,6 +34,71 @@ build, `--check` reproducibility rebuild, offline lint and network-isolated
 save/load smoke passed using OMP tooling.  Runtime output was
 `DIABAIG_RUNTIME_OK`; no user game state or installed profile was changed.
 
+## Six Two One original-game runtime proof
+
+`six-two-one` packages Jeff Lait's original **Six Two One 2016-03-06**
+Seven Day Roguelike release, not a replacement game or prebuilt executable.
+The canonical pinned source is
+[`sixtwoone7drl.zip`](http://www.zincland.com/7drl/sixtwoone/sixtwoone7drl.zip),
+with SHA256 `c3597321994f25a092e2b66cbeee0bf044331af4961bc434ec688770a63d6843`
+and Guix base32 `0hv87nk711v8xhsc86wnyhd36i7h1gpbwv5nwa9a09agk4hp6nf3`.
+Upstream's HTTPS endpoint has a certificate-name mismatch; the HTTP archive
+matched the HTTPS bytes, and the fixed digest pins those contents.
+Game source and libtcod 1.5.0 are BSD-3-Clause, the room map and Moby wordlist
+are public domain, and the Oxygen Mono glyph image is SIL OFL 1.1.
+Upstream notices and `THIRD-PARTY-NOTICES.txt` are installed under
+`share/doc/six-two-one`.
+
+The original C++ game and its private static libtcod archive are compiled
+from source, using Guix SDL12-compat, libpng and zlib.  Bundled executables,
+shared libraries, Windows DLLs, demo fonts and unused music are not installed.
+The libtcod font-lifecycle fix calls `TCOD_sys_startup()` before loading the
+custom font: without it, static linkage can defer startup until after glyph
+loading, resetting ASCII mappings and the first-draw colour cache and causing
+real glyph corruption.  The launcher execs `libexec/six-two-one` from a writable
+`linux` layout under `${XDG_DATA_HOME:-$HOME/.local/share}/six-two-one`.
+Configuration, world definitions and native saves stay there; original text,
+glyphs, room map and wordlist are symlinked from the immutable store.  A newly
+copied configuration is explicitly made mode 0600, fixing the otherwise
+read-only mode inherited from a 0444 store file.  Existing configuration is
+preserved.  The launcher accepts no command-line options.
+
+```sh
+guix build -L guix --no-grafts six-two-one
+make check-six-two-one
+six-two-one
+```
+
+On 2026-10-01, local source build, reproducibility rebuild (`--check`), offline
+lint and the isolated graphical runtime smoke passed for
+`/gnu/store/jdc1rr95nv42k1s1iqkg85hgcxkr0flh-six-two-one-2016-03-06`.
+`tests/six-two-one-smoke.sh` drives the actual original SDL window in private
+Xvfb with fresh HOME/XDG directories and user, mount, network and PID namespaces.
+It enters the real Play/welcome screens, opens and dismisses original help,
+and sends actual cardinal arrow keys before using the original `Q` quit/save
+action.  Native time advanced to 14.  A distinct OS process then consumed
+`save/Default.sav` through the original loader, displayed the return welcome
+and restored dungeon, and saved again without a turn-taking action.  All six
+faces' words, discovered letters and room topology, map depth and clock were
+restored; the entire 44,566-byte save was identical in this run.  The runner
+asserts native-field restoration; whole-file identity is additional observed
+evidence, not a promise for every future run.
+
+The final artifacts in `/tmp/omp-six-two-one-final` include `proof.json`, native
+saves and unmodified XWD/PNG window captures.  Set
+`SIX_TWO_ONE_SMOKE_ARTIFACTS=/absolute/path` to retain another run's evidence.
+Mutable writes remained confined to the launcher's XDG data directory, the
+caller's working directory stayed empty, and before/after output NAR hashes
+matched.  No user profile or existing game state was changed.
+`.goocastle/evidence/issue-720.png` is the exact inspected `played.png` capture
+(640×425): Depth 1, discoveries `nnvet`, and `You punch a one.  You kill a one!`
+are legible.  It is actual visual gameplay evidence produced with OMP tooling,
+not a Goocastle execution or by itself the save/restore proof.  Legacy
+`thread.h` return warnings and headless Mesa/XKB warnings remain visible and
+unsuppressed.  This proves the exercised gameplay and persistence paths, not
+a full campaign or safety of every legacy path.  No deployed system changed;
+no OKF catalog update applies to this repository-only addition.
+
 ## Atrogue original-game runtime proof
 
 `atrogue` packages the original **Atrogue 0.3.0** GPL-3.0-or-later source,
@@ -1460,6 +1525,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `talmudifier` | subalterngames/talmudifier 1.1.0 + 1 revision (`1f23206`) | Offline XeLaTeX rendering of the bundled Talmud-style example; Python API installed |
 | `rouge` | The Rougelike! 1.61 | Original curses Wikipedia-satire roguelike with XDG controls and high scores |
 | `sewer-massacre` | The Sewer Massacre 1.0 | Original Common Lisp curses roguelike with ASDF FASLs and XDG save state |
+| `six-two-one` | Six Two One 2016-03-06 | Original source-built C++/SDL word-puzzle roguelike with libtcod and XDG configuration/saves |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
@@ -1905,6 +1971,7 @@ make check-aquesttoofar # private Xvfb SDL intro/help-return/three decline turns
 make check-talmudifier # two isolated real XeLaTeX renders, notices and store integrity
 make check-rouge    # four real curses PTYs, controls, score reload/MD5 and store integrity
 make check-sewer-massacre # original curses game-model movement, CL-STORE restoration and NAR integrity
+make check-six-two-one # isolated original SDL arrows, native second-process restore and NAR integrity
 make build-fontra   # local --no-grafts --no-offload build
 APOUT_FIXTURE=/path/to/cleared-v7-echo APOUT_FIXTURE_PROVENANCE='recorded source' APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE=yes make check-apout
 make check-durthang  # headless keyring failure plus loopback Telnet/GMCP map smoke
