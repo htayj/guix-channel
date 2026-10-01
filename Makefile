@@ -42,7 +42,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	vt05 weidu blincolnlights pdp10-its-disassembler itstar pdp11 pdp6 uc-explorer \
 	azurra-gtk-theme pdp10-xpl-pdp-10 faugus-launcher react-blessed wanderers \
 	clojure-roguelike astx acehack bell-labs-rogue7 aquarium-arena atlas-warriors \
-	bcrawl avanor bootrogue brogue brogue-lite chessrogue corerl cryptrover \
+	bcrawl avanor bootrogue brogue brogue-lite rapidbrogue chessrogue corerl cryptrover \
 	cutlassrl dhack diabaig dnethack dragonslayer grippy-socks gruesome hack hunger-games hydra-slayer \
 	martins-dungeon-bash nlarn robotfindskitten fontra dicom2mesh modus \
 	trial-by-combat xrogue keymapper liquid input-remapper emacs-cl \
@@ -77,6 +77,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-wanderers \
 	check-brogue \
 	check-brogue-lite \
+	check-rapidbrogue \
 	check-chessrogue \
 	check-corerl \
 	check-cutlassrl \
@@ -281,6 +282,13 @@ check-brogue:
 check-brogue-lite:
 	GUIX="$(GUIX)" tests/brogue-lite-smoke.sh
 
+check-rapidbrogue:
+	@set -eu; \
+	output="$$($(GUIX) build -L guix --no-grafts rapidbrogue)"; \
+	evidence=$$(mktemp -d "$${TMPDIR:-/tmp}/rapidbrogue-proof.XXXXXX"); \
+	printf '%s\n' "RapidBrogue evidence: $$evidence"; \
+	GUIX="$(GUIX)" tests/rapidbrogue-smoke.sh "$$output" "$$evidence"
+
 check-chessrogue:
 	GUIX="$(GUIX)" tests/chessrogue-smoke.sh
 
@@ -474,6 +482,7 @@ check: check-source-count check-sentinelone check-datamosh-security check-dicom2
 	check-modus check-amstelvar check-trial-by-combat check-xrogue check-keymapper \
 	check-liquid check-input-remapper check-emacs-cl check-liveonce check-xnethack \
 	check-qiling check-ai-code-interface-el check-chatgpt-el check-eca-emacs check-urogue check-letter-hunt check-pyrosimple check-savescummer check-srogue check-linerogue check-bloatcrawl2 check-ighalsk check-aquesttoofar check-freelarn check-talmudifier check-rouge check-sewer-massacre check-atrogue check-six-two-one \
+	check-rapidbrogue \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-kitty-bitmap-oldguix check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \

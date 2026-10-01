@@ -943,6 +943,46 @@ save or score files.  `.goocastle/evidence/issue-718.png` shows the restored
 game's welcome-back message and character sheet; the image alone is
 not the save/restore evidence, which is asserted by the PTY runner.
 
+## RapidBrogue
+
+`rapidbrogue` 1.4.0 builds the pinned upstream commit
+`02e6715fd81c4c9da1546943700da7b2b3ed482a`, restoring the original SDL
+frontend with text, tiles and hybrid graphics; `rapidbrogue -t` selects the
+optional ncurses frontend.  The complete upstream tile atlas (including
+embedded glyphs), precomputed tile cache and icon are installed.  Engine
+code is AGPL-3.0-or-later, legacy platform code is GPL-3.0-or-later, and the
+tile atlas and derived cache are CC BY-SA 4.0.  Full license texts, asset
+notices and source-header attributions are installed under
+`share/doc/rapidbrogue`.  The launcher keeps the editable keymap, saves,
+recordings, high scores and native screenshots in
+`$XDG_STATE_HOME/rapidbrogue` (fallback `~/.local/state/rapidbrogue`), while
+using immutable packaged resources.  The fake package-owned smoke path
+and the issue-714 legacy contract are retired.
+
+On 2026-10-01, source build, reproducibility rebuild (`--check`), offline
+lint and isolated native save/resume proof passed for both frontends.
+`make check-rapidbrogue` resolves the output with `$(GUIX) build -L guix
+--no-grafts rapidbrogue`, allocates a fresh evidence directory and passes
+both required arguments to `tests/rapidbrogue-smoke.sh OUTPUT EVIDENCE_DIR`.
+The proof uses private user, mount, network and PID namespaces, fresh
+HOME/XDG state, a private Xvfb display and SDL's software renderer.  Each
+frontend starts seed 1 at depth 1, takes real rest turns, saves at turn 3,
+restores in a second process and saves at turn 5.  Native save decoding
+asserts the preserved event prefix, saved-game-loaded marker and two live
+rest events after restoration; the package output NAR remains unchanged.
+
+`.goocastle/evidence/issue-714.png` is the exact native hybrid capture,
+inspected with actual graphical tiles, the switched-to-hybrid message,
+depth 1 and `Str: 12  Armor: 3`; a restored original-text frame was also
+inspected.  Screenshots are visual evidence, not the save/resume assertion.
+The build log retains unsuppressed upstream `-Warray-parameter`,
+`-Wstringop-overread`, `-Wstringop-overflow` and `-Wstringop-truncation`
+warnings, plus Guile's imported `delete` binding warning.  Full-campaign
+play, GPU acceleration and desktop window-manager integration were not
+verified.  Parent issue 480 remains open; child issue 714 is historically
+closed, and its historical proof is not accepted as current verification.
+This is repository/store verification, not a profile or OKF deployment.
+
 ## Avanor
 
 `avanor` remains the existing 0.5.8 package built from the SourceForge
@@ -1972,6 +2012,7 @@ make check-talmudifier # two isolated real XeLaTeX renders, notices and store in
 make check-rouge    # four real curses PTYs, controls, score reload/MD5 and store integrity
 make check-sewer-massacre # original curses game-model movement, CL-STORE restoration and NAR integrity
 make check-six-two-one # isolated original SDL arrows, native second-process restore and NAR integrity
+make check-rapidbrogue # fresh evidence, original SDL/terminal native save/resume and NAR integrity
 make build-fontra   # local --no-grafts --no-offload build
 APOUT_FIXTURE=/path/to/cleared-v7-echo APOUT_FIXTURE_PROVENANCE='recorded source' APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE=yes make check-apout
 make check-durthang  # headless keyring failure plus loopback Telnet/GMCP map smoke

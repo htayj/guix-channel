@@ -1063,22 +1063,6 @@
       }
     },
     {
-      "issueNumber": 714,
-      "packageName": "rapidbrogue",
-      "packageModulePath": "guix/tay/packages/rapidbrogue.scm",
-      "artifactPath": ".goocastle/evidence/issue-714.png",
-      "runtime": {
-        "executable": "rapidbrogue",
-        "invocation": {
-          "file": "rapidbrogue",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "RAPIDBROGUE_GUIX_SMOKE_OK"
-      }
-    },
-    {
       "issueNumber": 715,
       "packageName": "revengate",
       "packageModulePath": "guix/tay/packages/revengate.scm",
