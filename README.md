@@ -796,9 +796,10 @@ and `dlvl:1`.  Caller state stays empty and the output NAR remains unchanged
 and read-only.  This game has no save/configuration writes, and the help-return
 check is **not** a claim of saved-game restoration.
 
-Both packages are verified locally only.  Publication remains pending because
-the Forgejo remote reports corrupt/empty Git objects; these changes are not
-represented as published channel state.
+Both packages were verified locally and published to the Forgejo channel on
+2026-10-01 in signed commit `57a81493bca4f3a24e47eb3feab98f185e86dbc1`, after
+repair of the remote's corrupt Git objects.  This is a channel-publication
+receipt, not a claim that either package was deployed in a host profile.
 
 ## Kbredir keyboard-event tools
 
