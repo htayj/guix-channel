@@ -34,6 +34,76 @@ build, `--check` reproducibility rebuild, offline lint and network-isolated
 save/load smoke passed using OMP tooling.  Runtime output was
 `DIABAIG_RUNTIME_OK`; no user game state or installed profile was changed.
 
+## NarwhaRL original-game runtime proof
+
+`narwharl` packages Nathan Hetherington's full original **NarwhaRL 0.0.1**
+C++/ncurses game, not a replacement UI or prebuilt executable.  The pinned
+[Google Code source archive](https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/narwharl/narwharl-0.0.1.tar.gz)
+has SHA256
+`393744ba92536f16053c9813680c82634e327947fffc33d1fc9a288c16af0da5`
+(Guix base32 `198dmwb8qa4szk8k7z7z8xwk4kk3h866h4wq7h2icvskjax48drr`).
+The source headers grant **GPL-2.0-or-later**, not GPL-2.0-only; README's
+abbreviated GPL 2.0 label does not narrow that grant.  Bundled Mtrand retains
+its BSD-3-Clause notice.  Original documentation, GPL text, the source grant,
+Mtrand provenance and `THIRD-PARTY-NOTICES` are installed under
+`share/doc/narwharl`.
+
+The source-built game retains its complete original curses interface and all
+six definition files, installed immutably under `share/narwharl/defs`.
+The launcher creates private writable native state under
+`${XDG_STATE_HOME:-$HOME/.local/state}/narwharl`, runs the game there, and
+preserves the optional positional numeric random seed.  Saves remain the
+original four files below `save/`: `map.m`, `creatures.m`, `items.m` and
+`itemknowledge.txt`.  The package corrects RNG initialization order, undefined
+Map initialization and missing generator returns.  Actual native restore
+initially exposed a SIGILL from `list_merge`, a non-returning mutator wrongly
+declared to return a pointer; both declaration and definition now return
+`void`.  Strict floor-item comparison then exposed stacked ammunition placed
+with stale `(0, 0)` coordinates and lost on load; `Map::put` now maintains the
+item's actual floor coordinates.  Remaining upstream return warnings are
+visible and unsuppressed.
+
+```sh
+guix build -L guix --no-grafts narwharl
+make check-narwharl
+narwharl
+```
+
+On 2026-10-01, local source build, reproducibility rebuild (`--check`), offline
+lint and isolated real-game smoke passed for
+`/gnu/store/inwvnccc51p46m2yq7xbihmdfrkjifrr-narwharl-0.0.1` using OMP tooling.
+`tests/narwharl-smoke.sh` and `tests/narwharl-pty-runner.py` drive six native
+80×54 PTY sessions, three each for explicit XDG state and HOME fallback, with
+fresh user directories and isolated user, network and PID namespaces.
+Both scenarios make the original six skill choices, move the live player
+from `(8, 32)` to `(9, 32)` (zero-based native map x/y), inspect inventory and
+use the native `S` then `Y` save-and-quit action.  A separate process resumes
+the moved position and saves without moving; comparison verifies player
+identity/skills, position, inventory, every floor-item record, item knowledge
+and dungeon terrain.  A third process resumes, moves to `(10, 32)` and
+re-saves all four native files.  Writes remain confined to fresh user state
+and the installed output NAR is unchanged.  The runtime marker is
+`NARWHARL-SMOKE: actual-map-movement-save-restore-continued-save-ok`.
+
+This is **not a byte-identical whole-save claim**: the native scheduler runs
+monsters before the resumed input prompt, so HP/MP, door state and monster
+locations can change.  Terrain comparison treats open and closed doors as
+the same door feature; floor items are compared as complete record multisets
+because native loading reverses list order.  Upstream duplicate-frostbolt,
+view-distance, active-state and ordering limitations remain; the proof does
+not claim these are fixed or establish campaign-wide correctness.
+
+Set `OMP_RUNTIME_RAW_CAPTURE=/absolute/path` and optionally
+`OMP_RUNTIME_TEXT_CAPTURE` and `OMP_RUNTIME_TRANSCRIPT` when running the
+smoke to retain the exact resumed gameplay stream, decoded frame and six
+complete PTY sessions.  Native save evidence for the final local run is at
+`/tmp/narwharl-smoke.YBc5SfMS` (temporary, not a durable fixture).
+`.goocastle/evidence/issue-707.png` is the inspected xterm rendering of the
+exact restored 80×54 stream, showing Player, Lvl 1, HP 10/10, MP 50/50,
+Unarmed and the live map.  It is OMP-produced evidence, not a Goocastle
+execution or a campaign playthrough.  No user profile or deployed system
+changed; no network OKF update applies to this repository-only addition.
+
 ## Pyro original-game runtime proof
 
 `pyro` packages Eric Burgess's complete original **Pyro 0.04a** Python 2
@@ -1688,6 +1758,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `six-two-one` | Six Two One 2016-03-06 | Original source-built C++/SDL word-puzzle roguelike with libtcod and XDG configuration/saves |
 | `umoria` | Umoria 5.7.15 (`624a051`) | Full original source-built C++/ncurses Moria with immutable data and XDG scores/default save |
 | `pyro` | Pyro 0.04a | Complete original Python 2/curses roguelike with XDG native log; no upstream save/load |
+| `narwharl` | NarwhaRL 0.0.1 | Full original source-built C++/ncurses roguelike with immutable definitions and XDG/HOME native saves |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
@@ -2136,6 +2207,7 @@ make check-sewer-massacre # original curses game-model movement, CL-STORE restor
 make check-six-two-one # isolated original SDL arrows, native second-process restore and NAR integrity
 make check-umoria   # three real PTY movement/Ctrl-X saves, separate-process resume and exact native character exports
 make check-pyro     # two isolated real 80x25 PTYs, four moves each, inventory/help, native log rewrite and NAR integrity
+make check-narwharl # six isolated real PTYs, native movement/save/restore/re-save, complete floor items and NAR integrity
 make check-rapidbrogue # fresh evidence, original SDL/terminal native save/resume and NAR integrity
 make build-fontra   # local --no-grafts --no-offload build
 APOUT_FIXTURE=/path/to/cleared-v7-echo APOUT_FIXTURE_PROVENANCE='recorded source' APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE=yes make check-apout
