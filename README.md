@@ -34,6 +34,79 @@ build, `--check` reproducibility rebuild, offline lint and network-isolated
 save/load smoke passed using OMP tooling.  Runtime output was
 `DIABAIG_RUNTIME_OK`; no user game state or installed profile was changed.
 
+## The Sewer Massacre original-game runtime proof
+
+`sewer-massacre` packages the original **The Sewer Massacre 1.0** Common Lisp
+source, not a replacement game or prebuilt executable.  The fixed-hash archive
+is [`sewers-src.zip`](http://common-lisp.net/project/lifp/sewers-src.zip)
+(SHA256 `817be571edb562c0a808455be2019e85b404b684b41e7eb7b0ec6e41e3982066`).
+The game is GPL-2.0-only; `license.txt` permits use of `curses.lisp` for any
+purpose.  Both `license.txt` and `GNU-GPL` are installed under
+`share/doc/sewer-massacre`.  Upstream `readme.txt` and `controls.cfg` have no
+explicit redistribution grant and are excluded from the installed package.
+Instead of copying `controls.cfg`, the package independently generates the
+documented default command bindings as the original `init-controls` fallback:
+arrows/numpad move, `5` or `.` waits, `Q` quits, `S` saves, `i` shows inventory,
+and `e` shows equipment.  The original controls-file loader remains available.
+
+The launcher loads the normally compiled ASDF `sewers` FASLs with SBCL and
+the packaged dependency registry, without ambient Quicklisp or user ASDF
+configuration.  Source timestamps are normalized and FASLs compile at stable
+store paths.  It does **not** dump a build-time SBCL core: ASDF `build-program`
+creates an extra `*-exec.lisp` after timestamp normalization, introducing a
+wall-clock mtime as well as nondeterministic live-process contents in the core.
+The curses binding uses the absolute packaged `libncurses.so.6`, replacing
+upstream's unavailable `libncurses.so.5`.  The generated controls fallback
+matches the actual CRLF source expression and checks that it replaced the
+upstream error branch; a silently unmatched substitution is not accepted.
+
+Mutable game files live under
+`${XDG_STATE_HOME:-$HOME/.local/state}/sewer-massacre`, not the caller's working
+directory or immutable store.  With no arguments, `sewer-massacre` still calls
+the original `start-game`, retaining the normal interactive curses game and
+its random seeding.  Only `--smoke` uses the fixed seed for repeatable evidence.
+
+```sh
+guix build -L guix --no-grafts sewer-massacre
+make check-sewer-massacre
+sewer-massacre
+```
+
+On 2026-10-01, local source build, reproducibility rebuild (`--check`), offline
+lint and the network-isolated runtime smoke passed.  The smoke runs the
+actual original game in an 80×25 curses PTY, but it is **game-model smoke,
+not keyboard automation of the interactive loop**.  It calls the original
+`test-levels`, `init-controls` and `go-to-level`, then dispatches a real
+`move-to` through `do-action` to a passable, unoccupied neighbor.  It preserves
+the actor invariant normally provided by `run-stack`: bind `*curmonster*` to
+the player and remove that player's queued stack entry before dispatch, so
+`cast` can temporarily push the actor without duplicating it.  Coordinate
+and cancellation assertions prove that movement occurred.
+
+The smoke obtains a real knife, sets cash to 7, saves `current.sav` through
+the original CL-STORE serialization, then mutates cash to 99, HP to 1 and
+inventory to empty before loading that save.  It asserts restoration of
+position, HP, cash and the knife, including identity between the restored
+player and the map-cell actor.  This is saved-object restoration in the same
+process, not proof of keyboard save/restore or a second-process load.  The
+runner requires `SEWERS_SMOKE_OK`, isolates HOME/XDG state and user, network,
+IPC and PID namespaces, checks that the caller's working directory stays
+empty, and compares package NAR hashes before and after: the immutable output
+is unchanged.  No package was deployed into a user profile.
+
+`.goocastle/evidence/issue-729.png` shows the actual restored map, HP 10/10,
+Level 1 and Cash 7.  It comes from the exact 80×25 raw curses stream captured
+after `redraw-screen`/`refresh` and **before `endwin`**, not a replacement
+renderer or a Goocastle execution.  Set `SEWERS_SMOKE_ARTIFACTS=/absolute/path`
+when running `tests/sewer-massacre-smoke.sh` to retain `gameplay.raw` (that
+pre-teardown prefix) and `terminal.raw` (the complete session).  The screenshot
+is visual evidence, not by itself the save-mutation-restoration proof.
+Legacy ASDF/CFFI warnings remain visible and unsuppressed: `cl-store.asd`
+defines `cl-store-tests` rather than an ASDF secondary `cl-store/*` system,
+CFFI reports deprecated bare struct references, and generic-method
+redefinitions are reported.  The exercised paths do not establish safety of
+every legacy path.
+
 ## The Rougelike! original-game runtime proof
 
 `rouge` packages the original **The Rougelike! 1.61** Linux/source release
@@ -1328,6 +1401,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `aquesttoofar` | A Quest Too Far 1.3 | Source-built C++/SDL dungeon adventure starring an aging hero |
 | `talmudifier` | subalterngames/talmudifier 1.1.0 + 1 revision (`1f23206`) | Offline XeLaTeX rendering of the bundled Talmud-style example; Python API installed |
 | `rouge` | The Rougelike! 1.61 | Original curses Wikipedia-satire roguelike with XDG controls and high scores |
+| `sewer-massacre` | The Sewer Massacre 1.0 | Original Common Lisp curses roguelike with ASDF FASLs and XDG save state |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
@@ -1772,6 +1846,7 @@ make check-ighalsk  # private Xvfb Tk creation/quest/move/save/load state proof
 make check-aquesttoofar # private Xvfb SDL intro/help-return/three decline turns
 make check-talmudifier # two isolated real XeLaTeX renders, notices and store integrity
 make check-rouge    # four real curses PTYs, controls, score reload/MD5 and store integrity
+make check-sewer-massacre # original curses game-model movement, CL-STORE restoration and NAR integrity
 make build-fontra   # local --no-grafts --no-offload build
 APOUT_FIXTURE=/path/to/cleared-v7-echo APOUT_FIXTURE_PROVENANCE='recorded source' APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE=yes make check-apout
 make check-durthang  # headless keyring failure plus loopback Telnet/GMCP map smoke
