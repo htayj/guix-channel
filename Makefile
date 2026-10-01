@@ -46,7 +46,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	cutlassrl dhack diabaig dnethack dragonslayer grippy-socks gruesome hack hunger-games hydra-slayer \
 	martins-dungeon-bash nlarn robotfindskitten fontra dicom2mesh modus \
 	trial-by-combat xrogue keymapper liquid input-remapper emacs-cl \
-	liveonce xnethack qiling ai-code-interface-el chatgpt-el eca-emacs urogue letter-hunt pyrosimple savescummer srogue linerogue bloatcrawl2 ighalsk aquesttoofar freelarn \
+	liveonce xnethack qiling ai-code-interface-el chatgpt-el eca-emacs urogue letter-hunt pyrosimple savescummer srogue linerogue bloatcrawl2 ighalsk aquesttoofar freelarn talmudifier \
 	caelestia-shell caelestia-cli quickshell-for-caelestia libcava m3shapes \
 	dart-sass gpu-screen-recorder font-rubik font-material-symbols-rounded \
 	font-nerd-caskaydia-cove
@@ -426,6 +426,10 @@ check-aquesttoofar:
 check-freelarn:
 	GUIX="$(GUIX)" tests/freelarn-smoke.sh
 
+.PHONY: check-talmudifier
+check-talmudifier:
+	GUIX="$(GUIX)" tests/talmudifier-smoke.sh
+
 check-fontra:
 	GUIX="$(GUIX)" tests/fontra-smoke.sh
 
@@ -453,7 +457,7 @@ check-emacs-mentor-pinned:
 check: check-source-count check-sentinelone check-datamosh-security check-dicom2mesh \
 	check-modus check-amstelvar check-trial-by-combat check-xrogue check-keymapper \
 	check-liquid check-input-remapper check-emacs-cl check-liveonce check-xnethack \
-	check-qiling check-ai-code-interface-el check-chatgpt-el check-eca-emacs check-urogue check-letter-hunt check-pyrosimple check-savescummer check-srogue check-linerogue check-bloatcrawl2 check-ighalsk check-aquesttoofar check-freelarn \
+	check-qiling check-ai-code-interface-el check-chatgpt-el check-eca-emacs check-urogue check-letter-hunt check-pyrosimple check-savescummer check-srogue check-linerogue check-bloatcrawl2 check-ighalsk check-aquesttoofar check-freelarn check-talmudifier \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-kitty-bitmap-oldguix check-lyntin check-mmapper check-mudlet check-ocaml-irc-client \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \

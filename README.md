@@ -78,6 +78,63 @@ Legacy upstream compiler warnings remain visible and unsuppressed:
 `FLPlayerSpells.cpp:447`.  Successful smoke does not establish that these
 unexercised legacy paths are safe.
 
+## Talmudifier local document rendering
+
+`talmudifier` packages `subalterngames/talmudifier` at commit
+`1f23206f7b6c899d6ff56bc4ce3fb610ef5cbe56` as `1.1.0-1.1f23206`, using
+the existing fixed-hash source snapshot.  The Python code is MIT/Expat.
+Bundled Averia, EB Garamond, Fell French Canon and Fell Flowers fonts carry
+SIL OFL 1.1 notices.  FrankRuehlCLM-Medium is GPL-2.0-only, with no embedding
+exception; the Culmus Bitstream notice applies to the unshipped David font,
+not FrankRuehl.  Mekorot-Rashi is LPPL-licensed.
+The package preserves upstream notices and adds the missing Hebrew-font
+notices from the fixed-hash frozen TeX Live 2024 `culmus.doc.r68495` archive
+(Culmus 1.1 notices) and Mekorot-Fonts 0.03 archive under
+`share/doc/talmudifier/fonts`.  The fonts are the pinned upstream assets,
+not claimed source-rebuilt fonts.
+
+The obsolete PyHyphen dependency is replaced by Guix Pyphen with its local
+`en_US` dictionary and `right=3`, matching its `RIGHTHYPHENMIN`.  Pyphen's
+longest-first splits are reversed to preserve upstream's ascending split order
+and styled `Word` pairs.  The installed
+Python modules and header resource are retained.  The TeX closure includes
+`kvoptions`, `kvsetkeys` and `ltxcmds`, fixing the missing dependencies needed
+by `lineno`; runtime rendering does not install TeX packages or fetch fonts.
+
+```sh
+guix build -L guix --no-grafts talmudifier
+make check-talmudifier
+talmudifier
+```
+
+The no-argument launcher typesets the **fixed bundled example**, not arbitrary
+command-line input.  It runs the real local XeLaTeX engine in a disposable
+writable workspace and copies only `test_page.pdf` and `test_page.tex` into
+the caller's `Output/` directory.  These are freshly generated outputs, not
+downloaded PDFs or screenshots.  XeLaTeX failures propagate nonzero status,
+print compiler diagnostics and preserve generated logs in a caller-side
+`talmudifier-diagnostics-*` directory rather than being swallowed or reported
+as success.  Separately, the installed Python `Talmudifier(left, center, right)`
+API accepts caller-supplied local text and defaults to the installed recipe,
+fonts and absolute store XeLaTeX executable, with disposable TeX state per
+call.  Importing the API does not create `Output/`; rendering creates it in
+the caller's working directory.  Explicit caller recipes remain supported.
+
+On 2026-10-01, local source build, package reproducibility rebuild (`--check`),
+offline lint and two real network-isolated example renders passed.  The smoke
+runner uses fresh HOME/XDG/TeX state and fixed `SOURCE_DATE_EPOCH`, validates
+PDF/TeX content and font notices, and checks that the immutable package tree
+is unchanged.  It also renders independent three-column caller text through
+the Python API with `PATH=/nonexistent` and no local recipe/font directories,
+checks that the resulting PDF contains that text, and verifies the `Morbi`
+hyphenation boundary does not leave a two-character suffix.  Generated example
+TeX was byte-identical and normalized rendered PDF text
+was equal across both runs; **PDF files differed bytewise**, so this is not a
+claim of deterministic PDF output.  `.goocastle/evidence/issue-646.png` is the
+actual rendered page: the title “Talmudifier Test Page,” a bold central block
+surrounded by columns, and visible Hebrew glyphs, with no obvious clipping at
+the captured resolution.  No package was deployed into a user profile.
+
 ## DicomToMesh command-line conversion
 
 `dicom2mesh` packages the MIT-licensed upstream revision
@@ -1212,6 +1269,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `atlas-warriors` | lkingsford/AtlasWarriors alpha-009 | Graphical fantasy roguelike with XDG state |
 | `ighalsk` | Ighalsk 0.1.16 | Original Python 2/Tk dungeon adventure with XDG saves and editors |
 | `aquesttoofar` | A Quest Too Far 1.3 | Source-built C++/SDL dungeon adventure starring an aging hero |
+| `talmudifier` | subalterngames/talmudifier 1.1.0 + 1 revision (`1f23206`) | Offline XeLaTeX rendering of the bundled Talmud-style example; Python API installed |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
@@ -1654,6 +1712,7 @@ make check-image-tape # Guix-toolchain output-safety regression; no tape hardwar
 make check-fontra   # local no-graft build plus conversion/workflow/HTTP smoke
 make check-ighalsk  # private Xvfb Tk creation/quest/move/save/load state proof
 make check-aquesttoofar # private Xvfb SDL intro/help-return/three decline turns
+make check-talmudifier # two isolated real XeLaTeX renders, notices and store integrity
 make build-fontra   # local --no-grafts --no-offload build
 APOUT_FIXTURE=/path/to/cleared-v7-echo APOUT_FIXTURE_PROVENANCE='recorded source' APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE=yes make check-apout
 make check-durthang  # headless keyring failure plus loopback Telnet/GMCP map smoke
