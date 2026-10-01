@@ -34,6 +34,60 @@ build, `--check` reproducibility rebuild, offline lint and network-isolated
 save/load smoke passed using OMP tooling.  Runtime output was
 `DIABAIG_RUNTIME_OK`; no user game state or installed profile was changed.
 
+## Pyro original-game runtime proof
+
+`pyro` packages Eric Burgess's complete original **Pyro 0.04a** Python 2
+curses game, without porting it or bundling Windows binaries.  The pinned
+[source-only release](https://sourceforge.net/projects/pyrogue/files/pyro/0.04a/pyro-0.04a-source.zip/download)
+has SHA256
+`74dfcbdf5b1624c4b347058b14e88c0f7483152d4c729667e81bc44c1c5f5b7c`
+(Guix base32 `0z2vbwf4ri0vx1krcwjc5laq6x0gikl192q58yrw890nbggwppvl`).
+The research digest beginning `81451f8d` describes the full Windows release
+`pyro-0.04a.zip`, not this source-only archive; all 16 source members are
+byte-identical between the two.  The package retains every original member,
+the MIT game notice and the zlib-style Philip Chu / Technicat installer
+notice.  `setup.py` and `install.nsi` remain inert historical packaging
+recipes; the original readme and MIT notice are also installed under
+`share/doc/pyro`.
+
+The public launcher runs the unmodified game with packaged Python 2 from
+`${XDG_STATE_HOME:-$HOME/.local/state}/pyro`, where its only native persistent
+file, `pyro.log`, is writable.  It preserves inherited terminal settings,
+including custom terminfo paths, and appends the packaged ncurses terminfo
+database as a fallback.  Python bytecode writes and accidental host Python
+dependencies are disabled.  **Upstream has no save/load facility**: a new
+process starts a new game and rewrites the log, rather than resuming a saved
+character.
+
+```sh
+guix build -L guix --no-grafts pyro
+make check-pyro
+pyro
+```
+
+On 2026-10-01, local source build, reproducibility rebuild (`--check`), offline
+lint and isolated real-game smoke passed for
+`/gnu/store/w3rpgbrm2zziv6gvnk7gifvqkfmfm929-pyro-0.04a` using OMP tooling.
+`tests/pyro-smoke.sh` and `tests/pyro-smoke.py` drive two separate 80×25 PTY
+sessions through the original name/god/race prompts.  Each session verifies
+four actual numpad movements by tracking the live `@` position, opens and
+returns from inventory and command help, and confirms a clean native quit.
+The first launch creates `pyro.log`; a sentinel appended between sessions is
+absent after the second launch, proving native log rewrite only, **not
+save/load**.  Fresh HOME/XDG directories, isolated user/network/PID
+namespaces and a private read-only bind mount confine this proof; the output
+NAR hashes remain identical and no other native state file is created.
+
+Set `PYRO_SMOKE_ARTIFACTS=/absolute/new-or-empty/directory` to retain the
+report, both complete PTY streams, native logs and exact live capture.
+`.goocastle/evidence/issue-713.png` is the inspected xterm rendering of the
+final output's exact first-session prefix after the fourth verified move,
+before inventory, help or quit.  The real dungeon map and `HP:16/16`, `Lvl:1`
+and `DLvl:1` are visible.  This is local gameplay/log-rewrite evidence, not
+a campaign playthrough or a Goocastle execution.  No user profile was
+installed or changed, nothing was deployed, and no network OKF update
+applies to this repository-only addition.
+
 ## Umoria original-game runtime proof
 
 `umoria` packages the full original **Umoria 5.7.15** terminal game, the
@@ -1633,6 +1687,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `sewer-massacre` | The Sewer Massacre 1.0 | Original Common Lisp curses roguelike with ASDF FASLs and XDG save state |
 | `six-two-one` | Six Two One 2016-03-06 | Original source-built C++/SDL word-puzzle roguelike with libtcod and XDG configuration/saves |
 | `umoria` | Umoria 5.7.15 (`624a051`) | Full original source-built C++/ncurses Moria with immutable data and XDG scores/default save |
+| `pyro` | Pyro 0.04a | Complete original Python 2/curses roguelike with XDG native log; no upstream save/load |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
@@ -2080,6 +2135,7 @@ make check-rouge    # four real curses PTYs, controls, score reload/MD5 and stor
 make check-sewer-massacre # original curses game-model movement, CL-STORE restoration and NAR integrity
 make check-six-two-one # isolated original SDL arrows, native second-process restore and NAR integrity
 make check-umoria   # three real PTY movement/Ctrl-X saves, separate-process resume and exact native character exports
+make check-pyro     # two isolated real 80x25 PTYs, four moves each, inventory/help, native log rewrite and NAR integrity
 make check-rapidbrogue # fresh evidence, original SDL/terminal native save/resume and NAR integrity
 make build-fontra   # local --no-grafts --no-offload build
 APOUT_FIXTURE=/path/to/cleared-v7-echo APOUT_FIXTURE_PROVENANCE='recorded source' APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE=yes make check-apout
