@@ -278,6 +278,38 @@ exit; store files remained unchanged/read-only.  Upstream obsolete-alias
 warnings remain visible, not suppressed.  `.goocastle/evidence/issue-606.png`
 shows the actual result `(42)` of defining and calling a Common Lisp function.
 
+## Org popup posframes
+
+`emacs-org-popup-posframe` packages the existing recipe for
+`A7R7/org-popup-posframe` at revision
+`d39cb7c2c9a996689b0d6519695eed3d807c0c85` (`0.0.1-0.d39cb7c`), covering
+source issue #62 and runtime issue #619.  The GPL-3.0-or-later Elisp library
+propagates `emacs-posframe`; Org is supplied by Emacs.  The upstream license is
+installed under `share/doc/emacs-org-popup-posframe`; source screenshots are
+not installed.  Installation does not enable the global minor mode or modify
+the user's Emacs configuration.
+
+```sh
+guix build -L guix --no-grafts emacs-org-popup-posframe
+make check-emacs-org-popup-posframe
+```
+
+In a graphical Emacs session, load `org-popup-posframe` and explicitly enable
+`org-popup-posframe-mode` to display supported Org popup buffers as child
+frames.  Batch/non-graphical posframe display is intentionally a no-op.
+
+On 2026-10-01, the local build, `--check` reproducibility rebuild and offline
+lint passed.  The revised smoke passed batch mode enable/disable, rendered the
+real `org-capture` menu in a child frame, selected a template and finalized
+its Org content, and exercised posframe show/hide/delete.  It used private
+HOME/XDG state and private Xvfb sockets in an isolated namespace; host Emacs
+configuration was not touched and the output NAR remained unchanged.
+`.goocastle/evidence/issue-619.png` was visually inspected and shows the live
+menu's `s Offline capture` and `x Alternate` options plus the `Template key`
+prompt; it is menu-rendering evidence, not an image of capture finalization.
+The existing upstream `original-set-window-buffer` byte-compilation warning
+remains disclosed, not suppressed.
+
 ## You Only Live Once
 
 `liveonce` 005 builds the original game's curses port from the pinned Zincland
