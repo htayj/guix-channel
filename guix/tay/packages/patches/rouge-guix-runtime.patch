@@ -1,0 +1,101 @@
+Use the packaged ncurses ABI and keep mutable state outside the caller's cwd.
+The upstream game and UI remain unchanged.  Default controls and the ncurses
+library are resolved to their immutable store locations by the recipe.
+
+--- a/curses.lisp
++++ b/curses.lisp
+@@ -23,14 +23,14 @@
+ (in-package :curses)
+ 
+ (define-foreign-library curses
+-  (:unix "libncurses.so.5")
++  (:unix "@GUIX_NCURSES@")
+   (t (:default "curses")))
+ 
+ ;(eval-when (:compile-toplevel :load-toplevel :execute)
+ 
+ (use-foreign-library curses);)
+ 
+-(defctype chtype :long)
++(defctype chtype :unsigned-int)
+ 
+ (defcfun "initscr" :pointer)
+ 
+@@ -400,7 +400,7 @@
+ ;;          (t (c-waddch (window s) c) cc))))
+ 
+ 
+-(defcfun ("PDC_ungetch" ungetch) :int (char :int))
++(defcfun ("ungetch" ungetch) :int (char :int))
+ 
+ (defmethod stream-unread-char ((s curses-in) c)
+   ;;(ungetch (char-code c)) 
+--- a/rouge.lisp
++++ b/rouge.lisp
+@@ -73,10 +73,29 @@
+   (dolist (i keys)
+     (setf (gethash i *controls*) action)))
+ 
++(defun user-directory (variable fallback)
++  ;; XDG base-directory variables must be absolute; empty values are unset.
++  (let ((value (uiop:getenv variable)))
++    (merge-pathnames
++     "rouge/"
++     (if (and value (plusp (length value)) (char= (char value 0) #\/))
++         (uiop:ensure-directory-pathname value)
++         (merge-pathnames fallback (user-homedir-pathname))))))
++
++(defun control-file ()
++  (let ((custom (merge-pathnames "controls.cfg"
++                                (user-directory "XDG_CONFIG_HOME" ".config/"))))
++    (if (probe-file custom) custom #P"@GUIX_CONTROLS@")))
++
++(defun hiscore-file ()
++  (merge-pathnames "hiscore"
++                  (user-directory "XDG_STATE_HOME" ".local/state/")))
++
+ (defun init-controls ()
+   (setf *controls* (make-hash-table :test #'eql))
+-  (when (probe-file "controls.cfg")
+-    (with-open-file (i "controls.cfg")
++  (when (probe-file (control-file))
++    (with-open-file (i (control-file))
+-      (let* ((*read-eval* nil)
++      (let* ((*package* (find-package :rougelike))
++             (*read-eval* nil)
+              (remapping (read i)))
+         (loop for remap in remapping
+@@ -1928,8 +1947,8 @@
+           'list))
+ 
+ (defun load-hiscore ()
+-  (unless (probe-file "hiscore") (return-from load-hiscore nil))
+-  (with-open-file (in "hiscore"
++  (unless (probe-file (hiscore-file)) (return-from load-hiscore nil))
++  (with-open-file (in (hiscore-file)
+                       :external-format #+clisp charset:utf-8 #+sbcl :utf-8)
+     (let* ((*read-eval* nil)
+            (hashentry (read in))
+@@ -1938,7 +1957,8 @@
+       (if (equal (genmd5 hiscore) hashentry) hiscore :error))))
+ 
+ (defun save-hiscore (hiscore)      
+-  (with-open-file (out "hiscore" :direction :output :if-exists :supersede
++  (ensure-directories-exist (hiscore-file))
++  (with-open-file (out (hiscore-file) :direction :output :if-exists :supersede
+                        :external-format #+clisp charset:utf-8 #+sbcl :utf-8)
+     (let ((*print-readably* t))
+       (format out "~s~%~s " (genmd5 hiscore) hiscore))))
+@@ -2003,10 +2023,10 @@
+         *messages* nil)
+   (if debug (connect-console)
+    (create-console "textconsole.exe"))
+-  (erase)
+-  (splash-screen)
+   (unwind-protect
+        (progn
++         (erase)
++         (splash-screen)
+          (when (init-controls) (error "Cannot find control file. This sucks :("))
+                (erase)
+                (generate-map :stairs nil :player :random)

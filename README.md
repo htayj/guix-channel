@@ -34,6 +34,63 @@ build, `--check` reproducibility rebuild, offline lint and network-isolated
 save/load smoke passed using OMP tooling.  Runtime output was
 `DIABAIG_RUNTIME_OK`; no user game state or installed profile was changed.
 
+## The Rougelike! original-game runtime proof
+
+`rouge` packages the original **The Rougelike! 1.61** Linux/source release
+from 2007-04-16, not a replacement game or the Windows 1.6 executable.
+The fixed-hash source is
+[`rouge-src.zip`](https://common-lisp.net/project/lifp/rouge-src.zip)
+(SHA256 `e3049336dd733e3d98d8da15a0682e589c6b49b2409dc38f653cf85de9511d7d`).
+Upstream `rouge.lisp` is GPL-2.0-or-later and `curses.lisp` is public domain.
+The package retains `license.txt`, `GNU-GPL`, `readme.txt` and dependency
+`THIRD-PARTY-NOTICES` under `share/doc/rouge`, plus the original default
+`share/rouge/controls.cfg`; no external game assets or prebuilt executables
+are installed.
+
+The only installed executable, `bin/rouge`, starts the actual curses game
+with SBCL and runtime-loads the normally compiled ASDF FASLs.  There is no
+dumped SBCL core: avoiding its entropy/timestamp-bearing contents permits
+reproducible package output.  The CFFI binding uses the absolute packaged
+ncurses library, its `unsigned-int` `chtype` ABI and ncurses `ungetch` rather
+than PDCurses' `PDC_ungetch`.  The controls reader dynamically binds
+`*package*` to `ROUGELIKE`, so action symbols resolve to the game package
+even when loaded through ASDF; read-time evaluation remains disabled.
+
+Custom controls come from `${XDG_CONFIG_HOME:-$HOME/.config}/rouge/controls.cfg`
+when present, otherwise from the installed defaults.  High scores live in
+`${XDG_STATE_HOME:-$HOME/.local/state}/rouge/hiscore`.  Empty or relative XDG
+values use the HOME fallback.  The caller's working directory and immutable
+package output are not used for mutable state.  Default `5` waits, `w`
+switches the primary weapon between word and banhammer, and `Q` ends the
+game and reaches the original name/high-score prompts.  This persistence
+is a high-score file, not a saved-game/restore feature.
+
+```sh
+guix build -L guix --no-grafts rouge
+make check-rouge
+rouge
+```
+
+On 2026-10-01, local source build, reproducibility rebuild (`--check`), offline
+lint and the network-isolated runtime smoke passed.  `tests/rouge-smoke.sh`
+drives four real event-driven 80×25 curses PTY sessions under a timeout in
+private user, network and PID namespaces, with fresh HOME/XDG directories.
+It exercises actual wait and weapon-switch actions, enters two names through
+the real quit prompts, independently verifies the score file's 16-octet MD5
+checksum and sorted entries, and observes the prior name on a second process's
+high-score screen.  Both explicit XDG state and the HOME fallback are exercised.
+A user controls override removes `5` and binds wait to `.`, proving that the
+original loader honors remapping.  The runner requires `ROUGE_RUNTIME_OK`;
+the shell checks installed licenses, read-only files and unchanged output
+hashes.  No user profile or existing game state was changed.
+
+`.goocastle/evidence/issue-728.png` shows the actual live dungeon stream,
+HP 10/10 and primary weapon word; it is visual evidence, **not score-persistence
+proof**.  Set `GOOCASTLE_RUNTIME_RAW_CAPTURE=/absolute/path/rouge.raw` when
+running the smoke to retain that exact live PTY prefix before `Q` and curses
+teardown.  Legacy upstream Lisp style warnings remain visible and unsuppressed;
+the exercised runtime paths do not establish safety of every legacy path.
+
 ## FreeLarn original-game runtime proof
 
 `freelarn` preserves the original Apache-2.0-licensed `atsb/freelarn` source
@@ -1270,6 +1327,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `ighalsk` | Ighalsk 0.1.16 | Original Python 2/Tk dungeon adventure with XDG saves and editors |
 | `aquesttoofar` | A Quest Too Far 1.3 | Source-built C++/SDL dungeon adventure starring an aging hero |
 | `talmudifier` | subalterngames/talmudifier 1.1.0 + 1 revision (`1f23206`) | Offline XeLaTeX rendering of the bundled Talmud-style example; Python API installed |
+| `rouge` | The Rougelike! 1.61 | Original curses Wikipedia-satire roguelike with XDG controls and high scores |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
@@ -1713,6 +1771,7 @@ make check-fontra   # local no-graft build plus conversion/workflow/HTTP smoke
 make check-ighalsk  # private Xvfb Tk creation/quest/move/save/load state proof
 make check-aquesttoofar # private Xvfb SDL intro/help-return/three decline turns
 make check-talmudifier # two isolated real XeLaTeX renders, notices and store integrity
+make check-rouge    # four real curses PTYs, controls, score reload/MD5 and store integrity
 make build-fontra   # local --no-grafts --no-offload build
 APOUT_FIXTURE=/path/to/cleared-v7-echo APOUT_FIXTURE_PROVENANCE='recorded source' APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE=yes make check-apout
 make check-durthang  # headless keyring failure plus loopback Telnet/GMCP map smoke
