@@ -166,6 +166,71 @@ This proves the exercised local SUPDUP client paths, not remote historical
 host interoperability or other protocols.  No profile or deployed system
 changed; no network OKF update applies to this repository-only addition.
 
+## robotfindskitten original-game runtime proof
+
+`robotfindskitten` packages the original **3.0000000.726** C/ncurses Zen
+simulation from
+[`Codeberg revision 471872786ca3a40db5b53f7baf96233a3793c45d`](https://codeberg.org/robotfindskitten/robotfindskitten/src/commit/471872786ca3a40db5b53f7baf96233a3793c45d).
+The pinned source archive has SHA256
+`6be0c9bab746e8484e29b2033bb915a59880cc1205c9f4ec3a377c62ca6cd5e7`
+(Guix base32 `1rymdk564z1p7bng9j852b6816552nwkn0xj5574is26nyxckq3b`).
+Autoreconf regenerates the archive's missing build machinery; the native
+executable is installed directly as `bin/robotfindskitten`, with no production
+wrapper, `--guix-smoke` option, Python dependency or substitute game.
+
+The complete original non-kitten item (NKI) collection, man/info documentation,
+desktop/AppStream metadata and PNG/SVG icons are installed.  Native colored
+items, eight-direction movement, deterministic seeds and custom NKI
+collections are retained.  Source and data are **GPL-2.0-or-later**, with
+upstream's full license and REUSE information retained under
+`share/doc/robotfindskitten`.  The AppStream file explicitly declares
+`<metadata_license>CC-BY-SA-4.0</metadata_license>` despite its SPDX header
+saying GPL-2.0-or-later.  Both declarations are preserved and the package
+metadata lists both licenses; this does not resolve that upstream discrepancy
+by silently discarding either statement.
+
+```sh
+guix build -L guix --no-grafts robotfindskitten
+make check-robotfindskitten
+robotfindskitten              # original interactive game
+robotfindskitten -n 1 -s 0    # one NKI plus kitten, reproducible native seed
+```
+
+Press a key at the introduction, then move robot (`#`) with arrow keys or the
+native movement bindings.  Touching a non-kitten item displays its description;
+touching kitten runs the original animation and ends the simulation.
+
+On 2026-10-02, local source build, `--check` reproducibility rebuild and offline
+lint passed for
+`/gnu/store/fp0f82gi50pis0cmfvxbgdyl6yfsjbjz-robotfindskitten-3.0000000.726`.
+There are **no upstream test programs**; Guix's enabled check phase exercises
+the supplied Automake `make check` target, not a claimed gameplay suite.
+The independent test-only smoke launches the actual installed ELF in an
+80×24 PTY, with fresh HOME/XDG/work directories, empty PATH and a network
+namespace whose only interface is down loopback.  It observes the native
+playfield and uses breadth-first routes through empty cells, sending genuine
+`h/j/k/l` keyboard moves and checking each rendered robot position.  It checks
+a description against the installed `vanilla.nki`, unchanged robot/object
+positions on NKI contact, the original kitten win and exit status zero.  If
+kitten is touched first, the helper replays the same native seed with reversed
+target order and verifies the same initial field rather than inventing a game.
+The final run observed 62 moves, NKI interaction and the kitten win.  No private
+user state was written; the read-only output NAR remained
+`0vl4amqjjndf0zzsb3h7a5m1cni264gyqqfphz5ra2ns7mj8mm0d`.
+
+The former issue-717 artificial robot contract was removed, not replaced with
+another production smoke implementation.  Runtime helpers remain only in
+`tests/robotfindskitten-smoke.sh` and `tests/robotfindskitten-smoke.py`.
+Set `ROBOTFINDSKITTEN_RAW_CAPTURE=/absolute/path` to retain genuine terminal
+bytes.  `/tmp/omp-robot-kitten-final.raw` is the final pre-exit capture;
+`.goocastle/evidence/issue-487.png` is the inspected actual 80×24 xterm replay
+of those unchanged bytes, showing `You found kitten! Way to go, robot!` and
+the original playfield with `#` adjacent to `n` and the `0` object.  This is
+OMP-produced terminal evidence, not Goocastle execution or an artificial UI.
+The proof covers the exercised native movement/NKI/win paths, not every
+movement key or custom collection.  No profile or deployed system changed;
+no network OKF update applies to this repository-only correction.
+
 ## Stoat Soup original-console runtime proof
 
 `stoat-soup` packages the independently playable **Stoat Soup
@@ -2442,6 +2507,7 @@ update applies to this repository-only addition.
 | `bcrawl` | b-crawl/bcrawl 1.42.1 | Terminal-only Dungeon Crawl Stone Soup fork with XDG-managed state |
 | `avanor` | Avanor 0.5.8 | Historical terminal roguelike with XDG-managed saves and high scores |
 | `nlarn` | NLarn 0.8.0 | Curses roguelike rewrite of Larn with isolated user state |
+| `robotfindskitten` | Codeberg robotfindskitten 3.0000000.726 (`4718727`) | Original GPL-2.0-or-later C/ncurses game installed as a direct native ELF, complete NKI/assets/docs; conflicting AppStream CC-BY-SA-4.0 metadata declaration retained |
 | `durthang` | Durthang 0.2.0 | Rust TUI MUD client with TLS, GMCP, automapping, and encrypted Secret Service transport |
 | `frostbite` | Frostbite 1.18.2 | Qt5 DragonRealms client with Ruby scripting, profiles, maps, sound, and XDG state |
 | `godisc` | DavidSatimeWallin/godisc | Discworld-oriented terminal MUD client with an optional tmux workspace |
@@ -3177,6 +3243,7 @@ make check-tinyfugue # sanitized fresh-HOME loopback fake-MUD protocol smoke
 make check-weidu # namespaced fresh-XDG offline TP2 installation smoke
 make check-trebuchet # fresh-HOME Xvfb Tcl/Tk plus loopback protocol smoke
 make check-vt05 # isolated Xvfb SDL window plus PTY TERM-contract smoke
+make check-robotfindskitten # isolated actual native PTY movement, installed NKI description, kitten win/exit and unchanged NAR
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass

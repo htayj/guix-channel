@@ -1099,22 +1099,6 @@
       }
     },
     {
-      "issueNumber": 717,
-      "packageName": "robotfindskitten",
-      "packageModulePath": "guix/tay/packages/robotfindskitten.scm",
-      "artifactPath": ".goocastle/evidence/issue-717.png",
-      "runtime": {
-        "executable": "robotfindskitten",
-        "invocation": {
-          "file": "robotfindskitten",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "GUIX_SMOKE_OK robotfindskitten"
-      }
-    },
-    {
       "issueNumber": 718,
       "packageName": "savescummer",
       "packageModulePath": "guix/tay/packages/savescummer.scm",
