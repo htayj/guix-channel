@@ -1794,6 +1794,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `nrl-text-to-phoneme` | greg-kennedy/p5-NRL-TextToPhoneme | NRL text-to-phoneme command and rule tables |
 | `you-can-datamosh-on-linux` | happyhorseskull/you-can-datamosh-on-linux | Datamoshing and video-to-GIF commands with argv-safe FFmpeg calls |
 | `ffglitch` | [FFglitch 0.10.2](https://ffglitch.org/) / [ramiropolla/ffglitch-core](https://github.com/ramiropolla/ffglitch-core) | Native bitstream editor, glitch encoder, live scripted player, and private QuickJS/JSON helpers |
+| `praat@7.0.02` | [Praat 7.0.02](https://praat.org/) / Debian audited DFSG source | Full GTK3 speech analysis/editor and batch scripting executable, ALSA/JACK/PulseAudio support, built-in manual and license notices |
 | `xq` | sibprogrammer/xq | Offline-built XML and HTML beautifier and extractor |
 | `sentinelone` | SentinelOne Linux agent 24.3.3.1 | Proprietary x86_64 agent; authorized installer required |
 
@@ -2153,6 +2154,130 @@ software-rendered Xvfb verification, not physical MIDI, GPU acceleration,
 audio, live-camera, or desktop-session verification.  No user profile was
 changed or deployed.
 
+### Praat: acoustic analysis, native files and the GTK editor
+
+`(tay packages praat)` updates the inherited GNU Guix **6.6.30** recipe to
+**7.0.02** (upstream release date: 2026-08-26), preserving the full GTK3 GUI,
+command-line scripting, built-in manual and ALSA/JACK/PulseAudio support.
+It compiles the original program and its adapted vendored numeric/audio
+libraries from the audited
+[Debian DFSG tarball](https://deb.debian.org/debian/pool/main/p/praat/praat_7.0.02+dfsg.orig.tar.xz),
+SHA256 `454a4bbadcd5e3ea656c2f7d5394566047a3d786b3e43c3bd4c6678c04d03267`
+(Guix base32 `0rrjs028qry6shxkrr5khvbs6iv0asa56z9gdijymqymvjx4njj5`).
+The repack corresponds to upstream commit
+`6f3da9ef1d8cce0d5684afc104d02888dfc71b25`; its
+[versioned per-file copyright audit](https://sources.debian.org/data/main/p/praat/7.0.02%2Bdfsg-1/debian/copyright)
+records the excluded executable downloads, ZIPs, obsolete font archive and
+Unicode HTML copies.  The channel additionally removes exactly four Microsoft
+Windows screenshots from `docs/pictures`: `arm64.png`, `dontrun.png`,
+`intel64.png` and `unblock.png`.  Upstream `docs/LICENSE.txt` permits these only
+under fair use, not a free license; they are download illustrations, not
+application, manual or test dependencies.  All remaining source and fixtures
+are retained.  The program is GPL-3.0-or-later and the remaining website is
+CC-BY-SA-4.0; mixed component notices, GPL text, Debian's audit and the built-in
+license-manual source are installed under `share/doc/praat-7.0.02`.
+
+The package retains both real offline upstream batch suites, `test` and
+`dwtest`, including their home-directory assertions.  A fresh build HOME
+isolates preferences/plugins and no test-data download is requested.  The
+zero-fuzz driver patch removes only the unmatched `endif` in
+`dwtest/runAllTests_batch.praat`, leaving the complete loop and cleanup intact.
+Driver threading follows Guix's requested build parallelism; the installed
+application's threading is unchanged.  Installed `runSystem`/`runSystem$`
+use the store's shell rather than relying on a host `/bin/sh`.
+
+Select the channel package explicitly: plain `praat` can select the older
+upstream package on the current Guix.  The aggregate build/lint lists use
+`praat@7.0.02`, and `check-praat` uses the module expression.
+
+```sh
+guix install -L guix -e '(@ (tay packages praat) praat)'
+# Or realize the output without changing any profile:
+praat_out=$(guix build -L guix --no-grafts -e '(@ (tay packages praat) praat)')
+"$praat_out/bin/praat" --version
+make check-praat
+```
+
+For a self-contained batch example, generate an original two-second, mono
+48 kHz, 440 Hz PCM fixture in a writable working directory, then use Praat's
+actual analysis and native-file commands:
+
+```sh
+python3 - <<'PY'
+import math, struct, wave
+samples = [round(32768 * 0.2 * math.sin(2 * math.pi * 440 * n / 48000))
+           for n in range(96000)]
+with wave.open('original-440hz.wav', 'wb') as sound:
+    sound.setparams((1, 2, 48000, 0, 'NONE', 'not compressed'))
+    sound.writeframes(struct.pack('<' + 'h' * len(samples), *samples))
+PY
+cat > analysis.praat <<'PRAAT'
+sound = Read from file: "original-440hz.wav"
+intensity = Get intensity (dB)
+pitch = To Pitch: 0, 75, 600
+frequency = Get mean: 0.1, 1.9, "Hertz"
+selectObject: sound
+Save as binary file: "original.Sound"
+reloaded = Read from file: "original.Sound"
+Save as WAV file: "reloaded.wav"
+writeInfoLine: "frequency_hz=", fixed$ (frequency, 9)
+appendInfoLine: "intensity_db=", fixed$ (intensity, 9)
+PRAAT
+"$praat_out/bin/praat" --FULL-TRUST --run --no-pref-files --no-plugins analysis.praat
+```
+
+`--run` is batch mode, not a GUI launch.  On a working graphical display,
+open the real SoundEditor with the same fixture and analysis settings:
+
+```sh
+cat > editor.praat <<'PRAAT'
+sound = Read from file: "original-440hz.wav"
+View & Edit
+editor: sound
+    Show analyses: "yes", "no", "no", "no", "no", 10
+    Spectrogram settings: 0, 2000, 0.02, 70
+    Zoom: 0.2, 0.3
+    Move cursor to: 0.25
+endeditor
+PRAAT
+"$praat_out/bin/praat" --FULL-TRUST --new-send --no-plugins editor.praat
+```
+
+The editor shows the waveform and spectrogram from 0.2 to 0.3 seconds with
+the cursor at 0.25 seconds; use its normal controls to edit, zoom and save.
+For ordinary interactive use, launch `praat` and use **Open → Read from file**,
+select the Sound in Objects, then **View & Edit**.  The batch example disables
+preferences/plugins; the GUI command disables plugins but can use preferences.
+The isolated smoke supplies a fresh HOME/XDG environment for both modes.
+`--FULL-TRUST` grants script filesystem/system-command access: use it only for
+scripts you trust.
+
+Verified 2026-10-02: the final notice-complete source build produced
+`/gnu/store/y3qw2b94d4bdha7jkc65rdw5j14h1j77-praat-7.0.02` and passed both
+upstream batch suites.  The explicit channel-package `guix build --check`
+rebuild reproduced the output, Praat's no-network lint was clean, and the
+integrated `make check-praat` passed.  The real numerical and GTK smoke
+retained at `/tmp/omp-praat-published` measured **439.999584949 Hz** and
+**76.989675205 dB**
+from the generated fixture.  All **96,000 native sample values** round-tripped
+exactly through `original.Sound`, and exported WAV PCM was identical.
+`runSystem$ ("printf 42")` returned `42`.  The actual SoundEditor displayed
+the waveform/spectrogram and reported the requested zoom/cursor state; the
+smoke clicked the real pause dialog's **Continue** button, closed the editor
+and quit with exit status **0**.  Return selects **Stop** in that dialog and
+is not equivalent to Continue.  `result.json`, `editor-info.txt` and
+`editor.png` retain the observed values, editor state and real Xvfb capture.
+The final editor screenshot is retained at
+[`.goocastle/evidence/praat-editor.png`](.goocastle/evidence/praat-editor.png);
+it shows the actual waveform, spectrogram, zoom and cursor, not a replacement
+UI or a Goocastle execution.
+The proof used fresh HOME/XDG state and private user/mount/network/PID
+namespaces, with only loopback and physical audio endpoints hidden; before
+and after output NAR hashes matched.  This proves software analysis, native
+file persistence and the GTK surface, **not physical recording/playback** or
+a real desktop session.  No profile or deployed system was changed; no
+network OKF catalog update applies to this repository-only integration.
+
 ### hy3 layout plugin
 
 `(tay packages hy3)` pins `d7e0c58a1116df3d79f24a225f17b988112ca1ad`,
@@ -2316,6 +2441,7 @@ Limitations and cautions:
 make check          # source-count/dry-run, no-network lint, and smoke tests
 make check-datamosh-security # package build plus argv-injection smoke test
 make check-ffglitch  # native/JSON/Python/QuickJS editing, independent decode and isolated SDL preview
+make check-praat    # explicit 7.0.02 selection, acoustic/native round trip and isolated real GTK editor
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware

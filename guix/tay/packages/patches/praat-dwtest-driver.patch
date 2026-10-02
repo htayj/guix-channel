@@ -1,0 +1,14 @@
+Fix the batch driver's unmatched endif, keeping the complete test loop and
+its cleanup.  The driver has no enclosing if: its only if ends inside the
+for loop, so the second endif is a syntax error in the 7.0.02 source.
+
+--- a/dwtest/runAllTests_batch.praat
++++ b/dwtest/runAllTests_batch.praat
+@@ -52,7 +52,6 @@
+ 		endif
+ 	endfor
+ 	removeObject: files
+-endif
+ random_initializeSafelyAndUnpredictably()
+ Debug multi-threading: "yes", 0, 0, "no"
+ 
