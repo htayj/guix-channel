@@ -2185,6 +2185,65 @@ No user profile deployment or host configuration change occurred.
 successful JSON result and unchanged-NAR smoke report.  The unrelated
 `nhfourk` module-load warning remains visible, not suppressed.
 
+## Domainslib native OCaml task pools
+
+`domainslib` packages the ISC-licensed `ocaml-multicore/domainslib` revision
+[`2a884868ff69c13ecef8efecca9ba1102ff11a7f`](https://github.com/ocaml-multicore/domainslib/tree/2a884868ff69c13ecef8efecca9ba1102ff11a7f)
+as `0.5.2-1.2a88486`, reusing the immutable snapshot origin.  The installed
+findlib library provides native multicore task pools, promises, parallel loops,
+reductions, scans/searches and bounded/unbounded channels.  The upstream README,
+changelog and ISC notice are installed under `share/doc/domainslib`.
+
+This is a library, not a `domainslib` command.  It reuses Miou's complete
+OCaml **5.4.1** compiler/findlib dependency closure, including implicit build
+inputs, rather than building a second ABI graph.  Use the matching consumer
+manifest, not default OCaml 4.14 or a profile containing incompatible OCaml
+libraries:
+
+```sh
+guix build -L guix --no-grafts domainslib
+make check-domainslib
+guix shell -L guix --no-grafts --pure -m tests/domainslib-manifest.scm -- \
+  ocamlfind ocamlopt -thread -package domainslib -linkpkg -o app app.ml
+./app
+```
+
+The recipe runs Domainslib's **unfiltered native Dune test alias**, including
+integration, clock, randomized model/property tests, byte/native backtraces and
+debug runtime.  Dependency test coverage is package-specific, not a claim of
+entire-monorepo or JavaScript coverage: QCheck's four selected public packages
+exclude the unrelated PPX extension; Yojson's core package excludes JSON5 and
+bench packages; multicoretests supplies STM and utility packages, not LIN or
+the separate umbrella package; both `kcas` and `kcas_data` are retained.
+Multicore-magic's optional JavaScript test is gated on `js_of_ocaml` availability;
+both native tests remain enabled.  Kcas's compiler-dependent opaque location
+constructor renderings are removed from MDX expectations via wildcards, not
+repinned to new incidental strings.  Every semantic example and operation
+result remains exercised.
+
+On 2026-10-02, local build, `--check` reproducibility rebuild and offline lint
+completed successfully; the full native Domainslib suite passed.  A separate
+consumer compiled against the installed library in a fresh, network-isolated
+Guix container with private HOME/XDG state.  A barrier and distinct domain IDs
+proved simultaneous execution rather than serial computation of correct sums.
+The consumer verified parallel Fibonacci, exactly-once per-index coverage with
+default/unit chunks, reduction and empty-range identity, integer and
+noncommutative scans including empty/singleton boundaries, found/missing search,
+exception identity and pool reuse after failure, zero-worker fallback, invalid
+pool/channel bounds, zero-buffer rendezvous, bounded capacity and unbounded FIFO.
+Its transcript matched independent exact oracles:
+`fib=317811 reduction=500500 channel=358438400` followed by
+`domainslib consumer passed`.  Store files stayed read-only and the output NAR
+remained unchanged:
+`1nmjs721cjsfc7vakpibvq22s02ampryh9ligikzw7baszgcm0hz`.
+Findlib's duplicate compiler `unix`/`threads` META warnings remain visible;
+they are not compiler ABI errors.  No user profile deployment or host
+configuration change occurred.
+`.goocastle/evidence/issue-149.png` is the actual xterm replay of
+`/tmp/omp-domainslib-final.raw`, visually inspected with the exact Fibonacci,
+reduction and channel results, successful consumer and unchanged-NAR report.
+The duplicate findlib warnings remain visible, with no runtime errors.
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -2271,6 +2330,7 @@ successful JSON result and unchanged-NAR smoke report.  The unrelated
 | `miou` | robur-coop/miou `5fcb7e6` (four commits after 0.8.0) | MIT-licensed OCaml-5.4.1 core, backoff, sync, Bitv, Unix and runtime-events libraries with native stubs |
 | `tui` | pmatiello/tui `e435b1b` | EPL-2.0 Clojure styled text/page rendering and cooked line input, AOT jar and offline `tui-clojure` launcher; no raw-key/cursor API |
 | `proiel` | syntacticus/proiel 1.3.3 (`8b74767`) | Corpus-free Ruby treebank library and MIT synthetic example; MIT code, historical TEI GPL-3.0-or-later and W3C schemas |
+| `domainslib` | ocaml-multicore/domainslib `2a88486` | ISC native OCaml-5.4.1 multicore task pools, promises, parallel algorithms and channels; matching private compiler closure |
 | `ruby-memoist` | memoist 0.16.2 | MIT Ruby method-result caching library |
 | `ruby-sax-machine` | sax-machine 1.3.2 | MIT declarative SAX parsing library with Nokogiri backend |
 | `mushkin` | Mushkin 0.5.1 | Qt MUSHclient-compatible MUD client with Lua, TLS, and MSP |
@@ -2940,6 +3000,7 @@ make check-notty    # isolated native installed-library Unix/Lwt consumer, Unico
 make check-miou     # fresh offline container, native six-library OCaml-5.4.1 consumer and immutable NAR
 make check-tui      # installed-jar upstream suite, isolated Unicode/ANSI/cooked-input PTY and immutable package/snapshot NARs
 make check-proiel   # canonical Ruby-3.3.9 isolated installed consumer, exact XML/token/edge/valency semantics and immutable NAR
+make check-domainslib # isolated native concurrent task/parallel-array/channel proof with exact oracles and immutable NAR
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
