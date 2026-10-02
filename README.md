@@ -166,6 +166,96 @@ This proves the exercised local SUPDUP client paths, not remote historical
 host interoperability or other protocols.  No profile or deployed system
 changed; no network OKF update applies to this repository-only addition.
 
+## UnNetHack native TTY and save continuity
+
+`unnethack` builds the original **UnNetHack 6.0.4** native terminal game from
+[`1f061e93b44d93e509f35dbfa3c853f758712558`](https://github.com/UnNetHack/UnNetHack/tree/1f061e93b44d93e509f35dbfa3c853f758712558),
+with Guix Git-tree base32 hash
+`1s08lc1jjv4nyrj4dg0d4rrlg84m6v46dw8xca6gz0sp636pdvqb`.
+The game and native data use the actual **NetHack General Public License**,
+recorded with Guix's `fsdg-compatible` license constructor and the
+[canonical license URL](https://nethack.org/common/license.html).
+`dat/license` is installed verbatim.  The incomplete upstream Debian
+copyright entry for Benjamin Rubin is not a GPL grant and does not justify
+inventing one; the optional Lisp-window BSD notice and other original source
+notices remain in the installed documentation/source record.
+
+The package retains all native TTY game rules, levels, monsters, objects,
+UTF-8/color rendering, internal compression, help, Guidebook, dump support,
+`nhdat` and recovery utility.  `make all`, not the executable-only default
+target, builds the complete resources.  Optional tilesets and bundled TTFs
+without accompanying per-file permission at this pin are filtered from the
+native origin; their exact tileset attribution README is retained.  They are
+not required for any TTY feature, and this package makes no graphical-port
+claim.  The relevant native source and notices are retained under
+`share/doc/unnethack/tty-source`, with dated package modifications documented
+in `TTY-SOURCE-NOTICE`.
+
+The recipe removes the two legacy macros that redefine compiler-owned
+`__warn_unused_result__` / `warn_unused_result` attributes and break glibc's
+`__has_attribute` query, restoring native attribute/diagnostic behavior rather
+than suppressing warnings.  Environment `CC=gcc` preserves the upstream
+`-DAUTOCONF` compiler flag, and the C tests receive Check's pkg-config header
+flags as well as library flags.
+
+```sh
+guix build -L guix --no-grafts unnethack
+make check-unnethack
+unnethack             # original native TTY game
+```
+
+The launcher puts mutable saves, bones, levels, scores/logs and dumps under
+`${XDG_DATA_HOME:-$HOME/.local/share}/unnethack`, with private permissions and
+no setuid/setgid installation or ownership changes.  Immutable data stays in
+`share/unnethack`.  The playground must be absolute and at most **128 bytes**;
+longer paths fail before writes rather than falling back to the store.
+Configure the original game with `~/.unnethackrc` or `NETHACKOPTIONS`.
+Use `i` for inventory, ordinary movement/search commands to play and `S` then
+`y` to save; the next ordinary invocation restores and consumes the save.
+Installation does not edit the user's configuration.
+
+On 2026-10-02, local source build, `--check` reproducibility rebuild, offline
+lint and standalone installed-game smoke passed for
+`/gnu/store/9pxmmdmh71wa35sgjlq8k98qm3ym57sv-unnethack-6.0.4`.
+All **five upstream C suites** (base32, hacklib, options, unicode and wishing)
+passed with zero failures/errors.  The separate legacy Ruby/RSpec-1 task
+requires `windowtype:dummy` and is not upstream's `make check` target; it is
+not claimed as native-TTY verification.  No dummy frontend, Python test
+interpreter or production smoke command is shipped; the obsolete issue-733
+contract was removed.
+
+`tests/unnethack-smoke.sh` and `tests/unnethack-smoke.py` run three real
+100×24 TTY processes with seed **424242**, a lawful human female Valkyrie
+named OmpProof, private HOME/XDG/work state, empty PATH, separate network/mount
+namespaces and a read-only store bind mount.  Each process makes one genuine
+floor move and five native search turns, inspects every inventory page, then
+saves and exits zero.  The observed turn sequence is **1 → 7 → 13 → 19**,
+with player coordinates `(54, 5) → (53, 5) → (52, 5) → (51, 5)` in the native
+80×21 zero-based map viewport.  Both restores exactly match the preceding
+saved HUD, every map cell, position, stats, HP, turn and every inventory
+letter/description, then consume the native save before continued play and
+resave.  HP remains **16/16**, with an uncursed +1 long sword in hand and an
+uncursed +0 dagger.  This proves actual native save continuity, not identical
+whole save bytes after advancing the world.
+
+Final receipts, raw TTY sessions and copied native saves are under
+`/tmp/omp-unnethack-final`; `continuity.json` records both exact restore
+comparisons and confined private writes.  To retain another run, pass
+`--output /absolute/fresh-directory` to `tests/unnethack-smoke.sh`.
+The installed read-only output NAR remains
+`1dw5v0x57jsyamj33kkqml1ajnag72jwr5c7iiic28wpbbzn1ll6`.
+`.goocastle/evidence/issue-733.png` is the inspected xterm replay of the
+unchanged restored TTY stream, showing OmpProof the Stripling, St 15/Dx 14/
+Co 18/In 14/Wi 8/Ch 8, Lawful, Dlvl 1, HP 16/16, Pw 2/2, AC 6, Exp 1,
+turn 7 and the native `@`/`f` map.  The welcome-back text has been cleared by
+the ordinary redraw; restore is established by the native continuity receipt,
+not a visible caption.  Terminal ECHO is disabled during replay to prevent
+DSR-response echo without modifying raw game bytes.  This is OMP-produced
+evidence of the real game, not Goocastle execution or an artificial frontend.
+The proof covers the exercised gameplay/save/restore paths, not a full
+campaign or the optional graphical ports.  No profile or deployed system
+changed; no network OKF update applies to this repository-only addition.
+
 ## NLarn original-game save continuity
 
 `nlarn` packages the original **NLarn 0.8.0** C/ncurses rewrite of Larn from
@@ -2575,6 +2665,7 @@ update applies to this repository-only addition.
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
 | `bcrawl` | b-crawl/bcrawl 1.42.1 | Terminal-only Dungeon Crawl Stone Soup fork with XDG-managed state |
+| `unnethack` | UnNetHack 6.0.4 (`1f061e9`) | NGPL full native TTY game/data/recovery/docs; private XDG data playground, upstream five C suites and three-process exact save continuity |
 | `avanor` | Avanor 0.5.8 | Historical terminal roguelike with XDG-managed saves and high scores |
 | `nlarn` | NLarn 0.8.0 (`1873599`) | Original C/ncurses Larn rewrite, immutable console data/locales and native `~/.nlarn` configuration/saves; actual two-process gameplay/restore/resave proof |
 | `robotfindskitten` | Codeberg robotfindskitten 3.0000000.726 (`4718727`) | Original GPL-2.0-or-later C/ncurses game installed as a direct native ELF, complete NKI/assets/docs; conflicting AppStream CC-BY-SA-4.0 metadata declaration retained |
@@ -3315,6 +3406,7 @@ make check-trebuchet # fresh-HOME Xvfb Tcl/Tk plus loopback protocol smoke
 make check-vt05 # isolated Xvfb SDL window plus PTY TERM-contract smoke
 make check-robotfindskitten # isolated actual native PTY movement, installed NKI description, kitten win/exit and unchanged NAR
 make check-nlarn # isolated native 100x30 PTYs, exact HUD/items restore, further movement/turn/resave and unchanged NAR
+make check-unnethack # isolated three native 100x24 TTYs, exact HUD/map/items restore, save consumption and further turns/resaves
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass

@@ -1321,20 +1321,6 @@
       }
     },
     {
-      "issueNumber": 733,
-      "packageName": "unnethack",
-      "packageModulePath": "guix/tay/packages/unnethack.scm",
-      "artifactPath": ".goocastle/evidence/issue-733.png",
-      "runtime": {
-        "executable": "unnethack-smoke",
-        "invocation": {
-          "file": "unnethack-smoke",
-          "args": []
-        },
-        "successMarker": "UNNETHACK SMOKE OK"
-      }
-    },
-    {
       "issueNumber": 734,
       "packageName": "wrogue",
       "packageModulePath": "gnu/packages/games.scm",
