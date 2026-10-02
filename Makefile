@@ -46,7 +46,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	cutlassrl dhack diabaig dnethack dragonslayer grippy-socks gruesome hack hunger-games hydra-slayer \
 	martins-dungeon-bash nlarn robotfindskitten fontra dicom2mesh modus \
 	trial-by-combat xrogue keymapper liquid input-remapper emacs-cl \
-	liveonce xnethack unnethack qiling ai-code-interface-el chatgpt-el eca-emacs urogue letter-hunt pyrosimple savescummer srogue linerogue bloatcrawl2 ighalsk aquesttoofar freelarn talmudifier rouge sewer-massacre atrogue six-two-one umoria pyro narwharl stoat-soup \
+	liveonce xnethack unnethack grunthack nitrohack qiling ai-code-interface-el chatgpt-el eca-emacs urogue letter-hunt pyrosimple savescummer srogue linerogue bloatcrawl2 ighalsk aquesttoofar freelarn talmudifier rouge sewer-massacre atrogue six-two-one umoria pyro narwharl stoat-soup \
 	caelestia-shell caelestia-cli quickshell-for-caelestia libcava m3shapes \
 	dart-sass gpu-screen-recorder font-rubik font-material-symbols-rounded \
 	font-nerd-caskaydia-cove
@@ -410,6 +410,14 @@ check-xnethack:
 check-unnethack:
 	GUIX="$(GUIX)" sh tests/unnethack-smoke.sh
 
+.PHONY: check-grunthack
+check-grunthack:
+	GUIX="$(GUIX)" sh tests/grunthack-smoke.sh
+
+.PHONY: check-nitrohack
+check-nitrohack:
+	GUIX="$(GUIX)" sh tests/nitrohack-smoke.sh
+
 .PHONY: check-qiling
 check-qiling:
 	GUIX="$(GUIX)" tests/qiling-smoke.sh
@@ -534,7 +542,7 @@ check-org-mind-map:
 
 check: check-source-count check-sentinelone check-datamosh-security check-ffglitch check-praat check-dicom2mesh \
 	check-modus check-amstelvar check-trial-by-combat check-xrogue check-keymapper \
-	check-liquid check-input-remapper check-emacs-cl check-liveonce check-xnethack check-unnethack \
+	check-liquid check-input-remapper check-emacs-cl check-liveonce check-xnethack check-unnethack check-grunthack check-nitrohack \
 	check-qiling check-ai-code-interface-el check-chatgpt-el check-eca-emacs check-urogue check-letter-hunt check-pyrosimple check-savescummer check-srogue check-linerogue check-bloatcrawl2 check-ighalsk check-aquesttoofar check-freelarn check-talmudifier check-rouge check-sewer-massacre check-atrogue check-six-two-one check-umoria check-pyro check-narwharl check-stoat-soup \
 	check-rapidbrogue \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \

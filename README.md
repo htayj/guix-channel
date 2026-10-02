@@ -166,6 +166,158 @@ This proves the exercised local SUPDUP client paths, not remote historical
 host interoperability or other protocols.  No profile or deployed system
 changed; no network OKF update applies to this repository-only addition.
 
+## NitroHack original curses game and save continuity
+
+`nitrohack` builds the original **NitroHack 4.0.4** wide-curses game from
+[`DanielT/NitroHack` revision `21b9774b24efbdafdd20e152f9b1e5ed2a7b4150`](https://github.com/DanielT/NitroHack/tree/21b9774b24efbdafdd20e152f9b1e5ed2a7b4150).
+The immutable Git-tree NAR base32 hash is
+`0s36b2wy5fm30lfpmsa9f00n4ykr4d2cak7rmrirf35ss5vxapgn`.
+Code, maps, generated `nhdat` and documentation come from that same tree.
+Its full **NitroHack General Public License** is the NetHack license renamed
+in December 2011, represented by Guix's `fsdg-compatible` constructor with
+the [canonical NGPL URL](https://nethack.org/common/license.html).
+The installed `share/nitrohack/license` retains that grant; README,
+Guidebook and Debian copyright notice credit Daniel Thaler and the NetHack
+Devteam under `share/doc/nitrohack`.  No bundled fonts, tiles or sound assets
+are installed, and the Windows icon is outside this curses output.
+
+The full original curses client's **network capability is retained** with
+`ENABLE_NETCLIENT=ON`; only the optional PostgreSQL server is disabled with
+`ENABLE_SERVER=OFF`, as explicitly requested in the original issue-456
+delivery brief.  This is not a reduced dummy game.  The offline acceptance
+below proves local gameplay, not a network-client connection or server runtime.
+The launcher supplies Guix library/terminfo paths and forwards ordinary
+arguments to `libexec/nitrohack-real`; generated resources stay immutable in
+`share/nitrohack`.  Native configuration, saves and logs use
+`${XDG_CONFIG_HOME:-$HOME/.config}/NitroHack`.  Dated source-change notices
+identify the ncurses header and fixed build-clock adjustments.
+
+```sh
+guix build -L guix --no-grafts nitrohack
+make check-nitrohack
+nitrohack            # original interactive curses main menu
+```
+
+Choose the native new-game menu to begin; use ordinary movement/search
+commands and `i` for inventory.  `S` and confirmation save back to the main
+menu, then `q` exits; a later invocation's load-game menu reopens the native
+save.  The shipped `--guix-smoke` branch and production Python/helper command
+were removed, and the obsolete issue-709 contract retired.  No profile,
+configuration in the user's home or running service is changed by installation.
+
+On 2026-10-02, source build, `--check` reproducibility rebuild, offline lint
+and actual installed-game acceptance passed for
+`/gnu/store/8ykai2wy24ragc7x2k5qw3l2zymfn0qq-nitrohack-4.0.4`.
+**No upstream test target exists**; disabling that unavailable phase is not
+a claim that an upstream suite passed.  Standalone
+`tests/nitrohack-smoke.sh` / `tests/nitrohack-smoke.py` run three real 100×30
+curses processes, native new/load/save menus and complete inventory pages
+with private HOME/XDG/work state, empty PATH, isolated network/mount namespaces
+and a read-only store bind mount.  Python/pyte and namespace tools are
+test-only even when an existing output is supplied.
+
+The lawful human female Valkyrie OmpProof performs one real floor move and
+three search turns in each process: observed turns **1 → 5 → 9 → 13**.
+Both subsequent native loads match the preceding HUD, stats, HP, every native
+80×21 map cell, player position, turn and inventory letters/descriptions
+exactly before further play.  The inventory contains a +1 long sword in
+hand, a +0 dagger, an uncursed +3 small shield being worn and an uncursed
+food ration, including the native weight/symbol descriptions.  Continued
+world turns reduce HP from **16/16** at the first save to **15/16**; later
+resaves update the same `.nhgame` file rather than inventing a new game or
+comparing a frozen fixture.  Each native menu quit exits zero.
+
+Final receipt, unchanged raw curses streams, full-screen pre-save prefixes
+and native save copies are under `/tmp/omp-nitrohack-final`; `continuity.json`
+records both exact restore comparisons and confined private writes.
+Pass `--output /absolute/fresh-directory` to `tests/nitrohack-smoke.sh`
+to retain another run.  The installed read-only output NAR remains
+`06fb6wmwfcjnibjari0565aj1j6hjzz166h9r4v0hk2zvapdi1nj`.
+`.goocastle/evidence/issue-456.png` is the inspected actual 100×30 xterm
+replay of the unchanged second-session advanced full-screen prefix, showing
+OmpProof the Stripling, HP 15/16, turn 9 and the legible colored native map.
+The sidebar is not shown; no sidebar-runtime claim is made.  This is
+OMP-produced actual game evidence, not Goocastle execution or a success-caption
+buffer.  The proof covers exercised local gameplay and save continuity, not a
+complete campaign or network-server/client interaction.  No deployed system
+changed; no network OKF update applies to this repository-only addition.
+
+## GruntHack native game and save continuity
+
+`grunthack` builds the original **GruntHack 0.2.4** NetHack derivative from
+[`NHTangles/GruntHack` revision `51d75eebbcf8ab0ce31ddab9581d266db0a691c5`](https://github.com/NHTangles/GruntHack/tree/51d75eebbcf8ab0ce31ddab9581d266db0a691c5)
+as `0.2.4-0.51d75ee`.  The fixed Git-tree NAR base32 hash is
+`0a2il12ap9lkdmys74vj90vv1dn18ypm7gn73yic8hdqh1j3kg5m`.
+The actual game/data grant is the **NetHack General Public License**,
+recorded with Guix's `fsdg-compatible` constructor and
+[canonical license URL](https://nethack.org/common/license.html).
+The native origin removes eleven unused Macintosh instrument `.uu` payloads
+whose README only speculates about Roland sample-library copyright, not a
+redistribution grant.  That README is retained as `sounds-README`; no TTY
+game feature depends on those samples.
+
+The original native executable compiles both TTY and curses interfaces; the
+default interactive TTY acceptance does not replace the game with a dummy or
+reduced frontend.  `make all` generates `ghdat` and the native game resources.
+The Guidebook, curses README, release changes, Unix README, license and
+`SOURCE` provenance/downstream-change notice are installed under
+`share/doc/grunthack`.  Native mutable saves, scores, locks and logs use
+`${XDG_DATA_HOME:-$HOME/.local/share}/grunthack`; immutable game data remains
+in `share/grunthack`.  Dated source notices identify the native build, XDG
+path and reproducible data-generation changes.
+
+```sh
+guix build -L guix --no-grafts grunthack
+make check-grunthack
+grunthack             # original interactive game
+```
+
+The launcher forwards ordinary game arguments to `libexec/grunthack-real`.
+Use native movement/search commands to play, `i` for inventory and `S` then
+`y` to save and exit.  An ordinary later invocation restores and consumes the
+native save.  No shipped test branch, Python dependency or production smoke
+command remains; the obsolete issue-691 contract was removed.  Installation
+does not edit the user's configuration or launch a service.
+
+On 2026-10-02, local source build, `--check` reproducibility rebuild, offline
+lint and real installed-game smoke passed for
+`/gnu/store/0slz1787l8j6mbdfdahxv2lgxzgvc0wq-grunthack-0.2.4-0.51d75ee`.
+**Upstream has no non-interactive test target**; the recipe disables that
+unavailable phase rather than claiming an upstream suite passed.  The separate
+`tests/grunthack-smoke.sh` / `tests/grunthack-smoke.py` acceptance runs three
+real 100×24 TTY processes with a lawful human female Valkyrie named OmpProof,
+private HOME/XDG/work state, empty PATH, isolated network/mount namespaces and
+a read-only store bind mount.  Python/pyte and namespace tools are test-only.
+
+Each process makes one genuine floor move and five native search turns,
+reads the complete inventory and saves/exits zero.  The observed turn sequence
+is **1 → 7 → 13 → 19**.  Each new process proves actual native restore and
+save consumption, matching the preceding HUD, every native 80×21 map cell,
+position, stats, HP, turn and all inventory letters/descriptions exactly
+before further play/resave.  The carried items are a +1 long sword in hand,
+a +0 dagger, an uncursed +3 small shield being worn and an uncursed food
+ration.  This pin has **no native seed option**: the oracle compares exact
+continuity within the observed run, not a fabricated seeded fixture.
+HP advances naturally from **16/16** at the first save to **14/16** and
+**11/16** after further world turns; the proof does not freeze gameplay or
+claim byte-identical saves after advancing it.
+
+Final receipt, raw TTY sessions, native save copies and the confined private
+footprint are under `/tmp/omp-grunthack-published`; `continuity.json` records
+both exact restore comparisons.  For another retained run, pass
+`--output /absolute/fresh-directory` to `tests/grunthack-smoke.sh`.
+The installed read-only output NAR remains
+`1inwh39gy38gw4lqqip4nvv3ggkl5510193qm8dxwsww9w4lc4vl`.
+`.goocastle/evidence/issue-385.png` is the inspected actual 100×24 xterm
+replay of the unchanged second-session pre-exit prefix, showing OmpProof the
+Stripling, St 18/01, Dx 14, Co 18, In 9, Wi 9, Ch 8, Lawful, HP 14/16,
+Pw 2/2, AC 6, Exp 1, turn 13 and the native small-room `@` map.  It is
+OMP-produced evidence of the genuine continued game, not Goocastle execution
+or a success-caption buffer.
+This proves the exercised native TTY gameplay/save/restore/resave paths, not
+a full campaign or curses-interface runtime.  No profile or deployed system
+changed; no network OKF update applies to this repository-only addition.
+
 ## UnNetHack native TTY and save continuity
 
 `unnethack` builds the original **UnNetHack 6.0.4** native terminal game from
@@ -2661,6 +2813,8 @@ update applies to this repository-only addition.
 | `pyro` | Pyro 0.04a | Complete original Python 2/curses roguelike with XDG native log; no upstream save/load |
 | `narwharl` | NarwhaRL 0.0.1 | Full original source-built C++/ncurses roguelike with immutable definitions and XDG/HOME native saves |
 | `stoat-soup` | Stoat Soup 0.23-ish-aug26 (`5df72bd`) | Complete original console-only Crawl variant with immutable data/docs and native XDG saves, scores, macros and caches |
+| `grunthack` | NHTangles/GruntHack 0.2.4 (`51d75ee`) | Original NGPL native TTY/curses game, immutable generated data/docs and XDG mutable state; three-process exact native save continuity |
+| `nitrohack` | DanielT/NitroHack 4.0.4 (`21b9774`) | Original NGPL wide-curses game with network client retained, PostgreSQL server omitted, immutable data/notices and XDG configuration/native saves; exact three-process local continuity |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
@@ -3407,6 +3561,8 @@ make check-vt05 # isolated Xvfb SDL window plus PTY TERM-contract smoke
 make check-robotfindskitten # isolated actual native PTY movement, installed NKI description, kitten win/exit and unchanged NAR
 make check-nlarn # isolated native 100x30 PTYs, exact HUD/items restore, further movement/turn/resave and unchanged NAR
 make check-unnethack # isolated three native 100x24 TTYs, exact HUD/map/items restore, save consumption and further turns/resaves
+make check-grunthack # isolated three native 100x24 TTYs, movement/search turns, exact HUD/map/items restore and consumed saves/resaves
+make check-nitrohack # isolated three native 100x30 curses sessions, original menus, movement/search, exact HUD/map/items restore and same-file resaves
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass

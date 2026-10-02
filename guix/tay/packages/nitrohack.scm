@@ -4,25 +4,27 @@
 
 (define-module (tay packages nitrohack)
   #:use-module (guix build-system cmake)
-  #:use-module (guix download)
+  #:use-module (guix git-download)
   #:use-module (guix gexp)
   #:use-module (guix packages)
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (gnu packages bash)
-  #:use-module (gnu packages base)
   #:use-module (gnu packages bison)
   #:use-module (gnu packages cmake)
   #:use-module (gnu packages commencement)
   #:use-module (gnu packages compiler-tools)
-  #:use-module (gnu packages linux)
   #:use-module (gnu packages ncurses)
   #:use-module (gnu packages web))
 
-;; Tag 4.0.4 names this immutable upstream revision.  The repository is
-;; archived, so use the commit archive rather than a moving branch or a
-;; build-time checkout.
+;; Tag 4.0.4 names this immutable upstream revision.  Fetch the complete
+;; pinned tree rather than GitHub's automatically generated tarball.
 (define %nitrohack-commit
   "21b9774b24efbdafdd20e152f9b1e5ed2a7b4150")
+;; License audit at this revision: libnitrohack/dat/license is the NGPL
+;; renamed to NitroHack in December 2011; dist/debian/copyright credits
+;; Daniel Thaler and the NetHack Devteam.  nhdat is generated from this same
+;; licensed tree.  The Windows nh.ico asset is not installed; this curses
+;; output contains no fonts, tiles, or sound assets.
 
 (define-public nitrohack
   (package
@@ -30,15 +32,13 @@
     (version "4.0.4")
     (source
      (origin
-       (method url-fetch)
-       (uri (string-append
-             "https://github.com/DanielT/NitroHack/archive/"
-             %nitrohack-commit ".tar.gz"))
-       (file-name (string-append name "-" version ".tar.gz"))
-       ;; SHA-256:
-       ;; 5db7e86e88ef3ac03a10cfe29738e4c45ab24be2ed552ebf8c71d6d11034682d
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/DanielT/NitroHack")
+             (commit %nitrohack-commit)))
+       (file-name (git-file-name name version))
        (sha256
-        (base32 "0bb86h8d3mkiijzjwmgdw95v4nn4whw9gqng20xc0fpgi1pfidsx"))))
+        (base32 "0s36b2wy5fm30lfpmsa9f00n4ykr4d2cak7rmrirf35ss5vxapgn"))))
     (build-system cmake-build-system)
     (arguments
      (list
@@ -50,7 +50,10 @@
       #:tests? #f
       #:configure-flags
       #~(list
+         ;; The live #456 delivery brief explicitly omits the PostgreSQL
+         ;; server, not the original curses client's network feature.
          "-DENABLE_SERVER=OFF"
+         "-DENABLE_NETCLIENT=ON"
          (string-append "-DBINDIR=" #$output "/libexec")
          (string-append "-DLIBDIR=" #$output "/lib")
          (string-append "-DDATADIR=" #$output "/share/nitrohack")
@@ -68,11 +71,14 @@
               ;; the timestamp of the pinned 4.0.4 commit instead.
               (substitute* "libnitrohack/util/makedefs.c"
                 (("time\\(&clocktim\\);")
-                 "clocktim = 1329666608L;"))
+                 (string-append
+                  "/* Guix modification, 2026-10-02: pin build timestamp. */\n"
+                  "clocktim = 1329666608L;")))
               ;; Guix's wide ncurses headers are installed directly as
               ;; include/curses.h rather than Debian's ncursesw/curses.h.
               (substitute* "nitrohack/include/nhcurses.h"
-                (("<ncursesw/curses\\.h>") "<curses.h>"))
+                (("<ncursesw/curses\\.h>")
+                 "<curses.h> /* Guix modification, 2026-10-02: flat ncurses headers. */"))
               (setenv "TZ" "UTC0")))
           ;; CMake's generated shell script is not the package interface.  It
           ;; is installed in a separate directory so it cannot overwrite the
@@ -89,18 +95,6 @@
                      (real (string-append libexec "/nitrohack-real"))
                      (launcher (string-append bin "/nitrohack"))
                      (shell #$(file-append bash-minimal "/bin/sh"))
-                     (cat #$(file-append coreutils-minimal "/bin/cat"))
-                     (cp #$(file-append coreutils-minimal "/bin/cp"))
-                     (dirname-bin #$(file-append
-                                      coreutils-minimal "/bin/dirname"))
-                     (find #$(file-append findutils "/bin/find"))
-                     (grep #$(file-append grep "/bin/grep"))
-                     (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
-                     (mktemp #$(file-append coreutils-minimal "/bin/mktemp"))
-                     (rm #$(file-append coreutils-minimal "/bin/rm"))
-                     (sleep #$(file-append coreutils-minimal "/bin/sleep"))
-                     (script #$(file-append util-linux "/bin/script"))
-                     (stty #$(file-append coreutils-minimal "/bin/stty"))
                      (terminfo (string-append #$ncurses "/share/terminfo"))
                      (source (dirname (car (find-files ".." "^README$"))))
                      (notices '("README" "doc/Guidebook.txt"
@@ -125,14 +119,8 @@
                   (lambda (port)
                     (format port "#!~a~%set -eu~%~%"
                             shell)
-                    (format port "real=~s~%data=~s~%out=~s~%libexec=~s~%"
-                            real data out libexec)
-                    (format port "cat=~s~%cp=~s~%dirname=~s~%find=~s~%"
-                            cat cp dirname-bin find)
-                    (format port "grep=~s~%mkdir=~s~%mktemp=~s~%rm=~s~%"
-                            grep mkdir mktemp rm)
-                    (format port "sleep=~s~%script=~s~%stty=~s~%terminfo=~s~%"
-                            sleep script stty terminfo)
+                    (format port "real=~s~%out=~s~%libexec=~s~%terminfo=~s~%"
+                            real out libexec terminfo)
                     (display
                      (string-append
                       "export LD_LIBRARY_PATH=\""
@@ -145,173 +133,6 @@
                      (string-append
                       "export TERMINFO_DIRS=\""
                       "$terminfo${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"\n\n")
-                     port)
-                    (display "run_session() {\n" port)
-                    (display "  log=$1\n  mode=${2-truncate}\n" port)
-                    (display
-                     (string-append
-                      "  command=\"$stty rows 25 cols 80; exec "
-                      "$real -@ -u goocastle-smoke\"\n")
-                     port)
-                    (display
-                     (string-append
-                      "  if test -n \""
-                      "${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"; then\n")
-                     port)
-                    (display
-                     (string-append
-                      "    \"$mkdir\" -p \"$(\""
-                      "$dirname\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"\n")
-                     port)
-                    (display "    if test \"$mode\" = append; then\n" port)
-                    (display
-                     (string-append
-                      "      \"$script\" -qefc \"$command\" \"$log\" >> "
-                      "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n")
-                     port)
-                    (display "    else\n" port)
-                    (display
-                     (string-append
-                      "      \"$script\" -qefc \"$command\" \"$log\" > "
-                      "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n")
-                     port)
-                    (display "    fi\n" port)
-                    (display "  else\n" port)
-                    (display
-                     (string-append
-                      "    \"$script\" -qefc \"$command\" \"$log\" "
-                      ">/dev/null\n")
-                     port)
-                    (display "  fi\n" port)
-                    (display "}\n\n" port)
-                    (display "if test \"${1-}\" = --guix-smoke; then\n" port)
-                    (display
-                     (string-append
-                      "  test \"$#\" -eq 1 || { echo 'usage: "
-                      "nitrohack [--guix-smoke]' >&2; exit 64; }\n")
-                     port)
-                    ;; Keep the package smoke self-contained: it does not
-                    ;; inspect or reuse a caller's home/configuration state.
-                    (display
-                     (string-append
-                      "  smoke=$(\"$mktemp\" -d "
-                      "\"${TMPDIR:-/tmp}/nitrohack-guix-smoke.XXXXXXXX\")\n")
-                     port)
-                    (display
-                     (string-append
-                      "  \"$mkdir\" -p \"$smoke/home\" \"$smoke/config\" "
-                      "\"$smoke/data\" \"$smoke/cache\" \"$smoke/state\" "
-                      "\"$smoke/runtime\" \"$smoke/tmp\"\n")
-                     port)
-                    (display
-                     (string-append
-                      "  export HOME=\"$smoke/home\" "
-                      "XDG_CONFIG_HOME=\"$smoke/config\" "
-                      "XDG_DATA_HOME=\"$smoke/data\" "
-                      "XDG_CACHE_HOME=\"$smoke/cache\" "
-                      "XDG_STATE_HOME=\"$smoke/state\" "
-                      "XDG_RUNTIME_DIR=\"$smoke/runtime\" "
-                      "TMPDIR=\"$smoke/tmp\" TERM=xterm-256color LC_ALL=C\n")
-                     port)
-                    (display
-                     (string-append
-                      "  first_log=\"$smoke/tmp/smoke-first.log\"\n"
-                      "  second_log=\"$smoke/tmp/smoke-second.log\"\n")
-                     port)
-                    ;; New game, deterministic movement, then save and leave
-                    ;; the first session through the main menu.
-                    (display
-                     (string-append
-                      "  if ! { \"$sleep\" 2; printf 'n'; "
-                      "\"$sleep\" 2; printf '  .hjl'; printf 'S'; "
-                      "printf 'y'; printf ' q'; } | run_session "
-                      "\"$first_log\"; then\n")
-                     port)
-                    (display
-                     (string-append
-                      "    echo 'nitrohack smoke: first game failed' >&2; "
-                      "exit 1\n  fi\n")
-                     port)
-                    (display
-                     (string-append
-                      "  saved=\"\"\n"
-                      "  for file in \"$smoke/config/NitroHack/save\"/*.nhgame; do\n"
-                      "    test -f \"$file\" || continue\n"
-                      "    saved=\"$file\"\n"
-                      "  done\n"
-                      "  test -n \"$saved\" || { echo 'nitrohack smoke: "
-                      "save artifact missing' >&2; exit 1; }\n")
-                     port)
-                    (display
-                     (string-append
-                      "  case \"$saved\" in \"$smoke/\"*) ;; *) "
-                      "echo 'nitrohack smoke: save escaped isolated state' >&2; "
-                      "exit 1 ;; esac\n")
-                     port)
-                    (display
-                     (string-append
-                      "  \"$grep\" -F 'NitroHack' \"$first_log\" >/dev/null || "
-                      "{ echo 'nitrohack smoke: gameplay title missing' >&2; "
-                      "exit 1; }\n")
-                     port)
-                    (display
-                     (string-append
-                      "  \"$grep\" -F 'welcome to NitroHack' \"$first_log\" "
-                      ">/dev/null || { echo 'nitrohack smoke: gameplay welcome "
-                      "missing' >&2; exit 1; }\n")
-                     port)
-                    ;; Relaunch, load the saved game, observe the restored
-                    ;; welcome, save/quit again, and leave the menu.
-                    (display
-                     (string-append
-                      "  if ! { \"$sleep\" 2; printf 'l'; "
-                      "\"$sleep\" 2; printf 'a'; printf 'S'; printf 'y'; "
-                      "printf ' q'; } | run_session \"$second_log\" "
-                      "append; then\n")
-                     port)
-                    (display
-                     (string-append
-                      "    echo 'nitrohack smoke: restore game failed' >&2; "
-                      "exit 1\n  fi\n")
-                     port)
-                    (display
-                     (string-append
-                      "  \"$grep\" -E 'welcome back to NitroHack|Welcome back' "
-                      "\"$second_log\" >/dev/null || { echo 'nitrohack smoke: "
-                      "restored-game text missing' >&2; exit 1; }\n")
-                     port)
-                    ;; The game is allowed to write only its fresh HOME and
-                    ;; XDG config tree.  Data/cache/state/runtime are checked
-                    ;; explicitly because the game does not use those APIs.
-                    (display
-                     (string-append
-                      "  test -z \"$(\"$find\" \"$smoke/data\" "
-                      "\"$smoke/cache\" \"$smoke/state\" "
-                      "\"$smoke/runtime\" -mindepth 1 -print -quit)\" || "
-                      "{ echo 'nitrohack smoke: unexpected XDG write' >&2; "
-                      "exit 1; }\n")
-                     port)
-                    (display
-                     (string-append
-                      "  test -z \"$(\"$find\" \"$out\" -xdev -type f "
-                      "-perm /222 -print -quit)\" || { echo 'nitrohack smoke: "
-                      "package output became writable' >&2; exit 1; }\n")
-                     port)
-                    (display
-                     (string-append
-                      "  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"; then\n"
-                      "    \"$mkdir\" -p \"$(\"$dirname\" "
-                      "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"\n"
-                      "    \"$cp\" \"$first_log\" "
-                      "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n"
-                      "    \"$cat\" \"$second_log\" >> "
-                      "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n"
-                      "  fi\n")
-                     port)
-                    (display
-                     (string-append
-                      "  printf '%s\\n' 'nitrohack guix smoke passed'\n"
-                      "  exit 0\nfi\n\n")
                      port)
                     ;; Ordinary invocations retain normal argument
                     ;; forwarding while keeping the executable private.
@@ -332,6 +153,12 @@
                   (error "missing installed NitroHack license"))
                 (invoke "grep" "-F" "NITROHACK GENERAL PUBLIC LICENSE"
                         (string-append data "license"))
+                (invoke "grep" "-F" "renamed to NitroHack as of December 2011"
+                        (string-append data "license"))
+                (invoke "grep" "-F" "Daniel Thaler"
+                        (string-append doc "copyright"))
+                (invoke "grep" "-F" "NetHack Devteam"
+                        (string-append doc "copyright"))
                 (invoke "grep" "-F" "NitroHack"
                         (string-append doc "README")))))
           ;; All generated data and launcher files must be immutable after
@@ -348,11 +175,9 @@
     ;; CMake invokes the checked-in bison/flex generators.  gcc-toolchain is
     ;; explicit because the project predates modern Guix CMake defaults.
     (native-inputs (list bison cmake-minimal flex gcc-toolchain))
-    ;; Jansson and wide ncurses are linked by the local client/UI.  The shell
-    ;; helpers and util-linux/script are runtime inputs for the reviewed smoke
-    ;; branch only.
-    (inputs (list bash-minimal coreutils-minimal findutils grep jansson
-                  ncurses util-linux))
+    ;; Preserve the original wide-curses client, including its network client.
+    ;; Python and namespace tools are realized only by the standalone test.
+    (inputs (list bash-minimal jansson ncurses))
     (home-page "https://github.com/DanielT/NitroHack")
     (synopsis "Modernized terminal dungeon exploration game")
     (description
@@ -361,7 +186,7 @@ NetHack dungeon exploration game.  This package builds the local wide-curses
 client from the fixed 4.0.4 source revision, with the optional PostgreSQL
 network server disabled and no runtime downloads.  Its launcher keeps the
 rebuilt executable private, supplies the Guix library and terminfo paths, and
-provides an isolated --guix-smoke save/restore proof.  Game configuration,
+forwards ordinary arguments without a test mode.  Game configuration,
 saves, and logs remain under the user's XDG configuration directory.  The
 upstream NitroHack/NetHack General Public License, README, Guidebook, and
 Debian copyright notice are installed with the generated nhdat archive.")

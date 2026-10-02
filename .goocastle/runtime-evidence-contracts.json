@@ -694,22 +694,6 @@
       }
     },
     {
-      "issueNumber": 691,
-      "packageName": "grunthack",
-      "packageModulePath": "guix/tay/packages/grunthack.scm",
-      "artifactPath": ".goocastle/evidence/issue-691.png",
-      "runtime": {
-        "executable": "grunthack",
-        "invocation": {
-          "file": "grunthack",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "grunthack guix smoke passed"
-      }
-    },
-    {
       "issueNumber": 692,
       "packageName": "hack",
       "packageModulePath": "guix/tay/packages/hack.scm",
@@ -980,22 +964,6 @@
           ]
         },
         "successMarker": "nhfourk isolated smoke passed"
-      }
-    },
-    {
-      "issueNumber": 709,
-      "packageName": "nitrohack",
-      "packageModulePath": "guix/tay/packages/nitrohack.scm",
-      "artifactPath": ".goocastle/evidence/issue-709.png",
-      "runtime": {
-        "executable": "nitrohack",
-        "invocation": {
-          "file": "nitrohack",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "nitrohack guix smoke passed"
       }
     },
     {

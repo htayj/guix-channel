@@ -4,7 +4,7 @@
 
 (define-module (tay packages grunthack)
   #:use-module (guix build-system gnu)
-  #:use-module (guix download)
+  #:use-module (guix git-download)
   #:use-module (guix gexp)
   #:use-module (guix packages)
   #:use-module (guix utils)
@@ -14,6 +14,7 @@
   #:use-module (gnu packages bison)
   #:use-module (gnu packages commencement)
   #:use-module (gnu packages compiler-tools)
+  #:use-module (gnu packages groff)
   #:use-module (gnu packages linux)
   #:use-module (gnu packages ncurses))
 
@@ -26,14 +27,21 @@
     (version "0.2.4-0.51d75ee")
     (source
      (origin
-       (method url-fetch)
-       (uri (string-append
-             "https://github.com/NHTangles/GruntHack/archive/"
-             %grunthack-commit ".tar.gz"))
-       (file-name (string-append name "-" version ".tar.gz"))
-       ;; SHA-256: 00c8b0178f4fb2aefd08c51d08263b9f6c57340b601afb6d9f9528fdd9bd718
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/NHTangles/GruntHack")
+             (commit %grunthack-commit)))
+       (file-name (git-file-name name version))
+       ;; NAR SHA-256 obtained with guix download --git at this exact commit.
        (sha256
-        (base32 "11vippczsa4mkxnzn6k01cs5fv4z7ck0h7f513ysxcjgiwbv1j00"))))
+        (base32 "0a2il12ap9lkdmys74vj90vv1dn18ypm7gn73yic8hdqh1j3kg5m"))
+       ;; The Macintosh instrument samples have no redistribution grant:
+       ;; their README only speculates about Roland sample-library copyright.
+       ;; They are unused by tty.  Keep that notice but omit the sample payload
+       ;; from the source derivation as well as the installed game.
+       (modules '((guix build utils)))
+       (snippet
+        #~(for-each delete-file (find-files "sys/share/sounds" "\\.uu$")))))
     (build-system gnu-build-system)
     (arguments
      (list
@@ -45,7 +53,9 @@
       #~(list (string-append "CC=" #$(cc-for-target))
               ;; This historical source uses K&R definitions and declarations
               ;; that GCC's default gnu17 mode rejects as errors.
-              "CFLAGS=-O2 -g0 -std=gnu89 -fcommon -I../include -D_DEFAULT_SOURCE -DTEXTCOLOR"
+              (string-append
+               "CFLAGS=-O2 -g0 -std=gnu89 -fcommon -I../include"
+               " -D_DEFAULT_SOURCE -DTEXTCOLOR")
               "LEX=flex"
               "YACC=bison -y"
               "WINTTYLIB=-lncurses"
@@ -59,6 +69,25 @@
           (delete 'configure)
           (add-after 'unpack 'prepare-build
             (lambda _
+              (use-modules (ice-9 textual-ports))
+              ;; NGPL paragraph 2(a): retain upstream headers and prominently
+              ;; identify every file changed by this downstream build.
+              (for-each
+               (lambda (file)
+                 (let ((original (call-with-input-file file get-string-all)))
+                   (call-with-output-file file
+                     (lambda (port)
+                       (display
+                        (string-append
+                         "/* Modified by the tay Guix channel, 2026-10-02:\n"
+                         " * native tty build, XDG paths, and reproducible"
+                         " data generation.\n"
+                         " * See the distributed package definition for"
+                         " exact changes. */\n")
+                        port)
+                       (display original port)))))
+               '("include/unixconf.h" "include/extern.h" "include/config.h"
+                 "sys/unix/unixmain.c" "util/makedefs.c"))
               ;; setup.sh installs the Unix Makefiles at their expected
               ;; relative paths.  The source archive has no .git directory,
               ;; so the version string is supplied through make-flags.
@@ -111,16 +140,7 @@
                      (real (string-append libexec "/grunthack-real"))
                      (launcher (string-append bin "/grunthack"))
                      (shell #$(file-append bash-minimal "/bin/sh"))
-                     (cat #$(file-append coreutils-minimal "/bin/cat"))
-                     (cp #$(file-append coreutils-minimal "/bin/cp"))
-                     (dirname #$(file-append coreutils-minimal "/bin/dirname"))
-                     (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
-                     (chmod-bin #$(file-append coreutils-minimal "/bin/chmod"))
-                     (find #$(file-append findutils "/bin/find"))
-                     (mktemp #$(file-append coreutils-minimal "/bin/mktemp"))
-                     (rm #$(file-append coreutils-minimal "/bin/rm"))
-                     (sleep #$(file-append coreutils-minimal "/bin/sleep"))
-                     (script #$(file-append util-linux "/bin/script")))
+                     (mkdir #$(file-append coreutils-minimal "/bin/mkdir")))
                 (mkdir-p data)
                 (mkdir-p libexec)
                 (mkdir-p bin)
@@ -135,20 +155,35 @@
                    "doc/changes01.0" "doc/changes01.1" "doc/changes02.0"
                    "doc/changes02.1" "sys/unix/README.linux"))
                 (install-file "dat/license" doc)
+                (copy-file "sys/share/sounds/README"
+                           (string-append doc "/sounds-README"))
+                (call-with-output-file (string-append doc "/SOURCE")
+                  (lambda (port)
+                    (display
+                     (string-append
+                      "GruntHack 0.2.4, upstream revision "
+                      "51d75eebbcf8ab0ce31ddab9581d266db0a691c5\n"
+                      "Complete upstream source (noncommercial NGPL"
+                      " paragraph 3(b)):\n"
+                      "https://github.com/NHTangles/GruntHack/archive/"
+                      "51d75eebbcf8ab0ce31ddab9581d266db0a691c5.tar.gz\n"
+                      "License: NetHack General Public License (see license).\n"
+                      "Downstream changes, 2026-10-02: native tty compilation,"
+                      " XDG writable\n"
+                      "paths, reproducible data generation, and omission of"
+                      " unused Macintosh\n"
+                      "instrument samples without a clear redistribution grant.\n"
+                      "Guix can retrieve the filtered source with:"
+                      " guix build --source grunthack\n"
+                      "Exact build and source changes:"
+                      " guix/tay/packages/grunthack.scm\n"
+                      "in the tay Guix channel.\n")
+                     port)))
                 (let ((port (open-file launcher "w")))
                   (format port "#!~a~%set -eu~%~%
 data=~s~%
 real=~s~%
-mkdir=~s~%
-mktemp=~s~%
-rm=~s~%
-sleep=~s~%
-script=~s~%
-cat=~s~%
-cp=~s~%
-dirname=~s~%
-find=~s~%~%
-chmod=~s~%~%
+mkdir=~s~%~%
 prepare_state() {~%
   state=\"${XDG_DATA_HOME:-${HOME:?}/.local/share}/grunthack\"~%
   \"$mkdir\" -p \"$state/save\" \"$state/whereis\"~%
@@ -159,69 +194,9 @@ prepare_state() {~%
   export GRUNTHACK_VAR_PLAYGROUND=\"$state/\"~%
   export TERM=\"${TERM:-xterm-256color}\"~%
 }~%~%
-run_game() {~%
-  log=$1~%
-  mode=${2-truncate}~%
-  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"; then~%
-    if test \"$mode\" = append; then~%
-      \"$script\" -qefc \"$real -u goocastle-tourist-human-neutral-male\" \"$log\" >> \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"~%
-    else~%
-      \"$script\" -qefc \"$real -u goocastle-tourist-human-neutral-male\" \"$log\" > \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"~%
-    fi~%
-  else~%
-    \"$script\" -qefc \"$real -u goocastle-tourist-human-neutral-male\" \"$log\" >/dev/null~%
-  fi~%
-}~%~%
-case \"${1-}\" in~%
-  --guix-smoke)~%
-    test \"$#\" -eq 1 || { echo 'usage: grunthack [--guix-smoke]' >&2; exit 64; }~%
-    smoke=$(\"$mktemp\" -d \"${TMPDIR:-/tmp}/grunthack-guix-smoke.XXXXXXXX\")~%
-    cleanup() { \"$rm\" -rf \"$smoke\"; }~%
-    trap cleanup EXIT HUP INT TERM~%
-    \"$mkdir\" \"$smoke/home\" \"$smoke/config\" \"$smoke/data\" \"$smoke/cache\" \"$smoke/state\" \"$smoke/runtime\" \"$smoke/tmp\"~%
-    \"$chmod\" 700 \"$smoke/runtime\"~%
-    export HOME=\"$smoke/home\" XDG_CONFIG_HOME=\"$smoke/config\"~%
-    export XDG_DATA_HOME=\"$smoke/data\" XDG_CACHE_HOME=\"$smoke/cache\"~%
-    export XDG_STATE_HOME=\"$smoke/state\" XDG_RUNTIME_DIR=\"$smoke/runtime\"~%
-    export TMPDIR=\"$smoke/tmp\" TERM=xterm-256color LC_ALL=C~%
-    prepare_state~%
-    first_log=\"$state/smoke-first.log\"~%
-    second_log=\"$state/smoke-second.log\"~%
-    if ! { printf 'y'; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf 'l'; \"$sleep\" 1; printf 'S'; \"$sleep\" 1; printf 'y'; } | run_game \"$first_log\"; then~%
-      echo 'grunthack smoke: first game failed' >&2; exit 1~%
-    fi~%
-    saved=~%
-    for file in \"$state/save\"/*; do~%
-      test -f \"$file\" || continue~%
-      saved=\"$file\"~%
-    done~%
-    test -n \"$saved\" || { echo 'grunthack smoke: save missing' >&2; exit 1; }~%
-    first_text=$(\"$cat\" \"$first_log\")~%
-    case \"$first_text\" in *GruntHack*) ;; *) echo 'grunthack smoke: title missing' >&2; exit 1 ;; esac~%
-    if ! { printf ' '; \"$sleep\" 1; printf '.'; \"$sleep\" 1; printf '#quit\\n'; \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf 'n'; \"$sleep\" 1; printf '    '; } | run_game \"$second_log\" append; then~%
-      echo 'grunthack smoke: restore game failed' >&2; exit 1~%
-    fi~%
-    second_text=$(\"$cat\" \"$second_log\")~%
-    case \"$second_text\" in *\"Restoring save file\"*) ;; *) echo 'grunthack smoke: restore missing' >&2; exit 1 ;; esac~%
-    for root in \"$HOME\" \"$XDG_CONFIG_HOME\" \"$XDG_CACHE_HOME\" \"$XDG_STATE_HOME\" \"$XDG_RUNTIME_DIR\" \"$TMPDIR\"; do~%
-      escaped=$(\"$find\" \"$root\" -mindepth 1 -print -quit)~%
-      test -z \"$escaped\" || { echo 'grunthack smoke: mutable path escaped XDG data' >&2; exit 1; }~%
-    done~%
-    if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"; then~%
-      \"$mkdir\" -p \"$(\"$dirname\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"~%
-      \"$cp\" \"$first_log\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"~%
-      \"$cat\" \"$second_log\" >> \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"~%
-    fi~%
-    printf '%s\\n' 'grunthack guix smoke passed'~%
-    exit 0~%
-    ;;~%
-  *)~%
-    prepare_state~%
-    exec \"$real\" \"$@\"~%
-    ;;~%
-esac~%"
-                            shell data real mkdir mktemp rm sleep script cat cp
-                            dirname find chmod-bin)
+prepare_state~%
+exec \"$real\" \"$@\"~%"
+                            shell data real mkdir)
                   (close-port port))
                 (unless (file-exists? launcher)
                   (error "GruntHack launcher was not created" launcher))
@@ -241,7 +216,7 @@ esac~%"
                      (error "missing installed GruntHack notice" file)))
                  '("README" "README-curses.txt" "Guidebook.txt"
                    "changes01.0" "changes01.1" "changes02.0" "changes02.1"
-                   "README.linux" "license"))
+                   "README.linux" "license" "SOURCE" "sounds-README"))
                 (invoke "grep" "-F" "NETHACK GENERAL PUBLIC LICENSE"
                         (string-append data "license"))
                 (invoke "grep" "-F" "GruntHack is a derivative of NetHack"
@@ -259,9 +234,11 @@ esac~%"
                               (else #o444))))
                (find-files #$output ".*" #:directories? #t)))))))
     (native-inputs
-     (list bison flex gcc-toolchain gnu-make))
+     ;; make all formats Guidebook.txt with tbl/nroff/col.  These tools are
+     ;; build-only; the ordinary native launcher does not reference them.
+     (list bison flex gcc-toolchain gnu-make groff util-linux))
     (inputs
-     (list bash-minimal coreutils-minimal findutils ncurses/tinfo util-linux))
+     (list bash-minimal coreutils-minimal ncurses/tinfo))
     (home-page "https://github.com/NHTangles/GruntHack")
     (synopsis "Historical terminal dungeon exploration game")
     (description
