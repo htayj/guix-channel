@@ -1952,6 +1952,65 @@ live Lwt capture prefix replayed in xterm, visually inspected with `SIZE 52x16`,
 Unicode.  The proof uses a temporary dependency profile, not the user's
 profile; no profile deployment or host configuration change is claimed.
 
+## Miou OCaml concurrency library
+
+`miou` packages the MIT-licensed `robur-coop/miou` revision
+[`5fcb7e65b648f5c3d22d01d0ebe70c321042f09d`](https://github.com/robur-coop/miou/tree/5fcb7e65b648f5c3d22d01d0ebe70c321042f09d)
+as `0.8.0-1.5fcb7e6`.  This is four commits after upstream `v0.8.0`, not the
+release tag itself.  It reuses the immutable `robur-coop-miou-source` origin
+and installs all six public findlib libraries: `miou`, `miou.backoff`,
+`miou.sync`, `miou.bitv`, `miou.unix` and `miou.runtime_events`, including
+the native Unix and bit-vector C stubs.  README, changelog and MIT notice are
+installed under `share/doc/miou`.  This is a library, not a `miou` command.
+
+The pin requires OCaml >= 5.1 and Dune >= 3.13.  This recipe uses Guix's
+OCaml **5.4.1** and Dune **3.19.1**, rewriting the complete dependency graph,
+including implicit build-system inputs, to one compiler ABI.  Do not mix it
+with the default OCaml 4.14/findlib or the channel's OCaml-4.14 Notty build.
+The compiler and findlib variants remain private to this package; the
+consumer manifest supplies the matching toolchain without changing the
+user's profile.  For an application source file `app.ml`:
+
+```sh
+guix build -L guix --no-grafts miou
+guix shell -L guix --no-grafts --pure -m tests/miou-manifest.scm -- \
+  ocamlfind ocamlopt -package miou.unix -linkpkg -o app app.ml
+./app
+make check-miou
+```
+
+Use `-package miou` for core-only consumers and add the relevant sublibraries
+for synchronization, bit vectors, backoff or runtime-event tracing.  The
+manifest is a development/consumer environment, not a profile deployment.
+
+The toolchain closure uses OCamlbuild 0.16.1 for its OCaml-5-compatible Digest
+handling, an upstream Alcotest normalizer fix for multiline source spans,
+and Guile 3.0.11 only for the affected Astring builder.  All build phases
+remain enabled; behavioral expected results are not weakened.  Dscheck 0.6.0
+satisfies upstream's >= 0.4 requirement using the OCaml standard library,
+without the obsolete containers/oseq/tsort dependency chain.
+
+On 2026-10-02, local source build, `--check` reproducibility rebuild and
+offline lint completed successfully.  The unfiltered upstream Dune tests
+passed all 48 core groups, five Unix groups (with three worker domains) and
+three synchronization groups; Dscheck and Alcotest dependency checks were
+also retained.  The isolated installed-library consumer compiled natively
+against all six installed libraries in a fresh Guix container without host
+network interfaces or inherited profile/search paths.  It verified deferred
+`async` versus `yield` ordering, result payloads, exception identity and
+`await_all` argument order, real Unix sleep/resume, Bitv partial-byte and native
+stub behavior, synchronization transitions and backoff reset, and a runtime
+event reporter/reader roundtrip for Spawn, Yield and Await.  Store files stayed
+read-only and the output NAR remained unchanged:
+`0v3kzqy0dhc7fg8acqhkrq13pln61jci5fz839j7hyi6cg1awflv`.
+Findlib's duplicate definitions of compiler-supplied `unix`, `threads` and
+`runtime_events` remain visible warnings; no incompatible compiler ABI was
+used.  Installation activates nothing and no user profile was deployed.
+`.goocastle/evidence/issue-160.png` captures the actual xterm replay of
+`/tmp/omp-miou-final.raw`, visually inspected with the successful consumer
+result and immutable-NAR report.  The duplicate-META warnings remain visible
+in that evidence; they are not errors or hidden by the proof.
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -2034,6 +2093,7 @@ profile; no profile deployment or host configuration change is claimed.
 | `mudpuppy` | Mudpuppy 20251214 | Rust terminal MUD client with embedded Python scripting and TLS |
 | `notion-river` | Marenz/notion-river 0.6.0-14.ge79dea3 | Static tiling window manager for a separately supplied River 0.4.x+ compositor |
 | `notty` | pqwy/notty 0.2.3 (`e035d06`, tag `v0.2.3`) | ISC-licensed OCaml core, Unix/Lwt backends, toplevel support and all 18 upstream examples; no Async backend |
+| `miou` | robur-coop/miou `5fcb7e6` (four commits after 0.8.0) | MIT-licensed OCaml-5.4.1 core, backoff, sync, Bitv, Unix and runtime-events libraries with native stubs |
 | `mushkin` | Mushkin 0.5.1 | Qt MUSHclient-compatible MUD client with Lua, TLS, and MSP |
 | `mushtato` | MushTato 1.9.3 | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |
 | `potato` | Potato 2.0.0b19 | Tcl/Tk graphical MUSH client; insecure upstream TLS is deliberately disabled |
@@ -2698,6 +2758,7 @@ make check-datamosh-security # package build plus argv-injection smoke test
 make check-ffglitch  # native/JSON/Python/QuickJS editing, independent decode and isolated SDL preview
 make check-praat    # explicit 7.0.02 selection, acoustic/native round trip and isolated real GTK editor
 make check-notty    # isolated native installed-library Unix/Lwt consumer, Unicode/colors/input/resize and snapshot NAR integrity
+make check-miou     # fresh offline container, native six-library OCaml-5.4.1 consumer and immutable NAR
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
