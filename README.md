@@ -2120,6 +2120,71 @@ without errors.  This live-prefix image proves display, not later input/EOF;
 those are established by the actual completed PTY session/report.  No user
 profile deployment or host configuration change occurred.
 
+## PROIEL Ruby treebank library
+
+`proiel` 1.3.3 builds the `syntacticus/proiel` code at
+[`8b74767f3c9acf978117afe7db18cfd67675ba7b`](https://github.com/syntacticus/proiel/tree/8b74767f3c9acf978117afe7db18cfd67675ba7b)
+from the recorded snapshot origin, with a **corpus-free native source
+sanitization**.  It provides PROIEL XML reading/validation, sentence and token
+objects, dependency resolution, annotation schemas, dictionaries and valency
+analysis.  It is a library loaded with `require 'proiel'`, not a `proiel` CLI.
+An independently authored MIT example is installed at
+`share/proiel/examples/minimal.xml`.
+
+The original `syntacticus-proiel-source` preservation snapshot is **not
+MIT-only or wholly free**: its annotated test corpora include CC-BY-NC-SA 3.0
+and dictionary metadata labelled CC-BY-NC-SA 4.0.  Its mixed-license metadata
+is corrected without altering archive or installed snapshot bytes.  The native
+package removes all corpus-derived XML and inline valency graphs before
+building, regenerating 14 XML fixtures and independent valency graphs rather
+than relabelling corpus data.  All 154 PROIEL examples remain exercised, with
+data-specific assertions migrated to the new fixtures; no noncommercial corpus
+is retained in the native source or installed gem.
+
+Native licensing is MIT for code and synthetic fixtures, GPL-3.0-or-later for
+the historical TEI Lite schema (selected under the contemporary TEI P5 1.1.0
+grant's later-version option), and W3C for the XML namespace schema.  This is
+not an inferred retroactive TEI BSD relicense.  The gem includes schema notices,
+the original TEI grant and selected GPL text alongside the MIT license.
+
+Use the canonical `(gnu packages ruby)` binding, verified here as **Ruby
+3.3.9**, not a bare `ruby` package lookup that may select Ruby 4.0.  Preserve
+the interpreter's bundled gems as well as the profile's propagated runtime gems:
+
+```sh
+guix build -L guix --no-grafts proiel ruby-memoist ruby-sax-machine
+make check-proiel
+ruby_out=$(guix build --no-grafts -e '(@ (gnu packages ruby) ruby)')
+guix shell -L guix --pure -e '(@ (gnu packages ruby) ruby)' proiel -- \
+  sh -c 'export GEM_PATH="$GEM_PATH:$("$1/bin/ruby" -rrubygems -e "print Gem.default_dir")";
+         exec "$1/bin/ruby" "$2"' sh "$ruby_out" app.rb
+```
+
+Runtime dependency constraints remain intact, using private Builder 3.2.4 and
+JSON 2.3.1 variants rather than incompatible newer versions.  Builder's
+BlankSlate accounts for modern Ruby's late Kernel includes; SAX Machine's
+constructor calls zero-argument `super` and handles forwarded nil attributes.
+These compatibility fixes preserve the tested behavior.  `ruby-memoist` 0.16.2
+and `ruby-sax-machine` 1.3.2 are also exported as installable MIT libraries.
+
+On 2026-10-02, source builds, `--check` reproducibility rebuilds and offline
+lint completed successfully.  PROIEL's complete 154-example corpus-free suite
+passed; Memoist passed 31 runs/140 assertions and SAX Machine passed 135
+examples.  JSON's pure and native-extension checks were retained and passed.
+The final installed consumer ran outside the checkout in a pure,
+network-isolated Guix container with fresh HOME/XDG state and only the declared
+runtime gems plus the canonical interpreter's bundled gem directory.  It
+verified XML entity decoding, metadata, schema/integrity validation, exact
+sentence/token IDs and attributes, dependency edges, citation reconstruction
+and valency extraction.  The exact result was
+`{"status":"ok","version":"1.3.3","sources":1,"sentences":2,"tokens":5,"dependency_edges":3,"fixture":"minimal.xml"}`.
+The example remained byte-identical and the installed output NAR unchanged.
+No user profile deployment or host configuration change occurred.
+`.goocastle/evidence/issue-170.png` captures the actual
+`/tmp/omp-proiel-final.raw` replay in xterm, visually inspected with the exact
+successful JSON result and unchanged-NAR smoke report.  The unrelated
+`nhfourk` module-load warning remains visible, not suppressed.
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -2205,6 +2270,9 @@ profile deployment or host configuration change occurred.
 | `notty` | pqwy/notty 0.2.3 (`e035d06`, tag `v0.2.3`) | ISC-licensed OCaml core, Unix/Lwt backends, toplevel support and all 18 upstream examples; no Async backend |
 | `miou` | robur-coop/miou `5fcb7e6` (four commits after 0.8.0) | MIT-licensed OCaml-5.4.1 core, backoff, sync, Bitv, Unix and runtime-events libraries with native stubs |
 | `tui` | pmatiello/tui `e435b1b` | EPL-2.0 Clojure styled text/page rendering and cooked line input, AOT jar and offline `tui-clojure` launcher; no raw-key/cursor API |
+| `proiel` | syntacticus/proiel 1.3.3 (`8b74767`) | Corpus-free Ruby treebank library and MIT synthetic example; MIT code, historical TEI GPL-3.0-or-later and W3C schemas |
+| `ruby-memoist` | memoist 0.16.2 | MIT Ruby method-result caching library |
+| `ruby-sax-machine` | sax-machine 1.3.2 | MIT declarative SAX parsing library with Nokogiri backend |
 | `mushkin` | Mushkin 0.5.1 | Qt MUSHclient-compatible MUD client with Lua, TLS, and MSP |
 | `mushtato` | MushTato 1.9.3 | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |
 | `potato` | Potato 2.0.0b19 | Tcl/Tk graphical MUSH client; insecure upstream TLS is deliberately disabled |
@@ -2871,6 +2939,7 @@ make check-praat    # explicit 7.0.02 selection, acoustic/native round trip and 
 make check-notty    # isolated native installed-library Unix/Lwt consumer, Unicode/colors/input/resize and snapshot NAR integrity
 make check-miou     # fresh offline container, native six-library OCaml-5.4.1 consumer and immutable NAR
 make check-tui      # installed-jar upstream suite, isolated Unicode/ANSI/cooked-input PTY and immutable package/snapshot NARs
+make check-proiel   # canonical Ruby-3.3.9 isolated installed consumer, exact XML/token/edge/valency semantics and immutable NAR
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware

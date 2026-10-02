@@ -208,11 +208,25 @@
                                "source snapshot of sylvainhalle/lua-pagemaker" "https://github.com/sylvainhalle/lua-pagemaker"
                                #f))
 
+;; Preservation snapshot, NOT a wholly MIT/free corpus: spec XML includes
+;; PROIEL annotations labelled CC BY-NC-SA 3.0 and dictionary data labelled
+;; CC SA-BY-NC 4.0.  The 2008 TEI Lite schema has the P5 1.1.0 GPL grant
+;; (any-later-version option); xml.xsd has W3C's software/document grant.
+;; Archive/install bytes deliberately remain untouched.  The native proiel
+;; package sanitizes corpus fixtures independently, rather than relabelling.
 (define-public syntacticus-proiel-source
   (make-github-source-snapshot "syntacticus-proiel-source" "syntacticus" "syntacticus" "proiel"
                                "8b74767f3c9acf978117afe7db18cfd67675ba7b" "0iwnh7nq87q3z63fakd8n3fbrrgmp3w0dybywm3n43fa9nw1ra6p"
                                "source snapshot of syntacticus/proiel" "https://github.com/syntacticus/proiel"
-                               license:expat))
+                               (list license:expat license:gpl3+ license:w3c
+                                     (license:license
+                                      "CC-BY-NC-SA 3.0"
+                                      "https://creativecommons.org/licenses/by-nc-sa/3.0/"
+                                      "Nonfree: corpus annotations restrict commercial use.")
+                                     (license:license
+                                      "CC-BY-NC-SA 4.0"
+                                      "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+                                      "Nonfree: dictionary source metadata restricts commercial use."))))
 
 (define-public tatuylonen-wiktextract-source
   (make-github-source-snapshot "tatuylonen-wiktextract-source" "tatuylonen" "tatuylonen" "wiktextract"
