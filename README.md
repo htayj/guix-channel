@@ -2065,6 +2065,61 @@ used.  Installation activates nothing and no user profile was deployed.
 result and immutable-NAR report.  The duplicate-META warnings remain visible
 in that evidence; they are not errors or hidden by the proof.
 
+## Tui styled Clojure text and line input
+
+`tui` packages the EPL-2.0 `pmatiello/tui` revision
+[`e435b1b60dbcc86b91060ccff70fe765b3285224`](https://github.com/pmatiello/tui/tree/e435b1b60dbcc86b91060ccff70fe765b3285224)
+as `0.2.0-0.e435b1b`, reusing the exact `pmatiello-tui-source` origin.
+The complete upstream library is AOT-compiled into `share/java/tui.jar`;
+unchanged upstream tests remain under `share/tui/tests`, and the README,
+changelog, EPL license and build metadata under `share/doc/tui`.
+
+This is a library for styled text/page rendering, flushing and cooked,
+line-oriented input, not a full-screen terminal framework.  It has **no raw
+key-input or cursor-addressing API**.  The `tui-clojure` launcher supplies
+the installed jar and Guix's source-built Clojure 1.12.4 runtime, including
+spec.alpha/core.specs.alpha, using IcedTea 3.19.0 (Java 8).  It uses fixed
+store classpaths, optionally appending `CLASSPATH` for local consumer code;
+no Maven, Clojars, deps.edn Git test runner or dependency download is needed.
+
+```sh
+guix build -L guix --no-grafts tui
+make check-tui
+tui-clojure -e '(require (quote [me.pmatiello.tui.core :as tui]))
+  (tui/println {:style [:bold :fg-green] :body "Hello, café λ!"})
+  (tui/flush)'
+tui-clojure app.clj
+```
+
+Use `tui/render` for strings composed from text and styled segments,
+`tui/print`/`tui/println` for output, and `tui/read-line`/`tui/read-lines`
+for cooked input and EOF.  Bold, underline, reset, foreground/background
+colors and their dispatched reset forms are available.  **Pinned upstream
+limitations are preserved**, not patched into new features: the style spec
+advertises `:faint`, `:italic`, `:slow-blink`, `:fast-blink`, `:reverse-video`,
+`:conceal`, `:strike`, `:weight-off`, `:italic-off`, `:reverse-video-off`,
+`:conceal-off` and `:strike-off`, but the rendering dispatch does not implement
+them.  Conversely its `:blink` and `:bold-off` dispatch keys are absent from
+the accepted spec.  These are not usable public style promises at this pin.
+Consumer layout geometry belongs to the application, not a Tui layout engine.
+
+On 2026-10-02, source build, `--check` reproducibility rebuild and offline lint
+completed successfully.  The installed-jar proof reran all unchanged upstream
+tests: **41 tests, 59 assertions, zero failures/errors**.  A real PTY consumer
+loaded the installed store jar and verified empty-page/println boundaries,
+plain/styled separators, ordered bold/foreground/background output and reset
+boundaries, invalid-style rejection, Unicode `café λ`, and actual cooked input
+`Alice` followed by `first`/`second` lines and EOF.  Terminal attributes remained
+unchanged.  Execution used private HOME/XDG state, an isolated network namespace
+and a read-only store; package, snapshot tree and snapshot-output NARs stayed
+unchanged.  Evidence is retained in `/tmp/omp-tui-final`.
+`.goocastle/evidence/issue-155.png` is the unchanged `tui-live.raw` replayed
+in a real 40×16 xterm, visually inspected with the cyan installed-consumer
+heading, red-on-blue text, green underline, Unicode and `Name>` prompt,
+without errors.  This live-prefix image proves display, not later input/EOF;
+those are established by the actual completed PTY session/report.  No user
+profile deployment or host configuration change occurred.
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -2149,6 +2204,7 @@ in that evidence; they are not errors or hidden by the proof.
 | `notion-river` | Marenz/notion-river 0.6.0-14.ge79dea3 | Static tiling window manager for a separately supplied River 0.4.x+ compositor |
 | `notty` | pqwy/notty 0.2.3 (`e035d06`, tag `v0.2.3`) | ISC-licensed OCaml core, Unix/Lwt backends, toplevel support and all 18 upstream examples; no Async backend |
 | `miou` | robur-coop/miou `5fcb7e6` (four commits after 0.8.0) | MIT-licensed OCaml-5.4.1 core, backoff, sync, Bitv, Unix and runtime-events libraries with native stubs |
+| `tui` | pmatiello/tui `e435b1b` | EPL-2.0 Clojure styled text/page rendering and cooked line input, AOT jar and offline `tui-clojure` launcher; no raw-key/cursor API |
 | `mushkin` | Mushkin 0.5.1 | Qt MUSHclient-compatible MUD client with Lua, TLS, and MSP |
 | `mushtato` | MushTato 1.9.3 | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |
 | `potato` | Potato 2.0.0b19 | Tcl/Tk graphical MUSH client; insecure upstream TLS is deliberately disabled |
@@ -2814,6 +2870,7 @@ make check-ffglitch  # native/JSON/Python/QuickJS editing, independent decode an
 make check-praat    # explicit 7.0.02 selection, acoustic/native round trip and isolated real GTK editor
 make check-notty    # isolated native installed-library Unix/Lwt consumer, Unicode/colors/input/resize and snapshot NAR integrity
 make check-miou     # fresh offline container, native six-library OCaml-5.4.1 consumer and immutable NAR
+make check-tui      # installed-jar upstream suite, isolated Unicode/ANSI/cooked-input PTY and immutable package/snapshot NARs
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
