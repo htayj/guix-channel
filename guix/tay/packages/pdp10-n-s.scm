@@ -2,6 +2,7 @@
 
 (define-module (tay packages pdp10-n-s)
   #:use-module (tay packages source-snapshot)
+  #:use-module ((guix licenses) #:prefix license:)
   #:export (pdp10-old-bits-source pdp10-panda-source pdp10-rogue-source
             pdp10-rsh-source pdp10-rutgers-common-lisp-source
             pdp10-rutgers-elisp-source pdp10-rutgers-pascal-source
@@ -25,6 +26,7 @@
 (define-public pdp10-stacken-source (make-github-source-snapshot "pdp10-stacken-source" "pdp10" "PDP-10" "stacken" "6e18f5ebefd9acb0d718ef31a08f33a60fc9fca2" "160y42rwjiicmwk5kchm92dmc7xww52frrjj8vjza6r8hng4b1m9" "Source snapshot of Stacken computer-club material" "https://github.com/PDP-10/stacken" #f))
 (define-public pdp10-suds-source (make-github-source-snapshot "pdp10-suds-source" "pdp10" "PDP-10" "SUDS" "a167729a953680a1442f057b517485035aecb734" "0sjksxjqdzbgfs7k9yn5322425dnnxwgrrff1qcsiya64cnwz894" "Source snapshot of the Stanford University Drawing System" "https://github.com/PDP-10/SUDS" #f))
 (define-public pdp10-supdup-source (make-github-source-snapshot "pdp10-supdup-source" "pdp10" "PDP-10" "supdup" "9658d1f2a9f823334f116655f452f0df93f5d35c" "1rynvs49xlqqillj7ih3n3b0gz5w4ff97ggbh7r8gdp8dll1akvg" "Source snapshot of the SUPDUP client" "https://github.com/PDP-10/supdup" #f))
-(define-public pdp10-suppty-source (make-github-source-snapshot "pdp10-suppty-source" "pdp10" "PDP-10" "SUPPTY" "2da0135f2f3069db4b692155887d4076e67d6fac" "18mzn29b1pkngp1zxsc7vhaxf8vvyykagrqk8qvy85yhrg5p78a5" "Source snapshot of the SUPDUP PuTTY client" "https://github.com/PDP-10/SUPPTY" #f))
+;; The pinned root LICENCE grants MIT/Expat permission; README refers to it.
+(define-public pdp10-suppty-source (make-github-source-snapshot "pdp10-suppty-source" "pdp10" "PDP-10" "SUPPTY" "2da0135f2f3069db4b692155887d4076e67d6fac" "18mzn29b1pkngp1zxsc7vhaxf8vvyykagrqk8qvy85yhrg5p78a5" "Source snapshot of the SUPDUP PuTTY client" "https://github.com/PDP-10/SUPPTY" license:expat))
 (define-public pdp10-sri-nic-source (make-github-source-snapshot "pdp10-sri-nic-source" "pdp10" "PDP-10" "sri-nic" "888264aa2d4e03c487ba9370543e2d7ca22d1d4b" "1pl118mv3frln03sjkg4rv2izl25q8xa1wgg7py0sr8g309l3g2s" "Source snapshot of the SRI-NIC backup" "https://github.com/PDP-10/sri-nic" #f))
 (define-public pdp10-system1022-source (make-github-source-snapshot "pdp10-system1022-source" "pdp10" "PDP-10" "System1022" "5b3a35c82d17d34b30773948db60e526283f4eeb" "1d0svh9899g3bwprll63w1m327ayhfmm1x4x145m52jg9f8kh808" "Source snapshot of System 1022" "https://github.com/PDP-10/System1022" #f))

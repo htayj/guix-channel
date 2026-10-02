@@ -101,6 +101,71 @@ and synthetic image-conversion paths: **no physical tape, guest OS or network
 device operation was verified**.  No profile or deployed system changed;
 no network OKF update applies to this repository-only addition.
 
+## SUPPTY original host-client runtime proof
+
+`pdp10-suppty` builds the original GTK 2 terminal client and command-line
+frontend from
+[`PDP-10/SUPPTY` revision `2da0135f2f3069db4b692155887d4076e67d6fac`](https://github.com/PDP-10/SUPPTY/tree/2da0135f2f3069db4b692155887d4076e67d6fac)
+as `0-2da0135`.  Its source snapshot has Guix recursive NAR SHA256 base32
+`18mzn29b1pkngp1zxsc7vhaxf8vvyykagrqk8qvy85yhrg5p78a5`.
+The pinned root
+[`LICENCE`](https://raw.githubusercontent.com/PDP-10/SUPPTY/2da0135f2f3069db4b692155887d4076e67d6fac/LICENCE)
+grants **MIT/Expat** permission, including modification, redistribution and
+commercial use; the source snapshot's license metadata now reflects that
+grant.  The earlier missing-license blocker does not apply to this revision.
+The original license and README are installed under
+`share/doc/pdp10-suppty-0-2da0135`.
+
+The package installs only `suppty` (GTK 2) and `suppty-plink` (CLI), with
+matching namespaced manual pages, so it can coexist with PuTTY without command
+or manual-page collisions.  The original SUPDUP, SSH, Telnet, rlogin, raw TCP,
+serial, session configuration, proxy and terminal functionality is retained;
+**only SUPDUP was exercised here**.  This preservation package is not a security
+endorsement of its old SSH implementation.  No guest software or public
+service is included.  Plink forwards SUPDUP display bytes without terminal
+emulation; use the graphical client for its original SUPDUP terminal renderer.
+
+The recipe adds the missing SUPDUP backend to upstream's `Recipe` before
+regenerating object lists.  `perl -I. mkfiles.pl` allows the charset generator
+to load `sbcsgen.pl` with modern Perl and prevents its swallowed load failure
+from leaving source scanning in the wrong working directory.  Line-discipline
+and ITS/WAITS charset translation now use their actual terminal contexts,
+including the CLI's absent terminal, rather than an out-of-scope `term`.
+
+```sh
+guix build -L guix --no-grafts pdp10-suppty
+make check-suppty
+suppty-plink supdup,HOST   # or load an original saved SUPDUP session
+suppty                    # original graphical session configuration
+```
+
+On 2026-10-02, local source build, reproducibility rebuild (`--check`), offline
+lint and isolated actual CLI/GTK runtime smoke passed for
+`/gnu/store/lc6drsyahfmpipim6gl5q7q9m1zmlwfn-pdp10-suppty-0-2da0135`
+using OMP tooling.  `tests/suppty-smoke.sh` and `tests/suppty-smoke.py` use fresh
+HOME/XDG/session state, private user, mount, network and PID namespaces, and
+private Xvfb.  The only network interface is loopback.  An original local
+SUPDUP fixture verifies both clients' actual RFC 734 36-byte six-bit handshake
+(six 36-bit words), geometry/options and location negotiation.  The CLI
+receives the exact original fixture stream and sends `CLI_INPUT_60` back on
+the socket.  The live GTK terminal receives protocol display commands;
+`xdotool` types `ROUNDTRIP60` into its actual window, the fixture verifies the
+exact keyboard bytes and sends them back for rendering.  Both clients exit
+zero on clean remote EOF.  CLI `--help` and `--version` retain upstream's
+exit status 1; those transcripts are recorded, not normalized into success.
+
+Set `SUPPTY_SMOKE_ARTIFACTS=/absolute/path` to retain command provenance,
+handshakes, location/input bytes, session configuration, result JSON and actual
+GTK window/desktop captures.  Final local evidence is in
+`/tmp/omp-suppty-font-fixed`; the before/after output NAR hashes match.
+`.goocastle/evidence/issue-60.png` is the inspected actual GTK terminal capture,
+showing `SUPPTY LIVE HOST CLIENT`, `Original local SUPDUP protocol fixture`,
+`ROUNDTRIP60` and `KEYBOARD ROUND TRIP VERIFIED`.  It is OMP-produced runtime
+evidence, not a Goocastle execution or a connection to a remote PDP-10 host.
+This proves the exercised local SUPDUP client paths, not remote historical
+host interoperability or other protocols.  No profile or deployed system
+changed; no network OKF update applies to this repository-only addition.
+
 ## NarwhaRL original-game runtime proof
 
 `narwharl` packages Nathan Hetherington's full original **NarwhaRL 0.0.1**
@@ -1811,6 +1876,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `terminaldrome` | thafaker/TerminalDrome | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | larsbrinkhoff/image-tape | Magnetic-tape image reader with safe output handling |
 | `klh10` | PDP-10/klh10 `6d733f2` | Source-built KL10/KS10 host emulator, console, disk/tape helpers and image converters; custom eight-clause Free-Fork license, modified source/notices included; no guest systems or network services |
+| `pdp10-suppty` | PDP-10/SUPPTY `2da0135` | MIT/Expat source-built GTK 2 `suppty` and CLI `suppty-plink`; original SUPDUP host clients, namespaced commands/manuals; only isolated local SUPDUP runtime verified, not old-SSH security |
 | `apout` | DoctorWkt/Apout 2.4.0 | PDP-11 Unix a.out user-mode emulator; supply a user-owned `APOUT_ROOT` |
 | `kitty-bitmap` | Kitty 0.49.1 (pinned tag `v0.49.1`) | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
 | `halloy` | squidowl/halloy 2026.8 | Upstream x86_64 Linux desktop IRC client release with Wayland/X11 runtime libraries |
@@ -2514,6 +2580,7 @@ make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
 make check-klh10    # three isolated native CPU/console PTYs, exact word/disk/tape-image roundtrips and NAR integrity
+make check-suppty   # isolated RFC734 CLI/GTK handshake, location, real keyboard roundtrip, EOF and NAR integrity
 make check-fontra   # local no-graft build plus conversion/workflow/HTTP smoke
 make check-ighalsk  # private Xvfb Tk creation/quest/move/save/load state proof
 make check-aquesttoofar # private Xvfb SDL intro/help-return/three decline turns
