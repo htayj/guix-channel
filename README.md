@@ -166,6 +166,76 @@ This proves the exercised local SUPDUP client paths, not remote historical
 host interoperability or other protocols.  No profile or deployed system
 changed; no network OKF update applies to this repository-only addition.
 
+## NLarn original-game save continuity
+
+`nlarn` packages the original **NLarn 0.8.0** C/ncurses rewrite of Larn from
+the release commit
+[`1873599a5682e4645e2801f7de6bd11ce54c2dfd`](https://github.com/nlarn/nlarn/tree/1873599a5682e4645e2801f7de6bd11ce54c2dfd),
+not a replacement game or UI.  The fixed Git tree has Guix base32 hash
+`0jcd5j2k23zx6ikwzkir47b9s57ign1hh82his1j1hs62nl8m34q`.
+The native executable retains the original game features and reads its
+immutable fortune, maze, help/message files and locale catalogs from
+`share/nlarn`.  The optional PDCurses submodule, Windows/SDL icon and bundled
+Fira Mono font are not part of this console package.  README, changelog,
+GPL-3.0 license, maze documentation and the cJSON MIT/Expat and enumFactory
+CC-BY-SA-3.0 notices are retained under `share/doc/nlarn`.  The recipe's
+license metadata is GPL-3.0-only plus those third-party licenses, not a claim
+of a GPL-3.0-or-later grant.
+
+```sh
+guix build -L guix --no-grafts nlarn
+make check-nlarn
+nlarn                 # original interactive menus and game
+nlarn --highscores    # native Hall of Fame display
+```
+
+Use the main menu to start or continue a game.  `i` opens the original
+inventory; `?` or F1 opens help, and Ctrl-S saves and quits.  Configuration
+and native saves remain in the game's ordinary `~/.nlarn` directory
+(`nlarn.ini` and `nlarn.sav`), not a new XDG adapter.  Installation does not
+alter the user's configuration or start a service.
+
+On 2026-10-02, local source build, `--check` reproducibility rebuild and offline
+lint passed for
+`/gnu/store/xb53638fq31in9dsdwb3v507kf8mjb5b-nlarn-0.8.0`.
+**Upstream has no test target**; the recipe disables that unavailable phase,
+and the independent installed-game proof is not presented as an upstream
+suite.  `tests/nlarn-smoke.sh` and `tests/nlarn-pty-runner.py` drive two real
+100×30 PTYs in isolated user/network/mount namespaces with private HOME/XDG
+state, empty PATH and a read-only store bind mount.  Python and pyte are
+test-only dependencies.  The former Goocastle bounded-runtime/Node dependency
+and obsolete issue-710 contract were removed; no Goocastle execution is used.
+
+The first process creates the native strong male OmpProof character with
+STR/DEX/CON/INT/WIS **20/15/16/12/12**, HP **21/21**, MP **17/17**, level 1 and
+experience 0.  It inspects the actual equipped **uncursed leather armour +1**
+and **uncursed dagger +0**, moves from Town map position `(52, 13)` at turn 1
+to `(52, 12)` at turn 2 (zero-based rendered coordinates), then saves using
+the ordinary Ctrl-S command.  A separate process restores exactly the
+HUD, position, turn and inventory, moves to `(53, 12)` at turn 3, and saves
+again.  The proof reads the actual gzip-JSON save streams, verifies HUD
+against native fields, compares carried item identities/contents and equipped
+slots, and proves the second save contains the further position/time advance.
+It does not claim byte-identical whole saves: native time and position must
+change.  The test parser handles ncurses' ECMA-48 CSI REP command so repeated
+cells are decoded accurately; the original raw output is not altered.
+
+The receipt and native save evidence are retained at
+`/tmp/nlarn-smoke-dakrYZ/proof/receipt.json`.  Only the private `~/.nlarn`
+state is written; the Hall of Fame query creates no user state, and the
+read-only installed output NAR remains
+`1l4v2sannym0gwcpp8f3r83i70vfqb8vd8rv5q4f4ychpjqajr9d`.
+Set `NLARN_RAW_CAPTURE`, `NLARN_TEXT_CAPTURE` and `NLARN_TRANSCRIPT` to
+absolute destinations to retain the genuine resumed live frame, decoded text
+and complete PTY transcript; the final raw frame is `/tmp/omp-nlarn-final.raw`.
+`.goocastle/evidence/issue-457.png` is the inspected actual 100×30 xterm replay,
+showing OmpProof, STR 20, DEX 15, CON 16, HP 21/21, turn 3, the Town map/player
+and the welcome-back message.  This is OMP-produced evidence of the real
+resumed game, not Goocastle execution or a success-caption buffer.  The proof
+covers the exercised native gameplay/save/restore/resave paths, not a full
+campaign.  No profile or deployed system changed; no network OKF update
+applies to this repository-only runtime correction.
+
 ## robotfindskitten original-game runtime proof
 
 `robotfindskitten` packages the original **3.0000000.726** C/ncurses Zen
@@ -2506,7 +2576,7 @@ update applies to this repository-only addition.
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
 | `bcrawl` | b-crawl/bcrawl 1.42.1 | Terminal-only Dungeon Crawl Stone Soup fork with XDG-managed state |
 | `avanor` | Avanor 0.5.8 | Historical terminal roguelike with XDG-managed saves and high scores |
-| `nlarn` | NLarn 0.8.0 | Curses roguelike rewrite of Larn with isolated user state |
+| `nlarn` | NLarn 0.8.0 (`1873599`) | Original C/ncurses Larn rewrite, immutable console data/locales and native `~/.nlarn` configuration/saves; actual two-process gameplay/restore/resave proof |
 | `robotfindskitten` | Codeberg robotfindskitten 3.0000000.726 (`4718727`) | Original GPL-2.0-or-later C/ncurses game installed as a direct native ELF, complete NKI/assets/docs; conflicting AppStream CC-BY-SA-4.0 metadata declaration retained |
 | `durthang` | Durthang 0.2.0 | Rust TUI MUD client with TLS, GMCP, automapping, and encrypted Secret Service transport |
 | `frostbite` | Frostbite 1.18.2 | Qt5 DragonRealms client with Ruby scripting, profiles, maps, sound, and XDG state |
@@ -3244,6 +3314,7 @@ make check-weidu # namespaced fresh-XDG offline TP2 installation smoke
 make check-trebuchet # fresh-HOME Xvfb Tcl/Tk plus loopback protocol smoke
 make check-vt05 # isolated Xvfb SDL window plus PTY TERM-contract smoke
 make check-robotfindskitten # isolated actual native PTY movement, installed NKI description, kitten win/exit and unchanged NAR
+make check-nlarn # isolated native 100x30 PTYs, exact HUD/items restore, further movement/turn/resave and unchanged NAR
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass

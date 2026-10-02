@@ -999,22 +999,6 @@
       }
     },
     {
-      "issueNumber": 710,
-      "packageName": "nlarn",
-      "packageModulePath": "guix/tay/packages/nlarn.scm",
-      "artifactPath": ".goocastle/evidence/issue-710.png",
-      "runtime": {
-        "executable": "nlarn",
-        "invocation": {
-          "file": "nlarn",
-          "args": [
-            "--highscores"
-          ]
-        },
-        "successMarker": "NLarn Hall of Fame"
-      }
-    },
-    {
       "issueNumber": 711,
       "packageName": "obumbrata",
       "packageModulePath": "guix/tay/packages/obumbrata.scm",
