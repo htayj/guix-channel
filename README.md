@@ -2244,6 +2244,63 @@ configuration change occurred.
 reduction and channel results, successful consumer and unchanged-NAR report.
 The duplicate findlib warnings remain visible, with no runtime errors.
 
+## Vim-style Emacs region editing
+
+`emacs-vim-region` builds `ongaeshi/emacs-vim-region` revision
+[`7c4a99ce3678fee40c83ab88e8ad075d2a935fdf`](https://github.com/ongaeshi/emacs-vim-region/tree/7c4a99ce3678fee40c83ab88e8ad075d2a935fdf)
+as `0-7c4a99c`, reusing the immutable source origin.  The installed source
+and bytecode provide Vim-style region motion and editing via the global
+`vim-region-mode`, with `emacs-expand-region` propagated.  README and HISTORY
+are installed under `share/doc/emacs-vim-region`.
+
+There is no standalone LICENSE upstream.  The 2013 ongaeshi copyright and
+complete **GPL-3.0-or-later** grant are present in `vim-region.el` itself,
+retained byte-for-byte in the installed header.  This resolves the earlier
+licensing uncertainty; it does not invent a separate license file or alter
+the preservation archive.  The native package adds the missing
+`(require 'expand-region)` so the existing `+` binding works immediately
+after loading the library; commands and bindings otherwise remain upstream.
+
+```sh
+guix build -L guix --no-grafts emacs-vim-region
+make check-emacs-vim-region
+```
+
+In an Emacs session with the package on its load path, explicitly load and
+enable it:
+
+```elisp
+(require 'vim-region)
+(vim-region-mode 1)
+```
+
+Ordinary editing commands exit the mode automatically unless the upstream
+persistent-selection option is enabled.  Installation does not enable the
+mode or edit the user's Emacs configuration.  This is a region-selection
+extension, not a replacement Emacs or a full Vim implementation.
+
+On 2026-10-02, source build, `--check` reproducibility rebuild and offline lint
+passed.  **Upstream has no test suite**; the independent installed-package
+smoke proved behavior in both batch Emacs and real `emacs -nw`.  It drove
+keyboard macros through the actual keymaps and pre/post-command hooks for
+region motion, kill/copy/yank, automatic exit, persistent (`eternal`) selection,
+character searches, symbol selection and expand-region.  Starting from
+`alpha beta gamma\nkeep this line\n`, the final edited buffer was exactly
+`alpha gammabeta \nkeep this line\n`, including the trailing space before the
+first newline.  It left `alpha` actively selected with point 6 and mark 1,
+both global/local modes on and the buffer modified.
+
+The proof used a private HOME/XDG state, empty PATH and a separate network
+namespace; installed package and expand-region files stayed read-only and
+byte-identical.  An open FIFO prevents util-linux `script` from synthesizing
+an editing NUL from `/dev/null` EOF.  The raw final display prefix is retained
+in `/tmp/omp-vim-region-final.raw`, before alternate-screen restoration.
+No user profile deployment or host configuration change occurred.
+`.goocastle/evidence/issue-215.png` is the actual raw-display replay in xterm,
+visually inspected with `alpha gammabeta ` and `keep this line`, highlighted
+`alpha`, and the modified-buffer `**`/`Fundamental vim-region` mode line.
+The screenshot shows the genuine edited buffer, not a success-caption buffer.
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -2284,6 +2341,7 @@ The duplicate findlib warnings remain visible, with no runtime errors.
 | `sbcl-qbcl` | qbcl | qBittorrent command-line controller |
 | `sbcl-rplaca` | rplaca | Lisp-native LLM chat interface |
 | `emacs-mentor-pinned` | skangas/mentor 0.5 + 21 commits (`ed42ae8`) | Distinct pinned Emacs rTorrent frontend with the post-0.5 tracker library; no daemon activation |
+| `emacs-vim-region` | ongaeshi/emacs-vim-region `7c4a99c` | GPL-3.0-or-later Vim-style region selection/editing with propagated expand-region; source-header grant retained |
 | `terminaldrome` | thafaker/TerminalDrome | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | larsbrinkhoff/image-tape | Magnetic-tape image reader with safe output handling |
 | `klh10` | PDP-10/klh10 `6d733f2` | Source-built KL10/KS10 host emulator, console, disk/tape helpers and image converters; custom eight-clause Free-Fork license, modified source/notices included; no guest systems or network services |
@@ -3001,6 +3059,7 @@ make check-miou     # fresh offline container, native six-library OCaml-5.4.1 co
 make check-tui      # installed-jar upstream suite, isolated Unicode/ANSI/cooked-input PTY and immutable package/snapshot NARs
 make check-proiel   # canonical Ruby-3.3.9 isolated installed consumer, exact XML/token/edge/valency semantics and immutable NAR
 make check-domainslib # isolated native concurrent task/parallel-array/channel proof with exact oracles and immutable NAR
+make check-emacs-vim-region # isolated batch and real terminal Emacs keymap editing, exact buffer/active-region state and immutable files
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware

@@ -154,11 +154,13 @@
                                "source snapshot of ondras/rot.js" "https://github.com/ondras/rot.js"
                                license:bsd-3))
 
+;; The only program source, vim-region.el, carries ongaeshi's 2013 copyright
+;; and GPL-3.0-or-later grant; no separate LICENSE exists.
 (define-public ongaeshi-emacs-vim-region-source
   (make-github-source-snapshot "ongaeshi-emacs-vim-region-source" "ongaeshi" "ongaeshi" "emacs-vim-region"
                                "7c4a99ce3678fee40c83ab88e8ad075d2a935fdf" "0nwl061rn37r21hpp32za7hq6gb18pbbk79zjv7wxpxsvkjys9dk"
                                "source snapshot of ongaeshi/emacs-vim-region" "https://github.com/ongaeshi/emacs-vim-region"
-                               #f))
+                               license:gpl3+))
 
 (define-public oobabooga-textgen-source
   (make-github-source-snapshot "oobabooga-textgen-source" "oobabooga" "oobabooga" "textgen"
