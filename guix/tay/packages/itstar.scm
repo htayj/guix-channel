@@ -32,9 +32,9 @@
                 (("UNAME != uname") "UNAME := Linux")
                 (("cc") "$(CC)")
                 (("strip itstar") "true"))
-              ;; Guix deliberately delivers an offline, local-image tool.
-              ;; The legacy host:device rmt path uses rexec(3), which is not
-              ;; available on current GNU libc and would be unsafe here.
+              ;; Issue 58 explicitly excludes the legacy host:device rmt
+              ;; path: its rexec(3) dependency is unavailable on musl.
+              ;; Local-image behavior remains unchanged.
               (substitute* "tapeio.c"
                 (("else .*rmt.*remote host.*")
                  (string-append
@@ -62,9 +62,10 @@
                             "Relicensing Permission.txt"))))))))
     (synopsis "Create, list, and extract PDP-10 ITS DUMP tape images")
     (description
-     "ITSTAR creates, lists, and extracts local PDP-10 ITS DUMP tape image
-files.  This package supports local files and compressed @file{.Z} input;
-remote rmt tape paths and physical tape-device operation are intentionally
-outside its offline, reproducible delivery scope.")
+     "ITSTAR creates, lists, appends to, and extracts PDP-10 ITS DUMP tape
+images.  It translates ITS filenames and evacuated 36-bit word data, and
+supports compressed @file{.Z} input.  Remote rmt paths are disabled as specified
+in the packaging scope; physical tape hardware is not part of its acceptance
+proof.")
     (home-page "https://github.com/PDP-10/itstar")
     (license license:gpl3+)))

@@ -1952,6 +1952,60 @@ live Lwt capture prefix replayed in xterm, visually inspected with `SIZE 52x16`,
 Unicode.  The proof uses a temporary dependency profile, not the user's
 profile; no profile deployment or host configuration change is claimed.
 
+## ITSTAR local ITS DUMP tape images
+
+`itstar` builds upstream V1.10 from
+[`PDP-10/itstar` revision `b709cd82ebcfa2cc78f79da8ca9e81c31f53a7c3`](https://github.com/PDP-10/itstar/tree/b709cd82ebcfa2cc78f79da8ca9e81c31f53a7c3)
+as `1.10-0.b709cd8`, reusing the immutable `pdp10-itstar-source` origin.
+The original C implementation creates, lists, extracts and appends ITS DUMP
+tape images, translating ITS filenames and evacuated 36-bit words.  The
+GPL-3.0-or-later declaration and copyright-holder relicensing permission
+are installed with README and `itstar.doc` under
+`share/doc/itstar-1.10-0.b709cd8`; the permission document was verified.
+
+```sh
+guix build -L guix --no-grafts itstar
+make check-itstar
+itstar -c -f local.tap src/hello.txt src/words.bin src/empty.txt
+itstar -t -f local.tap
+mkdir extracted
+itstar -x -C extracted -f local.tap
+itstar -r -f local.tap src/extra.txt
+```
+
+Operate only on files you own.  Upstream compressed-input behavior is
+**destructive in place**: a `.Z` input is expanded to the unsuffixed filename
+and the `.Z` file is deleted.  The stream may be UNIX `compress` or gzip;
+format detection comes from gzip, not the suffix.  Keep an independent copy
+when preservation matters.  The package invokes its declared gzip executable
+by absolute store path, including with an empty PATH, rather than a
+PATH-dependent `zcat` wrapper.
+
+Historical issue #58 explicitly authorizes removing the legacy `host:device`
+remote-rmt path with its unavailable `rexec` dependency.  Such paths fail
+locally before hostname lookup.  This restriction does not remove physical
+tape support; **physical tape hardware was not tested**.  The acceptance
+proof covers local images only.  Upstream provides no automated test suite;
+the separate installed-CLI smoke is the runtime proof.
+
+On 2026-10-02, local build, `--check` reproducibility rebuild and offline lint
+completed successfully.  The native smoke ran with private HOME/XDG state,
+separate user/mount/network/IPC/PID namespaces, no host network interfaces and
+a read-only store.  It exercised actual create/list/extract/append operations
+with exact ITS listings and byte-identical evacuated text, binary and empty
+files spanning record boundaries.  Both UNIX-compress and gzip `.Z` inputs
+were expanded and deleted exactly as upstream specifies.  An independently
+constructed SIMH-framed/TM03-word DUMP fixture, not an ITSTAR-created oracle,
+listed and extracted exactly `ABCDE`.  Evidence is retained in
+`/tmp/omp-itstar-proof`; the installed output NAR remained unchanged:
+`1bpkyhrffrprpbfsvc77dmkd2m56lbc9yv2ip96pkishpr0f85lh`.
+No user profile, host configuration or physical tape was changed.
+`.goocastle/evidence/issue-58.png` captures the unchanged
+`/tmp/omp-itstar-proof/list-appended.stdout` in a real xterm.  It was visually
+inspected with the original `Tape 1, reel 0` random-tape header and the five
+`SRC;HELLO TXT`, `SRC;WORDS BIN`, `SRC;EMPTY TXT`, `SRC;LZW TXT` and
+`SRC;EXTRA TXT` entries, without errors.
+
 ## Miou OCaml concurrency library
 
 `miou` packages the MIT-licensed `robur-coop/miou` revision
@@ -2055,6 +2109,7 @@ in that evidence; they are not errors or hidden by the proof.
 | `image-tape` | larsbrinkhoff/image-tape | Magnetic-tape image reader with safe output handling |
 | `klh10` | PDP-10/klh10 `6d733f2` | Source-built KL10/KS10 host emulator, console, disk/tape helpers and image converters; custom eight-clause Free-Fork license, modified source/notices included; no guest systems or network services |
 | `pdp10-suppty` | PDP-10/SUPPTY `2da0135` | MIT/Expat source-built GTK 2 `suppty` and CLI `suppty-plink`; original SUPDUP host clients, namespaced commands/manuals; only isolated local SUPDUP runtime verified, not old-SSH security |
+| `itstar` | PDP-10/itstar V1.10 (`b709cd8`) | GPL-3.0-or-later native ITS DUMP image create/list/extract/append tool, store-bound gzip and relicensing permission; remote rmt disabled, physical tape untested |
 | `apout` | DoctorWkt/Apout 2.4.0 | PDP-11 Unix a.out user-mode emulator; supply a user-owned `APOUT_ROOT` |
 | `kitty-bitmap` | Kitty 0.49.1 (pinned tag `v0.49.1`) | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
 | `halloy` | squidowl/halloy 2026.8 | Upstream x86_64 Linux desktop IRC client release with Wayland/X11 runtime libraries |
@@ -2764,6 +2819,7 @@ make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smok
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
 make check-klh10    # three isolated native CPU/console PTYs, exact word/disk/tape-image roundtrips and NAR integrity
 make check-suppty   # isolated RFC734 CLI/GTK handshake, location, real keyboard roundtrip, EOF and NAR integrity
+make check-itstar   # isolated byte-exact DUMP create/list/extract/append, compressed input and independent SIMH/TM03 fixture
 make check-fontra   # local no-graft build plus conversion/workflow/HTTP smoke
 make check-ighalsk  # private Xvfb Tk creation/quest/move/save/load state proof
 make check-aquesttoofar # private Xvfb SDL intro/help-return/three decline turns
