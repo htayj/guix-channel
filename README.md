@@ -166,6 +166,75 @@ This proves the exercised local SUPDUP client paths, not remote historical
 host interoperability or other protocols.  No profile or deployed system
 changed; no network OKF update applies to this repository-only addition.
 
+## Stoat Soup original-console runtime proof
+
+`stoat-soup` packages the independently playable **Stoat Soup
+0.23-ish-aug26** variant from the original C++ source, not a replacement UI or
+prebuilt executable.  The original research [issue #529](https://github.com/htayj/guix-channel/issues/529)
+explicitly specifies a **console-only** delivery: this is neither the distinct
+upstream Guix `crawl`/`crawl-tiles` package nor the channel's `bcrawl` fork.
+The reviewed [release tag](https://github.com/damerell/crawl/releases/tag/0.23-ish-aug26)
+(published 2026-08-02) resolves to commit
+`5df72bd44e7113642e311008665fafda6c7baa8c`.  Its pinned
+[official source archive](https://codeload.github.com/damerell/crawl/tar.gz/refs/tags/0.23-ish-aug26)
+has SHA256
+`50a0fd6a8836d522ef84c3789df85981b703cc441ae2552457332e5a1ade133e`
+(Guix base32 `0ghkvqd5lbikawj5bqhs8k607dw1b7w9sy63hkpj5m9ni1mgv82h`).
+
+The package builds the complete native console game against Guix Lua 5.1,
+ncurses, SQLite and zlib, without fetching bundled submodules or enabling
+graphical SDL, tiles, fonts or optional PCRE.  It fixes the release metadata
+for the archive without `.git` and changes only the exact upstream HOST
+`cc -dumpmachine` probe to use the available `gcc`, not substrings of existing
+`gcc` commands.  Immutable maps, Lua scripts, databases, defaults,
+descriptions, settings, generated manual and aptitudes are installed under
+`share/stoat-soup`; the game uses that compiled-in data path, without a
+source-tree/load-path fallback.  Complete upstream and Stoat documentation,
+`LICENCE`, credits, original third-party notices and the full Apache 2.0 text
+are retained under `share/doc/stoat-soup`.  The console code closure includes
+GPL-2.0-or-later, BSD-2-Clause, MIT, public-domain/CC0 and Apache-2.0 terms;
+retained historical graphical-component license texts do not imply those
+components are built or shipped as dependencies.
+
+The launcher places native saves, scores, macros and compiled caches below
+`${XDG_STATE_HOME:-$HOME/.local/state}/stoat-soup` and forwards ordinary game
+options.  It adds no installed `--smoke` mode, helper UI, updater or runtime
+download.  Verification helpers live only in `tests/`; upstream's
+`util/fake_pty`, built for its stress tests, is not installed.
+
+```sh
+guix build -L guix --no-grafts stoat-soup
+make check-stoat-soup
+stoat-soup
+```
+
+On 2026-10-02, the final local source build, upstream `make nondebugtest`,
+reproducibility rebuild (`--check`) and real-console runtime smoke passed for
+`/gnu/store/pvl49rih6smq8fffzlxsv3h733ibfiff-stoat-soup-0.23-ish-aug26`
+using OMP tooling.  `tests/stoat-soup-smoke.sh` and
+`tests/stoat-soup-pty-runner.py` use fresh HOME/XDG state, an empty inherited
+environment and isolated user, network and PID namespaces with only loopback.
+Two actual 80×30 PTY game processes select OmpProof, a Human Fighter, using
+literal `-seed 285` (the native parser treats it as hexadecimal, numeric 645).
+The first makes the ordinary weapon choice, performs three genuine advancing
+waits, writes a native character dump and saves with native `S`/`y`.  The
+independent second process restores the welcome-back map and exactly the saved
+game clock, console viewport coordinates, HP, stats and meaningful native dump
+fields.  One further ordinary wait advances the native turn count once before
+another native save.  Read-only `--edit-save` inspection retains actual `chr`,
+`you` and internal `D:1` chunks from both saves; the user-facing native place
+is **`Dungeon:1`**, not that internal chunk name.  The before/after installed
+output NAR hashes match.
+
+Final native evidence is at `/tmp/stoat-soup-smoke.wvQXyqvH` (temporary, not a
+durable fixture).  `.goocastle/evidence/issue-724.png` is the inspected xterm
+rendering of the exact restored 80×30 PTY prefix, showing OmpProof the Human
+Fighter, Health 18/18, Time 3.0, Place Dungeon:1 and the welcome-back dungeon
+map.  It is OMP-produced terminal evidence, not a graphical game frontend or
+a Goocastle execution.  This proves the exercised native gameplay/save/restore
+paths, not a full campaign or graphical frontend.  No profile or deployed
+system changed; no network OKF update applies to this repository-only addition.
+
 ## NarwhaRL original-game runtime proof
 
 `narwharl` packages Nathan Hetherington's full original **NarwhaRL 0.0.1**
@@ -1893,6 +1962,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `umoria` | Umoria 5.7.15 (`624a051`) | Full original source-built C++/ncurses Moria with immutable data and XDG scores/default save |
 | `pyro` | Pyro 0.04a | Complete original Python 2/curses roguelike with XDG native log; no upstream save/load |
 | `narwharl` | NarwhaRL 0.0.1 | Full original source-built C++/ncurses roguelike with immutable definitions and XDG/HOME native saves |
+| `stoat-soup` | Stoat Soup 0.23-ish-aug26 (`5df72bd`) | Complete original console-only Crawl variant with immutable data/docs and native XDG saves, scores, macros and caches |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
@@ -2591,6 +2661,7 @@ make check-six-two-one # isolated original SDL arrows, native second-process res
 make check-umoria   # three real PTY movement/Ctrl-X saves, separate-process resume and exact native character exports
 make check-pyro     # two isolated real 80x25 PTYs, four moves each, inventory/help, native log rewrite and NAR integrity
 make check-narwharl # six isolated real PTYs, native movement/save/restore/re-save, complete floor items and NAR integrity
+make check-stoat-soup # isolated real console PTYs, three waits, exact native save/restore, continued turn/re-save and NAR integrity
 make check-rapidbrogue # fresh evidence, original SDL/terminal native save/resume and NAR integrity
 make build-fontra   # local --no-grafts --no-offload build
 APOUT_FIXTURE=/path/to/cleared-v7-echo APOUT_FIXTURE_PROVENANCE='recorded source' APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE=yes make check-apout
