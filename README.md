@@ -2301,6 +2301,77 @@ visually inspected with `alpha gammabeta ` and `keep this line`, highlighted
 `alpha`, and the modified-buffer `**`/`Fundamental vim-region` mode line.
 The screenshot shows the genuine edited buffer, not a success-caption buffer.
 
+## Org mind maps with store-bound Graphviz
+
+`org-mind-map` builds the original Emacs Lisp library from
+[`the-ted/org-mind-map` revision `95347b2f9291f5c5eb6ebac8e726c03634c61de3`](https://github.com/the-ted/org-mind-map/tree/95347b2f9291f5c5eb6ebac8e726c03634c61de3)
+as `0.4-0.95347b2`.  It inherits GNU Guix's `emacs-org-mind-map` recipe and
+propagated Dash dependency, but deliberately replaces its older 0.4 pin
+(`477701b`) with the channel's reviewed post-release snapshot.  The newer
+revision adds `org-mind-map-include-images`; `org-mind-map-include-text` was
+already present and is not a new feature of this pin.  The installed source,
+bytecode and autoloads retain upstream's whole-buffer, branch and current-tree
+exports, headings, tags, text, local images and optional inter-heading links.
+README and LICENSE are installed under `share/doc/org-mind-map`.
+
+The Lisp code is **GPL-3.0-or-later**.  The native origin removes all bundled
+example PNGs (including `Lena.png` and its `example-8.png` derivative) and the
+root `org-mind-map.el.pdf`; redistribution permission for Lena is absent or
+unknown.  The raw `the-ted-org-mind-map-source` preservation snapshot remains
+unchanged, with mixed `license:gpl3+` / `%no-permission-license` metadata rather
+than a claim that every archived asset is freely redistributable.
+
+Graphviz's `dot` and `unflatten` defaults point to absolute store paths, so
+export does not require Graphviz in the user's PATH or profile.  Actual SVG
+rendering exposed clipping with Graphviz 7's non-72-DPI transform: the recipe
+adds `-Gdpi=72 -Gresolution=72` **only for SVG** to keep graph content inside
+the viewport.  Bitmap resolution settings and upstream layout selection are
+unchanged.
+
+```sh
+guix build -L guix --no-grafts org-mind-map
+make check-org-mind-map
+```
+
+In an Emacs session with the package on its load path, load Org's export
+backend before the library:
+
+```elisp
+(require 'ox-org)
+(require 'org-mind-map)
+(setq org-mind-map-dot-output '("svg"))
+```
+
+Open an Org file and use `M-x org-mind-map-write-with-prompt` to export it,
+or the upstream `org-mind-map-write-current-branch` /
+`org-mind-map-write-current-tree` commands for narrower exports.  Installation
+does not edit the user's Emacs configuration or enable a service.
+
+On 2026-10-02, local source build, `--check` reproducibility rebuild and offline
+lint passed for
+`/gnu/store/1sgq3rvb554bcqix0nhnsc11xrm48y5r-org-mind-map-0.4-0.95347b2`.
+**Upstream has no test suite**; the independent installed-package smoke runs
+real batch Emacs and asynchronous Graphviz with fresh HOME/XDG state, empty
+PATH/`exec-path` and a separate network namespace.  It verifies exact SVG
+node labels, directed edges, paragraph text, tags and viewport bounds: the
+whole fixture has eight nodes/six edges, the narrowed Build subtree three/two,
+and the image-enabled/disabled fixtures each two/one with exactly one/zero
+images.  The original local blue-and-yellow checkerboard is attached to Tile;
+no upstream demonstration image is reused.  The image fixture disables text
+separately because upstream assumes paragraph content can be converted to a
+string; this proof does not claim combined image/text paragraphs are fixed.
+
+Set `ORG_MIND_MAP_SMOKE_ARTIFACT_DIR=/absolute/path` to retain Org, DOT, SVG,
+PNG and diagnostic artifacts.  The final local run is retained under
+`/tmp/omp-org-mind-map-unclipped/org-mind-map.vE95kD`.
+`.goocastle/evidence/issue-171.png` is the Chromium-inspected complete graph:
+Plan → Design → Sketch, Plan → Build → {Assemble, Check}, and Other → Later.
+`.goocastle/evidence/issue-171-image.png` shows Picture → Tile with the original
+checkerboard.  These are OMP-produced visual evidence, not Goocastle execution.
+The proof covers the exercised exports, not every layout, format or optional
+link feature.  No user profile or deployed system changed; no network OKF
+update applies to this repository-only addition.
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -2342,6 +2413,7 @@ The screenshot shows the genuine edited buffer, not a success-caption buffer.
 | `sbcl-rplaca` | rplaca | Lisp-native LLM chat interface |
 | `emacs-mentor-pinned` | skangas/mentor 0.5 + 21 commits (`ed42ae8`) | Distinct pinned Emacs rTorrent frontend with the post-0.5 tracker library; no daemon activation |
 | `emacs-vim-region` | ongaeshi/emacs-vim-region `7c4a99c` | GPL-3.0-or-later Vim-style region selection/editing with propagated expand-region; source-header grant retained |
+| `org-mind-map` | the-ted/org-mind-map `95347b2` | GPL-3.0-or-later original Emacs Org graph exporter, propagated Dash and store-bound Graphviz; SVG viewport correction, unlicensed example images excluded |
 | `terminaldrome` | thafaker/TerminalDrome | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | larsbrinkhoff/image-tape | Magnetic-tape image reader with safe output handling |
 | `klh10` | PDP-10/klh10 `6d733f2` | Source-built KL10/KS10 host emulator, console, disk/tape helpers and image converters; custom eight-clause Free-Fork license, modified source/notices included; no guest systems or network services |
@@ -3060,6 +3132,7 @@ make check-tui      # installed-jar upstream suite, isolated Unicode/ANSI/cooked
 make check-proiel   # canonical Ruby-3.3.9 isolated installed consumer, exact XML/token/edge/valency semantics and immutable NAR
 make check-domainslib # isolated native concurrent task/parallel-array/channel proof with exact oracles and immutable NAR
 make check-emacs-vim-region # isolated batch and real terminal Emacs keymap editing, exact buffer/active-region state and immutable files
+make check-org-mind-map # isolated installed Emacs/Graphviz export, exact SVG nodes/edges/text/tags/images and viewport bounds
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware

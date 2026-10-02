@@ -244,7 +244,10 @@
   (make-github-source-snapshot "the-ted-org-mind-map-source" "the-ted" "the-ted" "org-mind-map"
                                "95347b2f9291f5c5eb6ebac8e726c03634c61de3" "0qj8bny90vsm77jw3f4n02a4aliqa06a6bjs28m7lvydrgjzhjsw"
                                "source snapshot of the-ted/org-mind-map" "https://github.com/the-ted/org-mind-map"
-                               license:gpl3))
+                               ;; GPL-3.0-or-later covers the code, not Lena.png
+                               ;; or its example-8.png derivative: redistribution
+                               ;; permission for that image is absent/unknown.
+                               (list license:gpl3+ %no-permission-license)))
 
 (define-public tim-smart-effect-atom-source
   (make-github-source-snapshot "tim-smart-effect-atom-source" "tim-smart" "tim-smart" "effect-atom"
