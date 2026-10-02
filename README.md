@@ -1902,6 +1902,56 @@ custom no-permission marker; do not redistribute those package outputs or
 publish substitutes for them without a separate rights review.  This caveat
 applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 
+## Notty terminal graphics library
+
+`notty` 0.2.3 builds the ISC-licensed `pqwy/notty` revision
+[`e035d069370da436f1fc53525c1e16bff3ed687e`](https://github.com/pqwy/notty/tree/e035d069370da436f1fc53525c1e16bff3ed687e),
+exactly upstream tag `v0.2.3`.  It reuses the archive and hash of
+`pqwy-notty-source`; version stamping occurs only in the private build tree,
+not the immutable source snapshot.  The package installs the pure `notty`
+core, `notty.unix`, `notty.lwt` and `notty.top` findlib libraries.  This
+revision has **no Async backend**.  All 18 upstream example executables are
+retained under `libexec/notty`, with example sources, README, changelog and
+license under `share/doc/notty`.
+
+Notty is a library, not a `notty` command or an automatically activated UI.
+Use OCaml 4.14, matching the installed library's compiler ABI.  For an
+application source file `app.ml` using the Unix backend:
+
+```sh
+guix build -L guix --no-grafts notty
+guix shell -L guix notty ocaml@4.14.3 ocaml-findlib gcc-toolchain -- \
+  ocamlfind ocamlopt -package notty,notty.unix -linkpkg -o app app.ml
+./app
+make check-notty
+```
+
+For a Lwt application, compile with `-thread -package notty,notty.lwt`
+instead.  `notty.top` supplies OCaml toplevel support; it is not another
+terminal I/O backend.  Uutf and Lwt are propagated dependencies.  See the
+[upstream interfaces and examples](https://pqwy.github.io/notty/doc) for
+image composition and terminal lifecycle APIs.
+
+On 2026-10-02, the local source build, `--check` reproducibility rebuild and
+offline lint passed.  The standard Dune `runtest` phase remains enabled,
+but upstream has **no test stanzas at this revision**: this is not a claim
+that an upstream unit suite ran.  The recipe compiles `@ex`; runtime proof
+comes from a separate native consumer compiled against the installed core,
+Unix and Lwt libraries, not from a replacement renderer or a build-tree link.
+
+The network-isolated, read-only-store smoke exercised both backends' actual
+geometry, overlay/crop composition, aligned Unicode (`界é`), ANSI colors and
+attributes, all four arrows and ASCII input, and resize from 40×12 to 52×16.
+Both sessions restored termios, cursor visibility and the alternate screen.
+The output, snapshot tree and complete snapshot output NAR hashes remained
+unchanged.  The pyte screen model corrects `ESC E` (NEL) to index plus carriage
+return; it does not edit the raw terminal capture.  Evidence is retained in
+`/tmp/omp-notty-final`.  `.goocastle/evidence/issue-156.png` shows the exact
+live Lwt capture prefix replayed in xterm, visually inspected with `SIZE 52x16`,
+`EVENTS UP DOWN LEFT RIGHT x`, input state, red/cube/truecolor/gray and aligned
+Unicode.  The proof uses a temporary dependency profile, not the user's
+profile; no profile deployment or host configuration change is claimed.
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -1983,6 +2033,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `mudlet` | Mudlet 4.22.0 | Qt6 graphical MUD client with Lua scripting, mapping, multimedia, MXP, and GMCP |
 | `mudpuppy` | Mudpuppy 20251214 | Rust terminal MUD client with embedded Python scripting and TLS |
 | `notion-river` | Marenz/notion-river 0.6.0-14.ge79dea3 | Static tiling window manager for a separately supplied River 0.4.x+ compositor |
+| `notty` | pqwy/notty 0.2.3 (`e035d06`, tag `v0.2.3`) | ISC-licensed OCaml core, Unix/Lwt backends, toplevel support and all 18 upstream examples; no Async backend |
 | `mushkin` | Mushkin 0.5.1 | Qt MUSHclient-compatible MUD client with Lua, TLS, and MSP |
 | `mushtato` | MushTato 1.9.3 | Python/Qt MUSH client with sandboxed scripting, TLS, and SSH |
 | `potato` | Potato 2.0.0b19 | Tcl/Tk graphical MUSH client; insecure upstream TLS is deliberately disabled |
@@ -2646,6 +2697,7 @@ make check          # source-count/dry-run, no-network lint, and smoke tests
 make check-datamosh-security # package build plus argv-injection smoke test
 make check-ffglitch  # native/JSON/Python/QuickJS editing, independent decode and isolated SDL preview
 make check-praat    # explicit 7.0.02 selection, acoustic/native round trip and isolated real GTK editor
+make check-notty    # isolated native installed-library Unix/Lwt consumer, Unicode/colors/input/resize and snapshot NAR integrity
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
