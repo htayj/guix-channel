@@ -1793,6 +1793,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `dipc` | doprz/dipc | Offline-built image palette converter |
 | `nrl-text-to-phoneme` | greg-kennedy/p5-NRL-TextToPhoneme | NRL text-to-phoneme command and rule tables |
 | `you-can-datamosh-on-linux` | happyhorseskull/you-can-datamosh-on-linux | Datamoshing and video-to-GIF commands with argv-safe FFmpeg calls |
+| `ffglitch` | [FFglitch 0.10.2](https://ffglitch.org/) / [ramiropolla/ffglitch-core](https://github.com/ramiropolla/ffglitch-core) | Native bitstream editor, glitch encoder, live scripted player, and private QuickJS/JSON helpers |
 | `xq` | sibprogrammer/xq | Offline-built XML and HTML beautifier and extractor |
 | `sentinelone` | SentinelOne Linux agent 24.3.3.1 | Proprietary x86_64 agent; authorized installer required |
 
@@ -2033,6 +2034,125 @@ it in the repository or store.  Running the agent requires a privileged system
 service and persistent state; this channel does not configure or validate that
 runtime deployment.
 
+### FFglitch: native bitstream editing and live preview
+
+`(tay packages ffglitch)` builds the official
+[0.10.2 source release](https://ffglitch.org/pub/src/ffglitch-0.10.2.tar.xz),
+corresponding to `ffglitch-core` commit
+`225c210d02a30949e7d0443109c4cd2a8bea94d0`.  The
+[official download page](https://ffglitch.org/download) and
+[release announcement](https://ffglitch.org/2024/10/ffglitch_0_11_2.html)
+identify 0.10.2 as the current official release; research on 2026-10-02 found
+no evidenced successor project.  The
+[ffglitch-scripts repository](https://github.com/ramiropolla/ffglitch-scripts)
+is a companion script collection, not a replacement.
+
+```sh
+guix install -L guix ffglitch
+# Or build without installing into a profile:
+ffglitch_out=$(guix build -L guix --no-grafts ffglitch)
+```
+
+The public commands are `ffedit` (bitstream editing), `ffgac` (glitch-oriented
+encoding), `fflive` (live scripting/playback), and `ffglitch-ffprobe` (the fork's
+probe).  They coexist with stock FFmpeg: the package does not install commands
+named `ffmpeg`, `ffplay`, `ffprobe`, or `qjs`, nor conflicting libav headers,
+libraries, pkg-config files, or public generic FFmpeg man pages.  Under the
+package output, the standalone interpreter is `libexec/ffglitch/qjs`; the
+helpers are `share/ffglitch/ffglitch.js` (standalone JSON transformation) and
+`share/ffglitch/ffglitch.py` (Python media workflow).  Generic manuals and
+QuickJS HTML documentation are private under `share/doc/ffglitch/`.
+
+The build retains upstream's default JavaScript/QuickJS, native Python with
+NumPy, bundled Xvid, ZeroMQ messaging, SDL live preview, and RtMidi support;
+it does not enable nonfree components.  Native Python loads the package's
+Python library and wrapped NumPy environment rather than depending on a host
+Python installation.  The configured build is GPL-2.0-or-later because it
+enables GPL components including bundled Xvid; LGPL, Expat/MIT, MPL-2.0, BSD,
+and IJG component terms also apply.  `share/doc/ffglitch/` retains `LICENSE.md`,
+the GPL/LGPL license texts, `CREDITS`, and `NOTICES`, with bundled component
+licenses and required source copyright/disclaimer notices under `licenses/`.
+
+This original example is the exercised native JavaScript API, not a stock
+FFmpeg filter.  Work in a writable directory.  Generate a 36-frame, 320×240,
+12-fps RGB fixture with Python, then encode it with the tested `ffgac` options:
+
+```sh
+python3 - <<'PY'
+image = bytearray()
+for y in range(240):
+    for x in range(320):
+        image.extend(((x * 3 + y) % 256,
+                      (y * 5 + (x // 16) * 31) % 256,
+                      ((x // 12 ^ y // 12) & 1) * 220 + 20))
+with open("fixture.rgb", "wb") as stream:
+    for _ in range(36):
+        stream.write(image)
+PY
+"$ffglitch_out/bin/ffgac" -hide_banner -nostdin -y -f rawvideo \
+    -pixel_format rgb24 -video_size 320x240 -framerate 12 -i fixture.rgb \
+    -frames:v 36 -an -c:v mpeg4 -pix_fmt yuv420p -threads 1 -bf 0 \
+    -qscale:v 2 -mpv_flags +nopimb+forcemv -fcode 6 -g max \
+    -sc_threshold max source.avi
+cat > native.js <<'JS'
+let mutate = false;
+export function setup(args) {
+  args.features.push("mv");
+  mutate = args.params === true;
+}
+export function glitch_frame(frame) {
+  if (mutate && frame.mv && frame.mv.forward)
+    frame.mv.forward.fill(MV(16, 0));
+}
+JS
+"$ffglitch_out/bin/ffedit" -threads 1 -i source.avi -s native.js \
+    -sp false -o control.avi
+"$ffglitch_out/bin/ffedit" -threads 1 -i source.avi -s native.js \
+    -sp true -o glitched.avi
+# Preview the same transformation directly from the original encoded source.
+# Requires a working display; press q to quit.
+"$ffglitch_out/bin/fflive" -i source.avi -s native.js -sp true -an \
+    -noframedrop -x 320 -y 240 -noborder -window_title "FFglitch native proof"
+```
+
+`setup` requests the motion-vector feature and receives the JSON value from
+`-sp`; `MV(16, 0)` changes forward vectors horizontally.  Use `-sp false` for
+the no-op control.  In `fflive`, `-f` selects the demuxer format, so feature
+selection belongs in `setup`, not a guessed `-f mv` player option.  For
+`ffedit`'s separate JSON workflow, the exercised commands are:
+
+```sh
+"$ffglitch_out/bin/ffedit" -threads 1 -i source.avi -f mv -e vectors.json
+"$ffglitch_out/bin/ffedit" -threads 1 -i source.avi -f mv \
+    -a vectors.json -o json-roundtrip.avi
+```
+
+See the official [ffedit reference](https://ffglitch.org/docs/0.10.0/ffedit/),
+[ffgac reference](https://ffglitch.org/docs/0.10.1/ffgac/), and
+[fflive reference](https://ffglitch.org/docs/0.10.2/fflive/) for further modes.
+User scripts execute code; use only scripts you trust.
+
+Verified 2026-10-02: the local build produced
+`/gnu/store/r0mgvnyaiaydpf0fwr3xxih1r1vc8wlm-ffglitch-0.10.2`.  A subsequent
+`guix build -L guix --no-grafts --check ffglitch` passed, confirming the
+rebuild reproduced the output.  FFglitch's no-network lint and integrated
+`make check-ffglitch` also passed.  Its offline
+FATE tests passed after reclassifying three upstream tests that require an
+external Lena sample into the external-sample group; those three were not
+run.  Six bundled QuickJS tests and the complete shipped `ffedit` fixture
+checks passed.  The real runtime smoke exported 10,500 motion vectors from
+the synthetic MPEG-4 fixture.  The native JavaScript mutation changed decoded
+pixels with mean absolute error 86.987 against the control; native Python and
+standalone JavaScript/Python transformations matched it exactly.  No-op
+scripting and JSON export/import preserved the source.  The actual SDL
+`fflive` preview matched the decoded glitch frame pixel-for-pixel (MAE 0),
+showed colored, displaced horizontal strips, and exited cleanly on `q`.
+The smoke ran in private user/mount/network/PID namespaces with no external
+network interface and verified an unchanged immutable output NAR.  This is
+software-rendered Xvfb verification, not physical MIDI, GPU acceleration,
+audio, live-camera, or desktop-session verification.  No user profile was
+changed or deployed.
+
 ### hy3 layout plugin
 
 `(tay packages hy3)` pins `d7e0c58a1116df3d79f24a225f17b988112ca1ad`,
@@ -2195,6 +2315,7 @@ Limitations and cautions:
 ```sh
 make check          # source-count/dry-run, no-network lint, and smoke tests
 make check-datamosh-security # package build plus argv-injection smoke test
+make check-ffglitch  # native/JSON/Python/QuickJS editing, independent decode and isolated SDL preview
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware

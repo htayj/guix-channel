@@ -34,7 +34,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	hyprland-preview-share-picker hy3 dank-material-shell-shell-only sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape ks10-udis emacs-treesit-sexp \
 	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a emacs-aidermacs emacs-mentor-pinned \
-	dipc nrl-text-to-phoneme you-can-datamosh-on-linux xq apout kitty-bitmap shader-slang opencode \
+	dipc nrl-text-to-phoneme you-can-datamosh-on-linux ffglitch xq apout kitty-bitmap shader-slang opencode \
 	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin shadow-over-darkmoor \
 	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy notion-river mushkin mushtato ocaml-irc-client \
 	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl halloy \
@@ -57,7 +57,7 @@ INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 OPTIONAL_PROPRIETARY_PACKAGES ?= sentinelone
 CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 
-.PHONY: check check-source-count check-sentinelone check-datamosh-security check-buzz \
+.PHONY: check check-source-count check-sentinelone check-datamosh-security check-ffglitch check-buzz \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-flex-launcher check-mmapper check-mudlet check-mudpuppy check-notion-river check-mushkin check-mushtato check-ocaml-irc-client check-potato \
 	check-kitty-bitmap check-kitty-bitmap-oldguix check-lyntin check-pycat check-rune check-tinyfugue check-weidu lint lint-cve \
@@ -111,6 +111,9 @@ check-buzz:
 check-datamosh-security:
 	GUIX="$(GUIX)" tests/you-can-datamosh-on-linux-security-smoke.sh \
 		"$$($(GUIX) build -L guix --no-grafts you-can-datamosh-on-linux)"
+
+check-ffglitch:
+	GUIX="$(GUIX)" tests/ffglitch-smoke.sh
 
 check-axmud:
 	GUIX="$(GUIX)" tests/axmud-smoke.sh
@@ -490,7 +493,7 @@ check-emacs-aidermacs:
 check-emacs-mentor-pinned:
 	GUIX="$(GUIX)" tests/emacs-mentor-pinned-smoke.sh
 
-check: check-source-count check-sentinelone check-datamosh-security check-dicom2mesh \
+check: check-source-count check-sentinelone check-datamosh-security check-ffglitch check-dicom2mesh \
 	check-modus check-amstelvar check-trial-by-combat check-xrogue check-keymapper \
 	check-liquid check-input-remapper check-emacs-cl check-liveonce check-xnethack \
 	check-qiling check-ai-code-interface-el check-chatgpt-el check-eca-emacs check-urogue check-letter-hunt check-pyrosimple check-savescummer check-srogue check-linerogue check-bloatcrawl2 check-ighalsk check-aquesttoofar check-freelarn check-talmudifier check-rouge check-sewer-massacre check-atrogue check-six-two-one check-umoria check-pyro check-narwharl \
