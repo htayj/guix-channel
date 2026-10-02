@@ -34,6 +34,73 @@ build, `--check` reproducibility rebuild, offline lint and network-isolated
 save/load smoke passed using OMP tooling.  Runtime output was
 `DIABAIG_RUNTIME_OK`; no user game state or installed profile was changed.
 
+## KLH10 host-only emulator runtime proof
+
+`klh10` builds the original KL10 and KS10 host emulator from
+[`PDP-10/klh10` revision `6d733f2a47644964492fd864454cbe1331655e53`](https://github.com/PDP-10/klh10/tree/6d733f2a47644964492fd864454cbe1331655e53)
+as `2.0l-guix-0.6d733f2`.  The fixed source archive has Guix SHA256 base32
+`1kg68m8yyd3za3y4yjfi5lrbf1hipvamqqv3dq7m5kgb61x19br8`.
+It installs `kn10-kl`, `kn10-ks` and `kn10-ks-its`, with `klh10` pointing to
+the KL model; `wfconv`, `tapedd`, `vdkfmt`, `wxtest`, `udlconv` and `uexbconv`
+are available in `bin`, and disk/tape helpers `dprpxx` and `dptm03` in
+`libexec/klh10`.  The emulator uses absolute store paths for those helpers.
+The origin removes `run`, `contrib`, installation/guest guides and the
+Auxiliary Distribution metadata before building.  No guest operating systems,
+boot images, network-interface processes or services are included.
+
+The host grant is the custom **KLH10 Free-Fork (eight clauses)**
+[`LICENSE`](https://raw.githubusercontent.com/PDP-10/klh10/6d733f2a47644964492fd864454cbe1331655e53/LICENSE),
+not the later nine-clause UW variant with an export restriction.
+The pinned [`README`](https://raw.githubusercontent.com/PDP-10/klh10/6d733f2a47644964492fd864454cbe1331655e53/README)
+states that use is unrestricted and explicitly excludes `run` and `contrib`
+from that host grant.  Its source-sharing, origin-label, notice-retention,
+no-endorsement and warranty terms are the basis of this channel's host-only
+free-software assessment; they do not prohibit commercial use.
+The clause-equivalent UW Free-Fork grant in
+[`uw-imap` in Debian sarge/main](https://sources.debian.org/src/uw-imap/7%3A2002edebian1-11sarge1/debian/copyright)
+is historical distribution precedent, **not formal GNU Guix acceptance,
+named FSF approval or a legal opinion**.  License sources were read on
+2026-10-02.  Modified binaries are distributed together with the corresponding
+complete sanitized, modified source under `share/klh10/source`, and the license,
+README and console/developer documentation under `share/doc/klh10`.
+Modified version banners carry the `-guix` origin tag.  Source transformations
+use Latin-1 decoding/re-encoding to preserve original copyright notice bytes.
+
+```sh
+guix build -L guix --no-grafts klh10
+make check-klh10
+klh10                 # guest-free interactive console; type help
+```
+
+On 2026-10-02, local source build, reproducibility rebuild (`--check`), offline
+lint and isolated runtime smoke passed for
+`/gnu/store/lvb2kkazajacmzh6fkh6dz4glncyh841-klh10-2.0l-guix-0.6d733f2`
+using OMP tooling.  `tests/klh10-smoke.sh` and `tests/klh10-smoke.py` use fresh
+HOME/XDG state and isolated user, mount, network, IPC and PID namespaces.
+Three actual console PTYs deposit `MOVEI AC1,123` at octal `100` and `HALT`
+at `101`, execute them, and verify AC1 changes from zero to octal `123`,
+PC is `101` and the CPU is `STOPPED`.  Each also deposits the maximum 36-bit
+word and verifies native memory zeroing.  `wfconv` preserves every bit of the
+chosen 36-bit patterns (including zero, maximum and instruction words) through
+core/high-density/core conversion.  `vdkfmt` verifies exact nonzero disk-word
+serialization and inverse conversion between DLW8 and DBD9.  `tapedd` verifies
+exact TPS/TPE/TPS records, including odd-length padding and tape marks.
+Actual tape-image conversion exposed an upstream defect: successful copies
+retained a failure return status, and the no-skip path read an uninitialized
+error variable.  The recipe fixes the return status and initializes that
+variable rather than ignoring a failing converter exit.
+
+Set `KLH10_SMOKE_ARTIFACTS=/absolute/path` to retain logs, the summary and all
+three complete raw console streams.  Final local evidence is in
+`/tmp/omp-klh10-final`; before/after output NAR hashes match.
+`.goocastle/evidence/issue-57.png` is the inspected 100×40 xterm rendering of
+the unmodified `kn10-kl-terminal.raw` stream, showing `01/ 123`, the stopped
+CPU at PC `101` and `Program Halt`.  It is OMP-produced terminal evidence,
+not a Goocastle execution.  This proves only the exercised host CPU, console
+and synthetic image-conversion paths: **no physical tape, guest OS or network
+device operation was verified**.  No profile or deployed system changed;
+no network OKF update applies to this repository-only addition.
+
 ## NarwhaRL original-game runtime proof
 
 `narwharl` packages Nathan Hetherington's full original **NarwhaRL 0.0.1**
@@ -1743,6 +1810,7 @@ applies to the drbeefsupreme snapshots except `tassh`, which records MIT.
 | `emacs-mentor-pinned` | skangas/mentor 0.5 + 21 commits (`ed42ae8`) | Distinct pinned Emacs rTorrent frontend with the post-0.5 tracker library; no daemon activation |
 | `terminaldrome` | thafaker/TerminalDrome | Rust terminal client for Navidrome and Subsonic servers |
 | `image-tape` | larsbrinkhoff/image-tape | Magnetic-tape image reader with safe output handling |
+| `klh10` | PDP-10/klh10 `6d733f2` | Source-built KL10/KS10 host emulator, console, disk/tape helpers and image converters; custom eight-clause Free-Fork license, modified source/notices included; no guest systems or network services |
 | `apout` | DoctorWkt/Apout 2.4.0 | PDP-11 Unix a.out user-mode emulator; supply a user-owned `APOUT_ROOT` |
 | `kitty-bitmap` | Kitty 0.49.1 (pinned tag `v0.49.1`) | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
 | `halloy` | squidowl/halloy 2026.8 | Upstream x86_64 Linux desktop IRC client release with Wayland/X11 runtime libraries |
@@ -2445,6 +2513,7 @@ make check-praat    # explicit 7.0.02 selection, acoustic/native round trip and 
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
+make check-klh10    # three isolated native CPU/console PTYs, exact word/disk/tape-image roundtrips and NAR integrity
 make check-fontra   # local no-graft build plus conversion/workflow/HTTP smoke
 make check-ighalsk  # private Xvfb Tk creation/quest/move/save/load state proof
 make check-aquesttoofar # private Xvfb SDL intro/help-return/three decline turns

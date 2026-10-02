@@ -2,6 +2,8 @@
 
 (define-module (tay packages pdp10-g-m)
   #:use-module (tay packages source-snapshot)
+  #:use-module (tay packages klh10)
+  #:use-module (guix packages)
   #:use-module ((guix licenses) #:prefix license:)
   #:export (pdp10-harvard-ecl-source pdp10-harvard-ppl-source
             pdp10-hamburg-pascal-source pdp10-imsss-source
@@ -25,7 +27,26 @@
 (define-public pdp10-kcc-source (make-github-source-snapshot "pdp10-kcc-source" "pdp10" "PDP-10" "kcc" "cc60d4946e03566c02aa5623effe12e04158e7cd" "1v3cs320hpjyx95dbddr2bhwqqgcsaf3brwxiyinaj81kf0q8925" "Source snapshot of Kok Chen C" "https://github.com/PDP-10/kcc" #f))
 (define-public pdp10-kevin-cole-declibs-source (make-github-source-snapshot "pdp10-kevin-cole-declibs-source" "pdp10" "PDP-10" "Kevin-Cole-DEClibs" "e9389f32ea407ba04e4456ee2bd000e1175dfa2b" "0fykk4sd7rd5ag81rx7yqsxpj8is5r29gal3fz7dk3mdkv28yq24" "Source snapshot of Kevin Cole DEC libraries" "https://github.com/PDP-10/Kevin-Cole-DEClibs" license:gpl3))
 (define-public pdp10-kldcp-source (make-github-source-snapshot "pdp10-kldcp-source" "pdp10" "PDP-10" "kldcp" "40152452f50a6f8f66040f571b14f77aa63daf30" "0aaahi4k332wa40h9sfqz8p229nbzsaiscjyh1jcypmh2iqn3djd" "Source snapshot of the KL10 diagnostic console" "https://github.com/PDP-10/kldcp" #f))
-(define-public pdp10-klh10-source (make-github-source-snapshot "pdp10-klh10-source" "pdp10" "PDP-10" "klh10" "6d733f2a47644964492fd864454cbe1331655e53" "1kg68m8yyd3za3y4yjfi5lrbf1hipvamqqv3dq7m5kgb61x19br8" "Source snapshot of the KLH10 emulator" "https://github.com/PDP-10/klh10" #f))
+;; Host-only, licensed source.  The same freed origin backs the runtime package;
+;; do not publish the separately licensed run/contrib auxiliary distribution.
+(define-public pdp10-klh10-source
+  (package
+    (inherit
+     (make-github-source-snapshot
+      "pdp10-klh10-source" "pdp10" "PDP-10" "klh10"
+      "6d733f2a47644964492fd864454cbe1331655e53"
+      "1kg68m8yyd3za3y4yjfi5lrbf1hipvamqqv3dq7m5kgb61x19br8"
+      "Host-only source of the KLH10 emulator"
+      "https://github.com/PDP-10/klh10" klh10-license))
+    (source (package-source klh10))
+    (description
+     "This package installs the licensed KLH10 host source at commit
+6d733f2a47644964492fd864454cbe1331655e53 under
+@file{share/pdp10/projects/klh10}.  The separately licensed Auxiliary
+Distribution, guest/run images and installation guides are removed from the
+source origin.  Native help/version support and reproducible banners are
+included, and modified sources carry the Guix origin tag.  This package does
+not build the emulator.")))
 (define-public pdp10-kom-source (make-github-source-snapshot "pdp10-kom-source" "pdp10" "PDP-10" "KOM" "a4c3c97f69e33331ef8e0c8e6f6d87718ffce074" "0qfklmz2avbqzhib6kk3zsjwwx5lx72ny97cmdanwyyw8nnfmpz6" "Source snapshot of KOM for TOPS-20" "https://github.com/PDP-10/KOM" #f))
 (define-public pdp10-lds-1-source (make-github-source-snapshot "pdp10-lds-1-source" "pdp10" "PDP-10" "LDS-1" "a83a3e2f14d207e1f19a46ab010c51783fa1989c" "0vk2i8glxma5z7094hkr7plb40nx8jdc5l804vwgrar0q66llnjl" "Source snapshot of the LDS-1 system" "https://github.com/PDP-10/LDS-1" #f))
 ;; Archived upstream; retained as an immutable preservation source snapshot.
