@@ -54,7 +54,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	hermes-agent hermes-desktop lbforth legcord \
 	font-nerd-caskaydia-cove \
 	aiwnios aiwnios-bytecode wrogue babel7drl \
-	the-smiths-hand tetraworld splicehack-rewrite
+	the-smiths-hand tetraworld splicehack-rewrite space-privateers slashem shamogu
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -102,7 +102,8 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-kraken check-gened check-soundthread check-cotd check-emacs-application-framework check-eca \
 	check-pi-coding-agent check-squad check-oh-my-opencode-slim check-oh-my-opencode-slim-companion build build-sources \
 	check-aiwnios check-aiwnios-bytecode check-wrogue check-babel7drl \
-	check-smiths-hand check-tetraworld check-splicehack-rewrite
+	check-smiths-hand check-tetraworld check-splicehack-rewrite \
+	check-space-privateers check-slashem check-shamogu
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -651,7 +652,8 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-klh10 check-suppty check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-bell-labs-rogue7 check-astx check-acehack check-avanor check-bootrogue check-wanderers check-hack check-emacs-org-popup-posframe \
 	check-emacs-forth-mode check-emacs-aidermacs check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-aquarium-arena check-atlas-warriors check-bcrawl check-chessrogue check-corerl check-cutlassrl check-dhack check-cryptrover check-dnethack check-dragonslayer check-grippy-socks check-hunger-games check-gruesome check-hydra-slayer check-martins-dungeon-bash check-nlarn check-robotfindskitten check-fontra \
 	check-aiwnios check-aiwnios-bytecode check-wrogue check-babel7drl \
-	check-smiths-hand check-tetraworld check-splicehack-rewrite
+	check-smiths-hand check-tetraworld check-splicehack-rewrite \
+	check-space-privateers check-slashem check-shamogu
 	$(GUIX) build -L guix --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L guix --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
@@ -680,3 +682,15 @@ check-tetraworld:
 .PHONY: check-splicehack-rewrite
 check-splicehack-rewrite:
 	GUIX="$(GUIX)" sh tests/splicehack-rewrite-smoke.sh
+
+.PHONY: check-space-privateers
+check-space-privateers:
+	GUIX="$(GUIX)" sh tests/space-privateers-smoke.sh
+
+.PHONY: check-slashem
+check-slashem:
+	GUIX="$(GUIX)" sh tests/slashem-smoke.sh
+
+.PHONY: check-shamogu
+check-shamogu:
+	GUIX="$(GUIX)" sh tests/shamogu-smoke.sh

@@ -988,22 +988,6 @@
       }
     },
     {
-      "issueNumber": 719,
-      "packageName": "shamogu",
-      "packageModulePath": "guix/tay/packages/shamogu.scm",
-      "artifactPath": ".goocastle/evidence/issue-719.png",
-      "runtime": {
-        "executable": "shamogu",
-        "invocation": {
-          "file": "shamogu",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "shamogu isolated smoke passed"
-      }
-    },
-    {
       "issueNumber": 720,
       "packageName": "six-two-one",
       "packageModulePath": "guix/tay/packages/six-two-one.scm",
@@ -1017,38 +1001,6 @@
           ]
         },
         "successMarker": "SIX_TWO_ONE_SMOKE_OK"
-      }
-    },
-    {
-      "issueNumber": 721,
-      "packageName": "slashem",
-      "packageModulePath": "guix/tay/packages/slashem.scm",
-      "artifactPath": ".goocastle/evidence/issue-721.png",
-      "runtime": {
-        "executable": "slashem",
-        "invocation": {
-          "file": "slashem",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "SLASHEM GUIX SMOKE PASS"
-      }
-    },
-    {
-      "issueNumber": 722,
-      "packageName": "space-privateers",
-      "packageModulePath": "guix/tay/packages/space-privateers.scm",
-      "artifactPath": ".goocastle/evidence/issue-722.png",
-      "runtime": {
-        "executable": "space-privateers",
-        "invocation": {
-          "file": "space-privateers",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "SPACE_PRIVATEERS_SMOKE_OK"
       }
     },
     {

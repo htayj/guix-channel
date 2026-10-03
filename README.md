@@ -4043,6 +4043,144 @@ Only the exact synthetic production contracts #730 (`--goocastle-smoke`),
 supersede them; no Goocastle executor, installed hook or fake replacement was
 created or executed.
 
+## Space Privateers, SLASH'EM and Shamogu — verified native paths
+
+These deliveries use source-built games and external `tests/*` native consumers,
+not installed proof modes.  All three passed final build/reproducibility,
+offline lint and genuine native/integrated acceptance, including their stated
+upstream test scopes.  No deployed host/profile change is established.
+
+- **Space Privateers #521** exports `space-privateers` **0.1.0.0** in
+  `(tay packages space-privateers)`, using the exact Hackage release archive
+  `SpacePrivateers-0.1.0.0.tar.gz`, SHA-256
+  `70e6061caa2b7eed8be2d120ba165365e008c37a510290c8f89b926d6702473e`,
+  not the later canonical master revision `fbe2ecec`.  GHC 8.0 builds a private
+  pinned Hackage closure with LambdaHack **0.2.14** and original Vty **4.7.5**;
+  no GTK frontend, game-side test adapter or registry resolution is installed.
+  Original BSD-3 game/engine LICENSE/CREDITS and every statically linked
+  private-library notice accompany the executable (BSD-3, BSD-2 `text`, and
+  Expat `pretty-show`/`haskell-lexer`/`base-orphans`), together with original
+  license files from the pinned GHC 8.0 compiler/boot-library source.  Narrow
+  compiler metadata compatibility repairs retain original deepseq 1.3 Config
+  `rnf` semantics.  Cabal 1.24.2.0 uses its supported `--enable-library-vanilla`
+  configure flag rather than modern Guix's unsupported `--enable-static`,
+  retaining shared libraries/static executable linking and other standard
+  configure semantics.  `miniutter`'s duplicate `Binary Text` orphan and unused
+  import are removed in favor of `text`'s equivalent valid UTF-8 ByteString
+  encoding; save wire format is unchanged (malformed UTF-8 fails decoding).
+  The removed vector `Fusion.Stream` API migrates to `Fusion.Bundle` with
+  `indexed`/`foldl1'`, retaining strict left-fold/last-equal tie selection
+  without materializing another vector.
+  Explicit `Data.Vector.Binary ()` imports the existing pinned serializer for
+  Overlay's unboxed vector, preserving its size/ordered-element wire format;
+  no custom serialization instance is introduced.
+  Item weight phrases use the native `miniutter` no-space `MU.:>` constructor
+  instead of a nonexistent `Part` Monoid, retaining intended `10g`/`1.5kg` display.
+  No gameplay/save instrumentation is added.  The launcher only
+  executes upstream `SpacePrivateers`, preserving native `~/.SpacePrivateers`
+  configuration, scores and compressed campaign saves.  Engine offline
+  `frontendNull` tests are enabled; the game has no Cabal test stanza.
+  `tests/space-privateers-smoke.sh [output]` honors `GUIX` and absolute
+  `SPACE_PRIVATEERS_SMOKE_ARTIFACTS`.  Its ordinary Vty/xterm consumer runs
+  inside offline user/mount/network/PID isolation.  Final build/reproducibility/
+  offline lint passed at
+  `/gnu/store/74rxy84i4dn3fv9r2b0fk7cfzp45xxk4-space-privateers-0.1.0.0`,
+  with the engine's upstream suite passing 1/1.  Standalone native proof passed
+  at `/tmp/space-privateers-native-clockfix`; integrated `make check-space-privateers`
+  passed at `/tmp/space-privateers-native-final`.  Genuine wait and bounded
+  adjacent moves strictly advanced native global/local time; two restores
+  exactly matched leader/map/arena/status/target/diary/equipment/inventory.
+  Processes exited 0 and output NAR remained
+  `08244j3vp4ax21g0ijccy3j0m6kizpy2gk34kzrsd8gnvs7l0rkc`.  Native server/UI
+  compressed saves are retained and checked for complete zlib streams, but
+  **hidden Haskell state is not fully decoded**: continuity proof is the exact
+  native visible fields/diary, not an assertion about all RNG or hidden state.
+  Main visually read the actual continued map: General quarters 1, 8% seen,
+  HP20/40, Calm60/60, no errors.  The final retained surface is
+  [space-privateers-native.png](.goocastle/evidence/space-privateers-native.png).
+- **SLASH'EM #515** exports `slashem` **0.0.8E0F2-0.aae9ef2** in
+  `(tay packages slashem)`, from the Hardfought `k21971/SlashEM` revision
+  `aae9ef2e4c2e5b591a3bc5ded888bab1e157b20b` (2024-02-10; no release tags).
+  The fixed archive SHA-256 is
+  `e48961ee54ad8b02b0e9859d17a4c895fad75bb5a0b3558d3b88b14f18279907`;
+  its actual Guix base32 is
+  `01wr4wc4zcc87f6mbcx0nmdxgylmr2j1g7c5x6q052xdakp632g4`, correcting the
+  research ticket's erroneous encoding.  NGPL notices, corresponding native
+  tty source, dated changes and Guidebook accompany complete native `nhshare`
+  and `nhushare` archives.  Optional sounds/fonts/tiles/GUI ports are absent.
+  Exact-count, dated source repairs fix missing declarations/terminal-color
+  arity, dump glyph blank-byte fallback, vanquished-list return semantics,
+  artifact output storage width, technique parameter type and parser anonymous
+  typedef.  Native ncurses/tinfo probes and link order use real `-ltinfo`;
+  compression uses absolute store gzip, not the configure fallback `:`.
+  `make all` generates complete archives with all native `dat/*.lev`; build
+  time is pinned to epoch 1707587348 UTC.  GNU C11/`-fcommon` adds no warning
+  suppression.  Corresponding tty source/generated headers and original notices
+  accompany the dated change record.
+  Immutable data is separate from private
+  `${XDG_DATA_HOME:-$HOME/.local/share}/slashem` saves/bones/locks/scores/logs/
+  dumps; `${XDG_CONFIG_HOME:-$HOME/.config}/slashem` provides configuration
+  through private HOME, validating the native 128-byte environment-path limit.
+  No upstream runnable suite/check target exists.
+  `tests/slashem-smoke.sh` honors `GUIX`, accepts an optional store output and
+  `--output fresh-directory` or `SLASHEM_EVIDENCE_DIRECTORY`.  Its external
+  consumer targets ordinary Valkyrie games, real safe floor movement, two
+  exact native save restores and live xterm screenshots with fail-closed
+  current-user/keep-caps user/mount/network/PID isolation and unchanged NAR.
+  Main's final build/reproducibility/offline lint passed at
+  `/gnu/store/sscy6f42b3ga9bx9vgb8y9x3ncvdhzj7-slashem-0.0.8E0F2-0.aae9ef2`.
+  Final `make check-slashem` passed at `/tmp/slashem-native-final`: three actual
+  sessions, two exact restores, read-only output and unchanged NAR.  Main
+  visually read HP16/16, Dlvl1, T3 on the actual map without errors.
+  The final retained surface is
+  [slashem-native.png](.goocastle/evidence/slashem-native.png).
+- **Shamogu #508** exports `shamogu` **1.5.0** in `(tay packages shamogu)`,
+  a material update over official Guix's 1.4.1 observed by its owner on
+  2026-10-03.  Canonical `codeberg.org/anaseto/shamogu` revision
+  `fcd439d4d7949dfa4b9d7e513caacc0a82360384` agrees with stable v1.5.0;
+  archive SHA-256 is
+  `ae08d808fab9c02e97805467c5ee34fac7f6fe6bb8836f36859b95c374e96a5f`.
+  Go 1.25 builds the actual ASCII terminal game offline with twelve exact
+  `go.mod` module versions, no CGO/SDL/browser frontend.  ISC game and closure
+  ISC/Apache-2.0/Expat/BSD-3 notices, nested SDL-driver notices and Go PATENTS
+  are retained.  The JS/SDL-only `images.go` is excluded: generated Source
+  Code Pro letters/fonts/PNG assets are not linked or installed in this
+  terminal build; tile LICENSE/README remain as notices, not runtime media.
+  Native saves/config/replays/logs/dump use `XDG_DATA_HOME/shamogu`.
+  `tests/shamogu-smoke.sh [output]` honors `GUIX` and new/empty
+  `SHAMOGU_EVIDENCE_DIR`;
+  its external PTY consumer requires native turns/save/exact restore, a real
+  xterm PNG, offline namespaces and unchanged output NAR before success.
+  The stdlib-only external Go decoder compares exported native Game state,
+  including terrain/FOV/path payloads and stats/logs; native unexported UI,
+  RNG/runtime state and separate configuration are not serialized proof.
+  Terminal characters and rendition are compared independently.
+  Main's final build, upstream `TestGame`, reproducibility and offline lint
+  passed at `/gnu/store/5v2c3b2manka9df0i8vvx556p6iwibw7-shamogu-1.5.0`.
+  Final `make check-shamogu` passed at `/tmp/shamogu-native-final`: five save
+  sessions with turns 0/1/1/2/2, two full exported Gob-state and map/HUD-
+  rendition restores, followed by native Q/Y deleting its save.  Main visually
+  read the actual populated live map at L1, T2, HP9/9, without errors.
+  The retained final surface is
+  [shamogu-native.png](.goocastle/evidence/shamogu-native.png).
+
+The invalid production `--guix-smoke` contracts #719/#721/#722 were retired rather
+than replacing ordinary game executables with synthetic proof hooks.  No
+Goocastle executor runs as part of these external consumers.
+
+Serial commands for the verified paths (evidence directories must be fresh):
+
+```sh
+guix lint -L guix --no-network --exclude=cve,refresh,archival space-privateers slashem shamogu
+privateers_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 space-privateers)
+slashem_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 slashem)
+shamogu_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 shamogu)
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 --check space-privateers slashem shamogu
+SPACE_PRIVATEERS_SMOKE_ARTIFACTS=/tmp/space-privateers-native-FRESH GUIX=guix sh tests/space-privateers-smoke.sh "$privateers_out"
+GUIX=guix sh tests/slashem-smoke.sh "$slashem_out" --output /tmp/slashem-native-FRESH
+SHAMOGU_EVIDENCE_DIR=/tmp/shamogu-native-FRESH GUIX=guix sh tests/shamogu-smoke.sh "$shamogu_out"
+```
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -4133,6 +4271,9 @@ created or executed.
 | `the-smiths-hand` | Jeff Lait/The Smith's Hand 2014-03-16 | Source-built SDL game/private libtcod/BSD3+PD notices; final build/repro/lint/standalone+integrated real wait/Q save/fresh exact load/inventory-topology/NAR passed; XDG native save |
 | `tetraworld` | blargdag/tetraworld (`14f5ca8`) + arsd (`d5c3539`) | Source-built GPL2+ D/Boost notices/embedded data; restored-agent fix final build/repro/lint/27tests/standalone+integrated four sessions byte-exact saves/HUD/turn1→2 passed; HOME autosaves |
 | `splicehack-rewrite` | RojjaCebolla/SpliceHack-Rewrite (`0cf23cb`) + Lua 5.4.2 | Source-built NGPL tty/data/MIT Lua/CC0 notices/XDG state; complete11dungeon Lua/archive/Guidebook/HOME-limit final build/repro/lint/native+integrated3games/two exact restores/save consumption/NAR passed |
+| `space-privateers` | Hackage SpacePrivateers 0.1.0.0 + LambdaHack 0.2.14 | Source-built BSD-3 Haskell/Vty game/private pinned closure/full notices/native HOME campaigns; final build/repro/lint/engine1of1/native+integrated real wait/moves/two exact visible-state restores/NAR passed; hidden state not fully decoded |
+| `slashem` | Hardfought/k21971 SlashEM (`aae9ef2`) | Source-built NGPL tty game/full nhshare+nhushare data/notices/Guidebook/private XDG state; final build/repro/lint/native+integrated3sessions/two exact restores/live screenshot/NAR passed |
+| `shamogu` | anaseto/Shamogu 1.5.0 (`fcd439d`) | Source-built ISC terminal game/pinned12module closure/full notices/XDG saves+replays; final build/repro/lint/TestGame/native+integrated turns0/1/1/2/2/two exported-state+screen exact restores/native Q/Ysave deletion passed |
 | `hermes-agent` | NousResearch/hermes-agent 0.21.5 (`f97608f`) | Actual CLI/JSON-RPC/WebSocket backend, pinned binary-assisted Python closure and source-built media; writable user configuration and Guix-only package updates; reproducibility and native/backend smoke passed |
 | `hermes-desktop` | NousResearch/hermes-agent 2026.9.24 (`f97608f`) | Actual desktop app with pinned Electron 40.10.2, rebuilt terminal addon, packaged backend and free-font substitution; reproducible build and sandboxed real desktop acceptance passed without provider/model calls |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
@@ -4862,6 +5003,9 @@ make check-babel7drl # final build/repro/lint/standalone+integrated native login
 make check-smiths-hand # final build/repro/lint/standalone+integrated real wait/Q save/fresh byte-identical restore/inventory-topology/NAR passed
 make check-tetraworld # final build/repro/lint/27tests/standalone+integrated4sessions entire save1=2/3=4 exact/turn1→2/HUD/live screenshot passed
 make check-splicehack-rewrite # final full11dungeon archive/Guidebook build/repro/lint/native+integrated3games/two exact restores/live screenshot/NAR passed
+make check-space-privateers # final build/repro/lint/engine1of1/native+integrated real wait/moves/two exact visible-state restores/live screenshot/NAR passed; hidden state not fully decoded
+make check-slashem # final build/repro/lint/native+integrated3sessions/two exact restores/live screenshot/NAR passed
+make check-shamogu # final build/repro/lint/TestGame/native+integrated turns0/1/1/2/2/two exported-state+map/HUD attrs exact restores/native Q/Y save deletion passed
 make check-lbforth # installed native arithmetic/control flow/recursion and error recovery from empty private cwd; python3 required, immutable output
 make check-legcord # real native onboarding/settings and Discord logged-out cold-relaunch surface, sandbox and unchanged NAR; no credentials/login/live audio
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
