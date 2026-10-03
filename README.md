@@ -362,6 +362,109 @@ buffer.  The proof covers exercised local gameplay and save continuity, not a
 complete campaign or network-server/client interaction.  No deployed system
 changed; no network OKF update applies to this repository-only addition.
 
+## Legcord source application and native desktop
+
+`legcord` **1.3.0** builds the stable
+[`Legcord/Legcord` revision `c8d91f61296019bb0c45f375535de8c93cf26ee1`](https://github.com/Legcord/Legcord/tree/c8d91f61296019bb0c45f375535de8c93cf26ee1),
+not the moving `notdev` branch.  The pinned source archive base32 SHA-256 is
+`09gqn9l82zl8xcji38w3p51a65wxga7d0i5l61i0gjzq2fvrhn4d`.
+The actual main process, preloads, renderer and Shelter plugins compile
+offline from source.  The **OSL-3.0** license, original attribution,
+conspicuous `GUIX-MODIFICATIONS.txt`, complete modified application source
+and fixed npm archives/notices are retained under `share/doc/legcord`.
+The ancillary GPL-3.0-or-later AppImage helper is retained in source but not
+executed or bundled as the installed application's updater.  The source
+closure includes actual npm manifests/notices and a separate upstream
+Codicons font-license supplement rather than invented copyright notices.
+The installed runtime omits 17 unused foreign Koffi binaries from its
+Windows-only import path; their original fixed archives and notices remain
+retained.  Build-tool/source shebang rewriting no longer adds host tools to
+the output closure: the final direct-reference check found nine store
+references and no Node or Python host-tool references.
+
+This **x86_64-linux** package is explicitly **binary-assisted**, under the
+user-approved pinned-component policy: Electron **43.2.0**, official Node
+**26.10.0** host tool and native npm build-tool bindings are vendor binaries,
+not claimed source builds.  Full Electron/Chromium notices and Node's
+corresponding source release accompany them.  By contrast, **Venmic 7.1.0**
+is genuinely compiled from C++ source against exact Electron headers and
+pinned local C++ dependencies; published native prebuilds are removed.
+Its MPL-2.0 corresponding modified source and MIT/BSD/zlib dependency notices
+are retained with the addon.  This preserves the native PipeWire audio API,
+not a no-op feature replacement; live audio acceptance remains unperformed.
+
+```sh
+guix build -L guix --no-grafts legcord
+legcord                      # native desktop after installation/profile setup
+legcord --guix-update-info    # instructions only; performs no upgrade
+make check-legcord
+# Retain proof for an existing output (test tools are still realized):
+GUIX=guix sh tests/legcord-smoke.sh \
+  --legcord /gnu/store/vbhjrpzfcg300dy06d9k4gllcdj8nil1-legcord-1.3.0 \
+  --evidence /absolute/empty-evidence-directory
+```
+
+The output installs `bin/legcord`, application resources, icon and
+`legcord.desktop`, including native mute/deafen/leave/settings actions.
+Guix owns application updates: run `guix pull`, then `guix upgrade legcord`,
+or update/reconfigure the profile's channel workflow.  In-place AppImage/dpkg
+updater code and its dependency are removed; onboarding/settings/update
+guidance identifies the package-managed installation.  Normal settings,
+themes and runtime mod caches stay writable in upstream's user-data
+directory (observed `${XDG_CONFIG_HOME}/legcord/storage/settings.json`).
+**Upstream mod selection and runtime downloads remain unchanged**: Guix
+immutability applies to the packaged app, not a promise that optional remote
+mods are pinned or never downloaded into the user cache.  Chromium sandboxing
+and context isolation remain enabled; no `--no-sandbox` fallback is used.
+
+**Verification status (2026-10-03): source application build, `--check`
+reproducibility rebuild, offline lint, integrated `make check-legcord` and
+final native onboarding/save/cold-relaunch/sandbox acceptance passed.**
+The final exercised output is
+`/gnu/store/vbhjrpzfcg300dy06d9k4gllcdj8nil1-legcord-1.3.0`.
+Runtime evidence at `/tmp/legcord-evidence.CLplj9X1` records real native
+onboarding option-card interaction and setup-saveSettings IPC persistence:
+native window style, disabled tray and no selected mods.  Both first launch
+and an independently cold-relaunched browser reached the actual
+`https://discord.com/login` surface with empty email/password controls; no
+login was performed.  The cold renderer read back the same persisted
+settings plus the inherited `automaticUpdates=true` preference.  Actual
+renderer identities had seccomp mode 2 and `NoNewPrivs=1`, and Node isolation
+passed on both launches.  The earlier CDP timeout was an observation race:
+the old browser's CDP port could answer before restart completed.  The helper
+now verifies the new browser generation and follows navigation contexts;
+the final run passed without changing or bypassing application sandboxing.
+The inherited update preference showed the owned native window titled
+“Legcord updates are managed by Guix”, dismissed with Return; its dialog
+body is outside CDP and was not independently verified.  Launcher/onboarding
+guidance was verified separately.  The unchanged before/after output NAR is
+`1dhg32fmlsf9m1wgacf1sw0gwp8d49zxkv9p44c1bfpcydmbkxwz`.
+
+The real, visually inspected onboarding screen is retained as
+[`.goocastle/evidence/legcord-onboarding.png`](.goocastle/evidence/legcord-onboarding.png).
+It contains no credentials, account information or QR challenge.  Actual
+first/cold-login screenshots remain in the local evidence directory rather
+than publishing their ephemeral login QR challenges.
+
+Standalone `tests/legcord-smoke.sh` / `tests/legcord-smoke.py` realize pure
+Python/Xvfb/D-Bus tools, use fresh HOME/XDG and an explicit environment
+allowlist, and retain screenshots, receipts and before/after output NAR
+hashes even on failure.  The passed full target covers real onboarding,
+setting persistence, first logged-out render, cold relaunch, package-managed
+update guidance, renderer sandbox/isolation and unchanged installed output.
+It uses live Discord network content, not an offline fixture, but never
+accesses a host Discord profile or credentials.  No credentials/login,
+messages, calls, post-login settings, microphone/live audio, GPU or optional
+mod-download acceptance was performed.  No upstream full suite or
+deployed/profile installation is claimed.  The initial nondeterministic
+rebuild was corrected by retaining Monaco's runtime module layout and
+deterministic CSS exports; the corrected source build and `--check` rebuild
+passed before the integrated native target was re-exercised.  Final offline
+lint reported no findings for Legcord, its Electron/Node tools or Venmic;
+unrelated existing channel warnings remain.  The final output was again
+exercised through the full native helper after these corrections.  No
+network OKF update applies to this repository-only addition.
+
 ## lbForth self-hosted native interpreter
 
 `lbforth` **0-20230213** builds Lars Brinkhoff's original
@@ -3065,6 +3168,7 @@ update applies to this repository-only addition.
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
 | `hack` | CWI Hack 1.0.3 (1985-07-23) | Original BSD-3-Clause source-built terminal game/data/manual/notices, immutable store assets and XDG native mutable state; three-process exact native save continuity |
 | `lbforth` | Lars Brinkhoff/lbForth (`912433b`) with forth-metacompiler (`40b99c0`) | GPL-3.0-only original self-hosted portable C `forth`, immutable system/library/target wordsets and notices; upstream suites and isolated installed-language/error-recovery proof |
+| `legcord` | Legcord/Legcord 1.3.0 (`c8d91f6`) | OSL-3.0 source application and source-built Venmic, pinned binary-assisted Electron/Node/tools, writable settings/mod cache and Guix updates; actual onboarding/persisted settings/cold logged-out relaunch/sandbox and immutable-output proof |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
 | `bcrawl` | b-crawl/bcrawl 1.42.1 | Terminal-only Dungeon Crawl Stone Soup fork with XDG-managed state |
 | `unnethack` | UnNetHack 6.0.4 (`1f061e9`) | NGPL full native TTY game/data/recovery/docs; private XDG data playground, upstream five C suites and three-process exact save continuity |
@@ -3764,6 +3868,7 @@ make check-emacs-vim-region # isolated batch and real terminal Emacs keymap edit
 make check-org-mind-map # isolated installed Emacs/Graphviz export, exact SVG nodes/edges/text/tags/images and viewport bounds
 make check-hack # isolated three original 80x24 PTYs, actual movement/inventory, consumed saves, exact independent restores and read-only NAR
 make check-lbforth # installed native arithmetic/control flow/recursion and error recovery from empty private cwd; python3 required, immutable output
+make check-legcord # real native onboarding/settings and Discord logged-out cold-relaunch surface, sandbox and unchanged NAR; no credentials/login/live audio
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
