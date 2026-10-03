@@ -362,6 +362,63 @@ buffer.  The proof covers exercised local gameplay and save continuity, not a
 complete campaign or network-server/client interaction.  No deployed system
 changed; no network OKF update applies to this repository-only addition.
 
+## lbForth self-hosted native interpreter
+
+`lbforth` **0-20230213** builds Lars Brinkhoff's original
+[`lbForth` revision `912433b150b64252070116a5fd5c1a29ff29b26d`](https://github.com/larsbrinkhoff/lbForth/tree/912433b150b64252070116a5fd5c1a29ff29b26d)
+with the pinned recursive
+[`forth-metacompiler` revision `40b99c09628f616d94649009ba9894340088d77c`](https://github.com/larsbrinkhoff/forth-metacompiler/tree/40b99c09628f616d94649009ba9894340088d77c).
+The measured recursive Git-tree NAR hash is
+`0g7jzaw3yijnm8rkgqsrhhx63r3v45700mp1ycyh50hs5awqh7in`, independently
+matched by recursive fetch and archive reconstruction; the earlier accepted
+issue-609 hash does not match this exact recursive source.  The package uses
+the parent project's **GPL-3.0-only** grant (not “or later”), retaining
+LICENSE, README and INSTALL.  Same-author bootstrap copyright headers are
+preserved; the metacompiler submodule has no separate LICENSE.  The bundled
+Hayes test programs explicitly carry a public-domain grant.
+
+This is the original self-hosted **subset of Forth94**, not a renamed system
+Forth.  Native SBCL bootstraps the portable C target offline, then the Forth
+self-hosting stage regenerates the installed interpreter.  `bin/forth` loads
+required system/library/target wordsets from immutable `share/lbForth`, with
+no runtime checkout or compiler dependency.  The source patch opens the
+full absolute system directory directly: using it as a dictionary search-path
+name would truncate it to 15 bytes on this target.  The relative `src/`
+fallback and bootstrap git-fetch recipe are removed; no cwd-changing launcher
+or runtime store write is needed.  Other upstream cross targets are retained
+as source wordsets, not claimed built or runtime-verified executables.
+
+```sh
+guix build -L guix --no-grafts lbforth
+forth                 # native interactive text interpreter; use bye to exit
+printf ': square dup * ; 6 square 7 + . cr bye\n' | forth
+make check-lbforth     # needs python3 for the standalone acceptance helper
+```
+
+On 2026-10-03, source build, `--check` reproducibility rebuild and offline
+lint passed for
+`/gnu/store/nwv0y2gcmqy6zdh0y71kpj6liab2szak-lbforth-0-20230213`.
+The recipe runs actual upstream **test-standard, test-image and test-lib**
+after installation against the native C host.  Their upstream success oracle
+includes `Test-OK` and **exactly 53 known standard-suite errors**, `Image-OK`
+and the library check; this is not a claim of complete Forth94 conformance or
+an error-free standard suite.  Offline lint had no lbForth findings; existing
+flex/Fourk warnings remain unrelated.
+
+The separate installed consumer `tests/lbforth-smoke.sh` /
+`tests/lbforth-smoke.py` passed from an empty private cwd with fresh HOME/XDG
+and `PATH=/nonexistent`, without checkout/build tools.  Native arithmetic
+returns **43**; the two IF branches return **10/8**; DO/LOOP summation returns
+**45**; recursive factorial returns **120**; BEGIN/WHILE countdown returns
+**0**, with a clean stack.  Undefined-word and `ABORT"` diagnostics reset the
+stack and allow subsequent **42** results; a missing include reports its
+error and subsequent computation returns **81**.  The working directory
+stays empty and installed contents, modes, sizes and mtimes are unchanged.
+This exercises real language/control-flow/error-recovery behavior, not a
+mock interpreter, Goocastle executor or metadata-only contract.  No deployed
+profile/system changed; no network OKF update applies to this repository-only
+addition.
+
 ## Hack 1.0.3 original native save continuity
 
 `hack` packages Andries Brouwer's final **Hack 1.0.3**, distributed on
@@ -3007,6 +3064,7 @@ update applies to this repository-only addition.
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
 | `hack` | CWI Hack 1.0.3 (1985-07-23) | Original BSD-3-Clause source-built terminal game/data/manual/notices, immutable store assets and XDG native mutable state; three-process exact native save continuity |
+| `lbforth` | Lars Brinkhoff/lbForth (`912433b`) with forth-metacompiler (`40b99c0`) | GPL-3.0-only original self-hosted portable C `forth`, immutable system/library/target wordsets and notices; upstream suites and isolated installed-language/error-recovery proof |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
 | `bcrawl` | b-crawl/bcrawl 1.42.1 | Terminal-only Dungeon Crawl Stone Soup fork with XDG-managed state |
 | `unnethack` | UnNetHack 6.0.4 (`1f061e9`) | NGPL full native TTY game/data/recovery/docs; private XDG data playground, upstream five C suites and three-process exact save continuity |
@@ -3705,6 +3763,7 @@ make check-domainslib # isolated native concurrent task/parallel-array/channel p
 make check-emacs-vim-region # isolated batch and real terminal Emacs keymap editing, exact buffer/active-region state and immutable files
 make check-org-mind-map # isolated installed Emacs/Graphviz export, exact SVG nodes/edges/text/tags/images and viewport bounds
 make check-hack # isolated three original 80x24 PTYs, actual movement/inventory, consumed saves, exact independent restores and read-only NAR
+make check-lbforth # installed native arithmetic/control flow/recursion and error recovery from empty private cwd; python3 required, immutable output
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware
