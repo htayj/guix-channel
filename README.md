@@ -166,6 +166,126 @@ This proves the exercised local SUPDUP client paths, not remote historical
 host interoperability or other protocols.  No profile or deployed system
 changed; no network OKF update applies to this repository-only addition.
 
+## Hermes Desktop and packaged backend
+
+`hermes-desktop` **2026.9.24** and `hermes-agent` **0.21.5** share
+[`NousResearch/hermes-agent` revision `f97608f178d1ffeca59860195ab7da295f7c8e5f`](https://github.com/NousResearch/hermes-agent/tree/f97608f178d1ffeca59860195ab7da295f7c8e5f),
+with Git-tree NAR base32 hash
+`1wfgjy7a8jpk90pmn5y5kn3girqms5x0av0lhw7y62c7dyh5m8yb`.
+These are the actual upstream desktop renderer, preload/main process and
+headless JSON-RPC/WebSocket backend, not a browser-only substitute or a
+wrapper around an independently installed backend.  The desktop binds its
+packaged backend; `hermes`, `hermes-agent`, `hermes-acp` and `hermes-python`
+provide the backend's ordinary CLI/runtime interfaces.  The desktop output
+includes a `hermes-desktop` launcher, `hermes.desktop` application entry and
+icon.  Both recipes currently target **x86_64-linux**.
+
+**This is explicitly binary-assisted, not fully source-built or an all-free
+closure.**  Application code and CPython come from source, but the desktop
+uses the fixed upstream Electron **40.10.2** Linux executable through Nonguix,
+with Chromium redistribution notices retained.  npm archives are pinned to
+the source lockfile, including vendor native build-tool bindings; the terminal
+addon is rebuilt against the exact Electron headers.  Python 3.11 dependencies
+include fixed upstream wheels from `uv.lock` (the missing `sherpa-onnx-core`
+dependency is separately pinned to its official PyPI release).  That closure
+includes Intel/NVIDIA binary redistribution terms alongside free licenses.
+Original manifests, notices and required corresponding-source materials are
+retained rather than implying that every aggregate is MIT-licensed.
+Native **PyAV 17.0.0, Pillow 12.3.0 and pillow-heif 1.5.0** replace their
+vendor wheels with source builds and Guix codecs; HEIF support is not reduced
+to a decoder-only substitute.
+
+Restricted/unverified bundled UI fonts are removed from the npm UI origin.
+Redistributable IBM Plex and GNU Unifont replace those faces while retaining
+CSS typography roles; unchanged JetBrains Mono terminal faces and their OFL
+notice remain.  Font bytes/internal names are not renamed or altered, and
+the installed font notices describe the substitutions.
+
+```sh
+guix build -L guix --no-grafts hermes-agent hermes-desktop
+hermes-desktop        # desktop launcher after installation/profile setup
+hermes serve         # ordinary backend server interface
+make check-hermes-desktop
+# Backend-only proof, without building/launching Electron:
+GUIX=guix sh tests/hermes-desktop-smoke.sh --backend-only \
+  --evidence /absolute/empty-evidence-directory
+```
+
+Package code/data stay immutable in `/gnu/store`; normal user configuration
+and state remain writable under `${HERMES_HOME:-$HOME/.hermes}` and desktop
+user-data paths.  Guix installation detection **does not enable
+`HERMES_MANAGED`**, which would incorrectly disable configuration writes.
+The packaged code blocks in-place self-updates and lazy dependency installs;
+desktop update/repair actions give Guix instructions rather than downloading
+another checkout/backend into the user's home.  Upgrade through the channel
+and Guix profile/Home/System workflow (for example, `guix pull` followed by
+`guix upgrade hermes-agent hermes-desktop`), not Hermes's git/pip updater.
+Chromium sandboxing and renderer isolation remain part of the desktop recipe;
+the acceptance does not fall back to `--no-sandbox`.
+
+Wake engine Python interfaces are retained, but **licensed wake assets must
+be supplied by the user**; no engine/model asset is silently downloaded.
+openWakeWord's keyword and feature models use local paths and
+`HERMES_WAKE_MODEL_DIR` (default `$HERMES_HOME/wakewords`).  Sherpa KWS needs
+`wake_word.sherpa.model_dir` containing tokens, BPE and encoder/decoder/joiner
+ONNX files.  Porcupine requires its separately licensed local `.ppn`, native
+library and model paths (`wake_word.porcupine.keyword`, `library_path`,
+`model_path`, or the corresponding `HERMES_PORCUPINE_LIBRARY` /
+`HERMES_PORCUPINE_MODEL` overrides), plus the user's access key.  Provider
+credentials and inference models likewise remain user-supplied; none are
+needed or accessed by the repository smoke.
+
+**Verification status (2026-10-03): backend and desktop builds,
+`guix build --check` reproducibility rebuilds, offline lint and actual
+native/backend/Electron acceptance passed.**  The checked outputs are
+`/gnu/store/5ngz28ls6p1hx25fp9im0dilpq4v5zqx-hermes-agent-0.21.5` and
+`/gnu/store/r5jwrqdlkwlzbwlpyrif5yz1gsd43q4b-hermes-desktop-2026.9.24`.
+Import-generated timestamp bytecode caches were normalized to checked-hash
+`.pyc` files; npm archive-layout handling retains redistribution notices.
+Offline lint reported no Hermes findings (existing flex/Fourk warnings remain).
+Final evidence is under `/tmp/hermes-desktop-acceptance-sandbox`.
+
+The actual `hermes serve /api/ws` proof covers health/identity,
+`gateway.ready`, persisted theme configuration roundtrip and explicit
+`guix_update_unsupported` refusal.  Native imports and PNG/HEIF/PyAV
+color-conversion roundtrips passed; missing wake assets produce explicit
+errors.  The installed Electron app ran on private Xvfb/D-Bus with its own
+packaged local backend, real preload bridge, `backend.ready` (not fake mode)
+and visible no-provider onboarding.  Main-process update IPC returned manual
+`guix upgrade hermes-desktop` instructions.  Renderer Node isolation passed;
+the actual renderer identity from browser CDP had seccomp mode 2 and
+`NoNewPrivs=1`.  Final cleanup and before/after NAR checks passed: backend
+`0bz3qj9jrgik1hd2hvd8qd7rx21a5152s577gshw9jlnnyjjn8w6`, desktop
+`01r7z085q9d2mpwh9w1l7rsgjbv86x6rqc6xqjh8daqb4lqv4g8s`.
+
+Actual desktop interaction chose “I'll choose a provider later”, opened the
+**Settings → Model → Main model** panel, closed settings and entered an
+**unsent** `Guix desktop acceptance — unsent draft`.  Durable screenshots
+are [the native composer](.goocastle/evidence/hermes-desktop.png) and
+[native settings](.goocastle/evidence/hermes-desktop-settings.png).  The
+inspected composer shows that draft with no response/error; the settings
+show Provider/Model controls, Reasoning, context-window override and the
+Appearance and other categories.  Empty provider/model selections and
+“Gateway needs setup” are expected in this credential-free proof, not
+evidence of a configured provider.  These are copied actual Electron
+captures, not Goocastle execution or an artificial success buffer.
+
+`tests/hermes-desktop-smoke.sh` realizes its own pure test tools even with
+prebuilt `--backend` / `--desktop` outputs and retains reports, a screenshot
+and before/after NAR hashes in an empty absolute `--evidence` directory.
+The integrated `make check-hermes-desktop` target also passed, with evidence
+under `/tmp/hermes-desktop-evidence.WRYpbG5H`; Guix's explicit store `make`
+was used because the host had no `make`, without changing the recipe.
+The report records **zero model calls**, **no live wake verification** and
+no credential source (fresh HOME with an explicit environment allowlist).
+The passive update-notification cache is synthetic for offline startup;
+it is not proof of the latest upstream version.  Acceptance disables GPU
+use: real provider/model inference, GPU acceleration, microphone and live
+voice/wake recognition remain unverified.  No upstream service/browser
+test-suite completion or deployed/profile installation is claimed.  This
+repository integration makes no deployed-system correction, so no network
+OKF update applies; deployment belongs to the separate installation session.
+
 ## NitroHack original curses game and save continuity
 
 `nitrohack` builds the original **NitroHack 4.0.4** wide-curses game from
@@ -2815,6 +2935,8 @@ update applies to this repository-only addition.
 | `stoat-soup` | Stoat Soup 0.23-ish-aug26 (`5df72bd`) | Complete original console-only Crawl variant with immutable data/docs and native XDG saves, scores, macros and caches |
 | `grunthack` | NHTangles/GruntHack 0.2.4 (`51d75ee`) | Original NGPL native TTY/curses game, immutable generated data/docs and XDG mutable state; three-process exact native save continuity |
 | `nitrohack` | DanielT/NitroHack 4.0.4 (`21b9774`) | Original NGPL wide-curses game with network client retained, PostgreSQL server omitted, immutable data/notices and XDG configuration/native saves; exact three-process local continuity |
+| `hermes-agent` | NousResearch/hermes-agent 0.21.5 (`f97608f`) | Actual CLI/JSON-RPC/WebSocket backend, pinned binary-assisted Python closure and source-built media; writable user configuration and Guix-only package updates; reproducibility and native/backend smoke passed |
+| `hermes-desktop` | NousResearch/hermes-agent 2026.9.24 (`f97608f`) | Actual desktop app with pinned Electron 40.10.2, rebuilt terminal addon, packaged backend and free-font substitution; reproducible build and sandboxed real desktop acceptance passed without provider/model calls |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
@@ -3563,6 +3685,7 @@ make check-nlarn # isolated native 100x30 PTYs, exact HUD/items restore, further
 make check-unnethack # isolated three native 100x24 TTYs, exact HUD/map/items restore, save consumption and further turns/resaves
 make check-grunthack # isolated three native 100x24 TTYs, movement/search turns, exact HUD/map/items restore and consumed saves/resaves
 make check-nitrohack # isolated three native 100x30 curses sessions, original menus, movement/search, exact HUD/map/items restore and same-file resaves
+make check-hermes-desktop # actual installed backend plus Electron/Xvfb surface, writable config, Guix update refusal, sandbox and NAR checks; no real model/GPU/microphone proof
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass
