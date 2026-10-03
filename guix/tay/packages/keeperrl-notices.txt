@@ -1,0 +1,118 @@
+KeeperRL free ASCII package: third-party and media notices
+Source revision: 95d2be4e97db2243210a71918e36a533ad94dcd1
+
+KeeperRL code is GPL-2.0-or-later: source-file headers grant version 2 or,
+at your option, any later version. See COPYING.txt and LICENSE.
+All files in data_free/ are CC BY-SA 2.0 per COPYING-MEDIA.txt, including
+Lorc's game-icons.net derivative icons, maps, UI and translations. Credits
+remain in data_free/credits.txt. The proprietary data/ tree (oryx tiles,
+music and sound) is not distributed. Upstream data_contrib/ fonts are not
+installed. This package uses unmodified Guix DejaVu Sans fonts under the
+Bitstream Vera license and public-domain additions; their notices are in
+the font-dejavu input. No Steamworks SDK is built or distributed.
+
+Verbatim attribution-bearing source and library license files are installed
+in notices/. These are documentation, not runtime code or alternate assets.
+
+Bundled components
+------------------
+ProgramOptions.hxx: Josua Rieder (Fytch), MIT. The vendored
+extern/ProgramOptions.h omits the notice. A complete comparison against
+Fytch/ProgramOptions.hxx revision 70d1c8eb81e068da71e3c4494995357acab3c5cc
+(2017-03-28) shows the same implementation with KeeperRL changes: renamed
+parseArgs, underscore option names, debug mutability guards, count(), and
+minor warning fixes. This is not a byte-identical upstream file. The
+original project license is preserved below from LICENSE.txt at commit
+22216cc290e9e3e766665ff04001e51742a37bbf (2017-03-25):
+https://github.com/Fytch/ProgramOptions.hxx/blob/22216cc290e9e3e766665ff04001e51742a37bbf/LICENSE.txt
+
+MIT License
+
+Copyright (c) 2017 Josua Rieder
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+fontstash.h/fontstash.cpp: Andreas Krinke and Mikko Mononen, zlib-style.
+Full copyright and license in the installed source headers.
+stb_truetype.h/stb_truetype.cpp: Sean Barrett/RAD Game Tools, public domain.
+THEORAPLAY and video.cpp: Ryan C. Gordon, zlib-style; LICENSE_THEORAPLAY.txt.
+gzstream.h/gzstream.cpp: Deepak Bandyopadhyay and Lutz Kettner, LGPL-2.1+.
+minizip unzip/ioapi/miniunz: Gilles Vollant, zlib-style; decryption derives
+from Info-ZIP crypt.c, with its full conditions in notices/unzip.cpp.
+LodePNG: Lode Vandevenne, zlib-style; notices/extern/lodepng.cpp and .h.
+cxxopts: Jarryd Beck, MIT; notices/extern/cxxopts.h.
+cereal: Randolph Voorhies and Shane Grant, BSD-3-Clause;
+notices/extern/cereal/LICENSE.
+RapidJSON: THL A29 Limited (Tencent) and Milo Yip, MIT; per-file notices in
+notices/extern/cereal/external/rapidjson/.
+rapidxml: Marcin Kalicinski, Boost-1.0 or MIT (dual);
+notices/extern/cereal/external/rapidxml/license.txt.
+base64: Rene Nyffenegger, permissive as-is license;
+notices/extern/cereal/external/base64.hpp.
+STX variant: Just Software Solutions Ltd, BSD-3-Clause;
+notices/extern/variant.hpp.
+expected backport: CC0 public-domain dedication; notices/extern/expected.hpp.
+extern/variant.h and variant_serialize.h: KeeperRL GPL-2.0-or-later glue.
+The old extern/iomanip.h copy is removed; the compiler standard library
+supplies <iomanip> instead.
+
+Andrzej's optional backport: Copyright (C) 2011-2012 Andrzej Krzemienski.
+The source references the Boost Software License 1.0; complete text follows:
+
+Boost Software License - Version 1.0 - August 17th, 2003
+
+Permission is hereby granted, free of charge, to any person or organization
+obtaining a copy of the software and accompanying documentation covered by
+this license (the "Software") to use, reproduce, display, distribute,
+execute, and transmit the Software, and to prepare derivative works of the
+Software, and to permit third-parties to whom the Software is furnished to
+do so, all subject to the following:
+
+The copyright notices in the Software and this entire statement, including
+the above license grant, this restriction and the following disclaimer,
+must be included in all copies of the Software, in whole or in part, and
+all derivative works of the Software, unless such copies or derivative
+works are solely in the form of machine-executable object code generated by
+a source language processor.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
+SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
+FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+Package integration changes
+---------------------------
+The no-Steam input implementation reports the absence of Steam controllers;
+SDL keyboard/mouse input remains native. Upstream unit tests remain compiled
+in the release build, without developer quick-game controls. DejaVu font
+paths replace upstream contrib font paths. The unconditional personal-message
+download is removed. Online exchange/game-event reporting defaults are off,
+and the launcher disables crash reporting. Online exchange remains a user
+opt-in. Version/date generation is fixed to the pinned source revision.
+Equipment scoring includes the creature attack baseline independently of the
+item modifier map, fixing a negative DAMAGE modifier incorrectly making a Bow
+more valuable. The existing upstream equipment regression test is unchanged.
+The obsolete testDungeonLevel numeric balance snapshot is removed, not re-pinned.
+Upstream commit 6d905cc29f5e10a96ff4e4205d4d0cf86ddd3d0a (2022-12-08) intentionally
+reduced lesser/main villain rewards from 11/25 to 6/12. Production balance
+is unchanged; the remaining native upstream suite runs in the release build.
+https://github.com/miki151/keeperrl/commit/6d905cc29f5e10a96ff4e4205d4d0cf86ddd3d0a

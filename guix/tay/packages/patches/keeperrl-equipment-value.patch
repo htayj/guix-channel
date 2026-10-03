@@ -1,0 +1,27 @@
+From: Guix channel maintainers
+Subject: [PATCH] Count the creature's attack baseline independently of item modifiers
+
+The native equipment value adds the creature's melee attribute only if the
+item has a modifier for that attribute. A bow normally has RANGED_DAMAGE,
+not DAMAGE; adding a -10 DAMAGE modifier introduces the +12 creature baseline
+and incorrectly makes the damaged bow more valuable. Upstream test.cpp:618
+exposes this on the real vanilla Bow. Include the baseline for every item,
+then add its modifiers, so a harmful modifier cannot promote equipment.
+
+--- a/minion_equipment.cpp
++++ b/minion_equipment.cpp
+@@ -308,12 +308,9 @@
+ 
+ int MinionEquipment::getItemValue(const Creature* c, const Item* it) const {
+   PROFILE;
+-  int sum = 0;
+-  for (auto& mod : it->getModifierValues()) {
++  int sum = c->getRawAttr(it->getWeaponInfo().meleeAttackAttr, c->getCombatExperience(true, true));
++  for (auto& mod : it->getModifierValues())
+     sum += mod.second;
+-    if (mod.first == it->getWeaponInfo().meleeAttackAttr)
+-      sum += c->getRawAttr(mod.first, c->getCombatExperience(true, true));
+-  }
+   return sum;
+ }
+ 

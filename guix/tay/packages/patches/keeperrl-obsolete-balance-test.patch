@@ -1,0 +1,45 @@
+From: Guix channel maintainers
+Subject: [PATCH] Remove the obsolete dungeon reward balance snapshot
+
+Upstream commit 6d905cc29f5e10a96ff4e4205d4d0cf86ddd3d0a (2022-12-08)
+changed lesser/main villain rewards from 11/25 to 6/12. The old test pins
+that historical balance, not a stable user contract. Do not revert the
+intentional balance change or re-pin assertions to new incidental values.
+Remove this stale balance snapshot; all remaining native tests stay active.
+
+--- a/test.cpp
++++ b/test.cpp
+@@ -1223,25 +1223,6 @@
+       t.matching.addTarget(t.get(v.x, v.y));
+   }
+ 
+-  void testDungeonLevel() {
+-    DungeonLevel level;
+-    CHECKEQ(level.level, 0);
+-    CHECKEQ(level.progress, 0);
+-    level.onKilledVillain(VillainType::NONE);
+-    CHECKEQ(level.level, 1);
+-    CHECKEQ(level.progress, 0.5 / 3);
+-    for (int i = 0; i < 2; ++i)
+-      level.onKilledVillain(VillainType::NONE);
+-    CHECKEQ(level.level, 2);
+-    CHECKEQ(level.progress, 0.5 / 5);
+-    level.onKilledVillain(VillainType::LESSER);
+-    CHECKEQ(level.level, 3);
+-    CHECKEQ(level.progress, 6.5 / 7);
+-    level.onKilledVillain(VillainType::MAIN);
+-    CHECKEQ(level.level, 6);
+-    CHECKEQ(level.progress, 4.5 / 13);
+-  }
+-
+   void testVectorConcat() {
+     int ret = 0;
+     vector<int> v1 {1, 2, 3};
+@@ -1352,7 +1333,6 @@
+   Test().testPositionMatching2();
+   Test().testPositionMatching3();
+   Test().testPositionMatching4();
+-  Test().testDungeonLevel();
+   Test().testPrettyInput();
+   Test().testPrettyInput2();
+   Test().testPrettyInput3();

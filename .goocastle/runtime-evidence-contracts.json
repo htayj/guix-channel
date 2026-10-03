@@ -744,54 +744,6 @@
       }
     },
     {
-      "issueNumber": 700,
-      "packageName": "keeperrl",
-      "packageModulePath": "guix/tay/packages/keeperrl.scm",
-      "artifactPath": ".goocastle/evidence/issue-700.png",
-      "runtime": {
-        "executable": "keeper",
-        "invocation": {
-          "file": "keeper",
-          "args": [
-            "--smoke-test"
-          ]
-        },
-        "successMarker": "KEEPERRL_SMOKE_OK"
-      }
-    },
-    {
-      "issueNumber": 701,
-      "packageName": "kimchi",
-      "packageModulePath": "guix/tay/packages/kimchi.scm",
-      "artifactPath": ".goocastle/evidence/issue-701.png",
-      "runtime": {
-        "executable": "kimchi",
-        "invocation": {
-          "file": "kimchi",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "kimchi smoke: terminal UI OK; no store writes"
-      }
-    },
-    {
-      "issueNumber": 702,
-      "packageName": "lambdahack",
-      "packageModulePath": "guix/tay/packages/lambdahack.scm",
-      "artifactPath": ".goocastle/evidence/issue-702.png",
-      "runtime": {
-        "executable": "lambdahack",
-        "invocation": {
-          "file": "lambdahack",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "LAMBDAHACK-SMOKE-OK"
-      }
-    },
-    {
       "issueNumber": 703,
       "packageName": "letter-hunt",
       "packageModulePath": "guix/tay/packages/letter-hunt.scm",

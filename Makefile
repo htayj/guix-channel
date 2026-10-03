@@ -54,7 +54,8 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	hermes-agent hermes-desktop lbforth legcord \
 	font-nerd-caskaydia-cove \
 	aiwnios aiwnios-bytecode wrogue babel7drl \
-	the-smiths-hand tetraworld splicehack-rewrite space-privateers slashem shamogu revengate plomrogue obumbrata
+	the-smiths-hand tetraworld splicehack-rewrite space-privateers slashem shamogu revengate plomrogue obumbrata \
+	lambdahack kimchi keeperrl
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -104,7 +105,8 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-aiwnios check-aiwnios-bytecode check-wrogue check-babel7drl \
 	check-smiths-hand check-tetraworld check-splicehack-rewrite \
 	check-space-privateers check-slashem check-shamogu \
-	check-revengate check-plomrogue check-obumbrata
+	check-revengate check-plomrogue check-obumbrata \
+	check-lambdahack check-kimchi check-keeperrl
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -655,7 +657,8 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-aiwnios check-aiwnios-bytecode check-wrogue check-babel7drl \
 	check-smiths-hand check-tetraworld check-splicehack-rewrite \
 	check-space-privateers check-slashem check-shamogu \
-	check-revengate check-plomrogue check-obumbrata
+	check-revengate check-plomrogue check-obumbrata \
+	check-lambdahack check-kimchi check-keeperrl
 	$(GUIX) build -L guix --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L guix --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
@@ -709,3 +712,15 @@ check-plomrogue:
 .PHONY: check-obumbrata
 check-obumbrata:
 	GUIX="$(GUIX)" sh tests/obumbrata-smoke.sh
+
+.PHONY: check-lambdahack
+check-lambdahack:
+	GUIX="$(GUIX)" sh tests/lambdahack-smoke.sh
+
+.PHONY: check-kimchi
+check-kimchi:
+	GUIX="$(GUIX)" sh tests/kimchi-smoke.sh
+
+.PHONY: check-keeperrl
+check-keeperrl:
+	GUIX="$(GUIX)" sh tests/keeperrl-smoke.sh

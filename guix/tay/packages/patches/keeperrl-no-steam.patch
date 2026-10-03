@@ -1,0 +1,86 @@
+From: Guix channel maintainers
+Subject: [PATCH] Complete the optional no-Steam build and keep upstream tests active
+
+NO_STEAMWORKS currently excludes the implementation but the native renderer
+still calls its input interface and main dereferences a null input object.
+Provide the SDK-free implementation of that optional interface: no Steam
+controllers exist, so all queries return absent/inactive values.  These are
+not gameplay replacements; native SDL keyboard and mouse input are unchanged.
+
+Compile upstream unit tests in a release build, without enabling developer
+quick-game switches.  Remove the unconditional startup personal-message
+request; other network features remain explicit opt-ins in the settings.
+
+--- a/Makefile
++++ b/Makefile
+@@ -108,6 +108,7 @@
+ SRCS = $(shell ls -t *.cpp)
+ else
+ SRCS = $(shell ls -t *.cpp | grep -v steam_.*.cpp)
++SRCS += steam_input_nosteam.cpp steam_achievements_nosteam.cpp
+ endif
+ SRCS += $(shell ls -t extern/*.cpp)
+ 
+--- /dev/null
++++ b/steam_input_nosteam.cpp
+@@ -0,0 +1,14 @@
++// SDK-free implementation of the optional Steam controller interface.
++// Native SDL keyboard and mouse handling does not pass through this interface.
++#include "steam_input.h"
++void MySteamInput::init() {}
++void MySteamInput::showBindingScreen() {}
++void MySteamInput::showFloatingKeyboard(Rectangle) {}
++void MySteamInput::dismissFloatingKeyboard() {}
++optional<ControllerKey> MySteamInput::getEvent() { return none; }
++void MySteamInput::setGameActionLayer(GameActionLayer) {}
++pair<double, double> MySteamInput::getJoyPos(ControllerJoy) { return {0, 0}; }
++void MySteamInput::runFrame() {}
++bool MySteamInput::isPressed(ControllerKey) { return false; }
++bool MySteamInput::isRunningOnDeck() { return false; }
++optional<FilePath> MySteamInput::getGlyph(ControllerKey) { return none; }
+--- /dev/null
++++ b/steam_achievements_nosteam.cpp
+@@ -0,0 +1,5 @@
++// Achievements require the optional Steam service, absent in this build.
++#include "steam_achievements.h"
++#include "achievement_id.h"
++SteamAchievements::SteamAchievements() {}
++void SteamAchievements::achieve(AchievementId) {}
+--- a/main.cpp
++++ b/main.cpp
+@@ -324,7 +324,7 @@
+     userKeysPath.erase();
+     highscoresPath.erase();
+   }
+-  unique_ptr<MySteamInput> steamInput;
++  auto steamInput = make_unique<MySteamInput>();
+   unique_ptr<SteamAchievements> steamAchievements;
+   #ifdef RELEASE
+     AppConfig appConfig(dataPath.file("appconfig.txt"));
+@@ -332,7 +332,6 @@
+     AppConfig appConfig(dataPath.file("appconfig-dev.txt"));
+   #endif
+   #ifdef USE_STEAMWORKS
+-    steamInput = make_unique<MySteamInput>();
+     optional<steam::Client> steamClient;
+     if (appConfig.get<int>("steamworks") > 0) {
+       if (steam::initAPI()) {
+@@ -503,7 +502,6 @@
+     }
+   }
+   FileSharing bugreportSharing("http://retired.keeperrl.com/~bugreports", modVersion, saveVersion, options, installId);
+-  bugreportSharing.downloadPersonalMessage();
+   unique_ptr<View> view;
+   view.reset(WindowView::createDefaultView(
+       {renderer, guiFactory, tilesPresent, &options, &clock, soundLibrary, &bugreportSharing, userPath, installId,
+--- a/test.cpp
++++ b/test.cpp
+@@ -13,7 +13,7 @@
+    You should have received a copy of the GNU General Public License along with this program.
+    If not, see http://www.gnu.org/licenses/ . */
+ 
+-#ifndef RELEASE
++#if !defined(RELEASE) || defined(KEEPERRL_RUN_TESTS)
+ 
+ #include "stdafx.h"
+ 

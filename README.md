@@ -4298,6 +4298,159 @@ PLOMROGUE_EVIDENCE_DIR=/tmp/plomrogue-native-FRESH GUIX=guix sh tests/plomrogue-
 GUIX=guix sh tests/obumbrata-smoke.sh "$obumbrata_out" --output /tmp/obumbrata-native-FRESH
 ```
 
+## LambdaHack, Kimchi and KeeperRL — verified native paths
+
+These ordinary source-built games passed final serial build/reproducibility/
+offline lint/upstream/native/integrated gates.  Proof stays in external
+`tests/*` consumers; repository packaging establishes no deployed host/profile change.
+
+- **LambdaHack #419** exports `lambdahack` **0.9.5.0** in
+  `(tay packages lambdahack)`, canonical `LambdaHack/LambdaHack` stable pin
+  `aa894089399abe1a564a1ae6160a4751b6c61004`, recursive source hash
+  `06dx7qm0m9d3k39swrz2mwjmxcipqf15x86kfpsl9ffx88nm07xh`.
+  Upstream-tested GHC 8.6.5 uses a private 43-archive lts-13.18 library closure
+  (the snapshot compiler was 8.6.4, same ABI), preserving native default SDL.
+  Authentic snapshot Cabal revisions for async/hashable/primitive/cabal-doctest/
+  parsec are pinned rather than assuming unmodified archive metadata compatibility;
+  parsec r2 permits the compiler's base version.  Native transformers-base
+  dependency edges include both stm and transformers-compat.
+  The pinned enummapset 0.6.0.1 archive has a 42-byte multipart trailer;
+  exact size/trailer checks retain the complete CRC-validated gzip member
+  before ordinary tar extraction, without changing its origin/hash or ignoring
+  decompression errors.
+  Internal game-content/definition RUNPATHs relocate to their installed shared-
+  library directories, retaining real dependency paths/static/shared semantics
+  and enabled RUNPATH validation rather than suppressing warnings.
+  Original tests run post-install for the embedded font datadir: a 50-frame
+  null crawl and SDL battle initialization.  BSD-3 code, GPL-2-only font
+  modifications and OFL-1.1 font retain original COPYLEFT/CREDITS/font notices:
+  COPYLEFT grants GPL-2+, but CREDITS restricts these modifications to GPL-2;
+  no later-version grant is inferred for them.  Static dependency/compiler legal
+  files are also installed.  `tests/lambdahack-smoke.sh [output]` honors `GUIX` and absolute
+  `LAMBDAHACK_SMOKE_ARTIFACTS`.  Original uppercase `LambdaHack` basename keeps
+  native `~/.LambdaHack` state; saves are `saves/LambdaHack.server.sav` and
+  `LambdaHack.human_1.sav` (native solo-raid human faction 1) with atomic native
+  temporary-file rename.  The GUI starts
+  upstream insert-coin autoplay by default; external human input takes control
+  and starts the actual solo raid, waits/moves, then Ctrl-x/Space saves and
+  cleanly exits for ordinary process restart.  Exact map/HUD pixels, leader,
+  clocks and equipment/pack surfaces are compared, excluding messages.  Native
+  menu/equipment/pack/HUD ASCII text is decoded from exact pinned 16x16 BDF
+  glyph masks rather than OCR; global/local numeric clocks remain strict.
+  Unknown map graphics are kept outside decoded text regions.
+  Raw native saves are retained, but hidden serializer/RNG fields are not
+  decoded or claimed fully equal.  A separate
+  `tests/lambdahack-benchmark.sh [output]` honors `GUIX` and absolute
+  `LAMBDAHACK_BENCHMARK_ARTIFACTS` with the original upstream 50-frame null-
+  frontend deterministic crawl flags; it requires actual session frames/exit0
+  from the native `~/.LambdaHack/stdout.txt`/`stderr.txt` logs (non-TTY
+  redirection), not the consumer launcher's `benchmark.log`,
+  and no saves, not GUI acceptance or a changed default frontend.  Neither
+  consumer is an installed custom proof mode.
+  Final build/reproducibility/offline lint/original upstream suite, original
+  50-frame benchmark and native/integrated GUI passed for
+  `/gnu/store/b2vr0nkzzv4rlljshk6sp1apq2y0df8d-lambdahack-0.9.5.0`.
+  `/tmp/lambdahack-native-final` records two exact selected-state restores,
+  strict native clocks and continued moves, native save/clean exits and
+  unchanged NAR `06fq18vx3z89xrn72islh9pr1h453794xknq3csf15in24qm3d75`;
+  `/tmp/lambdahack-benchmark` retains the independent native benchmark receipt.
+  The [actual native SDL screen](.goocastle/evidence/lambdahack-native.png)
+  shows leader Haskell Alvin, HP 40/80, Calm 70/70 and Typing den 2 with 7%
+  seen; hidden serialized state/RNG remain outside the proof.
+- **Kimchi #416** exports `kimchi` **1.3.2** in `(tay packages kimchi)`,
+  canonical `kimjoy2002/crawl` tag kimchi-1.3.2 at
+  `8f533dcfe5fe76833cb636531bae56e3bf106556`.  Fixed archive SHA-256 is
+  `0aa72c8d85467374435f69bfa59e2f02787f452a24b49cc3075b18ad43906b47`,
+  actual Guix base32
+  `0ivbj11ss62v0z1rrd14592pyy025ygabgv9bx1p8ws6hn6jr9qa`.
+  GPL-2+ console source uses system Lua 5.1/ncursesw/SQLite/zlib, without
+  submodule fetches/tiles/fonts/sounds/web assets.  BSD-2/Expat/public-domain/
+  CC0/Apache-2 source notices and full upstream license docs are retained.
+  Ordinary `bin/kimchi` sets native data/state below `XDG_DATA_HOME/kimchi`
+  (HOME fallback), terminfo and macro/default `-dir` options; no installed
+  Python proof dispatcher exists.  `tests/kimchi-smoke.sh [output]` honors
+  `GUIX` and absolute new/empty `KIMCHI_EVIDENCE_DIR`.  Its real xterm/Xvfb
+  consumer requires ordinary waits/save/restore/native abandon-confirmed quit,
+  clock/coordinates/HP/stats/dump comparison and actual Hangul shield inspection
+  using test-only Noto CJK fonts.  Upstream has no restore welcome-back message;
+  proof does not depend on one or claim exhaustive future RNG continuation.
+  Final build/reproducibility/offline lint/original stress suite and integrated
+  native consumer passed for
+  `/gnu/store/grkkmx3xr9zn7yqxsi67aqm1ggy4w4pn-kimchi-1.3.2`.
+  `/tmp/kimchi-native-final` records three ordinary waits, same-character restore,
+  one further turn, re-save and confirmed abandon/quit, with clock/coordinates/
+  HP/stats/character dumps compared.  NAR stayed
+  `1aj48f0k0bn9rlwy32yk97pas6gilfjkhs95g8b6iqlkldaxg0vc` in private namespaces
+  with read-only store/private tmp.  Actual Korean shield text is legible without
+  missing-glyph boxes, with wide spacing/wrapping in the native console.
+  [Restored native screen](.goocastle/evidence/kimchi-native.png) and
+  [Korean shield inspection](.goocastle/evidence/kimchi-korean.png) are retained.
+- **KeeperRL #412** exports `keeperrl` **1.3.0-1.95d2be4** in
+  `(tay packages keeperrl)`, canonical `miki151/keeperrl` post-v1.3 pin
+  `95d2be4e97db2243210a71918e36a533ad94dcd1`, archive SHA-256
+  `40a70fcd1d4f6962bed475ddc8404bd8cb0865661760da23f660d3d85e8629db`.
+  The free graphical ASCII `data_free` scope excludes paid `data`/`data_contrib`,
+  fonts/music/tiles and Steam SDK; Guix DejaVu replaces fonts.  File headers
+  establish GPL-2+ code, with
+  CC-BY-SA-2.0 `data_free`, including Lorc icons.  ProgramOptions' original MIT
+  Josua Rieder 2017 grant is verified from Fytch/ProgramOptions.hxx.  Comparison
+  against upstream `70d1c8eb81e068da71e3c4494995357acab3c5cc` establishes the
+  implementation's local argument-name/debug/count/warning adaptations, not
+  byte-identical vendoring.  Original
+  library attribution files, LGPL-2.1 text and fontstash/stb/gzstream/minizip/
+  THEORAPLAY/video source notices accompany the package.  Standard iomanip
+  replaces the old bundled header copy.  Writable native cwd is
+  `${XDG_DATA_HOME:-$HOME/.local/share}/KeeperRL` for saves/settings/highscores/
+  keybindings/installId/mods/worldgen/stacktraces.  ONLINE/GAME_EVENTS default
+  off, unsolicited personal messages are removed and `--no_crash_reports`
+  is respected; online exchange remains a settings opt-in game capability.
+  `keeperrl-equipment-value.patch` fixes harmful bow modifiers incorrectly
+  scoring as upgrades by consistently initializing the melee baseline before
+  summing modifiers; its original upstream regression test remains unchanged.
+  The obsolete numeric dungeon-balance snapshot test/call is removed, not
+  re-pinned, after upstream `6d905cc29f5e10a96ff4e4205d4d0cf86ddd3d0a`
+  intentionally changed rewards in 2022.  Production rewards are unchanged.
+  External
+  `tests/keeperrl-smoke.sh [output]` honors `GUIX` and absolute
+  `KEEPERRL_SMOKE_ARTIFACTS`, requiring genuine fresh-campaign menus/actions/
+  saving/full-process reload/screenshots; no installed `--smoke-test` dispatcher
+  or generated-save fixture is used.  Pristine `data_free` lacks `tutorial.kep`
+  required by native tutorial loading, so tutorial acceptance is not claimed.
+  The native `campaign_base` worldgen diagnostic records 20 one-shot proposal
+  samples for each alignment/biome and preserves actual accepted/rejected counts;
+  it measures generation probability, not all-attempt success or gameplay proof.
+  The ordinary campaign uses upstream retry logic, and graphical campaign
+  actions/save/reload remain mandatory acceptance independent of this diagnostic.
+  Final build/reproducibility/offline lint/repaired genuine upstream suite and
+  native/integrated campaign consumer passed for
+  `/gnu/store/a3cvw4nw8s5ip8mb226nac0j2b5vzlz3-keeperrl-1.3.0-1.95d2be4`.
+  `/tmp/keeperrl-native-final` records controlled-creature native waits advancing
+  GlobalTime 6 → 7 → 8, full-process restores at exactly 7 and 8, the same native
+  save filename/display-name/version after continuation, changed decompressed
+  save content, native quits and a second fresh HOME/XDG with no primary save.
+  This proves controlled mode, save identity and exact clocks, not equality of
+  every hidden serialized field or future RNG.  Private namespaces/read-only
+  store preserved NAR `0c2nm6jpy41w23z2mnnan9mfripxi66qk8ianq1n769kf0s1adqs`.
+  The [actual graphical ASCII campaign](.goocastle/evidence/keeperrl-native.png)
+  shows Arnald the keeper, T:8 and native “Exit control mode [U]” without errors.
+
+Only exact synthetic installed proof contracts #700 (`--smoke-test`) and
+#701/#702 (`--smoke`) were retired.  No fake replacement or Goocastle executor
+is installed or run.
+
+Serial validation commands (use fresh evidence directories):
+
+```sh
+guix lint -L guix --no-network --exclude=cve,refresh,archival lambdahack kimchi keeperrl
+lambda_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 lambdahack)
+kimchi_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 kimchi)
+keeper_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 keeperrl)
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 --check lambdahack kimchi keeperrl
+LAMBDAHACK_SMOKE_ARTIFACTS=/tmp/lambdahack-native-FRESH GUIX=guix sh tests/lambdahack-smoke.sh "$lambda_out"
+KIMCHI_EVIDENCE_DIR=/tmp/kimchi-native-FRESH GUIX=guix sh tests/kimchi-smoke.sh "$kimchi_out"
+KEEPERRL_SMOKE_ARTIFACTS=/tmp/keeperrl-native-FRESH GUIX=guix sh tests/keeperrl-smoke.sh "$keeper_out"
+```
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -4394,6 +4547,9 @@ GUIX=guix sh tests/obumbrata-smoke.sh "$obumbrata_out" --output /tmp/obumbrata-n
 | `revengate` | ygingras/Revengate 0.13.0 (`21b0cb4`) | Source-imported Godot game/full source/media/legal notices/native node-ownership fix; final build/repro/lint/3x1000sim/native+integrated move/save/restart/resume/continued movement/clean ExitGame0/noerrors/NAR passed; selected persisted fields, not all RNG |
 | `plomrogue` | Please the Island God PtIG (`32c8b0d`) | Source-built GPL-3+ C engine/Python client-server/private XDG state; final build/repro/lint/original immutable90AI oracle/native+integrated two exact restores/90vs45reload45 fullsave+RNG/NAR passed |
 | `obumbrata` | Martin Read/Obumbrata et Velata 1.0.0 | Source-built BSD-2 ncurses game/project generators/manual/native XDG save; final build/repro/lint/native+integrated two exact persisted-state restores/live screenshot/NAR passed; RNG not serialized |
+| `lambdahack` | LambdaHack 0.9.5.0 (`aa89408`) | Source-built BSD-3 SDL game/private pinned Haskell closure/font+dependency notices; final build/repro/lint/original suite+50framebenchmark/native+integrated two selected-state restores/continued moves/clean exits/NAR passed; hidden state/RNG not decoded |
+| `kimchi` | kimjoy2002/Kimchi 1.3.2 (`8f533dc`) | Source-built GPL-2+ console variant/system libraries/full notices/native XDG state; final build/repro/lint/original stress/native+integrated waits/save/restore/continued turn/Hangul/NAR passed; no exhaustive future RNG claim |
+| `keeperrl` | miki151/KeeperRL (`95d2be4`) | Source-built GPL-2+ game/free CC-BY-SA2.0 ASCII data/full legal notices/no paid media/private native XDG cwd; final build/repro/lint/repaired upstream suite/native+integrated campaign waits/two exact clock restores/native quits/independent profile/NAR passed; hidden state/RNG not fully compared |
 | `hermes-agent` | NousResearch/hermes-agent 0.21.5 (`f97608f`) | Actual CLI/JSON-RPC/WebSocket backend, pinned binary-assisted Python closure and source-built media; writable user configuration and Guix-only package updates; reproducibility and native/backend smoke passed |
 | `hermes-desktop` | NousResearch/hermes-agent 2026.9.24 (`f97608f`) | Actual desktop app with pinned Electron 40.10.2, rebuilt terminal addon, packaged backend and free-font substitution; reproducible build and sandboxed real desktop acceptance passed without provider/model calls |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
@@ -5129,6 +5285,9 @@ make check-shamogu # final build/repro/lint/TestGame/native+integrated turns0/1/
 make check-revengate # final ownership-fix build/repro/lint/3x1000sim/native+integrated movement/save/restart/resume/clean ExitGame0/noerrors/NAR passed; selected state fields only
 make check-plomrogue # final build/repro/lint/original oracle/native+integrated two exact restores/90vs45reload45 fullsave+RNG/live screenshot/NAR passed
 make check-obumbrata # final build/repro/lint/native+integrated moves/Ssave/two exact persisted-state restores/live screenshot/NAR passed; RNG not serialized
+make check-lambdahack # final build/repro/lint/original suite+benchmark/native+integrated two selected-state restores/continued moves/clean exits/live screenshot/NAR passed
+make check-kimchi # final build/repro/lint/original stress/native+integrated waits/save/restore/continued turn/Hangul/live screenshots/NAR passed
+make check-keeperrl # final build/repro/lint/repaired upstream suite/native+integrated campaign waits/two exact clock restores/native quits/independent profile/live screenshot/NAR passed
 make check-lbforth # installed native arithmetic/control flow/recursion and error recovery from empty private cwd; python3 required, immutable output
 make check-legcord # real native onboarding/settings and Discord logged-out cold-relaunch surface, sandbox and unchanged NAR; no credentials/login/live audio
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
