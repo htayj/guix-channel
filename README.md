@@ -3913,6 +3913,136 @@ and the static Aiwnios `/tmp` fixture requires proper virtual-drive staging.
 The exact #734 contract was retired because it named the wrong upstream module
 and a nonexistent installed `wrogue-smoke`; no fake replacement was added.
 
+## The Smith's Hand, Tetraworld and SpliceHack Rewrite — verified native paths
+
+These three packages implement actual independently playable games from pinned
+source, not synthetic smoke launchers.  All three passed final build,
+reproducibility, offline lint and genuine native/integrated consumer proof;
+Tetraworld also passed 27-module upstream unit tests.  No deployment or
+installation in a user profile is established.
+
+- **The Smith's Hand #553** exports `the-smiths-hand` **2014-03-16** in
+  `(tay packages smiths-hand)`, from canonical
+  `http://www.zincland.com/7drl/smith/smith7drl.zip`, SHA-256
+  `a245e26b305d1ff9ec25bcc87635d4e8000f167e2563b5e269a3ed0c19e2adee`.
+  The real `bin/smith` no-argument SDL GUI and private libtcod 1.5.0 archive
+  are compiled from source; SDL12-compat/PNG/zlib are Guix runtime dependencies.
+  Original game/libtcod/MT19937 BSD-3 terms and public-domain map/terminal font
+  notices are retained.  No platform binary, demo assets or music is installed.
+  Upstream disables `USE_AUDIO`, so inactive SDL_mixer calls do not require a
+  mixer dependency.  Defaults are windowed with music off; original text/maps/
+  font remain store assets.  Writable config and actual `linux/smith.sav` live
+  under `$XDG_DATA_HOME/the-smiths-hand` or
+  `$HOME/.local/share/the-smiths-hand`; the launcher selects the native Linux
+  working directory, not a substitute game.  Upstream has no test target.
+  Main's build/`--check`/offline lint passed for
+  `/gnu/store/i9g31ljams71dkx1d0w3y52cl9vzsmpm-the-smiths-hand-2014-03-16`;
+  `tests/smiths-hand-smoke.sh` passed actual X11 gameplay, `Q` save and a fresh
+  consumed-save reload at `/tmp/smiths-hand-native-parserfix`: genuine wait
+  time 2, orcs 51, whole-save byte equality, exact avatar inventory/topology,
+  unchanged state and output NAR.  Main visually read restored.png's native
+  map and Smith inventory (Hammer, Clothes, Copper knife, Copper ringmail,
+  3 Iron ingots).  This is external isolation/native state, not a proof hook.
+  The retained actual surface is
+  [smiths-hand-native.png](.goocastle/evidence/smiths-hand-native.png).
+  Integrated `make check-smiths-hand` also passed at
+  `/tmp/smiths-hand-native-integrated`.  It honors `GUIX`, accepts
+  an optional realized output, and retains evidence in absolute
+  `SMITHS_HAND_SMOKE_ARTIFACTS`.
+- **Tetraworld #543** exports `tetraworld` **0-unstable-20210406** from
+  `blargdag/tetraworld` commit `14f5ca8265db8be91266922ea1718579d1481d68`, plus
+  independently pinned `adamdruppe/arsd` commit
+  `d5c35392931925ca75fe3a399de6c254b57673b0`, matching the parent's exact
+  mode-160000 gitlink.  LDC/SCons compile both native
+  console and software-rendered graphical backends.  Game/prefab data are
+  embedded; upstream release binaries and upload/SCP utilities are excluded.
+  Parent GPL-2-or-later and arsd Boost 1.0 notices are installed under
+  `share/doc/tetraworld`, including `arsd/LICENSE`, `NOTICE` and complete Boost
+  license.  There are no separately fetched runtime media.  Actual upstream
+  options and `USER.save` remain under `$HOME/.tetraworld`, with no runtime
+  wrapper or special proof flag.  The recipe uses LDC runtime's actual
+  test-only mode for upstream D unit tests.  Final repaired build, `--check`,
+  offline lint and 27-module tests passed for
+  `/gnu/store/vbzx7735m0p1lagnglkw47a8nk4xwamy-tetraworld-0-unstable-20210406`.
+  Dynamic X library names resolve to Guix paths rather than ambient
+  `LD_LIBRARY_PATH`.  Strict native-state equality exposed an upstream
+  restored-agent defect: early `return` in special-agent registration skipped
+  clearing newly pending agents.  Changing that unique return to `continue`
+  preserves new agents and the clear list, without normalizing saved data or
+  relaxing equality.  `tests/tetraworld-smoke.sh` passed at
+  `/tmp/tetraworld-native-restorefix`: four actual console sessions, complete
+  native saves 1=2 and 3=4 byte/hash-equal, player 1056 at `[0 0 0 0]`, turns
+  1/1/2/2, actual `p` turn/`q` exit and consumed saves with `Welcome back`.
+  Main observed the real loaded map screenshot; HUD health 5/5 and air 8/8
+  matched the native record.  Integrated `make check-tetraworld` also passed
+  at `/tmp/tetraworld-native-integrated`; the final helper rerun also passed
+  at `/tmp/tetraworld-native-final`, retaining post-exit `proof/options.native`
+  with actual `options { smoothscrollMsec 0 }` content.
+  The retained real loaded-game surface is
+  [tetraworld-native.png](.goocastle/evidence/tetraworld-native.png).
+  Restored HUD health/air must match native player `mortal.curStats`, not
+  just a screenshot; the actual player glyph is `&`, distinct from portal `@`.
+  A real Xvfb/xterm/ImageMagick loaded-game screenshot is not a fabricated renderer.
+  External user/network/PID isolation and unchanged NAR are required.  The
+  helper honors `GUIX`, accepts one optional realized output, and requires
+  `TETRAWORLD_EVIDENCE_DIR` to be new/empty; receipt/screens/native saves/raw
+  session evidence and actual `options.native` are retained.
+- **SpliceHack Rewrite #524** exports `splicehack-rewrite` **0.8.2-0.0cf23cb**
+  from `RojjaCebolla/SpliceHack-Rewrite` commit
+  `0cf23cb19eedd6b985502b1b8fdc86fd249a8172`.  Its tty-only NetHack 3.7 rewrite
+  embeds separately fixed official Lua **5.4.2**, SHA-256
+  `11570d97e9d7303c0a59567ed1ac7c648340cd0db10d5fd594c09223ef2f524f`;
+  upstream fetch targets are disabled for offline build.  NGPL game/data,
+  Lua MIT and ISAAC64 CC0 notices are retained with actual `nhdat`, `license`,
+  symbols, README, Guidebook, `isaac64.c`, Lua README, `spl-sources.txt` and
+  `spl-changelog.txt`.  No tiles, sounds, PDCurses or optional Windows port is
+  installed.  Immutable store `HACKDIR` is separate from patched
+  `VAR_PLAYGROUND`: saves/bones/scores/locks/logs use
+  `$XDG_DATA_HOME/splicehack-rewrite`, while config HOME uses
+  `$XDG_CONFIG_HOME/splicehack-rewrite` (normal HOME defaults apply).
+  No installed `--guix-smoke` mode exists.  Upstream Lua tests require game
+  bindings, and its pinned libnh renderer callbacks are unfinished rather than
+  a runnable harness; **no upstream suite pass is claimed**.
+  Ten stale bundled symbol rows absent from the actual game vocabulary are
+  removed; unknown-keyword diagnostics remain intact rather than suppressed.
+  The recipe includes 11 missing rewrite dungeon Lua entries in
+  `SPEC_LEVS` rather than relying on generic-maze fallback, installs the actual
+  generated Guidebook, and guards native HOME's 128-byte limit.  Final
+  build/`--check`/offline lint and integrated native acceptance passed at
+  `/gnu/store/15b62h1570mlll5phb6hzqk78gvm17pa-splicehack-rewrite-0.8.2-0.0cf23cb`.
+  Final `make check-splicehack-rewrite` passed at
+  `/tmp/splicehack-rewrite-native-final`: three native games, safe real movement,
+  two strict exact HUD/map/cursor/stats/HP/turn/inventory restores and consumed
+  native saves.  Read-only store, unchanged host state and unchanged NAR
+  `1r9lk8mapz02aifnxg4b5ifpa4gl4dqmys9jjflh9s0cs5zf80x1` passed.  Main
+  visually read the final restored.png map: OmpProof Stripling, HP16/16,
+  Dlvl1, T3, no errors or gameplay clipping.  Native saves/raw evidence and
+  the actual live xterm/Xvfb PNG remain external artifacts; Python/pyte/X11
+  tools are not production inputs.  Namespaces fail closed.  The retained
+  final actual surface is
+  [splicehack-rewrite-native.png](.goocastle/evidence/splicehack-rewrite-native.png).
+  It honors `GUIX`, accepts an optional realized output plus
+  `--output fresh-directory`, or
+  `SPLICEHACK_REWRITE_EVIDENCE_DIRECTORY`.
+
+Commands for the verified paths, run serially with fresh evidence directories:
+
+```sh
+guix lint -L guix --no-network --exclude=cve,refresh,archival the-smiths-hand tetraworld splicehack-rewrite
+smith_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 the-smiths-hand)
+tetra_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 tetraworld)
+splice_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 splicehack-rewrite)
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 --check the-smiths-hand tetraworld splicehack-rewrite
+SMITHS_HAND_SMOKE_ARTIFACTS=/tmp/smiths-hand-native-FRESH GUIX=guix sh tests/smiths-hand-smoke.sh "$smith_out"
+TETRAWORLD_EVIDENCE_DIR=/tmp/tetraworld-native-FRESH GUIX=guix sh tests/tetraworld-smoke.sh "$tetra_out"
+GUIX=guix sh tests/splicehack-rewrite-smoke.sh "$splice_out" --output /tmp/splicehack-rewrite-native-FRESH
+```
+
+Only the exact synthetic production contracts #730 (`--goocastle-smoke`),
+#727/#723 (`--guix-smoke`) were retired.  Genuine external native consumers
+supersede them; no Goocastle executor, installed hook or fake replacement was
+created or executed.
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -4000,6 +4130,9 @@ and a nonexistent installed `wrogue-smoke`; no fake replacement was added.
 | `aiwnios-bytecode` | Aiwnios 0.9.0-0.e155e87 (`e155e87a`) | Full source environment/upstream bytecode with rounded-word overread repaired; final build/repro/lint/native+integrated bootstrap/compiler/typed SDL42/FileWrite passed; native assembly retained |
 | `wrogue` | Warp Rogue 0.8.0 (`675bb5d`) | Recovered source-built SDL game/full immutable data/GPLv3+MT19937 BSD3 notices; build/repro/lint/standalone+integrated GUI create/save/exact Continue/move/second restore passed; HOME saves/settings |
 | `babel7drl` | Jeff Lait/Tower of Babel 2019-03-09 | Source-built game/libtcod/maps/text/Oxygen glyphs/XDG config; build/repro/lint/standalone+integrated native login/help/move/climb feedback/death/reconnect passed; no floor advancement/supported save-resume |
+| `the-smiths-hand` | Jeff Lait/The Smith's Hand 2014-03-16 | Source-built SDL game/private libtcod/BSD3+PD notices; final build/repro/lint/standalone+integrated real wait/Q save/fresh exact load/inventory-topology/NAR passed; XDG native save |
+| `tetraworld` | blargdag/tetraworld (`14f5ca8`) + arsd (`d5c3539`) | Source-built GPL2+ D/Boost notices/embedded data; restored-agent fix final build/repro/lint/27tests/standalone+integrated four sessions byte-exact saves/HUD/turn1→2 passed; HOME autosaves |
+| `splicehack-rewrite` | RojjaCebolla/SpliceHack-Rewrite (`0cf23cb`) + Lua 5.4.2 | Source-built NGPL tty/data/MIT Lua/CC0 notices/XDG state; complete11dungeon Lua/archive/Guidebook/HOME-limit final build/repro/lint/native+integrated3games/two exact restores/save consumption/NAR passed |
 | `hermes-agent` | NousResearch/hermes-agent 0.21.5 (`f97608f`) | Actual CLI/JSON-RPC/WebSocket backend, pinned binary-assisted Python closure and source-built media; writable user configuration and Guix-only package updates; reproducibility and native/backend smoke passed |
 | `hermes-desktop` | NousResearch/hermes-agent 2026.9.24 (`f97608f`) | Actual desktop app with pinned Electron 40.10.2, rebuilt terminal addon, packaged backend and free-font substitution; reproducible build and sandboxed real desktop acceptance passed without provider/model calls |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
@@ -4726,6 +4859,9 @@ make check-aiwnios # final build/repro/lint/native+integrated repeated bootstrap
 make check-aiwnios-bytecode # final build/repro/lint/native+integrated same genuine repeated bootstrap/HolyC/typed SDL42/FileWrite/NAR passed
 make check-wrogue # final build/repro/lint/standalone+integrated native create/save/exact Continue/move/second restore/NAR passed
 make check-babel7drl # final build/repro/lint/standalone+integrated native login/help/move/climb feedback/death/reconnect/NAR passed; no floor advancement/save-resume
+make check-smiths-hand # final build/repro/lint/standalone+integrated real wait/Q save/fresh byte-identical restore/inventory-topology/NAR passed
+make check-tetraworld # final build/repro/lint/27tests/standalone+integrated4sessions entire save1=2/3=4 exact/turn1→2/HUD/live screenshot passed
+make check-splicehack-rewrite # final full11dungeon archive/Guidebook build/repro/lint/native+integrated3games/two exact restores/live screenshot/NAR passed
 make check-lbforth # installed native arithmetic/control flow/recursion and error recovery from empty private cwd; python3 required, immutable output
 make check-legcord # real native onboarding/settings and Discord logged-out cold-relaunch surface, sandbox and unchanged NAR; no credentials/login/live audio
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke

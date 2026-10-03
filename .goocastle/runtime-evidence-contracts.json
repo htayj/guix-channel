@@ -1052,22 +1052,6 @@
       }
     },
     {
-      "issueNumber": 723,
-      "packageName": "splicehack-rewrite",
-      "packageModulePath": "guix/tay/packages/splicehack-rewrite.scm",
-      "artifactPath": ".goocastle/evidence/issue-723.png",
-      "runtime": {
-        "executable": "splicehack-rewrite",
-        "invocation": {
-          "file": "splicehack-rewrite",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "splicehack-rewrite guix smoke passed"
-      }
-    },
-    {
       "issueNumber": 724,
       "packageName": "stoat-soup",
       "packageModulePath": "guix/tay/packages/stoat-soup.scm",
@@ -1116,22 +1100,6 @@
       }
     },
     {
-      "issueNumber": 727,
-      "packageName": "tetraworld",
-      "packageModulePath": "guix/tay/packages/tetraworld.scm",
-      "artifactPath": ".goocastle/evidence/issue-727.png",
-      "runtime": {
-        "executable": "tetraworld",
-        "invocation": {
-          "file": "tetraworld",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "TETRAWORLD_GUIX_SMOKE_OK"
-      }
-    },
-    {
       "issueNumber": 728,
       "packageName": "rouge",
       "packageModulePath": "guix/tay/packages/rouge.scm",
@@ -1159,22 +1127,6 @@
           ]
         },
         "successMarker": "SEWERS_SMOKE_OK"
-      }
-    },
-    {
-      "issueNumber": 730,
-      "packageName": "the-smiths-hand",
-      "packageModulePath": "guix/tay/packages/smiths-hand.scm",
-      "artifactPath": ".goocastle/evidence/issue-730.png",
-      "runtime": {
-        "executable": "smith",
-        "invocation": {
-          "file": "smith",
-          "args": [
-            "--goocastle-smoke"
-          ]
-        },
-        "successMarker": "The Smith's Hand smoke ready"
       }
     },
     {
