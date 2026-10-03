@@ -52,7 +52,8 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	caelestia-shell caelestia-cli caelestia-panes quickshell-for-caelestia libcava m3shapes \
 	dart-sass gpu-screen-recorder font-rubik font-material-symbols-rounded \
 	hermes-agent hermes-desktop lbforth legcord \
-	font-nerd-caskaydia-cove
+	font-nerd-caskaydia-cove \
+	aiwnios aiwnios-bytecode wrogue babel7drl
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -98,7 +99,8 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-robotfindskitten \
 	check-fontra build-fontra \
 	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-kraken check-gened check-soundthread check-cotd check-emacs-application-framework check-eca \
-	check-pi-coding-agent check-squad check-oh-my-opencode-slim check-oh-my-opencode-slim-companion build build-sources
+	check-pi-coding-agent check-squad check-oh-my-opencode-slim check-oh-my-opencode-slim-companion build build-sources \
+	check-aiwnios check-aiwnios-bytecode check-wrogue check-babel7drl
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -600,6 +602,19 @@ check-oh-my-opencode-slim-companion:
 	GUIX="$(GUIX)" sh tests/oh-my-opencode-slim-companion.sh
 
 
+.PHONY: check-aiwnios check-aiwnios-bytecode check-wrogue check-babel7drl
+check-aiwnios:
+	GUIX="$(GUIX)" sh tests/aiwnios-smoke.sh
+
+check-aiwnios-bytecode:
+	GUIX="$(GUIX)" sh tests/aiwnios-smoke.sh "$$($(GUIX) build -L guix --no-grafts aiwnios-bytecode)"
+
+check-wrogue:
+	GUIX="$(GUIX)" sh tests/wrogue-smoke.sh
+
+check-babel7drl:
+	GUIX="$(GUIX)" sh tests/babel7drl-smoke.sh
+
 check-trebuchet:
 	GUIX="$(GUIX)" tests/trebuchet-smoke.sh
 
@@ -632,7 +647,8 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
 	check-tinyfugue check-weidu check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-klh10 check-suppty check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-bell-labs-rogue7 check-astx check-acehack check-avanor check-bootrogue check-wanderers check-hack check-emacs-org-popup-posframe \
-	check-emacs-forth-mode check-emacs-aidermacs check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-aquarium-arena check-atlas-warriors check-bcrawl check-chessrogue check-corerl check-cutlassrl check-dhack check-cryptrover check-dnethack check-dragonslayer check-grippy-socks check-hunger-games check-gruesome check-hydra-slayer check-martins-dungeon-bash check-nlarn check-robotfindskitten check-fontra
+	check-emacs-forth-mode check-emacs-aidermacs check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-aquarium-arena check-atlas-warriors check-bcrawl check-chessrogue check-corerl check-cutlassrl check-dhack check-cryptrover check-dnethack check-dragonslayer check-grippy-socks check-hunger-games check-gruesome check-hydra-slayer check-martins-dungeon-bash check-nlarn check-robotfindskitten check-fontra \
+	check-aiwnios check-aiwnios-bytecode check-wrogue check-babel7drl
 	$(GUIX) build -L guix --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L guix --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)

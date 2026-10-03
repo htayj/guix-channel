@@ -1,0 +1,43 @@
+Tower of Babel, original 7DRL release (2019-03-09)
+================================================
+Canonical source: http://www.zincland.com/7drl/babel/babel7drl.zip
+SHA-256: ce482e9f9b04efbff95e395a745366cc962ca71536d5bc5d9bd23f6b049424e1
+
+Game C++ source, generated enums, configuration and .txt data/documentation:
+Copyright 2019 Jeff Lait, BSD-3-Clause.  The embedded mt19937ar.c is
+copyright 1997-2002 Makoto Matsumoto and Takuji Nishimura under its
+three-clause BSD terms.  LICENSE.TXT preserves both complete notices.
+
+rooms/village.map is explicitly declared public domain in LICENSE.TXT.
+names.txt contains common animal names extracted from the Warren and
+Genevieve Garst Photographic Collection and a manually curated list of
+mythological animal names from Wikipedia.  This is the upstream .txt word
+list covered by the game's BSD grant; no photos or encyclopedia articles
+are included.  Its source acknowledgements remain in LICENSE.TXT.
+
+linux/terminal.png is the game's Oxygen Mono glyph image (it has a BMP
+header despite its suffix).  Oxygen Mono is copyright 2012 Vernon Adams,
+with Reserved Font Name Oxygen, under SIL Open Font License 1.1.  The
+complete notice is installed as OFL.txt.  No libtcod demo fonts are shipped.
+
+libtcod 1.5.0 is rebuilt from source in the same archive and privately
+linked into the game.  Copyright 2008,2009,2010 Jice, BSD-3-Clause;
+see LIBTCOD-LICENSE.txt and LIBTCOD-CREDITS.txt.  No upstream executable or
+shared library is reused.
+
+The game links dynamically to Guix's SDL 1.2 compatibility library and its
+SDL2 backend (zlib license), libpng (libpng license) and zlib (zlib license).
+Their sources and notices are supplied by the respective Guix packages.
+The historical LGPL SDL notice in LICENSE.TXT and README-SDL.txt describes
+the discarded upstream SDL binaries, not the Guix replacement libraries.
+
+Audio is disabled in released main.cpp (USE_AUDIO is commented out).
+The user-selected music directory, SDL_mixer, Windows DLLs and executables,
+prebuilt Linux executables, bundled shared libraries, demo programs and
+their data assets, and packaging/UPX tools are not installed.
+
+The upstream shutdown save and world-definition persistence code is
+compiled out.  The writable save directory preserves the expected layout
+but does not imply that this release supports resuming games.  Its terminal
+and servers are fictional local game UI, not network services.  No runtime
+download or updater is installed.

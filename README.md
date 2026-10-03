@@ -3777,6 +3777,142 @@ default`) and #741 (`--list-models`) remain because their invocations are valid.
 Their markers/metadata alone do not establish the richer current acceptance.
 No synthetic production contract was invented or retired for this batch.
 
+## Aiwnios, Warp Rogue and Tower of Babel — verified native paths
+
+These are source-built native compiler/game deliverables, not installed proof
+hooks.  All four final outputs passed build, `--check` reproducibility, offline
+lint without package diagnostics and genuine native/integrated acceptance.
+Implementation and historical launch markers alone are not that proof; no
+profile installation or deployed host change is established.
+
+- **Aiwnios #86** exports `aiwnios` and `aiwnios-bytecode` version
+  **0.9.0-0.e155e87** from canonical `aiwnios/Aiwnios` revision
+  `e155e87a4a4ddae4cd7f25685d9db8869fd45a40`.  CMake builds the actual host
+  compiler, then its compiler generates HCRT in a private writable boot drive.
+  The output retains DolDoc desktop/editor/help/apps/demo resources with their
+  original paths, and BSD-3/MIT/BSD-2/Tcl notices for Aiwnios, isocline and
+  argtable3.  `aiwnios-bytecode` uses upstream `USE_BYTECODE=ON` instead of
+  machine-code HolyC compilation; it is the same full host environment, not an
+  independent bootable kernel, ISO or Emscripten/WebAssembly deliverable.
+  The recipe zero-initializes AOT allocations and extends the patch-table tail
+  clearing from 16 to 31 bytes, removing 15 uninitialized heap bytes from the
+  generated binary.  Debug-map allocation also uses `CAlloc`, giving missing
+  bytecode instruction lines deterministic zero values.  HolyC AOT copies
+  rounded 64-bit words, but upstream bytecode allocation reserved only logical
+  length; the source fix zero-allocates `(len+7)&~7` bytes without changing
+  reported logical size or relaxing repeated-bootstrap equality assertions.
+  Final build/`--check`/lint/native/integrated acceptance passed for
+  `/gnu/store/dsikyxzszrd7sk2w252rl5na1xi3mzqm-aiwnios-0.9.0-0.e155e87` and
+  `/gnu/store/apzj0v2zhf6fdiypxfzda02sxha8mxy5-aiwnios-bytecode-0.9.0-0.e155e87`.
+  Explicit `HOME` is respected, while
+  `-t` still selects an explicit writable boot drive.  Resources in
+  `share/aiwnios` are an immutable template, not writable runtime state.
+  `-c` consumes HolyC file paths through that drive's virtual filesystem;
+  arbitrary host `/tmp` paths are not implicitly staged into it.
+  Untrusted HolyC has the user's host authority: the application is not a
+  sandbox.  Main attempted serial no-graft cross builds for
+  `aarch64-linux-gnu` and `riscv64-linux-gnu`; both stopped before compiler build
+  at `gnu/packages/python-build.scm:678:2`: `python-setuptools@80.9.0` uses a
+  pyproject build system without cross-build support.  Thus neither target
+  build nor runtime is verified.  The package's later HCRT bootstrap also
+  executes the target compiler, so cross support is not established by the
+  retained native aarch64/riscv64 assembly paths.
+  `tests/aiwnios-smoke.sh` passed both final backends at
+  `/tmp/aiwnios-native-final` and `/tmp/aiwnios-bytecode-final`: actual HolyC
+  arithmetic (42), loop (55), branch (-7/3/42), recursion (720), exact exit
+  status 23 and repeated bootstrap equal HCRT binary digests.  Both SDL
+  desktop consumers typed a real function/loop computing 42 and called native
+  `FileWrite` for `/GUI_RESULT.TXT`; Main visually read both final computation
+  PNGs with no errors.  Panels overlap/slightly clip at the edge, but result
+  42 remains legible.  Clean exit status 0 and unchanged output NAR passed.
+  Before/computation screenshots and result/NAR logs are retained.
+  It accepts no arguments or one realized package output, honors `GUIX`, and
+  retains evidence under `AIWNIOS_SMOKE_ARTIFACTS`.
+- **Warp Rogue #583** exports `wrogue` **0.8.0** from recovered original source
+  `anthonycicc/warp_rogue` revision
+  `675bb5db48434469582367c420b907b129bd6543`, not the later Mac-only SDL2 port.
+  Its actual C game is built from source with the channel's SDL 1.2 compatibility
+  backend.  The complete original scenario, scripts, bitmap font, graphics,
+  help and credits remain immutable in `share/wrogue/data`; the launcher sets
+  the resource working directory, and upstream writes saves/settings only to
+  `$HOME/.wrogue`.  Root GPLv3 terms cover code/media; the separate bundled
+  MT19937 BSD-3 notice is retained as `share/doc/wrogue/third-party/tt.c`.
+  [LibreGameWiki](https://libregamewiki.org/Warp_Rogue), retrieved 2026-10-03,
+  identifies this recovery of the 0.8.0 source and GPL code/media, not a live
+  original maintainer.  No separately fetched assets/submodules are used.
+  Main's build and `--check` reproducibility passed for
+  `/gnu/store/laqal2zgj44r4h216ig9nwvjbvsbzrsj-wrogue-0.8.0`; offline lint
+  reported no package diagnostics.  Standalone/integrated native acceptance passed.  No platform
+  prebuilt or synthetic `wrogue-smoke` executable is installed.  Upstream is
+  defunct and provides no automated test target.
+  `tests/wrogue-smoke.sh` passed actual GUI character creation, save,
+  fresh-process Continue restoration, movement and repeated save/load at
+  `/tmp/wrogue-proof-headerfix`: player `NativeConsumer`, Hive Cruor world
+  `(7,6,34)`/local `(30,104)` restored exactly; key `6` moved to `(30,105)`,
+  and a second save/restore preserved that location.  The native named-gameplay
+  screenshot was visually inspected; clean exit status 0 and unchanged NAR passed.
+  It decodes the game's bitmap font and asserts actual native C-record player
+  identity, world and location, with before/after output NAR and stage PNGs/
+  `evidence.json`.  Fresh HOME/XDG/private tmp/network/PID isolation is external;
+  no installed proof hook or fake OCR replaces the game.  The integrated
+  `make check-wrogue` passed at `/tmp/wrogue-native-integrated`.
+  It takes no arguments, honors `GUIX`,
+  accepts `WROGUE_OUTPUT` as a realized game override and
+  `WROGUE_EVIDENCE_DIR` for retained screenshots/JSON.  Its disposable HOME/XDG
+  setup does not change upstream's HOME-based state convention.
+- **Tower of Babel #561** exports `babel7drl` **2019-03-09** from Jeff Lait's
+  fixed `http://www.zincland.com/7drl/babel/babel7drl.zip` source release,
+  SHA-256 `ce482e9f9b04efbff95e395a745366cc962ca71536d5bc5d9bd23f6b049424e1`.
+  Both game and private libtcod 1.5 C/C++ archive are built from source; Python 2
+  runs only the build-time enum generator.  Bundled platform executables/shared
+  libraries, demos and music are not installed.  SDL12-compat is the current
+  backend, not an assertion that historical bundled SDL libraries are used.
+  Game/libtcod/MT19937 BSD-3 notices, public-domain map terms, names/text source
+  acknowledgements and Oxygen Mono SIL OFL 1.1 are retained.  The launcher uses
+  `$XDG_DATA_HOME/babel7drl` or `$HOME/.local/share/babel7drl` for writable config
+  and runtime layout; maps/names/text/font remain immutable links.
+  The released source disables the normal shutdown save producer and definition
+  persistence.  Loader code exists, but **no supported save/resume claim applies**.
+  Its fictional terminal/servers are local UI, not remote services.  Upstream
+  provides no automated test target.
+  Main's build, `--check` reproducibility and offline lint passed without
+  package diagnostics.  `tests/babel7drl-smoke.sh` passed at
+  `/tmp/babel7drl-native-healthfix`: default native login/help, real key `l`
+  movement delta `[1,0]`, actual action reducing health from 50 to 2, then
+  native death/reconnect to `Restarted` at depth 1.  Supported caller
+  `easymode=true` provides deterministic controls, not a replacement game.
+  Main visually verified the restart-initial PNG; clean exit, state and
+  unchanged NAR passed.  Climb-attempt feedback is covered, but floor
+  descent/advancement, combat and boss victory are not exercised.
+  Restart verifies new-game UI, not save persistence.
+  The helper requires actual user/mount/net/PID isolation, Xvfb and a
+  before/after immutable NAR match, not a terminal mock.
+  It takes no arguments and honors `GUIX`; `BABEL7DRL_NATIVE_STORE` skips game
+  realization, and absolute `BABEL7DRL_NATIVE_OUTPUT` retains screenshots/logs/
+  decoded surfaces/proof JSON.  Integrated `make check-babel7drl` also passed
+  at `/tmp/babel7drl-native-integrated`.
+
+Commands for the verified paths, run serially with fresh evidence directories:
+
+```sh
+guix lint -L guix --no-network --exclude=cve,refresh,archival aiwnios aiwnios-bytecode wrogue babel7drl
+aiwnios_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 aiwnios)
+aiwnios_bytecode_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 aiwnios-bytecode)
+wrogue_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 wrogue)
+babel_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 babel7drl)
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 --check aiwnios aiwnios-bytecode wrogue babel7drl
+AIWNIOS_SMOKE_ARTIFACTS=/tmp/aiwnios-native-FRESH GUIX=guix sh tests/aiwnios-smoke.sh "$aiwnios_out"
+AIWNIOS_SMOKE_ARTIFACTS=/tmp/aiwnios-bytecode-native-FRESH GUIX=guix sh tests/aiwnios-smoke.sh "$aiwnios_bytecode_out"
+WROGUE_EVIDENCE_DIR=/tmp/wrogue-native-FRESH WROGUE_OUTPUT="$wrogue_out" GUIX=guix sh tests/wrogue-smoke.sh
+BABEL7DRL_NATIVE_OUTPUT=/tmp/babel-native-FRESH BABEL7DRL_NATIVE_STORE="$babel_out" GUIX=guix sh tests/babel7drl-smoke.sh
+```
+
+Historical #731 native no-argument launch and #738 ordinary `-c` invocation
+remain; their title/fixture markers do not prove current gameplay/desktop proof,
+and the static Aiwnios `/tmp` fixture requires proper virtual-drive staging.
+The exact #734 contract was retired because it named the wrong upstream module
+and a nonexistent installed `wrogue-smoke`; no fake replacement was added.
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -3860,6 +3996,10 @@ No synthetic production contract was invented or retired for this batch.
 | `squad` | bradygaster/squad 0.13.0 (`92ff24ef`) | Source-built SDK/CLI/native PTY/Koffi plus SQL/Yoga WASM/notices; final build/repro/lint/standalone+integrated init/copy-mode/routing/casting/SQLite/PTY/FFI passed, proprietary Copilot excluded |
 | `oh-my-opencode-slim` | alvinunreal/oh-my-opencode-slim 2.2.13 (`6faaed2`) | MIT source plugin/dependency+Bun notices/store companion; final build/repro/lint/standalone+integrated actual OpenCode agents/tools/skills/default+project override/idle state passed; zero prompts, no model claim |
 | `oh-my-opencode-slim-companion` | Slim companion 0.1.3 (build `5a4a81a`, tag `04cdef5`) | Official prebuilt x86_64/aarch64 GUI/source provenance; final build/repro/lint/standalone+integrated local-state GUI passed; simulated busy fixture not plugin/model work, no audited Rust closure claim |
+| `aiwnios` | aiwnios/Aiwnios 0.9.0-0.e155e87 (`e155e87a`) | Source-built HolyC compiler/HCRT/DolDoc resources/notices; final build/repro/lint/native+integrated repeated bootstrap/compiler/status23/typed SDL42/FileWrite/NAR passed; no sandbox/kernel/cross-build claim |
+| `aiwnios-bytecode` | Aiwnios 0.9.0-0.e155e87 (`e155e87a`) | Full source environment/upstream bytecode with rounded-word overread repaired; final build/repro/lint/native+integrated bootstrap/compiler/typed SDL42/FileWrite passed; native assembly retained |
+| `wrogue` | Warp Rogue 0.8.0 (`675bb5d`) | Recovered source-built SDL game/full immutable data/GPLv3+MT19937 BSD3 notices; build/repro/lint/standalone+integrated GUI create/save/exact Continue/move/second restore passed; HOME saves/settings |
+| `babel7drl` | Jeff Lait/Tower of Babel 2019-03-09 | Source-built game/libtcod/maps/text/Oxygen glyphs/XDG config; build/repro/lint/standalone+integrated native login/help/move/climb feedback/death/reconnect passed; no floor advancement/supported save-resume |
 | `hermes-agent` | NousResearch/hermes-agent 0.21.5 (`f97608f`) | Actual CLI/JSON-RPC/WebSocket backend, pinned binary-assisted Python closure and source-built media; writable user configuration and Guix-only package updates; reproducibility and native/backend smoke passed |
 | `hermes-desktop` | NousResearch/hermes-agent 2026.9.24 (`f97608f`) | Actual desktop app with pinned Electron 40.10.2, rebuilt terminal addon, packaged backend and free-font substitution; reproducible build and sandboxed real desktop acceptance passed without provider/model calls |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
@@ -4582,6 +4722,10 @@ make check-pi-coding-agent # final build/repro/lint/exact ungrafted+integrated o
 make check-squad # final build/repro/lint/standalone+integrated native init/copy-mode/routing/casting/SQLite/PTY/FFI passed; no Copilot
 make check-oh-my-opencode-slim # final build/repro/lint/standalone+integrated actual OpenCode agents/tools/skills/default+project override/idle state passed; zero prompts
 make check-oh-my-opencode-slim-companion # final build/repro/lint/standalone+integrated actual GUI passed; separate local busy fixture, no provider
+make check-aiwnios # final build/repro/lint/native+integrated repeated bootstrap/HolyC42,55,branches,720/status23/typed SDL42/FileWrite/NAR passed
+make check-aiwnios-bytecode # final build/repro/lint/native+integrated same genuine repeated bootstrap/HolyC/typed SDL42/FileWrite/NAR passed
+make check-wrogue # final build/repro/lint/standalone+integrated native create/save/exact Continue/move/second restore/NAR passed
+make check-babel7drl # final build/repro/lint/standalone+integrated native login/help/move/climb feedback/death/reconnect/NAR passed; no floor advancement/save-resume
 make check-lbforth # installed native arithmetic/control flow/recursion and error recovery from empty private cwd; python3 required, immutable output
 make check-legcord # real native onboarding/settings and Discord logged-out cold-relaunch surface, sandbox and unchanged NAR; no credentials/login/live audio
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
