@@ -888,38 +888,6 @@
       }
     },
     {
-      "issueNumber": 711,
-      "packageName": "obumbrata",
-      "packageModulePath": "guix/tay/packages/obumbrata.scm",
-      "artifactPath": ".goocastle/evidence/issue-711.png",
-      "runtime": {
-        "executable": "obumbrata",
-        "invocation": {
-          "file": "obumbrata",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "OBUMBRATA_RUNTIME_OK"
-      }
-    },
-    {
-      "issueNumber": 712,
-      "packageName": "plomrogue",
-      "packageModulePath": "guix/tay/packages/plomrogue.scm",
-      "artifactPath": ".goocastle/evidence/issue-712.png",
-      "runtime": {
-        "executable": "plomrogue",
-        "invocation": {
-          "file": "plomrogue",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "PL0MROGUE_SMOKE_OK"
-      }
-    },
-    {
       "issueNumber": 713,
       "packageName": "pyro",
       "packageModulePath": "guix/tay/packages/pyro.scm",

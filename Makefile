@@ -54,7 +54,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	hermes-agent hermes-desktop lbforth legcord \
 	font-nerd-caskaydia-cove \
 	aiwnios aiwnios-bytecode wrogue babel7drl \
-	the-smiths-hand tetraworld splicehack-rewrite space-privateers slashem shamogu
+	the-smiths-hand tetraworld splicehack-rewrite space-privateers slashem shamogu revengate plomrogue obumbrata
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -103,7 +103,8 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-pi-coding-agent check-squad check-oh-my-opencode-slim check-oh-my-opencode-slim-companion build build-sources \
 	check-aiwnios check-aiwnios-bytecode check-wrogue check-babel7drl \
 	check-smiths-hand check-tetraworld check-splicehack-rewrite \
-	check-space-privateers check-slashem check-shamogu
+	check-space-privateers check-slashem check-shamogu \
+	check-revengate check-plomrogue check-obumbrata
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -653,7 +654,8 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-emacs-forth-mode check-emacs-aidermacs check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-aquarium-arena check-atlas-warriors check-bcrawl check-chessrogue check-corerl check-cutlassrl check-dhack check-cryptrover check-dnethack check-dragonslayer check-grippy-socks check-hunger-games check-gruesome check-hydra-slayer check-martins-dungeon-bash check-nlarn check-robotfindskitten check-fontra \
 	check-aiwnios check-aiwnios-bytecode check-wrogue check-babel7drl \
 	check-smiths-hand check-tetraworld check-splicehack-rewrite \
-	check-space-privateers check-slashem check-shamogu
+	check-space-privateers check-slashem check-shamogu \
+	check-revengate check-plomrogue check-obumbrata
 	$(GUIX) build -L guix --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L guix --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
@@ -694,3 +696,16 @@ check-slashem:
 .PHONY: check-shamogu
 check-shamogu:
 	GUIX="$(GUIX)" sh tests/shamogu-smoke.sh
+
+
+.PHONY: check-revengate
+check-revengate:
+	GUIX="$(GUIX)" sh tests/revengate-smoke.sh
+
+.PHONY: check-plomrogue
+check-plomrogue:
+	GUIX="$(GUIX)" sh tests/plomrogue-smoke.sh
+
+.PHONY: check-obumbrata
+check-obumbrata:
+	GUIX="$(GUIX)" sh tests/obumbrata-smoke.sh

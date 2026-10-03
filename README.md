@@ -4181,6 +4181,123 @@ GUIX=guix sh tests/slashem-smoke.sh "$slashem_out" --output /tmp/slashem-native-
 SHAMOGU_EVIDENCE_DIR=/tmp/shamogu-native-FRESH GUIX=guix sh tests/shamogu-smoke.sh "$shamogu_out"
 ```
 
+## Revengate, Please the Island God and Obumbrata — verified native paths
+
+These recipes install actual source-built games, not synthetic smoke modes.
+All three passed final build/reproducibility/offline lint and genuine native/
+integrated acceptance.  Plomrogue passed its unchanged original oracle and exact
+continuation; Revengate passed the real combat simulations and clean native
+lifecycle.  No deployed host/profile change is established.
+
+- **Revengate #486** exports `revengate` **0.13.0** in `(tay packages revengate)`,
+  official GitLab `ygingras/revengate` stable pin
+  `21b0cb49a84a1fada7e171064b68f1183818c32c`, recursive source hash
+  `0yqjav3ihbqhva1zf5qw16577khhys8b927v0bbysm8zqskn7cj7`.
+  Guix Godot 4.6 imports the project with the actual editor translation-parser
+  4.3-to-4.6 API adaptation.  Initial import avoids a theme referencing fonts
+  not yet imported, then restores the theme for validated normal import.
+  Import and actual combat-scene checks reject `ERROR`/`SCRIPT ERROR` even when
+  Godot exits 0; editor updater/plugin output is disabled.  The launcher uses
+  immutable `share/revengate` via ordinary
+  `--path` and forwards native Godot arguments.  Native `user://` state uses
+  `XDG_DATA_HOME/Revengate`, saves under `saves/current`.  Full source, CREDITS,
+  COPYING and vendor/legal docs retain GPL-3+ code/fonts, Expat, CC0/public
+  domain, CC-BY-3/4 and artists' CC-BY/CC-BY-SA grants with unspecified versions
+  where upstream does not specify them; no invented CC version is assigned.
+  `docs/legal` contains verbatim artist email grants, not CC legalcode texts.
+  Symbola's actual free-use/modification/redistribution grant is retained.
+  `tests/revengate-smoke.sh [absolute-output]` honors `GUIX` and absolute
+  `REVENGATE_SMOKE_ARTIFACTS`; its external X11 consumer requires actual game
+  play, save and restart/resume with live screenshots.  The legitimate upstream
+  `combat_sim.tscn` remains historical scene data, not full native proof.
+  `revengate-node-ownership.patch` attaches the default deck builder and Main's
+  limbo to their owning tree, frees detached HUD buttons and frees highlight
+  template nodes after `PackedScene.pack` while retaining rendered TileMap
+  instances/resources.  These actual ownership fixes remove the 21 leaked
+  Area2D and 11 orphan highlight templates; no error gate is weakened or hidden.
+  Main's final build/import/reproducibility/offline lint passed at
+  `/gnu/store/97fsb3r50jlhj7np21h9rr7zqlccka2d-revengate-0.13.0`, including
+  the actual three 1000-game upstream combat simulations.  Final integrated
+  native proof passed at `/tmp/revengate-native-final-owned`: ordinary NewGame,
+  real movement/save/process restart/Resume/continued movement, both native
+  ExitGame processes exiting 0, no engine errors/leaks, and unchanged NAR
+  `0aryx5n60jsk2ccakjlq5a2n775c05n94njf93ncz5zwkmhimmnr`.
+  Restore proof compares saved queue turn, active/start board IDs, terrain and
+  Hero position; returning to the menu completes the interrupted native turn.
+  It does **not** establish full RNG/all-hidden-state equality.  Main visually
+  read the actual map with Health50 and no errors; original debug buttons were
+  visible but not used.  The final retained surface is
+  [revengate-native.png](.goocastle/evidence/revengate-native.png).
+- **Please the Island God #471** exports `plomrogue` **0-1.20170821** in
+  `(tay packages plomrogue)`, canonical `plomlompom/plomrogue` PtIG tag pin
+  `32c8b0d55c091b10ba683621d7881ef57ce8a88a`, recursive source hash
+  `0inw5ddi33gb4pm26bygnnjd22xbbjjpv291l957xjl6hxdr7aw5`.
+  GPL-3+ source/data and NOTICE/GPLv3 accompany the C11 source-built engine
+  library and original Python client/server.  The launcher forwards native
+  arguments, symlinks immutable resources into writable
+  `${XDG_STATE_HOME:-$HOME/.local/state}/plomrogue`; native saves, record, log
+  and `server_run` stay local.  `tests/plomrogue-smoke.sh [output]` honors
+  `GUIX` and new/empty `PLOMROGUE_EVIDENCE_DIR`, requiring real ordinary client/
+  server turns, native saves/exact restarts, live screenshot and offline/NAR
+  isolation.  Main reproduced implicit mutable Thing-iteration order causing
+  both the original oracle mismatch and native uninterrupted90 versus
+  45/native QUIT-save/restart/45 serialized-state/RNG divergence.  Canonical
+  sorted Thing-ID iteration across simulation/same-cell/memory/metamap now
+  matches native save serialization while retaining the turn-start snapshot.
+  Main's final build/reproducibility/offline lint passed at
+  `/gnu/store/qmcl142galgpc1sznh49fr0glqhx5218-plomrogue-0-1.20170821`,
+  including byte-exact `cmp` against the original immutable `testing/ref_end`.
+  The strict oracle remains unchanged: no fixture regeneration, stale-fixture
+  waiver or behavior reversion.  Final `make check-plomrogue` passed at
+  `/tmp/plomrogue-native-final`: original oracle and uninterrupted90 versus
+  45/native-save/reload/45 full save/RNG matched exactly, together with two
+  exact full-save/UI restores after real movement and later wait.  Main
+  visually read the actual map at T4, H30, inventory none, without errors.
+  The final surface is [plomrogue-native.png](.goocastle/evidence/plomrogue-native.png).
+- **Obumbrata et Velata #463** exports `obumbrata` **1.0.0** in
+  `(tay packages obumbrata)`, official HTTP `obumbrata_1.0.0.tar.gz`, SHA-256
+  `253d6250d2378fe91f15ea92ef9c9ad5c7f967bada7778ee8955bb2c8eacac47`, stable
+  tag `c2f5361f63deeed1c7415f742dfa83f90d0ce699`, not the unreleased bugfix tip.
+  Native ncurses/panelw/libxdg and Perl-generated project data retain BSD-2
+  COPYING/notes/manual, with no separate font/tile/audio assets.  Build repairs
+  add a missing flag separator/owning standard headers and use real Guix wide
+  curses headers; control-character classification rejects negative/special
+  curses keys outside ASCII.  No game prompt behavior patch is introduced.
+  Native S/name/D saving returns to the menu; R loads and unlinks the successful
+  save at `${XDG_DATA_HOME:-$HOME/.local/share}/com.blackswordsonics/obumbrata/obumbrata.sav`.
+  Configuration directories follow XDG but upstream implements no configuration
+  content.  Native `@` dumps to cwd, so the consumer isolates cwd too.  The
+  TERMINFO-only launcher executes the ordinary game, not a proof dispatcher.
+  `tests/obumbrata-smoke.sh [output] [--output fresh-directory]` honors `GUIX`
+  and `OBUMBRATA_EVIDENCE_DIRECTORY`; the screen-driven consumer requires actual
+  moves, native saving, two exact restores/live screenshots and unchanged NAR.
+  Persisted native bytes/state and live screens are compared, but upstream does
+  not serialize RNG: no complete runtime RNG continuity is claimed.
+  Main's final build/reproducibility/offline lint passed at
+  `/gnu/store/dijgr9ia31x7279ry1n1kdz0qyy3wqkq-obumbrata-1.0.0`.
+  Final `make check-obumbrata` passed at `/tmp/obumbrata-native-final` with
+  two exact native restores and unchanged NAR.  Main's retained actual
+  restored surface shows OmpProof, HP20/20, Food1998, Depth1, Exp1/0 and
+  “Game successfully restored”, without errors:
+  [obumbrata-native.png](.goocastle/evidence/obumbrata-native.png).
+
+Only exact installed custom `--smoke` contracts #712/#711 were retired.
+Legitimate #716 upstream headless combat-scene invocation remains historical;
+no Goocastle executor or fake replacement is run.
+
+Serial commands for the verified paths (fresh evidence directories):
+
+```sh
+guix lint -L guix --no-network --exclude=cve,refresh,archival revengate plomrogue obumbrata
+revengate_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 revengate)
+plomrogue_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 plomrogue)
+obumbrata_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 obumbrata)
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 --check revengate plomrogue obumbrata
+REVENGATE_SMOKE_ARTIFACTS=/tmp/revengate-native-FRESH GUIX=guix sh tests/revengate-smoke.sh "$revengate_out"
+PLOMROGUE_EVIDENCE_DIR=/tmp/plomrogue-native-FRESH GUIX=guix sh tests/plomrogue-smoke.sh "$plomrogue_out"
+GUIX=guix sh tests/obumbrata-smoke.sh "$obumbrata_out" --output /tmp/obumbrata-native-FRESH
+```
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -4274,6 +4391,9 @@ SHAMOGU_EVIDENCE_DIR=/tmp/shamogu-native-FRESH GUIX=guix sh tests/shamogu-smoke.
 | `space-privateers` | Hackage SpacePrivateers 0.1.0.0 + LambdaHack 0.2.14 | Source-built BSD-3 Haskell/Vty game/private pinned closure/full notices/native HOME campaigns; final build/repro/lint/engine1of1/native+integrated real wait/moves/two exact visible-state restores/NAR passed; hidden state not fully decoded |
 | `slashem` | Hardfought/k21971 SlashEM (`aae9ef2`) | Source-built NGPL tty game/full nhshare+nhushare data/notices/Guidebook/private XDG state; final build/repro/lint/native+integrated3sessions/two exact restores/live screenshot/NAR passed |
 | `shamogu` | anaseto/Shamogu 1.5.0 (`fcd439d`) | Source-built ISC terminal game/pinned12module closure/full notices/XDG saves+replays; final build/repro/lint/TestGame/native+integrated turns0/1/1/2/2/two exported-state+screen exact restores/native Q/Ysave deletion passed |
+| `revengate` | ygingras/Revengate 0.13.0 (`21b0cb4`) | Source-imported Godot game/full source/media/legal notices/native node-ownership fix; final build/repro/lint/3x1000sim/native+integrated move/save/restart/resume/continued movement/clean ExitGame0/noerrors/NAR passed; selected persisted fields, not all RNG |
+| `plomrogue` | Please the Island God PtIG (`32c8b0d`) | Source-built GPL-3+ C engine/Python client-server/private XDG state; final build/repro/lint/original immutable90AI oracle/native+integrated two exact restores/90vs45reload45 fullsave+RNG/NAR passed |
+| `obumbrata` | Martin Read/Obumbrata et Velata 1.0.0 | Source-built BSD-2 ncurses game/project generators/manual/native XDG save; final build/repro/lint/native+integrated two exact persisted-state restores/live screenshot/NAR passed; RNG not serialized |
 | `hermes-agent` | NousResearch/hermes-agent 0.21.5 (`f97608f`) | Actual CLI/JSON-RPC/WebSocket backend, pinned binary-assisted Python closure and source-built media; writable user configuration and Guix-only package updates; reproducibility and native/backend smoke passed |
 | `hermes-desktop` | NousResearch/hermes-agent 2026.9.24 (`f97608f`) | Actual desktop app with pinned Electron 40.10.2, rebuilt terminal addon, packaged backend and free-font substitution; reproducible build and sandboxed real desktop acceptance passed without provider/model calls |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
@@ -5006,6 +5126,9 @@ make check-splicehack-rewrite # final full11dungeon archive/Guidebook build/repr
 make check-space-privateers # final build/repro/lint/engine1of1/native+integrated real wait/moves/two exact visible-state restores/live screenshot/NAR passed; hidden state not fully decoded
 make check-slashem # final build/repro/lint/native+integrated3sessions/two exact restores/live screenshot/NAR passed
 make check-shamogu # final build/repro/lint/TestGame/native+integrated turns0/1/1/2/2/two exported-state+map/HUD attrs exact restores/native Q/Y save deletion passed
+make check-revengate # final ownership-fix build/repro/lint/3x1000sim/native+integrated movement/save/restart/resume/clean ExitGame0/noerrors/NAR passed; selected state fields only
+make check-plomrogue # final build/repro/lint/original oracle/native+integrated two exact restores/90vs45reload45 fullsave+RNG/live screenshot/NAR passed
+make check-obumbrata # final build/repro/lint/native+integrated moves/Ssave/two exact persisted-state restores/live screenshot/NAR passed; RNG not serialized
 make check-lbforth # installed native arithmetic/control flow/recursion and error recovery from empty private cwd; python3 required, immutable output
 make check-legcord # real native onboarding/settings and Discord logged-out cold-relaunch surface, sandbox and unchanged NAR; no credentials/login/live audio
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
