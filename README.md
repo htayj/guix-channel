@@ -3160,6 +3160,195 @@ The proof covers the exercised exports, not every layout, format or optional
 link feature.  No user profile or deployed system changed; no network OKF
 update applies to this repository-only addition.
 
+## Native backlog integrations — observed verification
+
+On 2026-10-03, source builds, reproducibility `--check` rebuilds and
+installed-output smokes passed for `hackem`, `hellcrawl`, `wired` and
+`scala-ts`; scala-ts's build passed all 22 upstream tests.  The four
+integrated Make targets passed, and offline lint reported no package-specific
+findings.  The final Hack'EM/Wired outputs and Scala's supplemented origins
+passed fresh native/exact-consumer checks with unchanged immutable outputs.
+
+- **Hack'EM 1.2.2** (`elunna/hackem` revision `6e99cff`): the launcher now
+  forwards ordinary game arguments with private XDG configuration/state,
+  installs the required native symbol definitions and keeps dump logs under
+  private state.  The production `--guix-smoke` branch is removed; NGPL
+  modification notices and the bundled ISAAC64 CC0/public-domain notice are
+  retained.  `tests/hackem-smoke.sh` / `tests/hackem-smoke.py` at
+  `/tmp/hackem-native-movement` passed three ordinary TTY sessions with full
+  map/HUD/inventory continuity, one actual floor move away from visible
+  hostiles and native compressed save per session, two exact independent
+  restores, consumed saves and unchanged read-only output NAR.  The proof
+  performs genuine movement rather than stationary searches; it does not
+  claim a fixed five-search-turn sequence.
+- **Hellcrawl 5.7** (`Hellmonk/hellcrawl` revision `8abd877`): the original
+  console game/data/notices and XDG-managed saves remain, without the
+  production `--smoke` branch or installed smoke PTY helper.  The standalone
+  `tests/hellcrawl-smoke.sh` / `tests/hellcrawl-smoke.py` passed at
+  `/tmp/hellcrawl-native-dumpfix`: native menus/dungeon entry, turn
+  0 → 1, save/exit, independent restoration of persistent character state
+  at turn 1, then turn 2 and resave.  Raw PTYs, interpreted screens, native
+  dumps and the report are retained; the output NAR remained unchanged.
+- **Wired 0.10.7** (`Toqozz/wired-notify` revision `6b6f3c1`): the recipe
+  retains the locked Cargo graph's manifests and nested license notices.
+  `tests/wired-smoke.sh` at `/var/tmp/wired-native-fixed` passed
+  real D-Bus `Notify`, mapped-window/rendered-pixel checks,
+  `CloseNotification`, and ordinary `--kill`, with unchanged store-tree
+  digest.  The private D-Bus/Xvfb/fontconfig and namespace proof retained
+  PNGs/logs.  Screenshot inspection found a truncated title but readable
+  notification body; it is not evidence of untruncated title rendering.
+  The inspected native screenshot is
+  [wired-native.png](.goocastle/evidence/wired-native.png).
+- **scala-ts 0.1.8** (`codingismy11to7/scala-ts` revision `9342030`): package
+  metadata now selects source-built `dist/scala-ts.js` with its matching
+  declarations rather than the obsolete legacy bundle.  The standalone
+  `tests/scala-ts-smoke.sh` passed the strict compiled installed-consumer
+  scenario: populated scores totaled 52, empty/error cases and Try recovery
+  matched the exact JSON oracle, and the output NAR stayed unchanged.  The
+  build passed all 22 upstream tests.  The dated audit at
+  `/tmp/scala-license-closure-20261003/audit-report.json` verifies all 698
+  pinned archive hashes and 990 lockfile integrity records; it records
+  sanitized node-notifier payloads and retained TypeScript helper notices.
+  Follow-up primary-source review resolves the 19 full-text omissions as
+  notice-retention gaps rather than installed-output grant blockers:
+  json-schema's AFL-or-BSD metadata and same-owner MIT file headers are
+  complementary, with the linked historical Dojo terms recovered.  Eighteen
+  build-origin full-text supplements are implemented with eight shared notice
+  texts and exact package/version mappings, preserving original attribution;
+  the CC0 spdx-license-ids entry requires no notice.  The receipt is
+  `/tmp/scala-license-followup-20261003/followup-report.json`.  The final
+  derived-origin build, reproducibility rebuild and exact installed-consumer
+  smoke passed with unchanged NAR.  All 18 realized source archives were
+  inspected: their 20 supplement texts matched the full notice contract
+  byte-for-byte, recorded in
+  `/tmp/scala-license-followup-20261003/main-realized-verification.json`.
+  Raw notifier archives retain
+  Apple/LGPL payload redistribution caveats although the derived origin
+  excludes those payloads; no blanket raw-tarball redistribution claim applies.
+
+Build/smoke commands for reproducing the verified paths, run serially from
+the checkout with fresh evidence (the Hack'EM and Hellcrawl helpers require
+empty destinations):
+
+```sh
+guix lint -L guix --no-network --exclude=cve,refresh,archival hackem hellcrawl wired scala-ts
+hackem_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 hackem)
+hellcrawl_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 hellcrawl)
+wired_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 wired)
+scala_ts_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 scala-ts)
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 --check hackem hellcrawl wired scala-ts
+GUIX=guix sh tests/hackem-smoke.sh "$hackem_out" --output /tmp/hackem-native-evidence-FRESH
+HELLCRAWL_SMOKE_ARTIFACTS=/tmp/hellcrawl-native-evidence-FRESH GUIX=guix sh tests/hellcrawl-smoke.sh "$hellcrawl_out"
+WIRED_SMOKE_ARTIFACTS=/var/tmp/wired-native-evidence-FRESH GUIX=guix sh tests/wired-smoke.sh "$wired_out"
+GUIX=guix sh tests/scala-ts-smoke.sh "$scala_ts_out"
+```
+
+The four `make check-*` targets invoke these standalone helpers, are included
+in `make check`, and passed on 2026-10-03.  Offline lint also passed without
+package-specific findings; unrelated diagnostics are not acceptance evidence.
+Only obsolete executable-mode contracts for Hack'EM #693 and Hellcrawl #694
+were removed from `.goocastle/runtime-evidence-contracts.json`.  Historical
+screenshots and other contract records remain untouched and do not establish
+current acceptance.  This is repository-only work, not a deployed-system
+change; no network OKF page update applies.
+
+## CrashRun, Dungeon Monkey Unlimited and Emigo — verified native paths
+
+On 2026-10-03, final source builds, reproducibility rebuilds, installed-runtime
+smokes and offline lint passed for these three packages.  Emigo's proof covers
+local backend/IPC/parser/tokenizer operations and fail-closed TLS trust, **not
+provider calls or the interactive chat UI**.  Legacy Cargo-input deprecation
+warnings remain; no package-specific lint findings were reported.
+
+- **CrashRun #314** packages DanaL's Python 3/SDL2 `v0.5.0` branch snapshot
+  at `9b95cc7dd2b8227a219769a95fcaee48e3371bec`, not a tagged stable release.
+  The canonical [crashrun.org](http://crashrun.org/) links that repository;
+  its advertised stable release is 0.4.1 (2010-03-23), while the pinned
+  branch revision dates to 2018-12-05.  The source NAR was rechecked as
+  `1mmznn1ly3dh9yd4hh6yfk7gysxwjn8q804b65zm6zxg0085kky8`.
+  Code/texts retain GPL-3.0-or-later notices, and the unmodified VeraMono
+  font retains its Bitstream Vera permission notice.  The production
+  `--smoke` branch and bundled synthetic Python executor are removed.
+  `tests/crashrun-smoke.sh` / `tests/crashrun-smoke.py` passed at
+  `/tmp/crashrun-native-confined`: original SDL/X11 name/character/skill
+  creation, inventory, pass turns, native save/exit, independent load and
+  resave, isolated state and unchanged output.  Screenshot inspection showed
+  the actual ASCII/player map, character `guix-smoke`, AC 15, HP 18(18) and
+  Outside location.  Xvfb/xdotool/OCR/screenshots and actual archive turn
+  counters replace game monkeypatching; `CRASHRUN_SMOKE_EVIDENCE` retains
+  gameplay/screen PNGs and game/Xserver logs.  Offline lint and final
+  reproducibility rebuild passed.
+  The inspected native screenshot is
+  [crashrun-native.png](.goocastle/evidence/crashrun-native.png).
+- **Dungeon Monkey Unlimited #336** packages source release 1.001; its
+  independently rechecked archive hash remains
+  `1p796097xgyykvax2piv8k04g9asdr2wnfd9aigzayjpfh6yswpp`.  Source headers grant
+  LGPL-2.1-or-later; Gervais tiles retain CC-BY-3.0 attribution, RLTiles
+  retain public-domain credits, and VeraBd is the only installed font with
+  its Bitstream Vera notice.  The production `--smoke` branch/binary and
+  synthetic Pascal helper are removed.
+  `tests/dungeon-monkey-unlimited-smoke.sh` /
+  `tests/dungeon-monkey-unlimited-x11-runner.py` passed at
+  `/tmp/dmu-native-input-diagnostic`: actual NativeHero/NativeCampaign GUI
+  creation, movement, native save, independent restore, further movement
+  and unchanged output NAR.  Screenshot inspection showed NativeHero in an
+  isometric forest/hut scene.  Private namespaces/Xvfb keep the host session
+  separate; `DMU_SMOKE_ARTIFACTS` retains PNG/XWD windows, native save
+  snapshots, inputs and a report.  The final post-format build,
+  reproducibility rebuild, fresh native run at `/tmp/dmu-native-final`,
+  unchanged NAR and offline lint passed.
+  The inspected native screenshot is
+  [dmu-native.png](.goocastle/evidence/dmu-native.png).
+- **Emigo #76** packages MatthewZMD/emigo revision `91d122a` as
+  `0.5-0.91d122a`, with installed Emacs Lisp, a store-bound Python launcher,
+  parser queries, local cl100k tokenizer vocabulary and dependency/notices
+  closure.  `tests/emigo-smoke.sh`, `tests/emigo-smoke.el` and
+  `tests/emigo-local-smoke.py` passed real two-way EPC transport,
+  file context/token-header/add/reject/remove/cleanup, installed parser
+  definitions/repomap, tokenizer and path-error cases.  The clean
+  user/network namespace enables only loopback for EPC; no provider request,
+  credentials, model response or end-to-end LLM capability is claimed.
+  No synthetic production mode existed or was added.  The helper returns
+  77 when the required unprivileged namespaces are unavailable.
+  The source combines explicit GPL-3.0-or-later `utils.py`/`emigo-epc.el`,
+  Apache-2.0 root/`emigo.el`, and MIT/Apache query notices.  The packaged
+  tree-sitter-language-pack 0.5.0 retains upstream README/LICENSE parser
+  credits, but its sdist lacks individual parser license files: those
+  permissive-license credits are upstream's coverage assertion, **not
+  per-file legal provenance verification**.  LiteLLM's enterprise directory
+  is excluded; tokenizer MIT notice and the fixed vocabulary are retained.
+  Optional provider SDK integrations outside the core closure are not installed.
+  The Python/LiteLLM closure supplies its own default trust data rather than
+  depending on a host Certifi path.  The
+  python-litellm recipe now installs an immutable Mozilla/NSS-derived CA
+  bundle as its default fallback, without disabling TLS verification.
+  Explicit `SSL_CERT_FILE`, `REQUESTS_CA_BUNDLE`, `ssl_verify` paths and
+  `SSL_CERT_DIR` remain honored, including invalid-file errors.  The runner's
+  `tests/emigo-ca-smoke.py` passed real SSLContext root loading,
+  `CERT_REQUIRED`/hostname checking and valid/invalid explicit CA precedence
+  without HTTP.  The final build and reproducibility output is
+  `/gnu/store/w2fn8c60689k4aiazfi0358kzhaw556q-emigo-0.5-0.91d122a`.
+
+Build/smoke commands, run serially from the checkout with fresh evidence:
+
+```sh
+guix lint -L guix --no-network --exclude=cve,refresh,archival crashrun dungeon-monkey-unlimited emigo
+crashrun_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 crashrun)
+dmu_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 dungeon-monkey-unlimited)
+emigo_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 emigo)
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 --check crashrun dungeon-monkey-unlimited emigo
+CRASHRUN_SMOKE_EVIDENCE=/tmp/crashrun-native-evidence-FRESH GUIX=guix sh tests/crashrun-smoke.sh "$crashrun_out"
+DMU_SMOKE_ARTIFACTS=/tmp/dmu-native-evidence-FRESH GUIX=guix sh tests/dungeon-monkey-unlimited-smoke.sh "$dmu_out"
+GUIX=guix sh tests/emigo-smoke.sh "$emigo_out"
+```
+
+Only the obsolete `--smoke` executable contracts for CrashRun #670 and
+Dungeon Monkey Unlimited #683 were removed from
+`.goocastle/runtime-evidence-contracts.json`; their historical evidence files
+remain untouched.  The current backlog issue numbers above are different
+from those historical contract IDs.  No Emigo contract was removed.
+No deployed host/service changed, so no network OKF update applies.
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -3226,6 +3415,13 @@ update applies to this repository-only addition.
 | `stoat-soup` | Stoat Soup 0.23-ish-aug26 (`5df72bd`) | Complete original console-only Crawl variant with immutable data/docs and native XDG saves, scores, macros and caches |
 | `grunthack` | NHTangles/GruntHack 0.2.4 (`51d75ee`) | Original NGPL native TTY/curses game, immutable generated data/docs and XDG mutable state; three-process exact native save continuity |
 | `nitrohack` | DanielT/NitroHack 4.0.4 (`21b9774`) | Original NGPL wide-curses game with network client retained, PostgreSQL server omitted, immutable data/notices and XDG configuration/native saves; exact three-process local continuity |
+| `hackem` | elunna/hackem 1.2.2 (`6e99cff`) | Original NGPL TTY game, immutable data/symbols/notices and XDG configuration/native saves; final reproducibility, three-session movement/two exact restores and lint passed |
+| `hellcrawl` | Hellmonk/hellcrawl 5.7 (`8abd877`) | Original GPL-2.0-or-later console Crawl fork/data/notices and XDG native state; reproducibility, native dungeon/save/reload and lint passed |
+| `wired` | Toqozz/wired-notify 0.10.7 (`6b6f3c1`) | Source-built MIT X11 notification daemon, locked Rust manifests/notices and configuration examples; final reproducibility, real Notify/render/close/kill and lint passed |
+| `scala-ts` | codingismy11to7/scala-ts 0.1.8 (`9342030`) | Source-built Apache-2.0 Scala-style TypeScript library and declarations; final supplemented-origin build/reproducibility/strict consumer and lint passed; raw-archive caveats retained |
+| `crashrun` | DanaL/crashRun `v0.5.0` branch snapshot (`9b95cc7`) | Original GPL-3.0-or-later Python/SDL2 game and Bitstream Vera font; source build/reproducibility/native creation/turn/save/load and lint passed |
+| `dungeon-monkey-unlimited` | Dungeon Monkey Unlimited 1.001 | Original LGPL-2.1-or-later Pascal/SDL game with attributed tiles/font and XDG native saves; final build/reproducibility/native GUI/lint passed |
+| `emigo` | MatthewZMD/emigo `0.5-0.91d122a` | Emacs/local Python coding-agent backend with parser queries, fixed tokenizer and immutable default CA data; build/reproducibility/local IPC/parser/TLS/lint passed; no provider or interactive chat proof |
 | `hermes-agent` | NousResearch/hermes-agent 0.21.5 (`f97608f`) | Actual CLI/JSON-RPC/WebSocket backend, pinned binary-assisted Python closure and source-built media; writable user configuration and Guix-only package updates; reproducibility and native/backend smoke passed |
 | `hermes-desktop` | NousResearch/hermes-agent 2026.9.24 (`f97608f`) | Actual desktop app with pinned Electron 40.10.2, rebuilt terminal addon, packaged backend and free-font substitution; reproducible build and sandboxed real desktop acceptance passed without provider/model calls |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
@@ -3931,6 +4127,13 @@ make check-domainslib # isolated native concurrent task/parallel-array/channel p
 make check-emacs-vim-region # isolated batch and real terminal Emacs keymap editing, exact buffer/active-region state and immutable files
 make check-org-mind-map # isolated installed Emacs/Graphviz export, exact SVG nodes/edges/text/tags/images and viewport bounds
 make check-hack # isolated three original 80x24 PTYs, actual movement/inventory, consumed saves, exact independent restores and read-only NAR
+make check-hackem # build/repro/runtime/lint observed: three native moves/saves, full state continuity, two exact restores
+make check-hellcrawl # build/repro/runtime/lint observed: native dungeon/save/restore/continued turns and NAR integrity
+make check-wired # build/repro/runtime/lint observed: private D-Bus/Xvfb Notify/render/close/--kill and store integrity
+make check-scala-ts # build/repro/runtime/lint observed: strict compiled Option/Either/Try/collection consumer and unchanged NAR
+make check-crashrun # build/repro/runtime/lint passed: SDL creation/inventory/turn/save/load/resave and immutable output
+make check-dungeon-monkey-unlimited # final build/repro/runtime/lint passed: GUI creation/movement/save/restore/continued play
+make check-emigo # build/repro/native/lint passed: real loopback EPC/context/tokenizer/parser/path errors and TLS trust; no provider/chat UI proof
 make check-lbforth # installed native arithmetic/control flow/recursion and error recovery from empty private cwd; python3 required, immutable output
 make check-legcord # real native onboarding/settings and Discord logged-out cold-relaunch surface, sandbox and unchanged NAR; no credentials/login/live audio
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke

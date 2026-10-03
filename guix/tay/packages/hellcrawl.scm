@@ -1,7 +1,6 @@
 ;;; GNU Guix package for the Hellcrawl terminal roguelike.
 
 (define-module (tay packages hellcrawl)
-  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system gnu)
   #:use-module (guix build utils)
   #:use-module (guix gexp)
@@ -18,12 +17,6 @@
   #:use-module (gnu packages perl)
   #:use-module (gnu packages pkg-config)
   #:use-module (gnu packages sqlite))
-
-;; This helper is built from source and is only reachable through the
-;; package-owned --smoke mode.  It avoids a runtime dependency on a host PTY
-;; utility while keeping the requested runtime closure small.
-(define %hellcrawl-smoke-pty
-  (local-file (search-tay-package-file "hellcrawl-smoke-pty.c")))
 
 (define-public hellcrawl
   (package
@@ -59,15 +52,7 @@
               (call-with-output-file "util/release_ver"
                 (lambda (port)
                   (display "5.7\n" port)))))
-          (add-after 'enter-source-directory 'build-smoke-helper
-            (lambda _
-              (copy-file #$%hellcrawl-smoke-pty "hellcrawl-smoke-pty.c")
-              ;; forkpty is provided by the standard system libutil; the GNU
-              ;; toolchain is supplied by gnu-build-system.
-              (invoke "gcc" "-O2" "-Wall" "-Wextra"
-                      "-o" "hellcrawl-smoke-pty"
-                      "hellcrawl-smoke-pty.c" "-lutil")))
-          (add-after 'build-smoke-helper 'patch-cxx-compatibility
+          (add-after 'enter-source-directory 'patch-cxx-compatibility
             (lambda _
               ;; Modern libstdc++ no longer provides ostream through the
               ;; transitive headers used by this old release.
@@ -97,8 +82,6 @@
                      (libexec (string-append out "/libexec"))
                      (bin (string-append out "/bin"))
                      (program (string-append libexec "/hellcrawl"))
-                     (runner (string-append libexec
-                                             "/hellcrawl-smoke-pty"))
                      (launcher (string-append bin "/hellcrawl")))
                 ;; install-data copies only the console data and text
                 ;; documentation when TILES and WEBTILES are unset.  A
@@ -120,7 +103,6 @@
                 (mkdir-p doc)
                 (install-file "crawl" libexec)
                 (rename-file (string-append libexec "/crawl") program)
-                (install-file "hellcrawl-smoke-pty" libexec)
                 ;; Keep the upstream license filename and attribution next
                 ;; to the installed terminal program and data.
                 (install-file "../licence.txt" doc)
@@ -133,14 +115,9 @@
                   (lambda (port)
                     (format port "#!~a/bin/sh~%set -eu~%"
                             #$bash-minimal)
-                    (format port "program=~s~%runner=~s~%output=~s~%"
-                            program runner out)
-                    (format port
-                            "cp=~s~%mkdir=~s~%mktemp=~s~%find=~s~%"
-                            #$(file-append coreutils-minimal "/bin/cp")
-                            #$(file-append coreutils-minimal "/bin/mkdir")
-                            #$(file-append coreutils-minimal "/bin/mktemp")
-                            #$(file-append findutils "/bin/find"))
+                    (format port "program=~s~%mkdir=~s~%"
+                            program
+                            #$(file-append coreutils-minimal "/bin/mkdir"))
                     (format port "terminfo=~s~%"
                             #$(file-append ncurses "/share/terminfo"))
                     (display
@@ -161,72 +138,11 @@
                       "  export TERMINFO_DIRS=\"$terminfo"
                       "${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"\n")
                      port)
-                    (display "}\nrun_game() {\n  prepare_environment\n"
-                             port)
-                    (display "  exec \"$program\" \"$@\"\n}\n" port)
-                    (display
-                     "if test \"${1:-}\" = --smoke; then\n"
-                     port)
-                    (display "  test \"$#\" -eq 1\n" port)
-                    (display
-                     (string-append
-                      "  scratch=$(\"$mktemp\" -d "
-                      "\"${TMPDIR:-/tmp}/hellcrawl-smoke.XXXXXXXX\")\n")
-                     port)
-                    (display
-                     (string-append
-                      "  \"$mkdir\" -p \"$scratch/home\" "
-                      "\"$scratch/config\" \"$scratch/data\" "
-                      "\"$scratch/cache\"\n")
-                     port)
-                    (display
-                     (string-append
-                      "  \"$mkdir\" -p \"$scratch/state\" "
-                      "\"$scratch/runtime\" \"$scratch/tmp\"\n")
-                     port)
-                    (display "  export HOME=\"$scratch/home\"\n" port)
-                    (display "  export XDG_CONFIG_HOME=\"$scratch/config\"\n" port)
-                    (display "  export XDG_DATA_HOME=\"$scratch/data\"\n" port)
-                    (display "  export XDG_CACHE_HOME=\"$scratch/cache\"\n" port)
-                    (display "  export XDG_STATE_HOME=\"$scratch/state\"\n" port)
-                    (display "  export XDG_RUNTIME_DIR=\"$scratch/runtime\"\n" port)
-                    (display "  export TMPDIR=\"$scratch/tmp\"\n" port)
-                    (display "  export TERM=xterm-256color LC_ALL=C\n" port)
-                    (display "  prepare_environment\n  cd \"$scratch\"\n" port)
-                    (display
-                     (string-append
-                      "  \"$runner\" \"$program\" -seed 285 -no-save "
-                      "-name Goocastle -species Hu -background Fi "
-                      ">\"$scratch/ui.raw\"\n")
-                     port)
-                    (display "  test -s \"$scratch/ui.raw\"\n" port)
-                    (display
-                     "  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}\"; then\n"
-                     port)
-                    (display
-                     (string-append
-                      "    \"$cp\" \"$scratch/ui.raw\" "
-                      "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n")
-                     port)
-                    (display "  fi\n" port)
-                    (display
-                     (string-append
-                      "  test -z \"$(\"$find\" \"$scratch/home\" "
-                      "\"$scratch/config\" \"$scratch/cache\" "
-                      "\"$scratch/state\" \"$scratch/runtime\" "
-                      "-mindepth 1 -print -quit)\"\n")
-                     port)
-                    (display "  test -d \"$scratch/data/hellcrawl\"\n" port)
-                    (display "  test ! -w \"$output\"\n" port)
-                    (display
-                     (string-append
-                      "  printf '%s\\n' 'hellcrawl smoke: terminal UI OK; "
-                      "no store writes'\n")
-                     port)
-                    (display "  exit 0\nfi\nrun_game \"$@\"\n" port)))
+                    (display "}\nprepare_environment\nexec \"$program\" \"$@\"\n"
+                             port)))
                 (chmod launcher #o555)))))))
     (native-inputs (list bison flex perl pkg-config which))
-    (inputs (list bash-minimal coreutils-minimal findutils lua-5.1 ncurses
+    (inputs (list bash-minimal coreutils-minimal lua-5.1 ncurses
                   sqlite zlib))
     (home-page "https://github.com/Hellmonk/hellcrawl")
     (synopsis "Terminal fork of Dungeon Crawl Stone Soup")
@@ -238,22 +154,15 @@ zlib libraries.  It excludes the upstream tile, font, sound, webserver, and
 contrib gitlink contents.  The launcher keeps saves, logs, and other mutable
 state under @file{$XDG_DATA_HOME/hellcrawl}, falling back to
 @file{$HOME/.local/share/hellcrawl}; it has no updater, telemetry, or runtime
-download.  Its package-owned @option{--smoke} mode drives the installed game
-through an isolated PTY and verifies character creation, dungeon entry, and
-the absence of writes to the immutable store output.")
-    ;; The terminal closure contains the GPL program and compatible BSD-2,
-    ;; BSD-3, CC0/public-domain, MIT, zlib, Apache-2.0, and bundled-notice
-    ;; components.  The upstream notices are installed beside the output.
+download.  The repository acceptance test drives the installed game through
+an isolated PTY, advances a dungeon turn, and saves and reloads the character.")
+    ;; Console code and data inherit GPL-2.0-or-later; the bundled perlin,
+    ;; json, worley, and pcg sources carry the compatible licenses below.
+    ;; Tile-only libraries are not linked.  Their upstream notices remain
+    ;; installed with the documentation, not asserted as program licenses.
     (license (list license:gpl2+
                    license:bsd-2
-                   license:bsd-3
                    license:cc0
                    license:public-domain
                    license:expat
-                   license:zlib
-                   license:asl2.0
-                   license:lgpl2.1+
-                   (license:fsdg-compatible
-                    "https://www.libpng.org/pub/png/src/libpng-LICENSE.txt")
-                   (license:fsdg-compatible
-                    "https://www.pcre.org/original/doc/html/pcre2license.html")))))
+                   license:asl2.0))))

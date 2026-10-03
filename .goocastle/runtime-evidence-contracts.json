@@ -400,21 +400,6 @@
       }
     },
     {
-      "issueNumber": 670,
-      "packageName": "crashrun",
-      "artifactPath": ".goocastle/evidence/issue-670.png",
-      "runtime": {
-        "executable": "crashrun",
-        "invocation": {
-          "file": "crashrun",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "crashrun smoke passed: new-game, turn, save-load, and isolated-state"
-      }
-    },
-    {
       "issueNumber": 671,
       "packageName": "cryptrover",
       "artifactPath": ".goocastle/evidence/issue-671.png",
@@ -566,22 +551,6 @@
       }
     },
     {
-      "issueNumber": 683,
-      "packageName": "dungeon-monkey-unlimited",
-      "packageModulePath": "guix/tay/packages/dungeon-monkey-unlimited.scm",
-      "artifactPath": ".goocastle/evidence/issue-683.png",
-      "runtime": {
-        "executable": "dungeon-monkey-unlimited",
-        "invocation": {
-          "file": "dungeon-monkey-unlimited",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "DMU-SMOKE: campaign-save-load-ok"
-      }
-    },
-    {
       "issueNumber": 684,
       "packageName": "dynahack",
       "packageModulePath": "guix/tay/packages/dynahack.scm",
@@ -691,38 +660,6 @@
           ]
         },
         "successMarker": "GRUESOME-SMOKE: gameplay-turn-ok"
-      }
-    },
-    {
-      "issueNumber": 693,
-      "packageName": "hackem",
-      "packageModulePath": "guix/tay/packages/hackem.scm",
-      "artifactPath": ".goocastle/evidence/issue-693.png",
-      "runtime": {
-        "executable": "hackem",
-        "invocation": {
-          "file": "hackem",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "hackem guix smoke passed"
-      }
-    },
-    {
-      "issueNumber": 694,
-      "packageName": "hellcrawl",
-      "packageModulePath": "guix/tay/packages/hellcrawl.scm",
-      "artifactPath": ".goocastle/evidence/issue-694.png",
-      "runtime": {
-        "executable": "hellcrawl",
-        "invocation": {
-          "file": "hellcrawl",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "hellcrawl smoke: terminal UI OK; no store writes"
       }
     },
     {

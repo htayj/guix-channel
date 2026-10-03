@@ -379,6 +379,30 @@
               (invoke "cargo" "install" "--offline" "--locked" "--no-track"
                       "--path" "." "--bin" "wired"
                       "--root" (assoc-ref outputs "out"))))
+          (add-after 'install-wired 'install-locked-license-notices
+            (lambda _
+              (let ((notices (string-append
+                              #$output "/share/doc/wired/third-party-licenses/")))
+                ;; Cargo links these fixed registry sources into the daemon.
+                ;; Preserve nested notice paths instead of flattening names:
+                ;; a crate can carry several different native/asset notices.
+                ;; Preserve SPDX expressions and attribution from manifests,
+                ;; including crates without conventional notice filenames.
+                (for-each
+                 (lambda (file)
+                   (let* ((relative (substring file
+                                               (string-length "guix-vendor/")))
+                          (destination (string-append notices relative)))
+                     (mkdir-p (dirname destination))
+                     (copy-file file destination)))
+                 (find-files
+                  "guix-vendor"
+                  (string-append
+                   "(^|/)([Ll][Ii][Cc][Ee][Nn][Ss][Ee]|[Ll][Ii][Cc][Ee][Nn][Cc][Ee]|"
+                   "[Cc][Oo][Pp][Yy][Ii][Nn][Gg]|[Nn][Oo][Tt][Ii][Cc][Ee]|"
+                   "[Cc][Oo][Pp][Yy][Rr][Ii][Gg][Hh][Tt]|"
+                   "[Uu][Nn][Ll][Ii][Cc][Ee][Nn][Ss][Ee])([-._].*)?$"
+                   "|(^|/)Cargo\\.toml$"))))))
           (add-after 'install-wired 'install-user-managed-data
             (lambda* (#:key outputs #:allow-other-keys)
               (let* ((out (assoc-ref outputs "out"))
@@ -390,6 +414,7 @@
                 ;; examples, which contain no executable downloads or media.
                 (mkdir-p doc)
                 (install-file "LICENSE" doc)
+                (copy-file ".guix-Cargo.lock" (string-append doc "/Cargo.lock"))
                 (mkdir-p examples)
                 (for-each (lambda (file) (install-file file examples))
                           '("wired.ron" "wired_multilayout.ron"))
@@ -423,8 +448,9 @@
 notifications using an X11 event loop, so it requires an X11 or XWayland
 @env{DISPLAY} and a session D-Bus; it does not provide native Wayland support.
 The package builds the exact upstream commit and complete Cargo.lock graph
-offline from immutable source archives.  It installs only the daemon, MIT
-notice, declarative configuration examples, and user-managed systemd data.
+offline from immutable source archives.  It installs the daemon, upstream MIT
+notice, locked Rust dependency notices, declarative configuration examples,
+and user-managed systemd data.
 Icon and font discovery remain user or system configuration, and URL actions
 use the explicit @command{xdg-open} runtime input without downloading assets.")
     (home-page "https://github.com/Toqozz/wired-notify")

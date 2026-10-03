@@ -1,7 +1,6 @@
 ;;; GNU Guix package for crashRun.
 
 (define-module (tay packages crashrun)
-  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system copy)
   #:use-module (guix build utils)
   #:use-module (guix gexp)
@@ -14,9 +13,6 @@
   #:use-module (gnu packages python)
   #:use-module (gnu packages python-graphics)
   #:use-module (gnu packages sdl))
-
-(define crashrun-smoke-script
-  (local-file (search-tay-package-file "crashrun-smoke.py")))
 
 (define-public crashrun
   (package
@@ -42,12 +38,13 @@
               ;; Python 3-compatible source tree from starting.
               (substitute* "crashRun.py"
                 (("from sys import setcheckinterval") ""))
-              ;; Guix's python-pysdl2 fixes SDL extension paths to store
-              ;; objects.  PySDL2 0.9.17's directory scan needs the
-              ;; containing directory when such a path is supplied.
+              ;; Poll the native event queue directly; sdl2.ext also loads
+              ;; unused SDL_image/mixer/gfx extensions.
               (substitute* "src/DisplayGuts.py"
                 (("import sdl2\\.ext as sdl2ext")
                  (string-append
+                  ;; Guix pins the SDL_ttf library to a file.  PySDL2 0.9.17
+                  ;; scans this argument as a directory before loading it.
                   "import sdl2.dll as sdl2dll\n"
                   "_crashrun_original_finds_libs_at_path = "
                   "sdl2dll._finds_libs_at_path\n"
@@ -57,8 +54,14 @@
                   "    return _crashrun_original_finds_libs_at_path("
                   "libnames, path, patterns)\n"
                   "sdl2dll._finds_libs_at_path = "
-                  "_crashrun_finds_libs_at_path\n"
-                  "import sdl2.ext as sdl2ext")))))
+                  "_crashrun_finds_libs_at_path"))
+                (("events = sdl2ext.get_events\\(\\)") "")
+                (("for event in events:")
+                 "while SDL_PollEvent(ctypes.byref(event)):")
+                ;; Modifier bits are flags, not exact numeric values.  The
+                ;; upstream comparison breaks shifted commands on X11.
+                (("event.key.keysym.mod in \\(\\[4097, 4098\\]\\)")
+                 "event.key.keysym.mod & KMOD_SHIFT"))))
           (add-after 'prepare-python3 'check-python3
             (lambda* (#:key tests? #:allow-other-keys)
               (when tests?
@@ -88,20 +91,13 @@
                  (string-append #$font-bitstream-vera
                                 "/share/doc/font-bitstream-vera-1.10/COPYRIGHT.TXT")
                  (string-append doc "/COPYRIGHT.TXT"))
-                (copy-file #$crashrun-smoke-script
-                           (string-append data "/crashrun-smoke.py"))
                 (call-with-output-file launcher
                   (lambda (port)
                     (format port "#!~a/bin/sh~%" #$bash-minimal)
                     (display "set -eu\n" port)
                     (display
                      (string-append
-                      "usage() { echo 'usage: crashrun [--smoke]' >&2; exit 64; }\n"
-                      "case \"$#\" in\n"
-                      "  0) ;;\n"
-                      "  1) test \"$1\" = --smoke || usage ;;\n"
-                      "  *) usage ;;\n"
-                      "esac\n")
+                      "test \"$#\" -eq 0 || { echo 'usage: crashrun' >&2; exit 64; }\n")
                      port)
                     (format port "data=~s~%python=~s~%mkdir=~s~%cp=~s~%"
                             data
@@ -128,16 +124,6 @@
                       "state_root=\"$xdg_state/crashrun\"\n"
                       "\"$mkdir\" -p \"$state_root\"\n"
                       "resources='help.txt keys.txt rumours.txt ttd.txt VeraMono.ttf'\n"
-                      "if test \"$#\" -eq 1; then\n"
-                      "  smoke_state=\"$state_root/smoke-$$\"\n"
-                      "  test ! -e \"$smoke_state\"\n"
-                      "  \"$mkdir\" -p \"$smoke_state\"\n"
-                      "  for resource in $resources; do\n"
-                      "    \"$cp\" \"$data/$resource\" \"$smoke_state/$resource\"\n"
-                      "  done\n"
-                      "  smoke_script=\"$data/crashrun-smoke.py\"\n"
-                      "  exec \"$python\" \"$smoke_script\" \"$data\" \"$smoke_state\"\n"
-                      "fi\n"
                       "for resource in $resources; do\n"
                       "  if test ! -e \"$state_root/$resource\"; then\n"
                       "    \"$cp\" \"$data/$resource\" \"$state_root/$resource\"\n"

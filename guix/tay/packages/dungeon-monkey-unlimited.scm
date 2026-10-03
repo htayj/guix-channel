@@ -3,7 +3,6 @@
 ;;; SPDX-License-Identifier: LGPL-2.1-only
 
 (define-module (tay packages dungeon-monkey-unlimited)
-  #:use-module (tay packages auxiliary)
   #:use-module (guix build-system gnu)
   #:use-module (guix download)
   #:use-module (guix gexp)
@@ -16,10 +15,6 @@
   #:use-module (gnu packages pascal)
   #:use-module (gnu packages sdl)
   #:use-module (gnu packages xorg))
-
-(define dmu-smoke-source
-  (local-file
-   (search-tay-package-file "dungeon-monkey-unlimited-smoke.pas")))
 
 (define-public dungeon-monkey-unlimited
   (package
@@ -45,9 +40,6 @@
           (delete 'configure)
           (delete 'check)
           (delete 'install-license-files)
-          (add-after 'unpack 'prepare-source
-            (lambda _
-              (copy-file #$dmu-smoke-source "dmu-smoke.pas")))
           (replace 'build
             (lambda _
               (let ((fpc #$(file-append fpc "/bin/fpc"))
@@ -80,8 +72,7 @@
                           "-k-lSDL_ttf"
                           (string-append "-o" output)
                           source))
-                (compile "dmu.pas" "build/dungeon-monkey-unlimited-real")
-                (compile "dmu-smoke.pas" "build/dungeon-monkey-unlimited-smoke"))))
+                (compile "dmu.pas" "build/dungeon-monkey-unlimited-real"))))
           (replace 'install
             (lambda _
               (let* ((out #$output)
@@ -91,17 +82,21 @@
                      (libexec (string-append out "/libexec"))
                      (doc (string-append out "/share/doc/dungeon-monkey-unlimited"))
                      (launcher (string-append bin "/dungeon-monkey-unlimited"))
-                     (real (string-append libexec "/dungeon-monkey-unlimited-real"))
-                     (smoke (string-append libexec "/dungeon-monkey-unlimited-smoke")))
+                     (real (string-append libexec "/dungeon-monkey-unlimited-real")))
                 (mkdir-p bin)
                 (mkdir-p graphics)
                 (mkdir-p libexec)
                 (mkdir-p doc)
                 (install-file "build/dungeon-monkey-unlimited-real" libexec)
-                (install-file "build/dungeon-monkey-unlimited-smoke" libexec)
                 (copy-recursively "gamedata" (string-append data "/gamedata"))
-                (for-each (lambda (file) (install-file file graphics))
-                          (find-files "image" "\\.png$"))
+                (for-each
+                 (lambda (file)
+                   ;; Sprite templates and convert.png are editor inputs,
+                   ;; never requested by the game or its gamedata.
+                   (unless (or (string-prefix? "template_" (basename file))
+                               (string=? "convert.png" (basename file)))
+                     (install-file file graphics)))
+                 (find-files "image" "\\.png$"))
                 (install-file "image/VeraBd.ttf" graphics)
                 (for-each (lambda (file) (install-file file doc))
                           '("license.txt" "readme.txt" "credits.txt"))
@@ -115,6 +110,13 @@
                 (call-with-output-file (string-append doc "/THIRD-PARTY-NOTICES.txt")
                   (lambda (port)
                     (display "Dungeon Monkey Unlimited third-party materials\n\n" port)
+                    (display
+                     (string-append
+                      "Code, gamedata and documentation: Joseph Hewitt, "
+                      "LGPL-2.1-or-later.\n"
+                      "The complete LGPL 2.1 text is in license.txt; "
+                      "source headers permit later versions.\n\n")
+                     port)
                     (display "David E. Gervais tile graphics\n" port)
                     (display
                      (string-append
@@ -125,6 +127,11 @@
                      (string-append
                       "license. Credit David E. Gervais when redistributing\n"
                       "these graphics.\n")
+                     port)
+                    (display
+                     (string-append
+                      "Tile license source: "
+                      "http://pousse.rapiere.free.fr/tome/tome-tiles.htm\n")
                      port)
                     (display "https://creativecommons.org/licenses/by/3.0/\n\n" port)
                     (display "RLTiles\n" port)
@@ -147,64 +154,19 @@
                       "The used VeraBd.ttf is distributed under the\n"
                       "Bitstream Vera license.\n")
                      port)
-                    (display "license. The complete, exact license text is in\n" port)
+                    (display "The complete, exact license text is in\n" port)
                     (display "Bitstream-Vera-COPYRIGHT.TXT in this directory.\n" port)))
                 (call-with-output-file launcher
                   (lambda (port)
                     (format port "#!~a/bin/sh~%set -eu~%" #$bash-minimal)
-                    (format port "real=~s~%data=~s~%smoke=~s~%"
-                            real data smoke)
-                    (format port "ln=~s~%mkdir=~s~%mktemp=~s~%rm=~s~%"
+                    (format port "real=~s~%data=~s~%" real data)
+                    (format port "ln=~s~%mkdir=~s~%"
                             #$(file-append coreutils-minimal "/bin/ln")
-                            #$(file-append coreutils-minimal "/bin/mkdir")
-                            #$(file-append coreutils-minimal "/bin/mktemp")
-                            #$(file-append coreutils-minimal "/bin/rm"))
+                            #$(file-append coreutils-minimal "/bin/mkdir"))
                     (display
-                     (string-append
-                      "usage() { echo 'usage: dungeon-monkey-unlimited "
-                      "[--smoke]' >&2; exit 64; }\n")
-                     port)
-                    (display
-                     (string-append
-                      "case \"${1-}\" in\n"
-                      "  --smoke)\n"
-                      "    test \"$#\" -eq 1 || usage\n"
-                      (string-append
-                       "    scratch=$(\"$mktemp\" -d \"${TMPDIR:-/tmp}/dungeon-"
-                       "monkey-unlimited-smoke.XXXXXXXX\")\n")
-                      "    trap '\"$rm\" -rf \"$scratch\"' EXIT HUP INT TERM\n"
-                      (string-append
-                       "    \"$mkdir\" -p \"$scratch/home\" \"$scratch/config\" "
-                       "\"$scratch/data\" \"$scratch/cache\" \"$scratch/state\" "
-                       "\"$scratch/runtime\" \"$scratch/tmp\" "
-                       "\"$scratch/work/savegame\"\n")
-                      "    \"$ln\" -s \"$data/gamedata\" \"$scratch/work/gamedata\"\n"
-                      "    \"$ln\" -s \"$data/image\" \"$scratch/work/image\"\n"
-                      (string-append
-                       "    export HOME=\"$scratch/home\"\n"
-                       "    export XDG_CONFIG_HOME=\"$scratch/config\"\n"
-                       "    export XDG_DATA_HOME=\"$scratch/data\"\n")
-                      (string-append
-                       "    export XDG_CACHE_HOME=\"$scratch/cache\"\n"
-                       "    export XDG_STATE_HOME=\"$scratch/state\"\n"
-                       "    export XDG_RUNTIME_DIR=\"$scratch/runtime\"\n"
-                       "    export TMPDIR=\"$scratch/tmp\"\n")
-                      "    export SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy LC_ALL=C\n"
-                      "    cd \"$scratch/work\"\n"
-                      "    proof=$(\"$smoke\" 2>&1)\n"
-                      "    case \"$proof\" in\n"
-                      "      *'DMU-SMOKE: campaign-save-load-ok'*) ;;\n"
-                      "      *) echo 'Dungeon Monkey smoke failed' >&2; exit 1 ;;\n"
-                      "    esac\n"
-                      "    printf '%s\\n' 'DMU-SMOKE: campaign-save-load-ok'\n"
-                      "    exit 0\n"
-                      "    ;;\n"
-                      "  '') ;;\n"
-                      "  *) ;;\n"
-                      "esac\n"
                       (string-append
                        "state=\"${XDG_DATA_HOME:-${HOME:?HOME or XDG_DATA_HOME "
-                       "must be set}/.local/share}/dungeon-monkey-unlimited\"\n")
+                       "must be set}/.local/share}/dungeon-monkey-unlimited\"\n"
                       "\"$mkdir\" -p \"$state/savegame\"\n"
                       "for resource in gamedata image; do\n"
                       "  if test ! -e \"$state/$resource\"; then\n"
@@ -227,11 +189,10 @@ from the original Dungeon Monkey lineage.  It generates a fantasy campaign,
 map, and encounters locally.  The package builds the pinned upstream source
 with Free Pascal and SDL 1.2-compatible libraries, installs only the used
 runtime assets, and runs the writable save/configuration files from an XDG
-data directory.  Its package-owned @option{--smoke} mode deterministically
-generates a campaign, activates a model, and verifies a save/load round-trip
-in an isolated temporary directory.")
+data directory.  Character creation, campaign generation, exploration, and
+save/load use the original graphical game interface.")
     (license
-     (list license:lgpl2.1
+     (list license:lgpl2.1+
            license:cc-by3.0
            license:public-domain
            (license:fsdg-compatible

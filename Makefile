@@ -46,8 +46,9 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	cutlassrl dhack diabaig dnethack dragonslayer grippy-socks gruesome hack hunger-games hydra-slayer \
 	martins-dungeon-bash nlarn robotfindskitten fontra dicom2mesh modus \
 	trial-by-combat xrogue keymapper liquid input-remapper emacs-cl \
-	liveonce xnethack unnethack grunthack nitrohack qiling ai-code-interface-el chatgpt-el eca-emacs urogue letter-hunt pyrosimple savescummer srogue linerogue bloatcrawl2 ighalsk aquesttoofar freelarn talmudifier rouge sewer-massacre atrogue six-two-one umoria pyro narwharl stoat-soup \
 	caelestia-shell caelestia-cli quickshell-for-caelestia libcava m3shapes \
+	crashrun dungeon-monkey-unlimited emigo \
+	caelestia-shell caelestia-cli caelestia-panes quickshell-for-caelestia libcava m3shapes \
 	dart-sass gpu-screen-recorder font-rubik font-material-symbols-rounded \
 	hermes-agent hermes-desktop lbforth legcord \
 	font-nerd-caskaydia-cove
@@ -419,6 +420,19 @@ check-grunthack:
 check-nitrohack:
 	GUIX="$(GUIX)" sh tests/nitrohack-smoke.sh
 
+.PHONY: check-hackem check-hellcrawl check-wired check-scala-ts
+check-hackem:
+	GUIX="$(GUIX)" sh tests/hackem-smoke.sh
+
+check-hellcrawl:
+	GUIX="$(GUIX)" sh tests/hellcrawl-smoke.sh
+
+check-wired:
+	GUIX="$(GUIX)" sh tests/wired-smoke.sh
+
+check-scala-ts:
+	GUIX="$(GUIX)" sh tests/scala-ts-smoke.sh
+
 .PHONY: check-hermes-desktop
 check-hermes-desktop:
 	GUIX="$(GUIX)" sh tests/hermes-desktop-smoke.sh
@@ -532,6 +546,18 @@ build-fontra:
 check-hack:
 	GUIX="$(GUIX)" tests/hack-smoke.sh
 
+.PHONY: check-crashrun
+check-crashrun:
+	GUIX="$(GUIX)" sh tests/crashrun-smoke.sh
+
+.PHONY: check-dungeon-monkey-unlimited
+check-dungeon-monkey-unlimited:
+	GUIX="$(GUIX)" sh tests/dungeon-monkey-unlimited-smoke.sh
+
+.PHONY: check-emigo
+check-emigo:
+	GUIX="$(GUIX)" sh tests/emigo-smoke.sh
+
 check-trebuchet:
 	GUIX="$(GUIX)" tests/trebuchet-smoke.sh
 
@@ -556,7 +582,8 @@ check-org-mind-map:
 check: check-source-count check-sentinelone check-datamosh-security check-ffglitch check-praat check-dicom2mesh \
 	check-modus check-amstelvar check-trial-by-combat check-xrogue check-keymapper \
 	check-liquid check-input-remapper check-emacs-cl check-liveonce check-xnethack check-unnethack check-grunthack check-nitrohack check-hermes-desktop check-lbforth check-legcord \
-	check-qiling check-ai-code-interface-el check-chatgpt-el check-eca-emacs check-urogue check-letter-hunt check-pyrosimple check-savescummer check-srogue check-linerogue check-bloatcrawl2 check-ighalsk check-aquesttoofar check-freelarn check-talmudifier check-rouge check-sewer-massacre check-atrogue check-six-two-one check-umoria check-pyro check-narwharl check-stoat-soup \
+	check-qiling check-ai-code-interface-el check-chatgpt-el check-eca-emacs check-urogue check-letter-hunt check-pyrosimple check-savescummer check-srogue check-linerogue check-bloatcrawl2 check-ighalsk check-aquesttoofar check-freelarn check-talmudifier check-rouge check-sewer-massacre check-atrogue check-six-two-one check-umoria check-pyro check-narwharl check-stoat-soup check-hackem check-hellcrawl check-wired check-scala-ts \
+	check-crashrun check-dungeon-monkey-unlimited check-emigo \
 	check-rapidbrogue \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-kitty-bitmap-oldguix check-lyntin check-mmapper check-mudlet check-ocaml-irc-client check-notty check-miou check-domainslib check-tui check-proiel \

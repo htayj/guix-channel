@@ -1,55 +1,35 @@
 #!/bin/sh
-# Exercise Hellcrawl's installed terminal UI in isolated XDG state and a
-# networkless namespace.
+# Installed Hellcrawl consumer, native dungeon/save/reload PTY and immutable NAR.
+# Usage: sh tests/hellcrawl-smoke.sh [hellcrawl-output]
+# HELLCRAWL_SMOKE_ARTIFACTS selects a new/empty absolute evidence directory.
 set -eu
-
+fail() { printf 'hellcrawl-smoke: %s\n' "$*" >&2; exit 1; }
 guix_bin=${GUIX:-guix}
 guix_bin=$(command -v "$guix_bin")
-node_bin=$(command -v node)
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-cd "$channel_dir"
+test "$#" -le 1 || { echo "usage: $0 [hellcrawl-output]" >&2; exit 64; }
+if test "$#" -eq 1; then hellcrawl_out=$1
+else hellcrawl_out=$("$guix_bin" build -L "$channel_dir/guix" --no-grafts hellcrawl); fi
+case "$hellcrawl_out" in
+    /gnu/store/*) test -d "$hellcrawl_out" || fail "missing store output: $hellcrawl_out" ;;
+    *) fail "expected realized /gnu/store output: $hellcrawl_out" ;;
+esac
 
-if test "$#" -gt 1; then
-    echo "usage: $0 [hellcrawl-output]" >&2
-    exit 64
-fi
+test -x "$hellcrawl_out/bin/hellcrawl" || fail 'missing installed launcher'
+test -x "$hellcrawl_out/libexec/hellcrawl" || fail 'missing installed game'
+test ! -e "$hellcrawl_out/libexec/hellcrawl-smoke-pty" || fail 'obsolete PTY helper remains installed'
+test ! -L "$hellcrawl_out/libexec/hellcrawl-smoke-pty" || fail 'obsolete PTY helper symlink remains installed'
+test -d "$hellcrawl_out/share/hellcrawl/dat" || fail 'missing terminal data'
+test ! -e "$hellcrawl_out/share/hellcrawl/dat/tiles" || fail 'tiles remain installed'
+test ! -e "$hellcrawl_out/share/hellcrawl/webserver" || fail 'webserver remains installed'
 
-if test "$#" -eq 1; then
-    hellcrawl_out=$1
-else
-    hellcrawl_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes hellcrawl)
-fi
-
-find_output ()
-{
-    program=$1
-    package=$2
-    for output in $($guix_bin build -L "$channel_dir/guix" --no-grafts \
-                       --no-substitutes "$package"); do
-        if test -x "$output/$program"; then
-            printf '%s\n' "$output"
-            return 0
-        fi
-    done
-    echo "could not find $program in Guix package $package" >&2
-    return 1
-}
-
-test -x "$hellcrawl_out/bin/hellcrawl"
-test -x "$hellcrawl_out/libexec/hellcrawl"
-test -x "$hellcrawl_out/libexec/hellcrawl-smoke-pty"
-test -d "$hellcrawl_out/share/hellcrawl/dat"
-test ! -e "$hellcrawl_out/share/hellcrawl/dat/tiles"
-test ! -e "$hellcrawl_out/share/hellcrawl/webserver"
-
-# The root license and every compatible notice copied by the package remain
-# available with the installed executable and terminal data.
+# Preserve the root license and all compatible installed third-party notices.
 doc=$hellcrawl_out/share/doc/hellcrawl
-test -s "$doc/licence.txt"
-test -s "$doc/CREDITS.txt"
+test -s "$doc/licence.txt" || fail 'missing root license'
+test -s "$doc/CREDITS.txt" || fail 'missing credits'
 for notice in cc0.txt lgpl.txt libpng-LICENSE.txt lualicense.txt \
               pcre_license.txt worley.txt license.txt; do
-    test -s "$doc/license/$notice"
+    test -s "$doc/license/$notice" || fail "missing license notice: $notice"
 done
 grep -F 'GNU GENERAL PUBLIC LICENSE' "$doc/licence.txt" >/dev/null
 grep -F 'Dungeon Crawl Stone Soup team' "$doc/CREDITS.txt" >/dev/null
@@ -59,71 +39,78 @@ grep -F 'Lua is licensed under the terms of the MIT license reproduced below' \
     "$doc/license/lualicense.txt" >/dev/null
 grep -F 'PCRE LICENCE' "$doc/license/pcre_license.txt" >/dev/null
 
-# The issue-specific executable, invocation, and marker are a required part
-# of the proof, not an advisory record.
-contract=.goocastle/runtime-evidence-contracts.json
-test -s "$contract"
-grep -F '"issueNumber": 694' "$contract" >/dev/null
-grep -F '"packageName": "hellcrawl"' "$contract" >/dev/null
-grep -F '"packageModulePath": "guix/tay/packages/hellcrawl.scm"' \
-    "$contract" >/dev/null
-grep -F '"artifactPath": ".goocastle/evidence/issue-694.png"' \
-    "$contract" >/dev/null
-grep -F '"executable": "hellcrawl"' "$contract" >/dev/null
-grep -F '"--smoke"' "$contract" >/dev/null
-marker='hellcrawl smoke: terminal UI OK; no store writes'
-grep -F "\"successMarker\": \"$marker\"" "$contract" >/dev/null
+# Realize every runtime dependency before entering isolation. No installed user
+# profile or cache is consulted by the native PTY driver.
+temporary=$(mktemp -d "${TMPDIR:-/tmp}/hellcrawl-smoke.XXXXXXXX")
+trap 'rm -rf "$temporary"' EXIT HUP INT TERM
+profile=$temporary/profile
+"$guix_bin" package --no-grafts -p "$profile" \
+    -i python python-pyte coreutils util-linux
+for tool in python3 unshare mount timeout env readlink mkdir mktemp cat; do
+    test -x "$profile/bin/$tool" || fail "fresh profile lacks $tool"
+done
+set -- "$profile"/lib/python3.*/site-packages
+test "$#" -eq 1 && test -d "$1" || fail 'fresh profile lacks one Python module directory'
+python_path=$1
+artifacts=${HELLCRAWL_SMOKE_ARTIFACTS:-$("$profile/bin/mktemp" -d "${TMPDIR:-/tmp}/hellcrawl-artifacts.XXXXXXXX")}
+case "$artifacts" in /*) ;; *) fail 'HELLCRAWL_SMOKE_ARTIFACTS must be absolute' ;; esac
+"$profile/bin/mkdir" -p "$artifacts"
+"$profile/bin/python3" -I -B - "$artifacts" <<'PY'
+from pathlib import Path
+import sys
 
-util_linux_out=$(find_output bin/unshare util-linux)
-test -x "$util_linux_out/bin/unshare"
-bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
-test -r "$bounded_validation"
-if ! "$node_bin" "$bounded_validation" --timeout-ms 5000 -- \
-        "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
-        true >/dev/null 2>&1; then
-    echo 'hellcrawl smoke requires an unprivileged network namespace' >&2
-    exit 77
-fi
+evidence = Path(sys.argv[1])
+if any(evidence.iterdir()):
+    raise SystemExit("Hellcrawl evidence directory must be empty: " + str(evidence))
+PY
+check_immutable()
+{
+    "$profile/bin/python3" -I -B - "$hellcrawl_out" <<'PY'
+from pathlib import Path
+import stat
+import sys
 
-# A NAR hash covers all installed files, modes, and symlinks.  It must remain
-# identical after the real game runs, catching accidental store writes.
-before=$($guix_bin hash -S nar "$hellcrawl_out")
+output = Path(sys.argv[1])
+for path in [output, *output.rglob("*")]:
+    mode = path.lstat().st_mode
+    if (stat.S_ISREG(mode) or stat.S_ISDIR(mode)) and mode & 0o222:
+        raise SystemExit("writable installed store member: " + str(path))
+PY
+}
+check_immutable
+before=$("$guix_bin" hash -S nar "$hellcrawl_out") || fail 'cannot hash installed output'
+printf '%s\n' "$before" >"$artifacts/output-nar-before.txt"
+status=0
+# The driver verifies the network namespace and remounts /gnu/store read-only.
+# It creates fresh HOME/XDG state and drives the ordinary installed game.
+"$profile/bin/env" -i LC_ALL=C TERM=xterm-256color PATH="$profile/bin" \
+    GUIX_PYTHONPATH="$python_path" \
+    HOST_NET_NS="$("$profile/bin/readlink" /proc/self/ns/net)" \
+    "$profile/bin/timeout" --kill-after=10 120 \
+    "$profile/bin/unshare" --user --map-root-user --mount --propagation private \
+    --net --pid --mount-proc --kill-child --fork \
+    "$profile/bin/python3" -I -B "$channel_dir/tests/hellcrawl-smoke.py" \
+    "$profile" "$hellcrawl_out" "$artifacts" \
+    >"$artifacts/proof.log" 2>&1 || status=$?
+# Print retained diagnostics even if hashing, mode validation or the proof fails.
+"$profile/bin/cat" "$artifacts/proof.log"
+after=$("$guix_bin" hash -S nar "$hellcrawl_out") || fail "cannot hash installed output after proof; evidence: $artifacts"
+printf '%s\n' "$after" >"$artifacts/output-nar-after.txt"
+test "$before" = "$after" || fail "installed output NAR changed; evidence: $artifacts"
+check_immutable || fail "installed output modes changed; evidence: $artifacts"
+test "$status" -eq 0 || fail "isolated PTY proof exited with status $status; evidence: $artifacts"
+"$profile/bin/python3" -I -B - "$artifacts" "$after" <<'PY'
+import json
+from pathlib import Path
+import sys
 
-scratch=$(mktemp -d "${TMPDIR:-/tmp}/hellcrawl-smoke-test.XXXXXXXX")
-mkdir "$scratch/home" "$scratch/config" "$scratch/data" "$scratch/cache" \
-      "$scratch/state" "$scratch/runtime" "$scratch/tmp"
-export HOME="$scratch/home"
-export XDG_CONFIG_HOME="$scratch/config"
-export XDG_DATA_HOME="$scratch/data"
-export XDG_CACHE_HOME="$scratch/cache"
-export XDG_STATE_HOME="$scratch/state"
-export XDG_RUNTIME_DIR="$scratch/runtime"
-export TMPDIR="$scratch/tmp"
-export TERM=xterm-256color
-export LC_ALL=C
-
-# bounded-validation owns the complete process group.  The package wrapper's
-# --smoke branch creates a fresh inner HOME/XDG tree and drives the real game
-# through a PTY, while the namespace has no network interfaces.
-raw=$scratch/terminal.raw
-proof=$(GOOCASTLE_RUNTIME_RAW_CAPTURE="$raw" \
-    "$node_bin" "$bounded_validation" --timeout-ms 40000 -- \
-    "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
-    "$hellcrawl_out/bin/hellcrawl" --smoke)
-case "$proof" in
-    *"$marker"*) ;;
-    *)
-        echo 'hellcrawl smoke did not produce its success marker' >&2
-        exit 1
-        ;;
-esac
-
-test -s "$raw"
-grep -aF 'choice of weapons' "$raw" >/dev/null
-grep -aF 'Health:' "$raw" >/dev/null
-grep -aF 'Goocastle' "$raw" >/dev/null
-
-after=$($guix_bin hash -S nar "$hellcrawl_out")
-test "$before" = "$after"
-test ! -w "$hellcrawl_out"
-printf '%s\n' "$proof"
+evidence = Path(sys.argv[1])
+report = json.loads((evidence / "report.json").read_text())
+report["immutable_nar"] = {"hellcrawl_output": sys.argv[2]}
+report["nar_unchanged"] = True
+for filename in ("new-game.raw", "reload.raw"):
+    if not (evidence / filename).stat().st_size:
+        raise SystemExit("missing actual PTY raw capture: " + filename)
+(evidence / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
+PY
+printf '%s\n' "Hellcrawl native dungeon/save/reload PTY and unchanged NAR passed; NAR: $after; evidence: $artifacts"

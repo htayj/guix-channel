@@ -1,200 +1,131 @@
 #!/bin/sh
-# Isolated installed-runtime proof for Dungeon Monkey Unlimited.
+# Drive the original installed graphical game in networkless namespaces.
 set -eu
 
-guix_bin=$(command -v "${GUIX:-guix}")
-grep_bin=$(command -v grep)
-find_bin=$(command -v find)
-env_bin=$(command -v env)
-true_bin=/usr/bin/true
-test -x "$true_bin"
-dirname_bin=$(command -v dirname)
-mkdir_bin=$(command -v mkdir)
-convert_bin=$(command -v convert || true)
-node_bin=${GOOCASTLE_NODE:-/usr/bin/node}
-test -x "$node_bin" || node_bin=$(command -v node)
-bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
+guix_bin=${GUIX:-guix}
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-cd "$channel_dir"
-
 if test "$#" -gt 1; then
     echo "usage: $0 [dungeon-monkey-unlimited-output]" >&2
     exit 64
 fi
-
 if test "$#" -eq 1; then
-    dmu_out=$1
+    game_out=$1
 else
-    dmu_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes \
-        dungeon-monkey-unlimited)
+    game_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts \
+        --no-substitutes dungeon-monkey-unlimited)
 fi
-
-test -x "$dmu_out/bin/dungeon-monkey-unlimited"
-test -x "$dmu_out/libexec/dungeon-monkey-unlimited-real"
-test -x "$dmu_out/libexec/dungeon-monkey-unlimited-smoke"
-
-data="$dmu_out/share/dungeon-monkey-unlimited"
-doc="$dmu_out/share/doc/dungeon-monkey-unlimited"
-test -s "$data/gamedata/messages.txt"
-test -s "$data/gamedata/advcom_core_introduction.txt"
-test -s "$data/image/title_screen.png"
-test -s "$data/image/VeraBd.ttf"
-test ! -e "$data/image/augie.ttf"
-test ! -e "$data/image/Thumbs.db"
-test ! -e "$data/image/debug.txt"
-test ! -e "$data/convert32.pas"
-test ! -e "$data/testit.pas"
-test ! -e "$data/mtest.pas"
-
-for notice in license.txt readme.txt credits.txt \
-    THIRD-PARTY-NOTICES.txt Bitstream-Vera-COPYRIGHT.TXT; do
-    test -s "$doc/$notice"
-done
-test -s "$doc/upstream-doc/effects_ref.txt"
-"$grep_bin" -F 'GNU Lesser General Public License' \
-    "$doc/license.txt" >/dev/null
-"$grep_bin" -F 'Version 2.1, February 1999' "$doc/license.txt" >/dev/null
-"$grep_bin" -F 'DUNGEON  MONKEY  UNLIMITED' "$doc/readme.txt" >/dev/null
-"$grep_bin" -F 'David Gervais' "$doc/credits.txt" >/dev/null
-"$grep_bin" -F 'RLTiles' "$doc/credits.txt" >/dev/null
-"$grep_bin" -F 'Creative Commons Attribution 3.0' \
-    "$doc/THIRD-PARTY-NOTICES.txt" >/dev/null
-"$grep_bin" -F 'Part of (or All) the graphic tiles used in this program is' \
-    "$doc/THIRD-PARTY-NOTICES.txt" >/dev/null
-"$grep_bin" -F 'Copyright (c) 2003 by Bitstream, Inc.' \
-    "$doc/Bitstream-Vera-COPYRIGHT.TXT" >/dev/null
-"$grep_bin" -F 'shall be included in all copies' \
-    "$doc/Bitstream-Vera-COPYRIGHT.TXT" >/dev/null
-
-contract="$channel_dir/.goocastle/runtime-evidence-contracts.json"
-test -s "$contract"
-"$grep_bin" -F '"issueNumber": 683' "$contract" >/dev/null
-"$grep_bin" -F '"packageName": "dungeon-monkey-unlimited"' \
-    "$contract" >/dev/null
-"$grep_bin" -F '"packageModulePath": "guix/tay/packages/dungeon-monkey-unlimited.scm"' \
-    "$contract" >/dev/null
-"$grep_bin" -F '"artifactPath": ".goocastle/evidence/issue-683.png"' \
-    "$contract" >/dev/null
-"$grep_bin" -F '"executable": "dungeon-monkey-unlimited"' \
-    "$contract" >/dev/null
-"$grep_bin" -F '"--smoke"' "$contract" >/dev/null
-"$grep_bin" -F '"successMarker": "DMU-SMOKE: campaign-save-load-ok"' \
-    "$contract" >/dev/null
-
-test -z "$("$find_bin" "$dmu_out" -xdev -type f -perm /222 -print -quit)"
-before=$($guix_bin hash -S nar "$dmu_out")
-
-if test -n "${GOOCASTLE_DISPOSABLE_WORKSPACE-}"; then
-    disposable_workspace=$GOOCASTLE_DISPOSABLE_WORKSPACE
-else
-    disposable_workspace=$(mktemp -d /tmp/goocastle-agent-XXXXXX)
-fi
-case "$disposable_workspace" in
-    /tmp/goocastle-agent-*) ;;
-    *) echo 'refusing an unvalidated disposable workspace' >&2; exit 1 ;;
+case "$game_out" in
+    /*) ;;
+    *) echo 'game output must be absolute' >&2; exit 64 ;;
 esac
-test -d "$disposable_workspace"
-scratch=$(mktemp -d "$disposable_workspace/dungeon-monkey-unlimited-XXXXXXXX")
-test -d "$scratch"
-mkdir "$scratch/home" "$scratch/config" "$scratch/data" \
-      "$scratch/cache" "$scratch/state" "$scratch/runtime" \
-      "$scratch/tmp" "$scratch/work"
-chmod 700 "$scratch/runtime"
-
-export HOME="$scratch/home"
-export XDG_CONFIG_HOME="$scratch/config"
-export XDG_DATA_HOME="$scratch/data"
-export XDG_CACHE_HOME="$scratch/cache"
-export XDG_STATE_HOME="$scratch/state"
-export XDG_RUNTIME_DIR="$scratch/runtime"
-export TMPDIR="$scratch/tmp"
-export PATH=
-export ALL_PROXY=http://127.0.0.1:9
-export HTTP_PROXY=http://127.0.0.1:9
-export HTTPS_PROXY=http://127.0.0.1:9
-export NO_PROXY='*'
-export LC_ALL=C
-
-if ! "$guix_bin" build --no-substitutes util-linux >/dev/null 2>&1; then
-    echo 'dungeon-monkey-unlimited smoke: util-linux is required' >&2
-    exit 77
-fi
-unshare_bin=
-for output in $($guix_bin build --no-substitutes util-linux); do
-    if test -x "$output/bin/unshare"; then
-        unshare_bin="$output/bin/unshare"
-        break
-    fi
+find_output ()
+{
+    for output in $($guix_bin build -L "$channel_dir/guix" --no-grafts \
+                       --no-substitutes "$2"); do
+        if test -x "$output/$1"; then
+            printf '%s\n' "$output"
+            return 0
+        fi
+    done
+    echo "could not find $1 in Guix package $2" >&2
+    return 1
+}
+coreutils_out=$(find_output bin/mktemp coreutils)
+findutils_out=$(find_output bin/find findutils)
+util_linux_out=$(find_output bin/unshare util-linux)
+python_out=$(find_output bin/python3 python)
+xorg_out=$(find_output bin/Xvfb xorg-server)
+xdotool_out=$(find_output bin/xdotool xdotool)
+xwd_out=$(find_output bin/xwd xwd)
+imagemagick_out=$(find_output bin/convert imagemagick)
+find=$findutils_out/bin/find
+fail ()
+{
+    echo "Dungeon Monkey native smoke: $*" >&2
+    exit 1
+}
+test -x "$game_out/bin/dungeon-monkey-unlimited" || fail 'missing launcher'
+test -x "$game_out/libexec/dungeon-monkey-unlimited-real" || fail 'missing source-built game'
+test ! -e "$game_out/libexec/dungeon-monkey-unlimited-smoke" || fail 'obsolete proof executable installed'
+data=$game_out/share/dungeon-monkey-unlimited
+doc=$game_out/share/doc/dungeon-monkey-unlimited
+for file in gamedata/messages.txt gamedata/advcom_core_introduction.txt \
+    image/title_screen.png image/VeraBd.ttf; do
+    test -s "$data/$file" || fail "missing asset $file"
 done
-test -n "$unshare_bin"
-test -r "$bounded_validation"
-if ! "$node_bin" "$bounded_validation" --timeout-ms 5000 -- \
-        "$unshare_bin" --user --map-root-user --net --fork \
-        "$true_bin" >/dev/null 2>&1; then
-    echo 'dungeon-monkey-unlimited smoke requires an unprivileged network namespace' >&2
+for file in license.txt readme.txt credits.txt THIRD-PARTY-NOTICES.txt \
+    Bitstream-Vera-COPYRIGHT.TXT upstream-doc/effects_ref.txt; do
+    test -s "$doc/$file" || fail "missing notice/document $file"
+done
+expect_sha256 ()
+{
+    actual=$("$coreutils_out/bin/sha256sum" "$1" | "$coreutils_out/bin/cut" -d ' ' -f 1)
+    test "$actual" = "$2" || fail "altered upstream license/font $1"
+}
+expect_sha256 "$doc/license.txt" \
+    df5a498f85ecfc3871b382f24b001de809378d6dc249d5c6020722a90001b9d6
+expect_sha256 "$doc/credits.txt" \
+    773c67603dde28a056300d9c32ca47985e6f383df5c26b4b5d0d91e1088892d8
+expect_sha256 "$data/image/VeraBd.ttf" \
+    cc037385e4d55bfde89b13e03091ee93bf40c0c52ddd391ff031ab276f13b8e9
+for forbidden in image/augie.ttf image/Thumbs.db image/debug.txt convert32.pas \
+    testit.pas mtest.pas; do
+    test ! -e "$data/$forbidden" || fail "unneeded or unlicensed file $forbidden"
+done
+forbidden=$("$find" "$game_out" \( -iname '*.exe' -o -iname '*.dll' \
+    -o -perm -2000 -o -perm -4000 -o -type f -perm /222 \) -print -quit)
+test -z "$forbidden" || fail "forbidden or writable output $forbidden"
+unshare=$util_linux_out/bin/unshare
+if ! "$unshare" --user --map-root-user --mount --propagation private \
+    --net --pid --kill-child --fork "$coreutils_out/bin/true" >/dev/null 2>&1; then
+    echo 'DMU smoke requires user, mount, network and PID namespaces' >&2
     exit 77
 fi
-
-artifact=
-screenshot_bmp=
-if test -n "${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}"; then
-    artifact="$channel_dir/.goocastle/evidence/issue-683.png"
-    screenshot_bmp="$disposable_workspace/dungeon-monkey-unlimited-smoke.bmp"
-    "$mkdir_bin" -p "$("$dirname_bin" -- "$artifact")"
-    test -x "$convert_bin"
+before=$($guix_bin hash -S nar "$game_out") || fail 'cannot hash output'
+scratch=$("$coreutils_out/bin/mktemp" -d "${TMPDIR:-/tmp}/dmu-native.XXXXXX")
+trap '"$coreutils_out/bin/rm" -rf "$scratch"' EXIT HUP INT TERM
+"$coreutils_out/bin/mkdir" "$scratch/home" "$scratch/config" "$scratch/data" \
+    "$scratch/cache" "$scratch/state" "$scratch/runtime" "$scratch/tmp" "$scratch/work"
+"$coreutils_out/bin/chmod" 700 "$scratch/runtime"
+artifacts=${DMU_SMOKE_ARTIFACTS:-$scratch/artifacts}
+case "$artifacts" in
+    /*) ;;
+    *) fail 'DMU_SMOKE_ARTIFACTS must be absolute' ;;
+esac
+status=0
+"$coreutils_out/bin/env" -i \
+    HOME="$scratch/home" XDG_CONFIG_HOME="$scratch/config" \
+    XDG_DATA_HOME="$scratch/data" XDG_CACHE_HOME="$scratch/cache" \
+    XDG_STATE_HOME="$scratch/state" XDG_RUNTIME_DIR="$scratch/runtime" \
+    TMPDIR="$scratch/tmp" LC_ALL=C PATH="$coreutils_out/bin" \
+    "$coreutils_out/bin/timeout" --kill-after=10 150 \
+    "$unshare" --user --map-root-user --mount --propagation private \
+    --net --pid --kill-child --fork \
+    "$python_out/bin/python3" "$channel_dir/tests/dungeon-monkey-unlimited-x11-runner.py" \
+    "$game_out/bin/dungeon-monkey-unlimited" "$scratch" "$xorg_out/bin/Xvfb" \
+    "$xdotool_out/bin/xdotool" "$xwd_out/bin/xwd" \
+    "$imagemagick_out/bin/convert" "$artifacts" || status=$?
+if test "$status" -ne 0; then
+    for log in "$scratch/game.log" "$scratch/xvfb.log"; do
+        test ! -f "$log" || "$coreutils_out/bin/cat" "$log" >&2
+    done
+    fail "native acceptance exited with status $status"
 fi
-
-if test -n "$screenshot_bmp"; then
-    proof=$("$env_bin" -i \
-        HOME="$scratch/home" \
-        XDG_CONFIG_HOME="$scratch/config" \
-        XDG_DATA_HOME="$scratch/data" \
-        XDG_CACHE_HOME="$scratch/cache" \
-        XDG_STATE_HOME="$scratch/state" \
-        XDG_RUNTIME_DIR="$scratch/runtime" \
-        TMPDIR="$scratch/tmp" \
-        SDL_VIDEODRIVER=dummy \
-        SDL_AUDIODRIVER=dummy \
-        DMU_SMOKE_SCREENSHOT="$screenshot_bmp" \
-        LC_ALL=C PATH= \
-        "$node_bin" "$bounded_validation" --timeout-ms 30000 -- \
-        "$unshare_bin" --user --map-root-user --net --fork \
-        "$dmu_out/bin/dungeon-monkey-unlimited" --smoke)
-else
-    proof=$("$env_bin" -i \
-        HOME="$scratch/home" \
-        XDG_CONFIG_HOME="$scratch/config" \
-        XDG_DATA_HOME="$scratch/data" \
-        XDG_CACHE_HOME="$scratch/cache" \
-        XDG_STATE_HOME="$scratch/state" \
-        XDG_RUNTIME_DIR="$scratch/runtime" \
-        TMPDIR="$scratch/tmp" \
-        SDL_VIDEODRIVER=dummy \
-        SDL_AUDIODRIVER=dummy \
-        LC_ALL=C PATH= \
-        "$node_bin" "$bounded_validation" --timeout-ms 30000 -- \
-        "$unshare_bin" --user --map-root-user --net --fork \
-        "$dmu_out/bin/dungeon-monkey-unlimited" --smoke)
-fi
-test "$proof" = 'DMU-SMOKE: campaign-save-load-ok'
-
-if test -n "$screenshot_bmp"; then
-    "$convert_bin" "$screenshot_bmp" "PNG24:$artifact"
-    test -s "$artifact"
-fi
-
-test -z "$("$find_bin" "$scratch/home" "$scratch/config" \
-    "$scratch/data" "$scratch/cache" "$scratch/state" \
-    "$scratch/runtime" "$scratch/tmp" "$scratch/work" \
-    -mindepth 1 -type f ! -name config.cfg -print -quit)"
-# The launcher gives --smoke its own temporary worktree and removes it on
-# exit.  The caller's isolated XDG/HOME tree must therefore remain empty.
-test -z "$("$find_bin" "$scratch/home" "$scratch/config" \
-    "$scratch/data" "$scratch/cache" "$scratch/state" \
-    "$scratch/runtime" "$scratch/tmp" "$scratch/work" \
-    -mindepth 1 -print -quit)"
-
-after=$($guix_bin hash -S nar "$dmu_out")
-test "$before" = "$after"
-test ! -w "$dmu_out"
-printf '%s\n' "$proof"
+state=$scratch/data/dungeon-monkey-unlimited
+test -s "$state/savegame/cha_NativeHero.txt" || fail 'no native character save'
+test -s "$state/savegame/rpg_NativeCampaign.txt" || fail 'no native campaign save'
+test -s "$state/config.cfg" || fail 'no native configuration'
+for resource in gamedata image; do
+    test -L "$state/$resource" || fail "resource $resource was copied or not linked"
+    test "$("$coreutils_out/bin/readlink" "$state/$resource")" = "$data/$resource" \
+        || fail "wrong immutable resource target $resource"
+done
+unexpected=$("$find" "$scratch/home" "$scratch/config" "$scratch/cache" \
+    "$scratch/state" "$scratch/runtime" "$scratch/work" -mindepth 1 -print -quit)
+test -z "$unexpected" || fail "state escaped XDG data $unexpected"
+unexpected=$("$find" "$state" -type f ! -name config.cfg ! -name cha_NativeHero.txt \
+    ! -name rpg_NativeCampaign.txt ! -name debug.txt -print -quit)
+test -z "$unexpected" || fail "unexpected game state $unexpected"
+after=$($guix_bin hash -S nar "$game_out") || fail 'cannot hash output after play'
+test "$before" = "$after" || fail "output NAR changed from $before to $after"
+printf '%s\n' 'Dungeon Monkey Unlimited isolated native graphical acceptance passed'
