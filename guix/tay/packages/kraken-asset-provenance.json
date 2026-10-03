@@ -1,0 +1,46 @@
+{
+  "source_commit": "eff0571e4c8b4930b476ef6af55851c62a938d15",
+  "source_archive_sha256_guix_base32": "010v78xy1cj7x9dvr57cq7d9ypm727kxfvqvd7q4vq73x408qx7d",
+  "license_url": "https://github.com/mittagessen/kraken/blob/eff0571e4c8b4930b476ef6af55851c62a938d15/LICENSE",
+  "metadata_url": "https://github.com/mittagessen/kraken/blob/eff0571e4c8b4930b476ef6af55851c62a938d15/pyproject.toml",
+  "assets": [
+    {
+      "path": "tests/resources/000236.png",
+      "sha256": "36f1dfbb212e6b82eb15e0c5e1d761a5a1aec6c4d580a7518673fd441dc56a34",
+      "bytes": 5263,
+      "license": "Apache-2.0",
+      "evidence": "Tracked in canonical eff0571e4c8b4930b476ef6af55851c62a938d15 tree; project pyproject.toml license Apache-2.0 and root LICENSE grants source/object redistribution; no file-specific restriction found. Not a grant for external downloaded models."
+    },
+    {
+      "path": "tests/resources/000236.gt.txt",
+      "sha256": "4cf0b6fa0dd3f46039ad5214dc1af87ca5b6b0ae2189f68df83d76d342c09f55",
+      "bytes": 69,
+      "license": "Apache-2.0",
+      "evidence": "Tracked in canonical eff0571e4c8b4930b476ef6af55851c62a938d15 tree; project pyproject.toml license Apache-2.0 and root LICENSE grants source/object redistribution; no file-specific restriction found. Not a grant for external downloaded models."
+    },
+    {
+      "path": "tests/resources/overfit.mlmodel",
+      "sha256": "90c653eda7fb4cf3795cf9610147a74656b7ad52340d5cebb76e7a13765a645e",
+      "bytes": 123218,
+      "license": "Apache-2.0",
+      "evidence": "Tracked in canonical eff0571e4c8b4930b476ef6af55851c62a938d15 tree; project pyproject.toml license Apache-2.0 and root LICENSE grants source/object redistribution; no file-specific restriction found. Not a grant for external downloaded models."
+    },
+    {
+      "path": "kraken/blla.mlmodel",
+      "sha256": "77a638a83c9e535620827a09e410ed36391e9e8e8126d5796a0f15b978186056",
+      "bytes": 5047020,
+      "license": "Apache-2.0",
+      "evidence": "Tracked in canonical eff0571e4c8b4930b476ef6af55851c62a938d15 tree; project pyproject.toml license Apache-2.0 and root LICENSE grants source/object redistribution; no file-specific restriction found. Not a grant for external downloaded models."
+    }
+  ],
+  "acceptance_oracle": {
+    "source_path": "tests/test_rpred.py",
+    "function": "test_mm_rpred_bbox_nobidi",
+    "predicate": "exact normalized reference prediction, not model accuracy claim",
+    "prediction": "ܕܗܣܐܕ ܪܝ .ܡܡ ܐܠܠ ܗܠ ܐܘܗ ܟܘܗܢ ܡܡ ܐܠ",
+    "padding": 16,
+    "bidi_reordering": false,
+    "bbox": [0, 0, 2544, 156]
+  },
+  "model_boundary": "No external assets are fetched at build or smoke time. External production recognition model selection/download/license verification is a separate user action; use an absolute local pinned model path."
+}

@@ -3349,6 +3349,130 @@ remain untouched.  The current backlog issue numbers above are different
 from those historical contract IDs.  No Emigo contract was removed.
 No deployed host/service changed, so no network OKF update applies.
 
+## Kraken, GenEd and SoundThread — verified native paths
+
+These integrations provide native applications and standalone safe-proof
+helpers.  Kraken passed final build/reproducibility/lint and integrated
+offline text/hOCR proof, including 30 upstream tests with 51 subtests.
+SoundThread passed final build/reproducibility/lint and real WAV import,
+graph save/reload/render and mixed Master-bus PCM proof.  GenEd passed final
+build/reproducibility/lint and real native scene open/text edit/save/reopen
+proof.  All three integrated Make targets also passed.  No deployment is
+established.
+
+- **Kraken #143** packages mittagessen/kraken 7.1 at revision `eff0571e`
+  with the original `kraken` and `ketos` entry points.  Kraken itself is
+  source-built; `kraken-python-runtime` installs pinned official CPython 3.12
+  dependency wheels, including CPU PyTorch 2.9.1/torchvision 0.24.1, without
+  rebuilding their native extensions.  This binary-assisted closure is
+  `x86_64-linux` only and retains bundled license/third-party notice trees and
+  a provenance inventory.  The canonical Apache-2.0 tree supplies the
+  `tests/resources` image, exact ground truth and overfit model; the earlier
+  research path `kraken/tests/resources` was incorrect.  The standalone
+  `tests/kraken-smoke.sh` passed real offline CPU recognition at
+  `/tmp/kraken-native-final` in plain-text and hOCR modes,
+  independently checking exact normalized output
+  against upstream `tests/test_rpred.py:test_mm_rpred_bbox_nobidi` for the
+  same model/image/full bounding box with `--no-reorder --pad 16`, export
+  consistency and pinned asset hashes.  This checks logical codepoint order,
+  not the different padding implied by the older simple-bbox test.  Installed
+  `share/kraken/fixtures/provenance.json` records license/asset hashes and the
+  exact oracle settings.
+  The canonical reference matched exactly (similarity 1.0); independently
+  normalized ground-truth similarity was 0.9315068.  These fixture-specific
+  results do not establish production OCR accuracy.  `ketos --help` covers command discovery/import
+  only, not training.  Production recognition needs a suitable separate local
+  model; no automatic model fetch is part of the proof or build.
+  The final provenance-bearing output
+  `/gnu/store/xsn6hj9w3g8cppq5y1xz02q7azi6vhmi-kraken-7.1` passed its
+  reproducibility rebuild, offline lint and integrated `make check-kraken`;
+  all checked immutable assets remained unchanged.
+- **GenEd #138** packages lambdamikel/GenEd revision `0d847a3b` as the
+  GPL-3.0-only Common Lisp/McCLIM visual editor with a complete ordered ASDF
+  system.  Ordinary `gened` launches the real editor; no production `--smoke`
+  or frame-probe switch is installed.  Writable assets are copied once under
+  `$XDG_DATA_HOME/gened`; upstream's disabled CLASSIC functionality remains
+  unavailable.  The Allegro-only Print Scene menu is omitted; portable Save
+  Scene As Postscript remains.  McCLIM compatibility repairs preserve command
+  registration while separating the dynamic Undo label, and supply the
+  required positional object to the blank-area creator translator.
+  Property-pane queries resynchronize frame state on each pass; completion
+  display names use `princ-to-string` while retaining their original typed
+  values, so G-TEXT selects the actual class rather than an invalid string.
+  Text creation uses the standard textual dialog view instead of the
+  incompatible text-field gadget callback/output-record path.
+  `tests/gened-smoke.sh` passed actual native X events under private Xvfb at
+  `/tmp/gened-native-roundtrip`: original scene load, G-TEXT selection,
+  creation of exact text `GenEd native exact text 750`, save, clear, reopen
+  and resave with exact serialized-text/scene continuity checks.  Screenshot
+  inspection of the reopened scene showed the original circle (ID 14) and
+  new text (ID 15), not a synthetic frame.  The final output
+  `/gnu/store/s27lvrf4ak6npph52dmkb5h0ixayf00q-gened-0-0.0d847a3` passed
+  its reproducibility rebuild and offline lint.  The inspected native
+  screenshot is [gened-native.png](.goocastle/evidence/gened-native.png).
+  Integrated `make check-gened` also passed at `/tmp/gened-artifacts-ffBnb4`.
+- **SoundThread #128** packages the canonical GDScript source at revision
+  `a33198a`, launched with a pinned official prebuilt Godot 4.4.1 engine.
+  The upstream engine ELF bytes remain unchanged; a wrapper selects the
+  pinned Guix glibc loader and library path instead of patching the ELF.
+  The recipe validates its exact six required shared-library sonames,
+  dependency closure, byte identity and loader compatibility.
+  Installed source under `share/soundthread` is imported on a disposable
+  writable copy per launch, rather than modifying the immutable store tree.
+  This is a source-run application, **not a source-built engine** or a claim
+  that this engine is current or security-audited.  The application is MIT;
+  Work Sans and Bravura fonts are OFL.  The bundled modified Bravura font
+  retained its reserved font name, so the package replaces it at the existing
+  resource path with pristine Guix Bravura 1.393 and retains both font
+  licenses.  Engine copyright/license and third-party notices are retained.
+  Automatic startup GitHub release requests are disabled because Guix owns
+  version selection; explicit user-initiated browser/help/upstream links remain.
+  Offline acceptance remains enforced by a private network namespace.
+  Optional CDP is not installed or stubbed: users may configure the directory
+  containing their `distort` executable in `user://settings.ini`, section
+  `[cdpprogs]`, key `location`.  The standalone helper passed at
+  `/var/tmp/soundthread-native-roundtripfix`: the original main scene imported
+  a generated two-second WAV through its existing Input File node, connected
+  the graph through Misc Gain set to 0.625 into Output File and saved/reloaded
+  that state.  Actual input-preview playback—not gain-processed CDP output—
+  produced Master-bus PCM captured by `AudioEffectCapture` on Godot's Dummy
+  driver: 94,208 frames at 44,100 Hz, no discarded frames, and both channels
+  measured 439.975 Hz with 1.99975 seconds of active signal.  The rendered
+  waveform/graph was inspected.  Roundtrip comparison normalizes only numeric
+  suffixes of anonymous `@Type@number` slider-path components and optionbutton
+  keys; types, path/control order and values remain intact, and every other
+  graph field is compared exactly.  Gain state is preserved but not executed:
+  CDP is absent, and the processed-file field remains empty as expected.
+  This does not prove host-speaker playback or optional CDP integration.
+  The final output is
+  `/gnu/store/8xm1qh308mhjpizcqshs9sfcmyk9f9g7-soundthread-0.0.0-0.a33198a`.
+  Its external consumer script is not an installed application hook or
+  production smoke mode.
+  Integrated `make check-soundthread` also passed at
+  `/var/tmp/soundthread-native-integrated`.  The inspected native screenshot is
+  [soundthread-native.png](.goocastle/evidence/soundthread-native.png).
+
+Build/smoke commands, run serially with fresh evidence directories:
+
+```sh
+guix lint -L guix --no-network --exclude=cve,refresh,archival kraken gened soundthread
+kraken_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 kraken)
+gened_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 gened)
+soundthread_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 soundthread)
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 --check kraken gened soundthread
+KRAKEN_SMOKE_ARTIFACT_DIR=/tmp/kraken-native-FRESH GUIX=guix sh tests/kraken-smoke.sh "$kraken_out"
+GUIX=guix sh tests/gened-smoke.sh --package "$gened_out" --artifacts /tmp/gened-native-FRESH
+SOUNDTHREAD_SMOKE_ARTIFACTS=/tmp/soundthread-native-FRESH GUIX=guix sh tests/soundthread-smoke.sh "$soundthread_out"
+```
+
+The obsolete synthetic production-mode contracts #748 (SoundThread) and
+#750 (GenEd) were removed from `.goocastle/runtime-evidence-contracts.json`.
+Kraken's #751 contract was also retired: its `--serializer` option does not
+exist in this pinned source (the real option is `--template`/`-t`), and its
+marker-only proof is superseded by independent recognition/output checks.
+Historical screenshots and unrelated contracts remain preserved.
+
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -3422,6 +3546,9 @@ No deployed host/service changed, so no network OKF update applies.
 | `crashrun` | DanaL/crashRun `v0.5.0` branch snapshot (`9b95cc7`) | Original GPL-3.0-or-later Python/SDL2 game and Bitstream Vera font; source build/reproducibility/native creation/turn/save/load and lint passed |
 | `dungeon-monkey-unlimited` | Dungeon Monkey Unlimited 1.001 | Original LGPL-2.1-or-later Pascal/SDL game with attributed tiles/font and XDG native saves; final build/reproducibility/native GUI/lint passed |
 | `emigo` | MatthewZMD/emigo `0.5-0.91d122a` | Emacs/local Python coding-agent backend with parser queries, fixed tokenizer and immutable default CA data; build/reproducibility/local IPC/parser/TLS/lint passed; no provider or interactive chat proof |
+| `kraken` | mittagessen/kraken 7.1 (`eff0571e`) | Source-built Apache-2.0 OCR CLI/fixtures with binary-assisted CPU Python wheels; final build/repro/lint/integrated offline upstream-reference text/hOCR proof and 30 tests/51 subtests passed; no production accuracy/training claim |
+| `gened` | lambdamikel/GenEd (`0d847a3b`) | GPL-3.0-only original Common Lisp/McCLIM editor/XDG assets; final build/repro/lint/native exact text edit/save/reopen/resave passed; CLASSIC and Allegro-only printing unavailable, Postscript export retained |
+| `soundthread` | j-p-higgins/SoundThread (`a33198a`) | MIT source-run graph/audio app with OFL fonts/pristine Bravura and pinned prebuilt Godot 4.4.1; final build/repro/lint/native WAV/graph roundtrip/render/Master PCM passed; no CDP/host audio claim |
 | `hermes-agent` | NousResearch/hermes-agent 0.21.5 (`f97608f`) | Actual CLI/JSON-RPC/WebSocket backend, pinned binary-assisted Python closure and source-built media; writable user configuration and Guix-only package updates; reproducibility and native/backend smoke passed |
 | `hermes-desktop` | NousResearch/hermes-agent 2026.9.24 (`f97608f`) | Actual desktop app with pinned Electron 40.10.2, rebuilt terminal addon, packaged backend and free-font substitution; reproducible build and sandboxed real desktop acceptance passed without provider/model calls |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
@@ -4134,6 +4261,9 @@ make check-scala-ts # build/repro/runtime/lint observed: strict compiled Option/
 make check-crashrun # build/repro/runtime/lint passed: SDL creation/inventory/turn/save/load/resave and immutable output
 make check-dungeon-monkey-unlimited # final build/repro/runtime/lint passed: GUI creation/movement/save/restore/continued play
 make check-emigo # build/repro/native/lint passed: real loopback EPC/context/tokenizer/parser/path errors and TLS trust; no provider/chat UI proof
+make check-kraken # final build/repro/lint/integrated offline CPU text+hOCR exact reference/export passed; ketos discovery only
+make check-gened # final build/repro/lint/standalone+integrated native exact text edit/save/reopen/resave passed
+make check-soundthread # final build/repro/lint/native WAV import/graph roundtrip/render/real Master-bus PCM passed; Dummy driver, no CDP/host audio
 make check-lbforth # installed native arithmetic/control flow/recursion and error recovery from empty private cwd; python3 required, immutable output
 make check-legcord # real native onboarding/settings and Discord logged-out cold-relaunch surface, sandbox and unchanged NAR; no credentials/login/live audio
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
