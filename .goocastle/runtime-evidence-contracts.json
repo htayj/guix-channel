@@ -1339,22 +1339,6 @@
       }
     },
     {
-      "issueNumber": 742,
-      "packageName": "eca",
-      "packageModulePath": "guix/tay/packages/editor-code-assistant-eca.scm",
-      "artifactPath": ".goocastle/evidence/issue-742.png",
-      "runtime": {
-        "executable": "eca",
-        "invocation": {
-          "file": "eca",
-          "args": [
-            "server"
-          ]
-        },
-        "successMarker": "\"chat-welcome-message\""
-      }
-    },
-    {
       "issueNumber": 743,
       "packageName": "dicom2mesh",
       "packageModulePath": "guix/tay/packages/dicom2mesh.scm",
@@ -1378,23 +1362,6 @@
       }
     },
     {
-      "issueNumber": 744,
-      "packageName": "emacs-eaf-emacs-application-framework",
-      "packageModulePath": "guix/tay/packages/emacs-application-framework.scm",
-      "artifactPath": ".goocastle/evidence/issue-744.png",
-      "runtime": {
-        "executable": "eaf-emacs-application-framework",
-        "invocation": {
-          "file": "eaf-emacs-application-framework",
-          "args": [
-            "--goocastle-smoke",
-            "--missing-app=goocastle-local-stub"
-          ]
-        },
-        "successMarker": "GOOCASTLE_EAF_CORE_RUNTIME_OK"
-      }
-    },
-    {
       "issueNumber": 745,
       "packageName": "amstelvar",
       "packageModulePath": "guix/tay/packages/amstelvar.scm",
@@ -1406,22 +1373,6 @@
           "args": []
         },
         "successMarker": "amstelvar: font metadata smoke passed"
-      }
-    },
-    {
-      "issueNumber": 746,
-      "packageName": "cotd",
-      "packageModulePath": "guix/tay/packages/cotd.scm",
-      "artifactPath": ".goocastle/evidence/issue-746.png",
-      "runtime": {
-        "executable": "cotd",
-        "invocation": {
-          "file": "cotd",
-          "args": [
-            "--cotd-smoke"
-          ]
-        },
-        "successMarker": "COTD-SMOKE-READY"
       }
     },
     {

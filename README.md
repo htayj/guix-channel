@@ -3473,6 +3473,116 @@ marker-only proof is superseded by independent recognition/output checks.
 Historical screenshots and unrelated contracts remain preserved.
 
 
+## CotD, Emacs Application Framework and ECA — verified native paths
+
+CotD passed final build/reproducibility/lint and native strategy save/advance/
+restore proof.  ECA passed final label-bearing build/reproducibility/lint and
+integrated real local JSON-RPC/`eca-emacs` proof, including a fresh exact
+ungrafted-output run.  EAF passed final build/reproducibility/lint and genuine
+GUI/demo/EPC/theme/resize/shutdown proof.  All three integrated Make targets
+also passed.  No deployment is established.
+
+- **CotD #122** packages gwathlobal/CotD revision `b771e2e` as
+  `2.0.2-0.b771e2e` (the ASDF version is stale).  The original GPL-3.0-only
+  SBCL/SDL game launches through `cotd` with no arguments or installed smoke
+  switch.  Immutable assets are under `share/cotd`; native state is under
+  `$XDG_STATE_HOME/cotd` or `$HOME/.local/state/cotd`.  Guix supplies
+  lispbuilder-sdl/bordeaux-threads/cl-store/log4cl; pinned defenum retains its
+  actual custom permissive COPYING terms rather than the misleading ASDF
+  BSD metadata, and the SDL font notices remain retained.  The required
+  `font_large.bmp` and source artwork `font_large_src.png` lack separate
+  per-file licenses; their GPL-3.0 project-wide coverage is an inference from
+  the root grant, not independent font-license verification.  There are no
+  TTF/audio payloads or submodules.  The standalone
+  `tests/cotd-smoke.sh` passed at `/tmp/cotd-native-loadfix`: a real Chrome
+  angel campaign, baseline save/restart/load, native Next day advancing
+  13 → 14 April 1915, followed by save/restart/restore/resave with exact
+  time/faction/world-map continuity.  Checkpointed native X events/OCR and
+  private namespaces/Xvfb/HOME/XDG replace a production readiness marker.
+  Inspection showed the populated map, Angels and Wait & see state; the
+  actual restored screenshot is
+  [cotd-native.png](.goocastle/evidence/cotd-native.png).
+  Integrated `make check-cotd` also passed at `/tmp/cotd-native-integrated`.
+  Tactical combat is outside that proof.
+- **Emacs Application Framework #116** packages the GPL-3.0-or-later core
+  at `5fe1a6c` and the real upstream GPL-3.0-or-later `eaf-demo` at
+  `d210ef3`.  Consumers load `eaf`/`eaf-demo` in Emacs and invoke
+  `eaf-open-demo`; there is no invented `eaf-emacs-application-framework`
+  launcher or installed `--goocastle-smoke` branch.  The store-bound
+  `eaf-python` wrapper supplies Qt6/Python/EPC and supporting libraries.
+  Installed `core/js/caret_browsing.js` also retains its Chromium BSD-3-Clause
+  notice; the package is not GPL-only.  Python Requests supports the core's
+  lazy pyaria2 import without bundling the optional browser app.
+  Private `python-eaf-tld` selects LGPL-2.1-or-later code terms and retains
+  MPL-2.0 suffix data without a network updater.  No imperative installer,
+  optional browser/media/provider app or missing-app stub is packaged.
+  `tests/emacs-application-framework-smoke.sh` passed at
+  `/tmp/eaf-native-cachefix` with actual GUI Emacs/upstream Qt demo and
+  two-way EPC under private Xvfb/loopback-only networking: native app identity,
+  pixel-visible theme transition, Python callback rename, resize from 1472
+  to 736 pixels and restoration, ordinary missing-source `FileNotFoundError`,
+  and close/stop lifecycle, with unchanged immutable output.  Artifacts include
+  root-before/root-resized PNGs and demo-before/themed/normal/resized/restored
+  JPEGs.  Resize proof clears Emacs's stale image cache; its earlier stale
+  screenshot mismatch did not establish a Qt resize defect.  Actual screenshot
+  inspection showed the renamed demo and working greeting, but oversized
+  button text is clipped at the left edge, not fully fitted.  The inspected
+  native screenshot is [eaf-native.png](.goocastle/evidence/eaf-native.png).
+  The store-bound Python default-declaration compatibility correction passed
+  final build/runtime.  A helper-only marker is not an application feature or
+  optional-app proof.
+  Integrated `make check-emacs-application-framework` also passed at
+  `/tmp/eaf-native-integrated`.
+- **ECA #113** packages the official `eca.jar` **0.154.0** release at
+  `52b6f015`, with a Guix OpenJDK 24 runtime.  This is a hash-pinned upstream
+  JVM artifact, **not a Guix source rebuild** or an Oracle/GraalVM native
+  executable.  Exact source, dependency lock/build workflow, bundled
+  third-party LICENSE/NOTICE contents, exposed Maven POMs and release provenance
+  are retained;
+  no embedded native `.so`, Maven resolution or runtime server download is
+  part of this installation.  The server is Apache-2.0; bundled dependencies
+  retain their EPL/Apache/MIT/BSD/CDDL terms rather than being relicensed.
+  `tests/eca-server-smoke.py` passed real framed JSON-RPC and actual
+  `eca-emacs` at `/tmp/eca-server-smoke.8hlyt2hw`: initialize's
+  `chatWelcomeMessage`, `config/updated` advertised agents, local `/doctor`,
+  missing-history top-level `chat_not_found`, JSON-RPC unknown method
+  `-32601`, shutdown/exit, and client welcome/doctor rendering.
+  `ECA_SMOKE_KEEP_SCRATCH=1` retains `protocol.json`, `emacs-chat.txt` and
+  `server.stderr`.  The companion's fake-server fixture remains a protocol
+  unit fixture, not actual ECA server proof.  No provider/model request,
+  credentials or model-assisted chat behavior is claimed.
+  Final label-bearing build/reproducibility/lint and integrated `make check-eca`
+  passed.  Both the integrated grafted output and a fresh exact final
+  ungrafted-output run at `/tmp/eca-server-smoke.kn2hqsyk` passed.
+  Provider-catalog/plugin fetching is explicitly disabled in the helper, but
+  upstream initialization still attempts a `models.dev` catalog request.
+  The offline namespace denies that external access (and the server logs the
+  error), after which local zero-provider operations continue.  This proof
+  establishes blocked external networking, not absence of attempted requests;
+  the no-Maven/no-server-downloader installation boundary is separate.
+
+Build/smoke commands for the verified paths, run serially with fresh evidence:
+
+```sh
+guix lint -L guix --no-network --exclude=cve,refresh,archival cotd emacs-eaf-emacs-application-framework eca
+cotd_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 cotd)
+eaf_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 emacs-eaf-emacs-application-framework)
+eca_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 eca)
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 --check cotd emacs-eaf-emacs-application-framework eca
+GUIX=guix sh tests/cotd-smoke.sh --package "$cotd_out" --artifacts /tmp/cotd-native-FRESH
+EAF_SMOKE_ARTIFACTS=/tmp/eaf-native-FRESH GUIX=guix sh tests/emacs-application-framework-smoke.sh "$eaf_out"
+ECA_SMOKE_KEEP_SCRATCH=1 GUIX=guix python3 tests/eca-server-smoke.py "$eca_out"
+```
+
+The obsolete synthetic CotD #746 and EAF #744 executable contracts were
+removed from `.goocastle/runtime-evidence-contracts.json`: ordinary native
+consumers replace their invented smoke switches/missing-app stub.  ECA's #742
+row was also retired: ordinary `eca server` remains valid, but its historical
+`chat-welcome-message` marker is not the current wire field
+`chatWelcomeMessage`.  This is not removal of a fake production mode.
+Unrelated records and historical screenshots remain preserved.
+
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -3549,6 +3659,9 @@ Historical screenshots and unrelated contracts remain preserved.
 | `kraken` | mittagessen/kraken 7.1 (`eff0571e`) | Source-built Apache-2.0 OCR CLI/fixtures with binary-assisted CPU Python wheels; final build/repro/lint/integrated offline upstream-reference text/hOCR proof and 30 tests/51 subtests passed; no production accuracy/training claim |
 | `gened` | lambdamikel/GenEd (`0d847a3b`) | GPL-3.0-only original Common Lisp/McCLIM editor/XDG assets; final build/repro/lint/native exact text edit/save/reopen/resave passed; CLASSIC and Allegro-only printing unavailable, Postscript export retained |
 | `soundthread` | j-p-higgins/SoundThread (`a33198a`) | MIT source-run graph/audio app with OFL fonts/pristine Bravura and pinned prebuilt Godot 4.4.1; final build/repro/lint/native WAV/graph roundtrip/render/Master PCM passed; no CDP/host audio claim |
+| `cotd` | gwathlobal/CotD 2.0.2 (`b771e2e`) | GPL-3.0-only original SBCL/SDL game/XDG native state; final build/repro/lint/standalone+integrated campaign day advance/save/restore passed; tactical combat unproved |
+| `emacs-eaf-emacs-application-framework` | EAF (`5fe1a6c`) with eaf-demo (`d210ef3`) | GPL-3.0-or-later core/Qt demo plus Chromium BSD-3 JS and Python/EPC closure; final build/repro/lint/standalone+integrated GUI/IPC/theme/resize/shutdown passed; clipped greeting/no optional apps |
+| `eca` | editor-code-assistant/eca 0.154.0 (`52b6f015`) | Official JVM jar/OpenJDK24 with retained source/provenance/notices; final build/repro/lint/integrated+exact ungrafted real server/client proof passed; no source-rebuild/provider claim |
 | `hermes-agent` | NousResearch/hermes-agent 0.21.5 (`f97608f`) | Actual CLI/JSON-RPC/WebSocket backend, pinned binary-assisted Python closure and source-built media; writable user configuration and Guix-only package updates; reproducibility and native/backend smoke passed |
 | `hermes-desktop` | NousResearch/hermes-agent 2026.9.24 (`f97608f`) | Actual desktop app with pinned Electron 40.10.2, rebuilt terminal addon, packaged backend and free-font substitution; reproducible build and sandboxed real desktop acceptance passed without provider/model calls |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
@@ -4264,6 +4377,9 @@ make check-emigo # build/repro/native/lint passed: real loopback EPC/context/tok
 make check-kraken # final build/repro/lint/integrated offline CPU text+hOCR exact reference/export passed; ketos discovery only
 make check-gened # final build/repro/lint/standalone+integrated native exact text edit/save/reopen/resave passed
 make check-soundthread # final build/repro/lint/native WAV import/graph roundtrip/render/real Master-bus PCM passed; Dummy driver, no CDP/host audio
+make check-cotd # final build/repro/lint/standalone+integrated native campaign day advance/save/restore passed; no tactical combat
+make check-emacs-application-framework # final build/repro/lint/standalone+integrated GUI/demo/IPC/theme/resize/shutdown passed
+make check-eca # final build/repro/lint/integrated+exact ungrafted local server/client proof passed; no provider
 make check-lbforth # installed native arithmetic/control flow/recursion and error recovery from empty private cwd; python3 required, immutable output
 make check-legcord # real native onboarding/settings and Discord logged-out cold-relaunch surface, sandbox and unchanged NAR; no credentials/login/live audio
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
