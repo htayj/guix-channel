@@ -174,6 +174,16 @@ are retained without rewriting them; store-bound launchers select Guix Node.")
 (define %hermes-desktop-font-helper
   (local-file (search-tay-package-file "files/hermes-desktop-fonts.py")))
 
+;; Main-process readiness uses a sandboxed Chromium renderer, never Node TLS.
+(define %hermes-chromium-ws-probe
+  (local-file (search-tay-package-file "files/hermes-chromium-ws-probe.ts")))
+
+(define %hermes-chromium-ws-probe-tests
+  (local-file (search-tay-package-file "files/hermes-chromium-ws-probe.test.ts")))
+
+(define %hermes-ws-probe-page
+  (local-file (search-tay-package-file "files/hermes-ws-probe.html")))
+
 (define-public hermes-desktop
   (package
     (name "hermes-desktop")
@@ -208,6 +218,14 @@ are retained without rewriting them; store-bound launchers select Guix Node.")
               (setenv "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD" "1")
               (invoke "python3" #$%hermes-desktop-npm-helper "prepare" (getcwd)
                       #$%hermes-desktop-ui-source)
+              ;; Replace the obsolete Node socket helper AND its adapter tests.
+              ;; Vite copies public/ to dist; install also retains public/.
+              (copy-file #$%hermes-chromium-ws-probe
+                         "apps/desktop/electron/gateway-ws-probe.ts")
+              (copy-file #$%hermes-chromium-ws-probe-tests
+                         "apps/desktop/electron/gateway-ws-probe.test.ts")
+              (copy-file #$%hermes-ws-probe-page
+                         "apps/desktop/public/hermes-ws-probe.html")
               (invoke "python3" #$%hermes-desktop-store-helper
                       (getcwd) #$hermes-agent #$output)))
           (add-before 'build 'install-offline-workspaces
@@ -253,6 +271,9 @@ are retained without rewriting them; store-bound launchers select Guix Node.")
                                      "/node_modules/@esbuild/linux-x64/bin/esbuild"))))
           (replace 'build
             (lambda _
+              ;; Bound build-only V8 memory on shared workstations. The launcher
+              ;; does not export this setting to the installed Electron app.
+              (setenv "NODE_OPTIONS" "--max-old-space-size=2048")
               ;; Unlike npm Electron installation, this produces Hermes's real
               ;; renderer, preload and main-process code from the pinned source.
               (with-directory-excursion "apps/desktop"

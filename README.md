@@ -223,6 +223,69 @@ and Guix profile/Home/System workflow (for example, `guix pull` followed by
 Chromium sandboxing and renderer isolation remain part of the desktop recipe;
 the acceptance does not fall back to `--no-sandbox`.
 
+### Remote HTTPS and constrained private CAs
+
+Gateway discovery, authenticated REST requests and streaming downloads use
+Electron's native Chromium network stack, matching the renderer's HTTPS and
+WebSocket certificate verifier.  Main-process connection tests also perform a
+genuine WebSocket upgrade in a short-lived sandboxed Chromium renderer, rather
+than accepting HTTP reachability as proof of WebSocket connectivity.  This
+deliberately replaces the gateway helpers' Node `https` and WebSocket probes:
+Electron 40.10.2 links Node against BoringSSL's legacy X.509 verifier, whose
+name-constraint matcher does not implement IP constraints.  Adding a CA through
+`NODE_EXTRA_CA_CERTS` cannot repair that unsupported constraint type.  Chromium's
+modern PKI verifier supports IP address/netmask constraints and enforces
+constraints on NSS trust anchors.
+
+Certificate-chain, validity, hostname/IP and critical name-constraint checks
+remain enabled; there is no certificate-error override, verification bypass,
+certificate rewriting or local proxy.  The migrated token/public/download
+helpers do not follow redirects and omit ambient cookies from token/bearer
+requests; native OAuth's existing dedicated cookie-session flow is unchanged.
+Private CAs must be trusted
+through Chromium's platform trust store (on Linux, NSS), not Node's extra-CA
+environment variable.  The package neither ships a site-specific CA nor edits
+the user's trust store, connection registry or credentials.  A trust change
+requires restarting Desktop so both network contexts load the same trust.
+
+Implementation references (retrieved 2026-10-03):
+[Electron 40.10.2 ClientRequest](https://github.com/electron/electron/blob/v40.10.2/docs/api/client-request.md),
+[its Chromium/Node pins](https://github.com/electron/electron/blob/v40.10.2/DEPS),
+[the pinned legacy matcher](https://github.com/google/boringssl/blob/b94d71f87ff943a617d77f3ff029f9a01a1ec6bc/crypto/x509/v3_ncons.cc),
+[modern IP constraint matching](https://github.com/google/boringssl/blob/b94d71f87ff943a617d77f3ff029f9a01a1ec6bc/pki/name_constraints.cc),
+and [Chromium 144 NSS trust-anchor enforcement](https://github.com/chromium/chromium/blob/144.0.7559.236/net/cert/internal/trust_store_nss.cc).
+
+TLS cutover verification (2026-10-03): pinned source anchors applied and the
+targeted retry, failure-atomic download and native WebSocket lifecycle suites
+passed (3 files, 56 tests).  Review found and corrected Electron's early
+Writable `close` lifecycle hazard; a generated-helper simulation verifies that
+early upload completion does not abort delayed JSON/download responses.
+Neither the unit tests nor that simulation prove certificate verification.
+The serial package build subsequently passed after the user freed RAM; its
+accepted output is
+`/gnu/store/5nhbmc1lmcyxsmqwzfkx6z3qybn9xbl8-hermes-desktop-2026.9.24`.
+A build-only 2048 MiB V8 heap bound is retained; host protections and runtime
+settings are unchanged.  Actual built-app `tests/hermes-desktop-tls.sh`
+acceptance passed using only disposable HOME/XDG/NSS trust.  Negative-first
+wrong-hostname, untrusted-chain, constrained-IP and additional-outside-SAN
+fixtures rejected both HTTP and genuine renderer WSS before any HTTP/upgrade
+request; the permitted IP fixture passed supported discovery/Test IPC and
+separate main/renderer WebSocket upgrades.  Four separate bad-certificate
+switches after successful HTTP status also rejected the main WSS leg without
+an upgrade.  Chromium redacts renderer WSS diagnostic text: negative evidence
+is an actual network error, no open/status/request, and the positive control,
+not an invented certificate-error string.  The real remote's discovery and
+renderer HTTPS returned 200; a linked native Chromium NetLog WebSocket
+handshake refusal returned 403, proving TLS but not authentication.  Raw
+NetLog remains disposable; exported evidence contains only status/source
+facts.  Sandbox seccomp/no-new-privileges and unchanged output NARs were
+checked.  TLS evidence is `/tmp/hermes-desktop-tls-passed-20261003`.
+The separate native/backend/Electron smoke also passed, including actual
+local `gateway.ready`, in `/tmp/hermes-native-cutover-smoke-20261003`.
+Neither suite accessed credentials or called a model.  Authenticated
+real-remote `gateway.ready` and user-profile cutover remain separately owned
+deployment checks, not verified by these credential-free tests.
+
 Wake engine Python interfaces are retained, but **licensed wake assets must
 be supplied by the user**; no engine/model asset is silently downloaded.
 openWakeWord's keyword and feature models use local paths and
@@ -235,9 +298,10 @@ library and model paths (`wake_word.porcupine.keyword`, `library_path`,
 credentials and inference models likewise remain user-supplied; none are
 needed or accessed by the repository smoke.
 
-**Verification status (2026-10-03): backend and desktop builds,
-`guix build --check` reproducibility rebuilds, offline lint and actual
-native/backend/Electron acceptance passed.**  The checked outputs are
+**Baseline verification (2026-10-03, before the native TLS transport cutover):
+backend and desktop builds, `guix build --check` reproducibility rebuilds,
+offline lint and actual native/backend/Electron acceptance passed.** The
+baseline checked outputs are
 `/gnu/store/5ngz28ls6p1hx25fp9im0dilpq4v5zqx-hermes-agent-0.21.5` and
 `/gnu/store/r5jwrqdlkwlzbwlpyrif5yz1gsd43q4b-hermes-desktop-2026.9.24`.
 Import-generated timestamp bytecode caches were normalized to checked-hash
