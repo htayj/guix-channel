@@ -551,38 +551,6 @@
       }
     },
     {
-      "issueNumber": 684,
-      "packageName": "dynahack",
-      "packageModulePath": "guix/tay/packages/dynahack.scm",
-      "artifactPath": ".goocastle/evidence/issue-684.png",
-      "runtime": {
-        "executable": "dynahack",
-        "invocation": {
-          "file": "dynahack",
-          "args": [
-            "--smoke-test"
-          ]
-        },
-        "successMarker": "DynaHack smoke test: gameplay-and-save-load passed"
-      }
-    },
-    {
-      "issueNumber": 685,
-      "packageName": "evilhack",
-      "packageModulePath": "guix/tay/packages/evilhack.scm",
-      "artifactPath": ".goocastle/evidence/issue-685.png",
-      "runtime": {
-        "executable": "evilhack",
-        "invocation": {
-          "file": "evilhack",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "evilhack guix smoke passed"
-      }
-    },
-    {
       "issueNumber": 689,
       "packageName": "grippy-socks",
       "packageModulePath": "guix/tay/packages/grippy-socks.scm",

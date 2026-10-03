@@ -4576,6 +4576,94 @@ guix shell guix python python-pyte coreutils findutils util-linux xorg-server xt
 GUIX=guix sh tests/fiqhack-smoke.sh "$fiqhack_out" /tmp/fiqhack-native-FRESH
 ```
 
+## EvilHack and DynaHack — verified native paths
+
+These distinct local tty/curses variants expose ordinary native launchers, with
+external `tests/*` consumers requiring prebuilt output/new-empty evidence and
+self-resolving proof-only dependencies through the selected `GUIX`.  Both passed
+final serial build/reproducibility/offline lint/native/integrated gates.
+No deployed host/profile change is established.
+
+- **EvilHack #353** exports `evilhack` **0.9.3**, canonical `k21971/EvilHack`
+  released tag commit `c444f6a3ab1e9f16d0676961dba86f628e91c6ba`, fixed Git
+  NAR hash `0xrp2djn1mwvxkygkn8q8yjsfn3r6swgfxccvcyzzmxk5560pb5n`.
+  NGPL game plus bundled ISAAC64 CC0 notices cover the selected native tty/
+  curses closure; optional sounds/fonts/graphical-port assets are excluded.
+  Restrictive legacy `doc/tmac.n`/derived formatter and grantless XCode config
+  are removed; an original Expat-licensed adapter preserves source-generated
+  Guidebook documentation.  Full dated modified-source/adapter/recipe notices
+  cover the cleaned selected closure, not every original upstream asset.
+  Mutable native state is `${XDG_DATA_HOME:-$HOME/.local/share}/evilhack`, with
+  per-run playground cleanup and ordinary native flags retained.  External
+  `tests/evilhack-smoke.sh OUTPUT EVIDENCE-DIRECTORY` honors `GUIX`; no installed
+  `--guix-smoke` branch or fabricated native proof marker is used.  The consumer
+  compares both complete 80-column HUD rows, turn/HP, source-derived player map
+  coordinate, all 80x21 displayed cells and native inventory letters/descriptions
+  across pages through two fresh-process restores and continued movement/quit.
+  Binary saves are not decoded; hidden terrain/monsters/objects/RNG/timers and
+  unshown attributes are excluded.  Live xterm PNG HUD pixels corroborate native
+  state, not OCR guesses or a transcript renderer.  The declared gzip store
+  path and native `.gz` save handling repair actual compressor errors; the
+  consumer rejects those errors instead of accepting successful-looking saves.
+  Encoded Atari assets are also excluded from the selected closure.
+  Final corrected build/reproducibility/offline lint/native/integrated gates
+  passed for `/gnu/store/fkc601vz1k8m945fggf2a0zd3mx77wgw-evilhack-0.9.3`.
+  `/tmp/evilhack-native-gzip-final` retains genuine `.gz` saves with valid native
+  decompression, two exact public-state restores and continued turns 1 → 2 → 3 → 4
+  followed by native zero-status quits, with compressor errors rejected.
+  UID 1000/offline lo/read-only store preserved NAR
+  `00bbk3qbhvylwq0428cbrzhzcn2z2i1c58n0zdbnw7c285daa55z`.
+  [The genuine final restored xterm](.goocastle/evidence/evilhack-native.png)
+  is from this corrected output, not an earlier recipe or calibration fixture.
+  The complete original Guidebook is source-generated without formatter errors;
+  no upstream automated suite is invented.
+- **DynaHack #342** exports `dynahack` **0.6.0**, canonical `tung/DynaHack`
+  stable tag commit `25aaf2ab6a27a9104864d22337d7117c7d261571`, archive SHA-256
+  `626de68b538265a6fd0a356079635f9c4e1a37ba5ada1e11c68194a1500e9880`.
+  Local curses executable/shared libnitrohack/nhdat excludes network client/
+  server/Jansson/PostgreSQL and fonts/tiles/sounds.  The source snippet removes
+  unused restrictive `doc/tmac.n` and Windows `nitrohack/rc` resources before
+  building/installing source; FOSS coverage applies to this cleaned local closure,
+  not every original archive asset.  NGPL game/map source and MT19937 LGPL-2.0+
+  notices retain original selected source/file notices, full LGPL-2.0 text,
+  Debian copyright, Guidebook/changelog/save recovery docs and
+  dated modified-source/recipe provenance.  Native `-H` selects immutable
+  `share/dynahack`, `-U` selects `XDG_CONFIG_HOME/DynaHack`, and `-V` selects
+  `XDG_STATE_HOME/dynahack`; terminfo comes from the declared ncurses closure.
+  No upstream automatic/CTest suite exists.  External
+  `tests/dynahack-smoke.sh OUTPUT EVIDENCE-DIRECTORY` honors `GUIX`, with no
+  installed testing branch.  The consumer compares native player/role/race/
+  gender/alignment identity, HP/max HP, turn, map/dungeon coordinates and initial
+  identity indices, plus exact committed command/diff bytes after restore.
+  The consumer permits only transient `flags.move` byte 82 to differ during a
+  no-turn binary re-save; the final observed run had full binary equality.
+  This is opaque equality, not decoded inventory/monster/map/timer/RNG semantics.
+  Final build/reproducibility/offline lint/native/integrated gates passed for
+  `/gnu/store/rliigp950xzkjvkwd30sjiqb0r0wsicr-dynahack-0.6.0`.
+  `/tmp/dynahack-native-final` records three real adjacent moves, turn 1 → 4,
+  exact turn-4 restore/native identity/coordinates/HP and committed log bytes,
+  two continued moves to turn 6, second exact turn-6 restore/no-turn re-save and
+  native quits.  The [genuine restored xterm](.goocastle/evidence/dynahack-native.png)
+  is independently checked with exact real reference glyphs, including native
+  bold+underlined player @; calibration is not game evidence or a cursor alias.
+  UID 1000/offline lo/read-only store preserved NAR
+  `0i41sr3021s7q182a7w6vl7c8mrs0f3b1c7jfvclckv7w67q3176`.
+
+Only exact synthetic installed #684 (`--smoke-test`) and #685 (`--guix-smoke`)
+contracts are retired; no fake replacement registry entries or Goocastle
+executor are introduced.
+
+Serial validation commands (fresh evidence directories):
+
+```sh
+guix lint -L guix --no-network --exclude=cve,refresh,archival evilhack dynahack
+evilhack_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 evilhack)
+dynahack_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 dynahack)
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 --check evilhack dynahack
+GUIX=guix sh tests/evilhack-smoke.sh "$evilhack_out" /tmp/evilhack-native-FRESH
+GUIX=guix sh tests/dynahack-smoke.sh "$dynahack_out" /tmp/dynahack-native-FRESH
+```
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -4678,6 +4766,8 @@ GUIX=guix sh tests/fiqhack-smoke.sh "$fiqhack_out" /tmp/fiqhack-native-FRESH
 | `gearhead2` | GearHead 2 0.701 (`415dee8`) | Source-built LGPL-2.1+ Free Pascal ASCII game/text assets/native XDG save/config; final build/repro/lint/native+integrated two pilots/two full canonical serialized restores/exact effective mapHUD/movement/quit/NAR passed; unserialized RNG/UI caches excluded |
 | `gearhead` | GearHead: Arena 1.310 (`4314041`) | Source-built LGPL-2.1+ Free Pascal ASCII game/text assets/native config/save/map state; final build/repro/lint/native+integrated creation/movement/selected state+clock restore/quit/NAR passed; no full hidden state/RNG claim |
 | `fiqhack` | FIQHack 4.3.0 (`6292ea1`) | Source-built NGPL local tty fork/static libuncursed/text tiles/full notices/native XDG data; final build/repro/lint/1000TAP/native+integrated two identity+gamestate-record restores/movement/quit/NAR passed; wholefile equality false |
+| `evilhack` | EvilHack 0.9.3 (`c444f6a`) | Source-built NGPL/CC0/Expat local tty/curses variant/native XDG playground/complete source-generated Guidebook/declared gzip; final build/repro/lint/native+integrated valid compressed saves/two exact public-state restores/continued moves/quit/NAR passed; hidden binary state not decoded |
+| `dynahack` | DynaHack 0.6.0 (`25aaf2a`) | Source-built NGPL curses variant/libnitrohack/local nhdat/full MT19937 LGPL notices/native XDG state; final build/repro/lint/native+integrated movement/two fixed-field+committed-log restores/full no-turn binary re-save/quit/NAR passed; opaque bytes, not hidden-state semantics |
 | `hermes-agent` | NousResearch/hermes-agent 0.21.5 (`f97608f`) | Actual CLI/JSON-RPC/WebSocket backend, pinned binary-assisted Python closure and source-built media; writable user configuration and Guix-only package updates; reproducibility and native/backend smoke passed |
 | `hermes-desktop` | NousResearch/hermes-agent 2026.9.24 (`f97608f`) | Actual desktop app with pinned Electron 40.10.2, rebuilt terminal addon, packaged backend and free-font substitution; reproducible build and sandboxed real desktop acceptance passed without provider/model calls |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
@@ -5419,6 +5509,8 @@ make check-keeperrl # final build/repro/lint/repaired upstream suite/native+inte
 make check-gearhead2 # final build/repro/lint/native+integrated two pilots/two full canonical serialized restores/exact effective mapHUD/movement/quit/live screenshot/NAR passed
 guix shell guix make python python-pyte coreutils findutils util-linux xorg-server xterm xdotool imagemagick font-dejavu -- make check-gearhead GEARHEAD_OUTPUT="$gearhead_out" GEARHEAD_EVIDENCE=/tmp/gearhead-integrated-FRESH # final build/repro/lint/native+integrated creation/movement/selected state+clock restore/quit/live screenshot/NAR passed
 make check-fiqhack FIQHACK_OUTPUT="$fiqhack_out" FIQHACK_EVIDENCE=/tmp/fiqhack-integrated-FRESH # final build/repro/lint/1000TAP/native+integrated two identity+gamestate-record restores/movement/quit/live screenshot/NAR passed
+make check-evilhack EVILHACK_OUTPUT="$evilhack_out" EVILHACK_EVIDENCE=/tmp/evilhack-integrated-FRESH # final corrected build/repro/lint/native+integrated valid compressed saves/two exact public-state restores/continued moves/quit/live screenshot/NAR passed
+make check-dynahack DYNAHACK_OUTPUT="$dynahack_out" DYNAHACK_EVIDENCE=/tmp/dynahack-integrated-FRESH # final build/repro/lint/native+integrated movement/two fixed-field+committed-log restores/no-turn binary re-save/quit/live screenshot/NAR passed
 make check-lbforth # installed native arithmetic/control flow/recursion and error recovery from empty private cwd; python3 required, immutable output
 make check-legcord # real native onboarding/settings and Discord logged-out cold-relaunch surface, sandbox and unchanged NAR; no credentials/login/live audio
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke

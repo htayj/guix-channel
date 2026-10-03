@@ -56,7 +56,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	aiwnios aiwnios-bytecode wrogue babel7drl \
 	the-smiths-hand tetraworld splicehack-rewrite space-privateers slashem shamogu revengate plomrogue obumbrata \
 	lambdahack kimchi keeperrl \
-	gearhead2 gearhead fiqhack
+	gearhead2 gearhead fiqhack evilhack dynahack
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -108,7 +108,8 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-space-privateers check-slashem check-shamogu \
 	check-revengate check-plomrogue check-obumbrata \
 	check-lambdahack check-kimchi check-keeperrl \
-	check-gearhead2 check-gearhead check-fiqhack
+	check-gearhead2 check-gearhead check-fiqhack \
+	check-evilhack check-dynahack
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -661,7 +662,8 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-space-privateers check-slashem check-shamogu \
 	check-revengate check-plomrogue check-obumbrata \
 	check-lambdahack check-kimchi check-keeperrl \
-	check-gearhead2 check-gearhead check-fiqhack
+	check-gearhead2 check-gearhead check-fiqhack \
+	check-evilhack check-dynahack
 	$(GUIX) build -L guix --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L guix --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
@@ -740,3 +742,13 @@ check-gearhead:
 check-fiqhack:
 	@test -n "$(FIQHACK_OUTPUT)" -a -n "$(FIQHACK_EVIDENCE)" || { echo 'Set FIQHACK_OUTPUT and FIQHACK_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/fiqhack-smoke.sh "$(FIQHACK_OUTPUT)" "$(FIQHACK_EVIDENCE)"
+
+.PHONY: check-evilhack
+check-evilhack:
+	@test -n "$(EVILHACK_OUTPUT)" -a -n "$(EVILHACK_EVIDENCE)" || { echo 'Set EVILHACK_OUTPUT and EVILHACK_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/evilhack-smoke.sh "$(EVILHACK_OUTPUT)" "$(EVILHACK_EVIDENCE)"
+
+.PHONY: check-dynahack
+check-dynahack:
+	@test -n "$(DYNAHACK_OUTPUT)" -a -n "$(DYNAHACK_EVIDENCE)" || { echo 'Set DYNAHACK_OUTPUT and DYNAHACK_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/dynahack-smoke.sh "$(DYNAHACK_OUTPUT)" "$(DYNAHACK_EVIDENCE)"
