@@ -48,7 +48,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	trial-by-combat xrogue keymapper liquid input-remapper emacs-cl \
 	liveonce xnethack unnethack grunthack nitrohack qiling ai-code-interface-el chatgpt-el eca-emacs urogue letter-hunt pyrosimple savescummer srogue linerogue bloatcrawl2 ighalsk aquesttoofar freelarn talmudifier rouge sewer-massacre atrogue six-two-one umoria pyro narwharl stoat-soup hackem hellcrawl wired scala-ts \
 	crashrun dungeon-monkey-unlimited emigo \
-	kraken gened soundthread cotd emacs-eaf-emacs-application-framework eca \
+	kraken gened soundthread cotd emacs-eaf-emacs-application-framework eca pi-coding-agent squad oh-my-opencode-slim oh-my-opencode-slim-companion \
 	caelestia-shell caelestia-cli caelestia-panes quickshell-for-caelestia libcava m3shapes \
 	dart-sass gpu-screen-recorder font-rubik font-material-symbols-rounded \
 	hermes-agent hermes-desktop lbforth legcord \
@@ -97,7 +97,8 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-nlarn \
 	check-robotfindskitten \
 	check-fontra build-fontra \
-	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-kraken check-gened check-soundthread check-cotd check-emacs-application-framework check-eca build build-sources
+	check-emacs-org-popup-posframe check-emacs-forth-mode check-emacs-aidermacs check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-kraken check-gened check-soundthread check-cotd check-emacs-application-framework check-eca \
+	check-pi-coding-agent check-squad check-oh-my-opencode-slim check-oh-my-opencode-slim-companion build build-sources
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -582,6 +583,22 @@ check-emacs-application-framework:
 .PHONY: check-eca
 check-eca:
 	GUIX="$(GUIX)" python3 tests/eca-server-smoke.py
+.PHONY: check-pi-coding-agent
+check-pi-coding-agent:
+	GUIX="$(GUIX)" python3 tests/pi-smoke.py
+
+.PHONY: check-squad
+check-squad:
+	GUIX="$(GUIX)" sh tests/squad-smoke.sh
+
+.PHONY: check-oh-my-opencode-slim
+check-oh-my-opencode-slim:
+	GUIX="$(GUIX)" bash tests/oh-my-opencode-slim.sh
+
+.PHONY: check-oh-my-opencode-slim-companion
+check-oh-my-opencode-slim-companion:
+	GUIX="$(GUIX)" sh tests/oh-my-opencode-slim-companion.sh
+
 
 check-trebuchet:
 	GUIX="$(GUIX)" tests/trebuchet-smoke.sh
@@ -608,7 +625,7 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-modus check-amstelvar check-trial-by-combat check-xrogue check-keymapper \
 	check-liquid check-input-remapper check-emacs-cl check-liveonce check-xnethack check-unnethack check-grunthack check-nitrohack check-hermes-desktop check-lbforth check-legcord \
 	check-qiling check-ai-code-interface-el check-chatgpt-el check-eca-emacs check-urogue check-letter-hunt check-pyrosimple check-savescummer check-srogue check-linerogue check-bloatcrawl2 check-ighalsk check-aquesttoofar check-freelarn check-talmudifier check-rouge check-sewer-massacre check-atrogue check-six-two-one check-umoria check-pyro check-narwharl check-stoat-soup check-hackem check-hellcrawl check-wired check-scala-ts \
-	check-crashrun check-dungeon-monkey-unlimited check-emigo check-kraken check-gened check-soundthread check-cotd check-emacs-application-framework check-eca \
+	check-crashrun check-dungeon-monkey-unlimited check-emigo check-kraken check-gened check-soundthread check-cotd check-emacs-application-framework check-eca check-pi-coding-agent check-squad check-oh-my-opencode-slim check-oh-my-opencode-slim-companion \
 	check-rapidbrogue \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-kitty-bitmap-oldguix check-lyntin check-mmapper check-mudlet check-ocaml-irc-client check-notty check-miou check-domainslib check-tui check-proiel \

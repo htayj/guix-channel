@@ -1,0 +1,65 @@
+Guix uses the companion from its immutable package closure instead of
+downloading a second executable into writable application state.
+Upstream status: Guix-specific store-path integration; not submitted.
+
+--- a/src/companion/updater.ts
++++ b/src/companion/updater.ts
+@@ -80,19 +80,7 @@
+ }
+ 
+ export function getCompanionBinaryPath(): string {
+-  const xdg = process.env.XDG_DATA_HOME?.trim();
+-  const base =
+-    xdg && path.isAbsolute(xdg) ? xdg : path.join(homedir(), '.local', 'share');
+-  return path.join(
+-    base,
+-    'opencode',
+-    'storage',
+-    'oh-my-opencode-slim',
+-    'bin',
+-    platform() === 'win32'
+-      ? 'oh-my-opencode-slim-companion.exe'
+-      : 'oh-my-opencode-slim-companion',
+-  );
++  return '@GUIX_COMPANION@';
+ }
+ 
+ export function loadCompanionManifestFromPackageRoot(
+@@ -136,6 +124,10 @@
+ 
+   if (config?.enabled !== true) {
+     return { status: 'skipped', reason: 'disabled', binaryPath };
++  }
++
++  if (!config.binaryPath?.trim() && existsSync(binaryPath)) {
++    return { status: 'current', binaryPath, version: COMPANION_MANIFEST.version };
+   }
+ 
+   if (config.binaryPath?.trim()) {
+--- a/src/companion/manager.ts
++++ b/src/companion/manager.ts
+@@ -146,23 +146,7 @@
+ }
+ 
+ function defaultBinaryPath(): string {
+-  const xdg = process.env.XDG_DATA_HOME?.trim();
+-  const base =
+-    xdg && path.isAbsolute(xdg)
+-      ? xdg
+-      : path.join(os.homedir(), '.local', 'share');
+-  const binaryName =
+-    os.platform() === 'win32'
+-      ? 'oh-my-opencode-slim-companion.exe'
+-      : 'oh-my-opencode-slim-companion';
+-  return path.join(
+-    base,
+-    'opencode',
+-    'storage',
+-    'oh-my-opencode-slim',
+-    'bin',
+-    binaryName,
+-  );
++  return '@GUIX_COMPANION@';
+ }
+ 
+ export function resolveCompanionBinaryPath(

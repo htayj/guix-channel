@@ -3583,6 +3583,200 @@ row was also retired: ordinary `eca server` remains valid, but its historical
 Unrelated records and historical screenshots remain preserved.
 
 
+## Pi, Squad and Oh My OpenCode Slim — verified native paths
+
+These four package outputs cover Pi, Squad, the Slim plugin and its desktop
+companion.  Pi's final build/reproducibility/lint and standalone/exact-ungrafted/
+integrated native acceptance passed.  Squad passed final permission/native/
+integrated/build/reproducibility/lint proof.  Bun and the companion passed all
+final gates.  Slim's latest real plugin-host proof, final reproducibility/lint
+and integrated rerun also passed.  Both Slim components are covered, and no
+deployment is established.
+
+- **Pi #112** packages the official earendil-works **0.84.2** executable
+  (`x86_64-linux` only), with matching source at release tag `914cf147`.
+  This approved pin correction selects the release ancestor four commits
+  behind research revision `b1efcf7`; the old starred snapshot is preserved.
+  It is the real upstream `pi` CLI/TUI, not an omp fork, and is a hash-pinned
+  prebuilt executable **not rebuilt by Guix**.  Pi's MIT sources and 140
+  dependency notices are retained from verified npm archives: 133 lockfile
+  SHA512 records plus seven explicitly pinned registry integrity values for
+  entries omitted by the lock.  Bundled Bun 1.3.14/JSC and linked notices have
+  separate grants including LGPL; this is not a MIT-only executable claim.
+  Bun's release ZIP contains only its executable, not a third-party notice
+  bundle or relinking objects; retained source `LICENSE.md` links patched
+  `oven-sh/webkit` and relinking instructions.  Source-notice preservation is
+  not a complete independently audited static-link closure claim, for Pi's
+  bundled runtime or Slim's separately selected Bun.
+  After general ELF relocation exposed a child-execution SIGSEGV, the final
+  Bun repair changes only its fixed-layout interpreter span without moving
+  load/dynamic segment addresses.  Actual raw child re-execution and the
+  plugin's `bun run` build and final Bun build/reproducibility/lint passed,
+  as did the actual plugin-host proof.  Its glibc-only
+  `LD_LIBRARY_PATH` is inherited by children and can affect owner-supplied
+  native programs; no universal compatibility guarantee applies.
+  Installed assets/themes/photon WASM/HTML export and clipboard support are
+  retained; example extension dependency graphs are not installed.  Guix
+  supplies Bash/coreutils/git/fd/ripgrep and Node LTS for optional npm extension
+  installation, not as the Pi CLI runtime.  `PI_PACKAGE_DIR` points to the
+  read-only installed assets; writable `PI_CODING_AGENT_DIR` defaults under
+  XDG state.  Startup offline/version-check/telemetry defaults are disabled
+  network features, not a sandbox: explicit `PI_OFFLINE=0/false/no`,
+  `PI_SKIP_VERSION_CHECK=0/false/no` and `PI_TELEMETRY=1` opt in as appropriate,
+  and normal provider calls still require owner-controlled credentials/network.
+  The external `tests/pi-smoke.py` passed genuine local RPC Bash file/sum-42
+  operations with configured shell prefix, session name/reset/switch/restart/
+  history and decoded native HTML-export payload, plus actual PTY `/session`,
+  `/hotkeys` and Ctrl-D exit under network-disabled isolation.
+  No mock model or production proof switch is used; model listing alone is
+  not that acceptance.  `PI_SMOKE_ARTIFACTS` selects a parent directory and
+  each run retains a fresh child.
+  The local catalog entry is metadata pointed at unreachable localhost, not
+  a fake provider/server.  Provider inference, OAuth/network integrations,
+  live-display clipboard and image resizing remain unexercised by this proof;
+  retained runtime resources alone do not establish those capabilities.
+  The final output
+  `/gnu/store/gd6gxdg8n1gvlx9qlf2ddqgp1289c18p-pi-coding-agent-0.84.2`
+  passed build/reproducibility/lint and the exact ungrafted native run at
+  `/tmp/pi-native-ungrafted/pi-smoke-s6u9yq92`; integrated grafted proof passed
+  at `/tmp/pi-native-final/pi-smoke-pl6t1ofi`.
+- **Squad #95** packages the source-built MIT SDK/CLI **0.13.0** at
+  `92ff24ef`, with native node-pty/Koffi compilation and official bundled
+  sql.js SQLite WASM and Yoga WASM (the latter embedded as base64).
+  The retained npm graph comprises 225 runtime and four build-only paths,
+  217 unique archives, and 129 missing-origin records recovered from exact
+  version metadata—not the research claim of 647 complete origins.  Original
+  MIT/Apache/ISC/BSD and selected MIT-or-CC0 notices plus SQLite public-domain
+  terms remain retained; exact upstream origins supplement omitted SDK/Yoga
+  MIT texts.  `squad` preserves normal features/auth; `squad-node` exposes the
+  packaged Node for SDK consumers.  `SQUAD_STANDALONE_HOME` selects installed
+  `bin/squad`, so local initialization creates its state-MCP launcher without
+  npm registry probes or npx runtime downloads.  Proprietary GitHub Copilot
+  packages are excluded; real Copilot sessions require an explicitly supplied
+  external `COPILOT_CLI_PATH`, user credentials and network access.
+  `tests/squad-smoke.sh` passed standalone and integrated native proof:
+  disposable real git initialization twice preserves user team/lead/routing
+  changes, durable SDK SQLite changes survive fresh processes, and actual
+  node-pty/Koffi local children run successfully.
+  A real repeated-init failure traced to `fs.copyFile` propagating immutable
+  store template mode 0444 into writable user `routing.md`, not a missing
+  preset.  The source repair adds owner-write permission only to newly copied
+  destinations.  Existing destination mode is captured before copying and
+  restored afterward, since `fs.copyFile` itself otherwise overwrites it;
+  authentication behavior is unchanged.  Final revised package/runtime proof
+  passed; errors are not suppressed or replaced with synthetic results.
+  The external consumer checks public asynchronous/synchronous copy APIs from
+  a 0444 source: new destinations accept genuine append/read, overwriting an
+  existing 0640 destination preserves its mode, and the source stays 0444.
+  Native initialization also requires owner-writable `routing.md` and preserves
+  an actual user comment through the second init.
+  The final copy-mode, complete routing/casting, SQLite-WASM/PTY/FFI proof
+  passed at `/tmp/squad-native-integrated`.  The recipe excludes nondeterministic
+  Koffi CMake worktree logs while retaining the finished native addon; the
+  final build/reproducibility/lint output is
+  `/gnu/store/s1rp8ag2d382vy5xl5g3hxs981nxazxs-squad-0.13.0`.
+  First init must assign every default agent to its role in the Work Type →
+  Agent table and record all five active `preset:default` identities/full-team
+  universe usage.  Repeat init must retain those identities and all prior
+  assignment/usage history, rather than accepting only partially written team
+  rows after an earlier hidden scaffold failure.
+  The helper runs CLI/SDK/native children in an actual rootless private
+  user/network namespace, compares host/child namespace identities and retains
+  `network-isolation.json`; it fails if required namespaces are unavailable,
+  without a provider fake or non-isolated fallback.  Native error output also
+  fails the proof even if the CLI exits zero.  This is not proof of Copilot or
+  model sessions.
+  `SQUAD_EVIDENCE_DIR` retains bounded logs/reports in a fresh child; on
+  failure it also preserves only the generated project and scratch-home
+  presets under `failed-project`, never the host HOME, credentials or an
+  environment dump.
+- **Oh My OpenCode Slim #89** packages the MIT plugin **2.2.13** at
+  `6faaed2`, with retained verified npm/native dependency notices and a
+  separately pinned Bun runtime.  The npm closure has 341 source keys for
+  326 versions; retained terms include MIT/MIT-0, Apache-2.0, ISC, BSD-2/3,
+  CC-BY-4.0 (`caniuse-lite`), BlueOak-1.0.0, CC0 and MIT/Zlib (`pako`),
+  selecting BSD-3 from AFL-2.1-or-BSD-3 where offered.  Official pinned native
+  `.so`/AST artifacts are relocated against Guix libc/GCC; unsupported optional
+  ARM-musl msgpackr code falls back to upstream's real JavaScript implementation,
+  not a fabricated stub.  ast-grep CLI/Linux platform and msgpackr-extract
+  Linux-x64 archives declare MIT but contain no separate license/notice text;
+  supplied OpenTUI/Linux/WebGPU license files are retained.  Preservation of
+  all supplied legal/README/package files is not independent verification of
+  those native artifacts' complete third-party static-link legal closure.
+  Ordinary `install` registers the immutable
+  local store package, configuration, skills and TUI assets; ordinary
+  `doctor --json` is real upstream behavior, not a fabricated smoke command.
+  The actual installer passed creation of eight skills and selection of the
+  immutable store companion, not a user-cache downloaded executable.
+  `tests/oh-my-opencode-slim.sh` passed at
+  `/tmp/slim-native-host-whichfix` against the **actual OpenCode host**:
+  six agents, five tools, eight skills, default orchestrator, project-local
+  override and real plugin-produced idle companion state, with zero prompts
+  sent.  This is not a mock host/provider result.  The production `which`
+  dependency now supports actual executable lookup in the pure host environment.
+  Final reproducibility/lint and integrated `make check-oh-my-opencode-slim`
+  also passed at `/tmp/slim-native-host-integrated`.
+  The no-argument helper resolves the plugin, actual OpenCode and the actual
+  companion store output; it does not substitute a user-cache installation.
+  The helper requires actual OpenCode 1.18.18 `/agent`, tool-ID and `/config`
+  APIs plus a created local session whose messages stay empty; no prompt is
+  sent.  Plugin-generated idle state is required in the headless host helper;
+  `DISPLAY`/`XAUTHORITY` are not propagated, and GUI proof is separate.
+  After actual writable CLI installation, the helper bind-mounts only its own
+  config/project `.opencode` directories read-only in private user/mount/net/
+  IPC namespaces with loopback enabled.  The host's supported nonwritable
+  path skips npm bootstrap; mounts thaw for restarts/project overrides/cleanup.
+  Ordinary writable OpenCode directories may bootstrap `@opencode-ai/plugin`
+  from the registry despite default plugins being disabled.  This is an
+  offline read-only-host-config consumer mode, **not a general offline
+  writable-config promise**, fake lock/cache or production behavior change.
+  Normal filesystem/process/network authority remains;
+  owner-controlled provider credentials/MCP services are not supplied.
+  The separately installable **oh-my-opencode-slim-companion 0.1.3** is the
+  official prebuilt GUI for `x86_64-linux`/`aarch64-linux`, not a Guix-rebuilt
+  Rust closure.  Its binary workflow
+  [27580998354](https://github.com/alvinunreal/oh-my-opencode-slim/actions/runs/27580998354)
+  built source `5a4a81a`; release tag `04cdef5` changes CLI-only files and keeps
+  the same companion source, while plugin `6faaed2` selects those artifacts.
+  Exact build source/Cargo.lock/animations/workflow and MIT license are kept;
+  the upstream executable-only archive lacks a separate third-party notice
+  bundle, so preservation is **not an independently audited Rust license or
+  reproducibility claim**.  Guix supplies its ELF loader/library closure.
+  `tests/oh-my-opencode-slim-companion.sh` is intended to exercise the real GUI
+  with disposable local state under private Xvfb/namespaces: actual native
+  title, embedded JPG sprite-sheet animation pixels, Size S/M/L/XL menu
+  choosing L geometry, config reload/project-label pixels and Close.  This
+  GUI fixture explicitly simulates busy state; it is distinct from the host
+  helper's real plugin-produced idle `intro` state, not proof of model work.
+  Both the initial actual GUI proof at `/tmp/slim-companion-native-main` and
+  the latest integrated proof at `/tmp/slim-companion-native-final` passed,
+  along with final wrapper build/reproducibility/lint.  Inspection showed
+  DESIGNER/EXPLORER and LOCAL-A rendered.  The actual screenshot is
+  [slim-companion-native.png](.goocastle/evidence/slim-companion-native.png).
+  This independent simulated-busy fixture remains distinct from the verified
+  actual plugin-produced idle state; no theme/provider behavior is claimed.
+  Its artifact directory must be absolute and empty.
+
+Build/smoke commands for the verified paths, run serially with fresh evidence:
+
+```sh
+guix lint -L guix --no-network --exclude=cve,refresh,archival pi-coding-agent squad oh-my-opencode-slim oh-my-opencode-slim-companion
+pi_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 pi-coding-agent)
+squad_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 squad)
+slim_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 oh-my-opencode-slim)
+companion_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 oh-my-opencode-slim-companion)
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 --check pi-coding-agent squad oh-my-opencode-slim oh-my-opencode-slim-companion
+PI_SMOKE_ARTIFACTS=/tmp/pi-native-FRESH GUIX=guix python3 tests/pi-smoke.py "$pi_out"
+SQUAD_EVIDENCE_DIR=/tmp/squad-native-FRESH GUIX=guix sh tests/squad-smoke.sh "$squad_out"
+SLIM_ARTIFACTS=/tmp/slim-native-FRESH GUIX=guix bash tests/oh-my-opencode-slim.sh
+OH_MY_OPENCODE_SLIM_COMPANION_SMOKE_ARTIFACTS=/tmp/slim-companion-FRESH GUIX=guix sh tests/oh-my-opencode-slim-companion.sh "$companion_out"
+```
+
+Historical ordinary contracts #739 (`doctor --json`), #740 (`init --preset
+default`) and #741 (`--list-models`) remain because their invocations are valid.
+Their markers/metadata alone do not establish the richer current acceptance.
+No synthetic production contract was invented or retired for this batch.
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -3662,6 +3856,10 @@ Unrelated records and historical screenshots remain preserved.
 | `cotd` | gwathlobal/CotD 2.0.2 (`b771e2e`) | GPL-3.0-only original SBCL/SDL game/XDG native state; final build/repro/lint/standalone+integrated campaign day advance/save/restore passed; tactical combat unproved |
 | `emacs-eaf-emacs-application-framework` | EAF (`5fe1a6c`) with eaf-demo (`d210ef3`) | GPL-3.0-or-later core/Qt demo plus Chromium BSD-3 JS and Python/EPC closure; final build/repro/lint/standalone+integrated GUI/IPC/theme/resize/shutdown passed; clipped greeting/no optional apps |
 | `eca` | editor-code-assistant/eca 0.154.0 (`52b6f015`) | Official JVM jar/OpenJDK24 with retained source/provenance/notices; final build/repro/lint/integrated+exact ungrafted real server/client proof passed; no source-rebuild/provider claim |
+| `pi-coding-agent` | earendil-works/pi 0.84.2 (`914cf147`) | Official prebuilt x86_64 CLI/TUI with matching source/assets/notices and XDG state; final build/repro/lint/exact ungrafted+integrated RPC/Bash/session/export/TUI passed, no source-rebuild/provider claim |
+| `squad` | bradygaster/squad 0.13.0 (`92ff24ef`) | Source-built SDK/CLI/native PTY/Koffi plus SQL/Yoga WASM/notices; final build/repro/lint/standalone+integrated init/copy-mode/routing/casting/SQLite/PTY/FFI passed, proprietary Copilot excluded |
+| `oh-my-opencode-slim` | alvinunreal/oh-my-opencode-slim 2.2.13 (`6faaed2`) | MIT source plugin/dependency+Bun notices/store companion; final build/repro/lint/standalone+integrated actual OpenCode agents/tools/skills/default+project override/idle state passed; zero prompts, no model claim |
+| `oh-my-opencode-slim-companion` | Slim companion 0.1.3 (build `5a4a81a`, tag `04cdef5`) | Official prebuilt x86_64/aarch64 GUI/source provenance; final build/repro/lint/standalone+integrated local-state GUI passed; simulated busy fixture not plugin/model work, no audited Rust closure claim |
 | `hermes-agent` | NousResearch/hermes-agent 0.21.5 (`f97608f`) | Actual CLI/JSON-RPC/WebSocket backend, pinned binary-assisted Python closure and source-built media; writable user configuration and Guix-only package updates; reproducibility and native/backend smoke passed |
 | `hermes-desktop` | NousResearch/hermes-agent 2026.9.24 (`f97608f`) | Actual desktop app with pinned Electron 40.10.2, rebuilt terminal addon, packaged backend and free-font substitution; reproducible build and sandboxed real desktop acceptance passed without provider/model calls |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
@@ -4380,6 +4578,10 @@ make check-soundthread # final build/repro/lint/native WAV import/graph roundtri
 make check-cotd # final build/repro/lint/standalone+integrated native campaign day advance/save/restore passed; no tactical combat
 make check-emacs-application-framework # final build/repro/lint/standalone+integrated GUI/demo/IPC/theme/resize/shutdown passed
 make check-eca # final build/repro/lint/integrated+exact ungrafted local server/client proof passed; no provider
+make check-pi-coding-agent # final build/repro/lint/exact ungrafted+integrated offline RPC/Bash/session/HTML export/PTY passed; no provider
+make check-squad # final build/repro/lint/standalone+integrated native init/copy-mode/routing/casting/SQLite/PTY/FFI passed; no Copilot
+make check-oh-my-opencode-slim # final build/repro/lint/standalone+integrated actual OpenCode agents/tools/skills/default+project override/idle state passed; zero prompts
+make check-oh-my-opencode-slim-companion # final build/repro/lint/standalone+integrated actual GUI passed; separate local busy fixture, no provider
 make check-lbforth # installed native arithmetic/control flow/recursion and error recovery from empty private cwd; python3 required, immutable output
 make check-legcord # real native onboarding/settings and Discord logged-out cold-relaunch surface, sandbox and unchanged NAR; no credentials/login/live audio
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
