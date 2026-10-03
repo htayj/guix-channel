@@ -362,6 +362,73 @@ buffer.  The proof covers exercised local gameplay and save continuity, not a
 complete campaign or network-server/client interaction.  No deployed system
 changed; no network OKF update applies to this repository-only addition.
 
+## Hack 1.0.3 original native save continuity
+
+`hack` packages Andries Brouwer's final **Hack 1.0.3**, distributed on
+23 July 1985, from the original
+[CWI historical release](https://homepages.cwi.nl/~aeb/games/hack/hack.html).
+The fixed [`hack-1.0.3.tar.gz`](https://homepages.cwi.nl/~aeb/games/hack/hack-1.0.3.tar.gz)
+archive SHA-256 is
+`688534e776acfe620ea9e24822bea8b0b4bbe8ec2c2f3c74c8db89b51c7bcc30`;
+there is no upstream VCS revision to invent.  CWI's page records separate
+**BSD-3-Clause** grants for Jay Fenlason's code and CWI's 1985 code.  Both
+complete notices are retained as `COPYRIGHT-JF` and `COPYRIGHT`, with
+`READ_ME` under `share/doc/hack` and the original `hack.6` manual.
+
+This is the original source-built K&R C terminal game, not a modern NetHack
+substitute or artificial frontend.  Compiler/linker/termio compatibility
+changes retain its native gameplay and regenerate `hack.onames.h` with the
+source `makedefs`.  The historical mailbox and shell-escape features are
+disabled.  Original `data`, `help`, `hh` and `rumors` stay immutable under
+`share/hack`; the launcher creates checked read-only store links in
+`${XDG_DATA_HOME:-$HOME/.local/share}/hack`, alongside native mutable saves,
+records, locks, bones and levels.  It rejects unexpected data/state symlinks
+and forwards ordinary arguments to the native `libexec/hack`.
+
+```sh
+guix build -L guix --no-grafts hack
+hack                 # original interactive game
+make check-hack
+HACK_KEEP_PROOF=1 GUIX=guix sh tests/hack-smoke.sh # retain a fresh native proof
+```
+
+Use ordinary movement and `i` for inventory; native `S` saves and exits.
+A later ordinary invocation restores and consumes that save.  No production
+test mode or dependency on a Goocastle executor is installed.  The obsolete
+issue-692 contract/registry removal is intentional; native gameplay evidence
+replaces fake contract assertions.
+
+On 2026-10-03, the source build, `--check` reproducibility rebuild and offline
+lint passed for `/gnu/store/x16fh3kj668qp9ldxfyns49mymnjgdzj-hack-1.0.3`.
+Upstream ships **no automated test target**; the disabled build-system test
+phase is not a claim of a passing upstream suite.  Standalone
+`tests/hack-smoke.sh` / `tests/hack-smoke.py` exercise three actual native
+80×24 PTYs as the ordinary Fighter OmpProof, with private HOME/XDG/work,
+empty PATH, separate network/mount/PID namespaces and a read-only store
+bind mount.  Test-only Python/pyte and namespace tools are realized before
+entering isolation, even when an existing output is supplied.
+
+The first process makes a genuine floor/stair-neighbor move, reads the
+inventory and saves/exits zero.  The second independently restores exact
+HUD, map, position, turn and inventory, proves save consumption, makes a
+further real move and resaves.  The third independently restores that
+continued state exactly and saves/exits again.  Observed turns are
+**2 → 3 → 4**, with Level 1, HP **14/14**, AC **7**, Str **17**, Exp **1**;
+inventory contains a +0 two handed sword in hand and +0 ring mail being worn.
+This is exact continuity in the actual unseeded run, not frozen world state:
+the continued save differs after its further movement/turn.
+
+Final native receipt/save copies/transcript and the genuine pre-exit frame
+are under `/tmp/hack-native-proof.UnCLqo/proof`.  `pre-exit.txt` shows the
+live room, `@`, monsters, stairs/items and turn-4 native HUD before `S` or
+terminal teardown.  Set `HACK_RAW_CAPTURE`, `HACK_TEXT_CAPTURE` and
+`HACK_TRANSCRIPT` to external paths for another retained capture; no game
+writes escaped private XDG data.  Before/after read-only output NAR is
+`09xqg14w7ghyv8kz90vz6765cf803hkg9ll8ljdrhz6w4rlnhzcb`.
+The proof covers exercised movement/inventory/save/restore/resave paths, not
+a full campaign.  No deployed/profile installation is claimed and no
+network OKF update applies to this repository-only change.
+
 ## GruntHack native game and save continuity
 
 `grunthack` builds the original **GruntHack 0.2.4** NetHack derivative from
@@ -2939,6 +3006,7 @@ update applies to this repository-only addition.
 | `hermes-desktop` | NousResearch/hermes-agent 2026.9.24 (`f97608f`) | Actual desktop app with pinned Electron 40.10.2, rebuilt terminal addon, packaged backend and free-font substitution; reproducible build and sandboxed real desktop acceptance passed without provider/model calls |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
 | `bell-labs-rogue7` | Bell Labs release 7.7.1 | Historical terminal dungeon game with XDG-managed score and save state |
+| `hack` | CWI Hack 1.0.3 (1985-07-23) | Original BSD-3-Clause source-built terminal game/data/manual/notices, immutable store assets and XDG native mutable state; three-process exact native save continuity |
 | `chessrogue` | ChessRogue 0.3.1 | Historical terminal chess roguelike built from the canonical SourceForge release |
 | `bcrawl` | b-crawl/bcrawl 1.42.1 | Terminal-only Dungeon Crawl Stone Soup fork with XDG-managed state |
 | `unnethack` | UnNetHack 6.0.4 (`1f061e9`) | NGPL full native TTY game/data/recovery/docs; private XDG data playground, upstream five C suites and three-process exact save continuity |
@@ -3636,6 +3704,7 @@ make check-proiel   # canonical Ruby-3.3.9 isolated installed consumer, exact XM
 make check-domainslib # isolated native concurrent task/parallel-array/channel proof with exact oracles and immutable NAR
 make check-emacs-vim-region # isolated batch and real terminal Emacs keymap editing, exact buffer/active-region state and immutable files
 make check-org-mind-map # isolated installed Emacs/Graphviz export, exact SVG nodes/edges/text/tags/images and viewport bounds
+make check-hack # isolated three original 80x24 PTYs, actual movement/inventory, consumed saves, exact independent restores and read-only NAR
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
 make check-blightmud # channel-pinned Guix plus fresh-HOME PTY protocol/TLS smoke
 make check-image-tape # Guix-toolchain output-safety regression; no tape hardware

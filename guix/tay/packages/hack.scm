@@ -12,11 +12,13 @@
   #:use-module (gnu packages bash)
   #:use-module (gnu packages base)
   #:use-module (gnu packages commencement)
-  #:use-module (gnu packages linux)
   #:use-module (gnu packages ncurses))
 
 ;; Andries Brouwer's CWI page identifies 1.0.3, distributed on 23 July
 ;; 1985, as the last Hack release.  There is no upstream VCS revision to pin.
+;; The same CWI page records two independent BSD-3-Clause grants: Jay
+;; Fenlason for all code he wrote, and CWI for its 1985 code.  The archive's
+;; COPYRIGHT and COPYRIGHT-JF retain both complete notices and disclaimers.
 (define-public hack
   (package
     (name "hack")
@@ -141,18 +143,9 @@
                      (real (string-append libexec "/hack"))
                      (launcher (string-append bin "/hack"))
                      (shell #$(file-append bash-minimal "/bin/sh"))
-                     (cat #$(file-append coreutils-minimal "/bin/cat"))
-                     (cp #$(file-append coreutils-minimal "/bin/cp"))
-                     (chmod-bin #$(file-append coreutils-minimal "/bin/chmod"))
-                     (dirname #$(file-append coreutils-minimal "/bin/dirname"))
-                     (find #$(file-append findutils "/bin/find"))
-                     (grep-bin #$(file-append grep "/bin/grep"))
                      (ln #$(file-append coreutils-minimal "/bin/ln"))
                      (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
-                     (mktemp #$(file-append coreutils-minimal "/bin/mktemp"))
-                     (readlink #$(file-append coreutils-minimal "/bin/readlink"))
-                     (script #$(file-append util-linux "/bin/script"))
-                     (sleep #$(file-append coreutils-minimal "/bin/sleep")))
+                     (readlink #$(file-append coreutils-minimal "/bin/readlink")))
                 (mkdir-p data)
                 (mkdir-p libexec)
                 (mkdir-p bin)
@@ -172,19 +165,9 @@
                     (format port "#!~a~%set -eu~%~%
 data=~s~%
 real=~s~%
-shell=~s~%
-cat=~s~%
-cp=~s~%
-chmod=~s~%
-dirname=~s~%
-find=~s~%
-grep=~s~%
 ln=~s~%
 mkdir=~s~%
-mktemp=~s~%
 readlink=~s~%
-script=~s~%
-sleep=~s~%
 terminfo=~s~%~%
 prepare_state() {~%
   state=\"${XDG_DATA_HOME:-${HOME:?}/.local/share}/hack\"~%
@@ -225,84 +208,10 @@ prepare_state() {~%
   export HACKDIR=\"$state\"~%
   export TERMINFO_DIRS=\"$terminfo${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"~%
   export TERM=\"${TERM:-xterm-256color}\"~%
-  unset HACKOPTIONS MAIL MAILREADER SHELL~%
 }~%~%
-run_game() {~%
-  log=$1~%
-  \"$script\" -qefc \"$real -d \\\"$state\\\" -n -u goocastle\" \"$log\" >/dev/null~%
-}~%~%
-case \"${1-}\" in~%
-  --guix-smoke)~%
-    test \"$#\" -eq 1 || { echo 'usage: hack [--guix-smoke]' >&2; exit 64; }~%
-    smoke=$(\"$mktemp\" -d \"${TMPDIR:-/tmp}/hack-guix-smoke.XXXXXXXX\")~%
-    \"$mkdir\" \"$smoke/home\" \"$smoke/config\" \"$smoke/data\"~%
-    \"$mkdir\" \"$smoke/cache\" \"$smoke/state\" \"$smoke/runtime\" \"$smoke/tmp\"~%
-    \"$chmod\" 700 \"$smoke/runtime\"~%
-    export HOME=\"$smoke/home\" XDG_CONFIG_HOME=\"$smoke/config\"~%
-    export XDG_DATA_HOME=\"$smoke/data\" XDG_CACHE_HOME=\"$smoke/cache\"~%
-    export XDG_STATE_HOME=\"$smoke/state\" XDG_RUNTIME_DIR=\"$smoke/runtime\"~%
-    export TMPDIR=\"$smoke/tmp\" TERM=xterm-256color LC_ALL=C~%
-    prepare_state~%
-    first_log=\"$state/smoke-first.log\"~%
-    second_log=\"$state/smoke-second.log\"~%
-    if ! { \"$sleep\" 1; printf 'n'; \"$sleep\" 1; printf ' ';~%
-      \"$sleep\" 1; printf '.'; \"$sleep\" 1; printf 'S'; } |~%
-      run_game \"$first_log\"; then~%
-      echo 'hack smoke: first game failed' >&2~%
-      exit 1~%
-    fi~%
-    if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"; then~%
-      \"$mkdir\" -p \"$(\"$dirname\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"~%
-      \"$cp\" \"$first_log\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"~%
-    fi~%
-    saved=~%
-    for file in \"$state/save\"/*; do~%
-      test -f \"$file\" || continue~%
-      saved=\"$file\"~%
-    done~%
-    test -n \"$saved\" || { echo 'hack smoke: save missing' >&2; exit 1; }~%
-    \"$grep\" -F 'Hello goocastle, welcome to hack!' \"$first_log\" >/dev/null~%
-    if ! { \"$sleep\" 1; printf '.'; \"$sleep\" 1;~%
-      printf 'Q'; \"$sleep\" 1; printf 'y'; } |~%
-      run_game \"$second_log\"; then~%
-      echo 'hack smoke: restore game failed' >&2~%
-      exit 1~%
-    fi~%
-    \"$grep\" -F 'Restoring old save file...' \"$second_log\" >/dev/null~%
-    \"$grep\" -F 'Hello goocastle, welcome to hack!' \"$second_log\" >/dev/null~%
-    \"$grep\" -F '@' \"$second_log\" >/dev/null~%
-    # Game files are all relative to the private -d directory.  The only
-    # files outside it would indicate a path escape; the empty isolation
-    # directories themselves are expected.
-    escaped=$(~%
-      \"$find\" \"$smoke\" -type f ! -path \"$state/*\" -print -quit~%
-    ) 2>/dev/null || true~%
-    test -z \"$escaped\" || {~%
-      echo \"hack smoke: path escaped state: $escaped\" >&2~%
-      exit 1~%
-    }~%
-    escaped=$(~%
-      \"$find\" \"$smoke\" -type l ! -path \"$state/*\" -print -quit~%
-    ) 2>/dev/null || true~%
-    test -z \"$escaped\" || {~%
-      echo \"hack smoke: link escaped state: $escaped\" >&2~%
-      exit 1~%
-    }~%
-    if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"; then~%
-      \"$mkdir\" -p \"$(\"$dirname\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")\"~%
-      \"$cp\" \"$first_log\" \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"~%
-      \"$cat\" \"$second_log\" >> \"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"~%
-    fi~%
-    printf '%s\\n' 'hack guix smoke passed'~%
-    exit 0~%
-    ;;~%
-  *)~%
-    prepare_state~%
-    exec \"$real\" -d \"$state\" \"$@\"~%
-    ;;~%
-esac~%"
-                            shell data real shell cat cp chmod-bin dirname find
-                            grep-bin ln mkdir mktemp readlink script sleep
+prepare_state~%
+exec \"$real\" -d \"$state\" \"$@\"~%"
+                            shell data real ln mkdir readlink
                             #$(file-append ncurses/tinfo "/share/terminfo"))))
                 (chmod launcher #o555))))
           (add-after 'install 'verify-license-notices
@@ -340,12 +249,10 @@ esac~%"
                (find-files #$output ".*" #:directories? #t)))))))
     (native-inputs
      (list gcc-toolchain gnu-make))
-    ;; ncurses-with-tinfo supplies the termcap-compatible symbols and the
-    ;; TERMINFO database used by the launcher.  util-linux supplies `script'
-    ;; only for the bounded package smoke mode.
+    ;; ncurses-with-tinfo supplies termcap symbols and the TERMINFO database.
+    ;; Only ordinary launcher utilities are runtime dependencies.
     (inputs
-     (list bash-minimal coreutils-minimal findutils grep ncurses/tinfo
-           util-linux))
+     (list bash-minimal coreutils-minimal ncurses/tinfo))
     (home-page "https://homepages.cwi.nl/~aeb/games/hack/hack.html")
     (synopsis "Historical terminal dungeon exploration game")
     (description
