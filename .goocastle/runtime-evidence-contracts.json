@@ -583,54 +583,6 @@
       }
     },
     {
-      "issueNumber": 686,
-      "packageName": "fiqhack",
-      "packageModulePath": "guix/tay/packages/fiqhack.scm",
-      "artifactPath": ".goocastle/evidence/issue-686.png",
-      "runtime": {
-        "executable": "fiqhack",
-        "invocation": {
-          "file": "fiqhack",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "fiqhack guix smoke passed"
-      }
-    },
-    {
-      "issueNumber": 687,
-      "packageName": "gearhead",
-      "packageModulePath": "guix/tay/packages/gearhead.scm",
-      "artifactPath": ".goocastle/evidence/issue-687.png",
-      "runtime": {
-        "executable": "gearhead",
-        "invocation": {
-          "file": "gearhead",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "gearhead guix smoke passed: ASCII gameplay and isolated state"
-      }
-    },
-    {
-      "issueNumber": 688,
-      "packageName": "gearhead2",
-      "packageModulePath": "guix/tay/packages/gearhead2.scm",
-      "artifactPath": ".goocastle/evidence/issue-688.png",
-      "runtime": {
-        "executable": "gearhead2",
-        "invocation": {
-          "file": "gearhead2",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "gearhead2 guix smoke passed: ASCII gameplay, save/load, and isolated state"
-      }
-    },
-    {
       "issueNumber": 689,
       "packageName": "grippy-socks",
       "packageModulePath": "guix/tay/packages/grippy-socks.scm",

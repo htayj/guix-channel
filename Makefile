@@ -55,7 +55,8 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	font-nerd-caskaydia-cove \
 	aiwnios aiwnios-bytecode wrogue babel7drl \
 	the-smiths-hand tetraworld splicehack-rewrite space-privateers slashem shamogu revengate plomrogue obumbrata \
-	lambdahack kimchi keeperrl
+	lambdahack kimchi keeperrl \
+	gearhead2 gearhead fiqhack
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -106,7 +107,8 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-smiths-hand check-tetraworld check-splicehack-rewrite \
 	check-space-privateers check-slashem check-shamogu \
 	check-revengate check-plomrogue check-obumbrata \
-	check-lambdahack check-kimchi check-keeperrl
+	check-lambdahack check-kimchi check-keeperrl \
+	check-gearhead2 check-gearhead check-fiqhack
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -658,7 +660,8 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-smiths-hand check-tetraworld check-splicehack-rewrite \
 	check-space-privateers check-slashem check-shamogu \
 	check-revengate check-plomrogue check-obumbrata \
-	check-lambdahack check-kimchi check-keeperrl
+	check-lambdahack check-kimchi check-keeperrl \
+	check-gearhead2 check-gearhead check-fiqhack
 	$(GUIX) build -L guix --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L guix --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
@@ -724,3 +727,16 @@ check-kimchi:
 .PHONY: check-keeperrl
 check-keeperrl:
 	GUIX="$(GUIX)" sh tests/keeperrl-smoke.sh
+.PHONY: check-gearhead2
+check-gearhead2:
+	GUIX="$(GUIX)" sh tests/gearhead2-smoke.sh
+
+.PHONY: check-gearhead
+check-gearhead:
+	@test -n "$(GEARHEAD_OUTPUT)" -a -n "$(GEARHEAD_EVIDENCE)" || { echo 'Set GEARHEAD_OUTPUT and GEARHEAD_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/gearhead-smoke.sh "$(GEARHEAD_OUTPUT)" "$(GEARHEAD_EVIDENCE)"
+
+.PHONY: check-fiqhack
+check-fiqhack:
+	@test -n "$(FIQHACK_OUTPUT)" -a -n "$(FIQHACK_EVIDENCE)" || { echo 'Set FIQHACK_OUTPUT and FIQHACK_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/fiqhack-smoke.sh "$(FIQHACK_OUTPUT)" "$(FIQHACK_EVIDENCE)"

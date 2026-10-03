@@ -4451,6 +4451,131 @@ KIMCHI_EVIDENCE_DIR=/tmp/kimchi-native-FRESH GUIX=guix sh tests/kimchi-smoke.sh 
 KEEPERRL_SMOKE_ARTIFACTS=/tmp/keeperrl-native-FRESH GUIX=guix sh tests/keeperrl-smoke.sh "$keeper_out"
 ```
 
+## GearHead 2, GearHead: Arena and FIQHack — verified native paths
+
+These separate source-built ASCII games retain ordinary native entrypoints;
+external `tests/*` consumers, not installed custom smoke modes, own evidence.
+All three passed final build/reproducibility/offline lint/native/integrated
+gates; FIQHack's unchanged 1000-case upstream TAP suite also passed.
+Repository packaging establishes no deployed profile change.
+
+- **GearHead 2 #376** exports `gearhead2` **0.701**, canonical
+  `jwvhewitt/gearhead-2` v0.701 peeled commit
+  `415dee8d8730ef1ed8adfd741b1a2b2fa201c2e7`, fixed Git NAR hash
+  `1h4aab0wl3s971s0h69wgk4amsyfga9gzpmq9l59ji3kh1457cm9`.
+  Free Pascal `-dASCII` builds LGPL-2.1+ source with text-only GameData/Design/
+  Series/docs; PNG/fonts/images/meshes/SDL assets are excluded.  Linked FPC RTL
+  retains full Library-GPL-2 and COPYING.FPC linking-exception notices from the
+  exact compiler source; bash/coreutils notices also cover the launcher closure.
+  Native writable
+  saves are under `XDG_STATE_HOME/gearhead2/savegame`, configuration under
+  `XDG_CONFIG_HOME/gearhead2/gearhead2.cfg`.  External
+  `tests/gearhead2-smoke.sh [output]` honors `GUIX` and new/empty
+  `GEARHEAD2_EVIDENCE_DIR`.  Its source-informed decoder preserves native
+  campaign dimensions/time/scale, complete active terrain/visibility, scene,
+  actor/inventory/subcomponent gear trees, named frozen maps and SOURCE gears.
+  Only keyed numeric/string attributes and frozen-map name ordering are
+  canonicalized; actor/gear/SOURCE ordering and all serialized fields remain,
+  including full raw string-attribute Info alongside interpreted values.
+  `gearhead2-native-restore.patch` preserves paused native turns and raw saved
+  attributes: true resume skips duplicate STARTGAME/UPDATE initialization and
+  continues the pending player input before clock advancement, preserving initial
+  deployment initialization and ordinary remaining turn processing.
+  Final build/reproducibility/offline lint/native/integrated consumer passed for
+  `/gnu/store/vy3bdyiyz3xww77l9al2px8a12mbh475-gearhead2-0.701`.
+  `/tmp/gearhead2-native-final` records two native pilots/campaigns and two
+  explicit Alpha selections from the two-file native menu, both exact full
+  canonical serialized-state restores including clock/raw attributes/maps/gears.
+  Exact rendered map/HUD glyphs, effective configured white/black colors and
+  rendition flags match; raw terminal cells remain separate, not a claim of
+  CSI-encoding equality.  Native movement advances [13,5] → [14,5], time 1 → 60;
+  native Quit Game exits zero.  Offline UID-preserving namespaces/read-only store
+  preserve NAR `1586nb2ab9v9m547kzx5s7vyar8r1dpw3989dgzanqf4c9x7p3c4`.
+  [The actual final live xterm](.goocastle/evidence/gearhead2-native.png) is not
+  a transcript renderer; unserialized RNG/UI/runtime-cache equality is excluded.
+- **GearHead: Arena #374** exports `gearhead` **1.310**, not GearHead 2 or
+  Caramel, canonical `jwvhewitt/gearhead-1` v1.310 peeled commit
+  `4314041f9e703e356807a9d17e613aae09289df4`.  Fixed archive SHA-256 is
+  `a2f120f006d72eef9408e558dd0a569f0a04c06cbf0a447063a934943a419af6`,
+  Guix base32 `1xls84x98d59cdq482mzdk0082lzaq5dsn7512afybnp0vq21wd2`.
+  LGPL-2.1+ ASCII source/text Design/GameData/Series/docs excludes image/font/
+  SDL/optional boxdrawing assets.  Linked Free Pascal RTL original COPYING/
+  COPYING.FPC/provenance notices retain its Library-GPL-2+ independent-module
+  linking exception without adding a compiled FPC source runtime dependency.
+  Ordinary `bin/gearhead [CONFIG-DIRECTORY]`
+  retains native first-argument configuration; no args uses absolute
+  `XDG_STATE_HOME/gearhead` or `HOME/.local/state/gearhead`.  Native
+  `gharena.cfg`, `SaveGame` and map-editor user maps stay outside the store.
+  External `tests/gearhead-smoke.sh OUTPUT EVIDENCE-DIRECTORY` requires a
+  prebuilt output and new/empty evidence directory, honoring `GUIX`; it triggers
+  no build and does not resolve host proof tools automatically.  Use the explicit
+  Guix shell below for native and integrated invocation.
+  `gearhead-resume.patch` preserves native combat resume:
+  saved scene-start state prevents duplicate entry/update/restock, resumes pending
+  player input before clock advancement and retains full raw saved attributes;
+  fresh/legacy scene entry and tactics behavior remain unchanged.
+  Final build/reproducibility/offline lint and native/integrated consumer passed
+  for `/gnu/store/xmzffynksszp1w9ffa39kfhfdajynj8r-gearhead-1.310`.
+  `/tmp/gearhead-native-final` records native creation/selection, map movement,
+  X save/Q/native quit, restart with explicit Config_Directory and exact selected
+  character, position, scene index/type/name, map dimensions/terrain, scale and
+  clock restore.  Final saved/restored clock is 18, position [29,37], scene index
+  319, map 50x50.  Namespace denial is failure, never a skipped pass; read-only
+  store preserved NAR `1rbmsvcly7fwx34vlabbzsbp7bfvp1d78q9w1xg4xn6k01hnz835`.
+  [The actual restored xterm](.goocastle/evidence/gearhead-native.png) shows
+  OmpProof, HP 16/16 and clock 0:00:18/day 0; full hidden state/RNG equality is
+  not claimed.  No upstream automated suite is substituted by these native checks.
+- **FIQHack #362** exports `fiqhack` **4.3.0**, canonical `FredrIQ/fiqhack`
+  stable tag commit `6292ea1d04b5cabac2865a93e3ac0d6fa6adcb84` (not unfinished
+  development branch).  Fixed tag archive SHA-256 is
+  `d00f714988f1207f5684ebd5d512840eba1429621e0403f48ba490720a5f56dc`,
+  Guix base32 `1p2nbw575454igs0610yc8li9fhfhh9dbmgbhib7y87ii14p23yh`.
+  Native GNUmakefile builds local tty `bin/fiqhack` with zlib and static
+  libuncursed; Jansson is not used by this build.  NGPL game/text and NGPL/GPL-2+
+  libuncursed retain full original notices, guidebook/changelog/text tile
+  sources and modified source/package provenance.  Full `nhdat` and ASCII/
+  Unicode text tiles ship, not SDL/fonts/art/server/network-client assets.
+  Native anti-magic traps clamp a level-zero monster's random-range argument
+  to one, avoiding invalid `rnd(0)` while preserving positive-level behavior
+  and RNG assertions.  The unchanged upstream 1000-case TAP suite exposed the
+  source defect; dated NGPL modification notice and modified source are retained.
+  Writable/config state uses `XDG_DATA_HOME/FIQHack` with
+  `HOME/.local/share/FIQHack` fallback; native `--userdir` overrides remain.
+  External `tests/fiqhack-smoke.sh OUTPUT EVIDENCE-DIRECTORY` requires a
+  prebuilt output and new/empty evidence directory and honors `GUIX`.  Final
+  build/reproducibility/offline lint and the unchanged 1000-case upstream TAP
+  suite passed for
+  `/gnu/store/cm0nd4rhw8cgk282n1yb75nqn22xpqsp-fiqhack-4.3.0`.
+  `/tmp/fiqhack-native-fixed` records actual native movement from turn 1/[6,14]
+  to turn 2/[7,14], first exact restore then continuation to turn 3/[6,14],
+  second exact restore and native quits: Fiqproof, Valkyrie/human/female/neutral,
+  HP 16/16, depth 1.  Immutable identity and committed native gamestate record
+  bytes match both restores; whole save files differ normally through native
+  log/bookkeeping records, so full-file equality is explicitly not claimed.
+  Actual game PNG status uses exact independently calibrated xterm ASCII glyph
+  masks, not OCR guesses; the font-reference calibration remains separate from
+  [the retained genuine game screenshot](.goocastle/evidence/fiqhack-native.png).
+  UID-preserving offline namespaces exposed only lo/read-only store, and NAR
+  stayed `1fsrsdk39wy94m88j9yl59mp4xskg4qzglk62viksa7d4mj1m3sj`.
+  The final integrated target also passed with an independent native campaign
+  under `/tmp/fiqhack-native-integrated`.
+
+Exact installed synthetic contracts #686/#687/#688 (`--guix-smoke`) are retired,
+without fake replacement registry entries or running Goocastle.
+
+Serial validation commands (fresh evidence directories):
+
+```sh
+guix lint -L guix --no-network --exclude=cve,refresh,archival gearhead2 gearhead fiqhack
+gearhead2_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 gearhead2)
+gearhead_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 gearhead)
+fiqhack_out=$(guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 fiqhack)
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 --check gearhead2 gearhead fiqhack
+GEARHEAD2_EVIDENCE_DIR=/tmp/gearhead2-native-FRESH GUIX=guix sh tests/gearhead2-smoke.sh "$gearhead2_out"
+guix shell guix python python-pyte coreutils findutils util-linux xorg-server xterm xdotool imagemagick font-dejavu -- sh tests/gearhead-smoke.sh "$gearhead_out" /tmp/gearhead-native-FRESH
+GUIX=guix sh tests/fiqhack-smoke.sh "$fiqhack_out" /tmp/fiqhack-native-FRESH
+```
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -4550,6 +4675,9 @@ KEEPERRL_SMOKE_ARTIFACTS=/tmp/keeperrl-native-FRESH GUIX=guix sh tests/keeperrl-
 | `lambdahack` | LambdaHack 0.9.5.0 (`aa89408`) | Source-built BSD-3 SDL game/private pinned Haskell closure/font+dependency notices; final build/repro/lint/original suite+50framebenchmark/native+integrated two selected-state restores/continued moves/clean exits/NAR passed; hidden state/RNG not decoded |
 | `kimchi` | kimjoy2002/Kimchi 1.3.2 (`8f533dc`) | Source-built GPL-2+ console variant/system libraries/full notices/native XDG state; final build/repro/lint/original stress/native+integrated waits/save/restore/continued turn/Hangul/NAR passed; no exhaustive future RNG claim |
 | `keeperrl` | miki151/KeeperRL (`95d2be4`) | Source-built GPL-2+ game/free CC-BY-SA2.0 ASCII data/full legal notices/no paid media/private native XDG cwd; final build/repro/lint/repaired upstream suite/native+integrated campaign waits/two exact clock restores/native quits/independent profile/NAR passed; hidden state/RNG not fully compared |
+| `gearhead2` | GearHead 2 0.701 (`415dee8`) | Source-built LGPL-2.1+ Free Pascal ASCII game/text assets/native XDG save/config; final build/repro/lint/native+integrated two pilots/two full canonical serialized restores/exact effective mapHUD/movement/quit/NAR passed; unserialized RNG/UI caches excluded |
+| `gearhead` | GearHead: Arena 1.310 (`4314041`) | Source-built LGPL-2.1+ Free Pascal ASCII game/text assets/native config/save/map state; final build/repro/lint/native+integrated creation/movement/selected state+clock restore/quit/NAR passed; no full hidden state/RNG claim |
+| `fiqhack` | FIQHack 4.3.0 (`6292ea1`) | Source-built NGPL local tty fork/static libuncursed/text tiles/full notices/native XDG data; final build/repro/lint/1000TAP/native+integrated two identity+gamestate-record restores/movement/quit/NAR passed; wholefile equality false |
 | `hermes-agent` | NousResearch/hermes-agent 0.21.5 (`f97608f`) | Actual CLI/JSON-RPC/WebSocket backend, pinned binary-assisted Python closure and source-built media; writable user configuration and Guix-only package updates; reproducibility and native/backend smoke passed |
 | `hermes-desktop` | NousResearch/hermes-agent 2026.9.24 (`f97608f`) | Actual desktop app with pinned Electron 40.10.2, rebuilt terminal addon, packaged backend and free-font substitution; reproducible build and sandboxed real desktop acceptance passed without provider/model calls |
 | `blightmud` | Blightmud 5.7.1 | Rust terminal MUD client with Lua, TLS, MCCP2, GMCP, and MSDP |
@@ -5288,6 +5416,9 @@ make check-obumbrata # final build/repro/lint/native+integrated moves/Ssave/two 
 make check-lambdahack # final build/repro/lint/original suite+benchmark/native+integrated two selected-state restores/continued moves/clean exits/live screenshot/NAR passed
 make check-kimchi # final build/repro/lint/original stress/native+integrated waits/save/restore/continued turn/Hangul/live screenshots/NAR passed
 make check-keeperrl # final build/repro/lint/repaired upstream suite/native+integrated campaign waits/two exact clock restores/native quits/independent profile/live screenshot/NAR passed
+make check-gearhead2 # final build/repro/lint/native+integrated two pilots/two full canonical serialized restores/exact effective mapHUD/movement/quit/live screenshot/NAR passed
+guix shell guix make python python-pyte coreutils findutils util-linux xorg-server xterm xdotool imagemagick font-dejavu -- make check-gearhead GEARHEAD_OUTPUT="$gearhead_out" GEARHEAD_EVIDENCE=/tmp/gearhead-integrated-FRESH # final build/repro/lint/native+integrated creation/movement/selected state+clock restore/quit/live screenshot/NAR passed
+make check-fiqhack FIQHACK_OUTPUT="$fiqhack_out" FIQHACK_EVIDENCE=/tmp/fiqhack-integrated-FRESH # final build/repro/lint/1000TAP/native+integrated two identity+gamestate-record restores/movement/quit/live screenshot/NAR passed
 make check-lbforth # installed native arithmetic/control flow/recursion and error recovery from empty private cwd; python3 required, immutable output
 make check-legcord # real native onboarding/settings and Discord logged-out cold-relaunch surface, sandbox and unchanged NAR; no credentials/login/live audio
 make check-axmud    # Xvfb setup plus namespaced loopback Telnet/GMCP log smoke
