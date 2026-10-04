@@ -25,7 +25,7 @@ pinned; adding the channel does not start services or change your desktop.
   - [Other utilities and game launchers](#other-utilities-and-game-launchers)
   - [Source-oriented collections](#source-oriented-collections)
   - [Desktop support libraries](#desktop-support-libraries)
-  - [Pending and restricted packages](#pending-and-restricted-packages)
+  - [Local acceptance and restricted packages](#local-acceptance-and-restricted-packages)
 - [Source snapshots and research](#source-snapshots-and-research)
   - [Research and definitions outside the normal build inventory](#research-and-definitions-outside-the-normal-build-inventory)
 - [Caveats](#caveats)
@@ -416,17 +416,17 @@ in their owning definitions and the detailed accounting rather than this catalog
 | [`m3shapes`](guix/tay/packages/caelestia-dependencies.scm) | `1.0.0-1.32ad9ce` | Material 3 Expressive shape QML module | Defined |
 | [`quickshell-for-caelestia`](guix/tay/packages/caelestia-dependencies.scm) | `0.3.1-1.2d3b3e9` | `qs`/`quickshell` at the commit pinned by Caelestia shell 2.5.0 | Defined |
 
-### Pending and restricted packages
+### Local acceptance and restricted packages
 
-Do not read these rows as completed deliveries. **Allure's final local acceptance
-passed, but publication is pending. AloneRL is still build-gating and must not be
-marked complete.** SentinelOne needs a separately authorized proprietary source
-artifact and has no validated privileged runtime deployment.
+**Allure and AloneRL passed final local acceptance.** Their publication state is
+established by the signed channel commit history, not by inclusion in this table.
+AloneRL's fresh-process Continue preserves terrain only—not character or inventory
+state. SentinelOne needs authorized source and has no validated privileged runtime.
 
 | Package | Version | What it does | Status |
 | --- | --- | --- | --- |
-| [`allure`](guix/tay/packages/allure.scm) | `0.11.0.0` | SDL party-based roguelike using LambdaHack | Verified locally; publication pending |
-| [`alone-rl`](guix/tay/packages/alone-rl.scm) | `0.3.1` | Java/Swing survival roguelike with source-built terrain generator | Build-gating; not complete |
+| [`allure`](guix/tay/packages/allure.scm) | `0.11.0.0` | SDL party-based roguelike using LambdaHack | Verified locally |
+| [`alone-rl`](guix/tay/packages/alone-rl.scm) | `0.3.1` | Java/Swing survival roguelike with source-built terrain generator | Verified locally; terrain-only Continue |
 | [`sentinelone`](guix/tay/packages/sentinelone.scm) | `24.3.3.1` | Proprietary x86_64 agent | Blocked without authorized installer |
 
 ## Source snapshots and research

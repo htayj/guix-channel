@@ -56,7 +56,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	aiwnios aiwnios-bytecode wrogue babel7drl \
 	the-smiths-hand tetraworld splicehack-rewrite space-privateers slashem shamogu revengate plomrogue obumbrata \
 	lambdahack kimchi keeperrl \
-	gearhead2 gearhead fiqhack evilhack dynahack
+	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -109,7 +109,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-revengate check-plomrogue check-obumbrata \
 	check-lambdahack check-kimchi check-keeperrl \
 	check-gearhead2 check-gearhead check-fiqhack \
-	check-evilhack check-dynahack
+	check-evilhack check-dynahack check-alone-rl check-allure
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -663,7 +663,7 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-revengate check-plomrogue check-obumbrata \
 	check-lambdahack check-kimchi check-keeperrl \
 	check-gearhead2 check-gearhead check-fiqhack \
-	check-evilhack check-dynahack
+	check-evilhack check-dynahack check-alone-rl check-allure
 	$(GUIX) build -L guix --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L guix --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
@@ -752,3 +752,13 @@ check-evilhack:
 check-dynahack:
 	@test -n "$(DYNAHACK_OUTPUT)" -a -n "$(DYNAHACK_EVIDENCE)" || { echo 'Set DYNAHACK_OUTPUT and DYNAHACK_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/dynahack-smoke.sh "$(DYNAHACK_OUTPUT)" "$(DYNAHACK_EVIDENCE)"
+
+.PHONY: check-alone-rl
+check-alone-rl:
+	@test -n "$(ALONE_RL_OUTPUT)" -a -n "$(ALONE_RL_EVIDENCE)" || { echo 'Set ALONE_RL_OUTPUT and ALONE_RL_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/alone-rl-smoke.sh "$(ALONE_RL_OUTPUT)" "$(ALONE_RL_EVIDENCE)"
+
+.PHONY: check-allure
+check-allure:
+	@test -n "$(ALLURE_OUTPUT)" -a -n "$(ALLURE_EVIDENCE)" || { echo 'Set ALLURE_OUTPUT and ALLURE_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/allure-smoke.sh "$(ALLURE_OUTPUT)" "$(ALLURE_EVIDENCE)"

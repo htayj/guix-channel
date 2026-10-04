@@ -16,9 +16,10 @@ Forgejo is authoritative. GitHub `htayj/guix-channel` is the code push mirror;
 after verified Forgejo resolution, manually close the matched GitHub issue
 counterpart. A mirrored code push does not close mirrored issues.
 
-As of this documentation reorganization (2026-10-04), **Allure is verified but
-pending publication; AloneRL is still build-gating, not complete**. The receipts
-below describe observed local work and retain their narrower acceptance limits.
+As of final local acceptance on 2026-10-04, **Allure and AloneRL are locally
+verified**. Publication is established by the signed channel commit history,
+not this receipt. The earlier AloneRL build gate below is retained as history
+and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04).
 
 ## Finding details
 
@@ -32,7 +33,7 @@ below describe observed local work and retain their narrower acceptance limits.
 - [Dualmaster layout and live evidence](#dualmaster-layout-plugin)
 - [Caelestia desktop](#caelestia-shell)
 - [Persistent native service panes](#persistent-native-service-panes-2026-10-03)
-- [Allure and AloneRL acceptance boundaries](#alonerl-and-allure--allure-verified-alonerl-acceptance-pending)
+- [Historical Allure/AloneRL acceptance context](#alonerl-and-allure--allure-verified-alonerl-acceptance-pending) and [final AloneRL acceptance](#alonerl-final-local-acceptance-2026-10-04)
 - [Developer validation commands](#validate)
 - [License](#license) and [third-party notices](THIRD_PARTY_NOTICES.md)
 
@@ -81,8 +82,8 @@ release versions or unresolved static metadata remain in the tables.
 The conservative README “Verified” labels refer to dated receipts retained
 below, not test filenames, a successful dry-run, a contract marker or a screenshot
 alone. “Defined” avoids asserting native acceptance that is not established by
-this guide. These labels do not establish publication or deployment. Allure is
-locally verified/pending publication and AloneRL remains build-gating.
+this guide. These labels do not establish publication or deployment. Allure and
+AloneRL subsequently passed final local acceptance; see the dated receipt below.
 
 This documentation-only reorganization ran **no commands, checks, tests, builds,
 linters or formatters**. Rendered readability, inventory/link checks and final
@@ -4761,12 +4762,70 @@ GUIX=guix sh tests/dynahack-smoke.sh "$dynahack_out" /tmp/dynahack-native-FRESH
 
 ## AloneRL and Allure — Allure verified, AloneRL acceptance pending
 
+**Historical pending context:** the earlier statements immediately below and
+the retained original catalog/check comments are superseded by the final
+2026-10-04 receipt. They are preserved to retain the chronology, not current gates.
+
 These standalone source-built games retain ordinary Swing/SDL entrypoints.
 External `tests/*` consumers require prebuilt output/new-empty evidence and
 self-resolve proof-only dependencies through `GUIX`.  Allure passed its final
 serial build/upstream tests/reproducibility/offline lint/native/integrated gates;
 AloneRL acceptance awaits Main's serial runs.
 No deployed host/profile change is established.
+
+### AloneRL final local acceptance (2026-10-04)
+
+This receipt supersedes the earlier pending statements in the preserved section
+and catalog below; the original source/licensing history remains available.
+Main's serial source build (bg943) produced
+`/gnu/store/mswq4vzrpbpipqybrhz2kkimgbrbvha5-alone-rl-0.3.1` with terrain output
+`/gnu/store/6ph2v9qjcliyhp7jg7divjpjywgydz4k-alone-rl-terrain-0.2.1`.
+The `--check` rebuild reproduced both outputs bit-identically (bg945).
+Offline lint reported no package findings (bg946); the known unrelated
+Flex Launcher and NHFourk findings are not AloneRL acceptance failures.
+
+Build repairs use named upstream JUnit modules, source-built/shaded FastCSV
+4.2.0 with its MIT notice, full Rust 1.93 including `rustdoc`, and the exact
+Pillow interpreter as a proof input. Source compilation does not substitute a
+release terrain binary or online dependency resolution.
+
+The final ordinary Swing/X11 consumer passed with exit status 0 and
+`ALONERL_RUNTIME_OK` (bg961, `/tmp/alone-rl-native-final-v6`). Its `evidence.json`
+records real New/world/character creation, F1 and Craft/back interaction,
+two successful moves from (512,512) to (513,512), then (513,514); same-process
+Continue retained loaded objects and further moves reached (514,514), then
+(514,515). An ordinary fresh launcher process used Continue, matched the
+preserved elevation bytes and six selected native terrain/background fields,
+then moved (512,512) to (512,514) and back to (512,512), and quit cleanly.
+Both native process exits were 0; the independent integrated
+`make check-alone-rl` also passed with exit 0/`ALONERL_RUNTIME_OK`
+(bg962, `/tmp/alone-rl-make-final`) against the same output.
+
+Input is real external XTEST focused at the discovered descendant AWT
+`FocusProxy`, not application instrumentation or a custom frontend. Temporary
+javaagent, `-Xint` and twm experiments were diagnostic only and are **not** the
+final acceptance path. Fresh HOME/XDG state, same-UID private namespaces,
+loopback-only networking, read-only caller mounts/store and a private temporary
+directory isolated the proof. No native error/stacktrace was observed. Before
+and after output NAR hashes both were
+`1vs813bgk8jsh35cjpj464fzqcls0n0iqlz1lrnim905vbvs7lhh`.
+The [genuine after-continued-play PNG](.goocastle/evidence/alone-rl-native.png)
+is copied from that final production run, not a diagnostic rendering.
+Main also visually inspected the actual screenshot: `@`, blue `~` water,
+green terrain, the AloneRL HUD and combat message lines are visible without
+a blank/error surface. Message lines do not establish comprehensive combat
+acceptance.
+
+
+**Continue persists terrain elevation only:** same-process Continue keeps loaded
+objects, while fresh-process Continue creates them anew. This is not character,
+inventory, position, time, hidden-state or future-RNG persistence. No deployed
+host/profile change is established. Allure's separate final receipt below is
+unchanged; publication of either package is established by signed channel
+history rather than a temporary pending-publication sentence.
+
+
+### Preserved source and earlier gate details
 
 - **AloneRL #272** exports `alone-rl` **0.3.1**, canonical `fabio-t/alone-rl`
   tag commit `de2ab3f0023cbfb0f9ab5a68e3d48fabf4b17de8`, fixed codeload archive
@@ -4876,6 +4935,11 @@ No deployed host/profile change is established.
   lint and consumer repairs and are not acceptance.  Integrated
   `make check-allure` against the same output also passed
   (`/tmp/allure-make-final`).
+
+  Main visually inspected the actual native SDL screenshot: a small ASCII
+  room, boxed `@` and party markers, “3 Captain’s bridge”, Calm 65/70,
+  HP 45/79 and Post-human Haskell Alvin are visible without an error surface.
+  This remains selected native surface proof, not hidden-state/RNG acceptance.
 
 Exact installed synthetic #654 (`--guix-smoke`) and #653's automated
 null-frontend benchmark contract are retired; the verified external SDL proof
