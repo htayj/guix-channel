@@ -60,22 +60,6 @@
       }
     },
     {
-      "issueNumber": 648,
-      "packageName": "wenyan",
-      "artifactPath": ".goocastle/evidence/issue-648.png",
-      "runtime": {
-        "executable": "wenyan",
-        "invocation": {
-          "file": "wenyan",
-          "args": [
-            "--no-outputHanzi",
-            "examples/helloworld.wy"
-          ]
-        },
-        "successMarker": "問天地好在。"
-      }
-    },
-    {
       "issueNumber": 649,
       "packageName": "aquesttoofar",
       "artifactPath": ".goocastle/evidence/issue-649.png",
@@ -120,21 +104,6 @@
           ]
         },
         "successMarker": "Top 10 Adventurers:"
-      }
-    },
-    {
-      "issueNumber": 652,
-      "packageName": "agduria",
-      "artifactPath": ".goocastle/evidence/issue-269.png",
-      "runtime": {
-        "executable": "agduria",
-        "invocation": {
-          "file": "agduria",
-          "args": [
-            "--version"
-          ]
-        },
-        "successMarker": "Agduria 0.0.1"
       }
     },
     {

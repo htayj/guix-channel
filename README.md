@@ -187,6 +187,7 @@ publication, source-required, and build gates appear in the final table.
 | [`fontra`](guix/tay/packages/fontra.scm) | `2026.9.0` | Browser-based font editor, local server, conversion and workflow commands | Verified |
 | [`gpu-screen-recorder`](guix/tay/packages/caelestia-cli.scm) | `6.1.3` | VA-API/Vulkan screen recorder and `gsr-kms-server` | Defined |
 | [`kraken`](guix/tay/packages/kraken.scm) | `7.1` | OCR command-line tools for historical and multilingual documents | Verified offline CPU OCR path |
+| [`ludviglundgren-qbittorrent-cli`](guix/tay/packages/ludviglundgren-qbittorrent-cli.scm) | `2.3.0` | Go qBittorrent Web API client; commands `qbt` and `qbittorrent-cli` | Verified isolated daemon path |
 | [`nrl-text-to-phoneme`](guix/tay/packages/nrl-text-to-phoneme.scm) | `0-f99c64a` | NRL text-to-phoneme command and rule tables | Defined |
 | [`praat`](guix/tay/packages/praat.scm) | `7.0.02` | GTK speech analysis/editor and batch scripting | Verified analysis and GTK path |
 | [`pyrosimple`](guix/tay/packages/pyrosimple.scm) | `2.14.2-16.d24655a` | Command-line tools for rTorrent and BitTorrent metainfo files | Verified |
@@ -304,6 +305,7 @@ publication, source-required, and build gates appear in the final table.
 
 | Package | Version | What it does | Status |
 | --- | --- | --- | --- |
+| [`agduria`](guix/tay/packages/agduria.scm) | `0.0.1-0.92c20b1` | Early C++/ncurses dungeon-exploration roguelike; no save/load | Verified native terminal path |
 | [`aquarium-arena`](guix/tay/packages/aquarium-arena.scm) | `0.4-0.6d494c` | Underwater pygame arena roguelike with XDG high scores | Defined |
 | [`aquesttoofar`](guix/tay/packages/aquesttoofar.scm) | `1.3` | Source-built C++/SDL dungeon adventure starring an aging hero | Verified |
 | [`atlas-warriors`](guix/tay/packages/atlas-warriors.scm) | `0.0.9` | Graphical fantasy roguelike with XDG state | Defined |
@@ -380,6 +382,7 @@ publication, source-required, and build gates appear in the final table.
 | [`scala-ts`](guix/tay/packages/scala-ts.scm) | `0.1.8` | Scala-style collections, Option, Either and Try for TypeScript | Verified |
 | [`shader-slang`](guix/tay/packages/shader-slang.scm) | `2026.14.1` | `slangc` Slang shader compiler and libraries | Defined |
 | [`tui`](guix/tay/packages/tui.scm) | `0.2.0-0.e435b1b` | Clojure styled text rendering and cooked line input | Verified |
+| [`wenyan`](guix/tay/packages/wenyan.scm) | `0.4.0` | Classical Chinese language compiler, CLI and JavaScript library | Verified compiler/CLI path |
 | [`xq`](guix/tay/packages/xq.scm) | `0-e1abbb3` | Offline-built XML and HTML beautifier and extractor | Defined |
 
 ### Other utilities and game launchers

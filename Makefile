@@ -56,7 +56,8 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	aiwnios aiwnios-bytecode wrogue babel7drl \
 	the-smiths-hand tetraworld splicehack-rewrite space-privateers slashem shamogu revengate plomrogue obumbrata \
 	lambdahack kimchi keeperrl \
-	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure
+	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
+	agduria wenyan ludviglundgren-qbittorrent-cli
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -110,6 +111,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-lambdahack check-kimchi check-keeperrl \
 	check-gearhead2 check-gearhead check-fiqhack \
 	check-evilhack check-dynahack check-alone-rl check-allure
+	check-agduria check-wenyan check-ludviglundgren-qbittorrent-cli
 
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
@@ -664,6 +666,7 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-lambdahack check-kimchi check-keeperrl \
 	check-gearhead2 check-gearhead check-fiqhack \
 	check-evilhack check-dynahack check-alone-rl check-allure
+	check-agduria check-wenyan check-ludviglundgren-qbittorrent-cli
 	$(GUIX) build -L guix --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L guix --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
@@ -762,3 +765,18 @@ check-alone-rl:
 check-allure:
 	@test -n "$(ALLURE_OUTPUT)" -a -n "$(ALLURE_EVIDENCE)" || { echo 'Set ALLURE_OUTPUT and ALLURE_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/allure-smoke.sh "$(ALLURE_OUTPUT)" "$(ALLURE_EVIDENCE)"
+
+.PHONY: check-agduria
+check-agduria:
+	@test -n "$(AGDURIA_OUTPUT)" -a -n "$(AGDURIA_EVIDENCE)" || { echo 'Set AGDURIA_OUTPUT and AGDURIA_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/agduria-smoke.sh "$(AGDURIA_OUTPUT)" "$(AGDURIA_EVIDENCE)"
+
+.PHONY: check-wenyan
+check-wenyan:
+	@test -n "$(WENYAN_OUTPUT)" -a -n "$(WENYAN_EVIDENCE)" || { echo 'Set WENYAN_OUTPUT and WENYAN_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/wenyan-smoke.sh "$(WENYAN_OUTPUT)" "$(WENYAN_EVIDENCE)"
+
+.PHONY: check-ludviglundgren-qbittorrent-cli
+check-ludviglundgren-qbittorrent-cli:
+	@test -n "$(QBT_CLI_OUTPUT)" -a -n "$(QBT_CLI_EVIDENCE)" || { echo 'Set QBT_CLI_OUTPUT and QBT_CLI_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/ludviglundgren-qbittorrent-cli-smoke.sh "$(QBT_CLI_OUTPUT)" "$(QBT_CLI_EVIDENCE)"

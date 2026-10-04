@@ -36,6 +36,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Historical Allure/AloneRL acceptance context](#alonerl-and-allure--allure-verified-alonerl-acceptance-pending) and [final AloneRL acceptance](#alonerl-final-local-acceptance-2026-10-04)
 - [Developer validation commands](#validate)
 - [License](#license) and [third-party notices](THIRD_PARTY_NOTICES.md)
+- [Agduria, Wenyan and Ludvig Lundgren's qBittorrent CLI](#agduria-wenyan-and-ludvig-lundgrens-qbittorrent-cli--verified-native-paths)
 
 ## Relocation map (2026-10-04)
 
@@ -60,9 +61,9 @@ remain; especially, inclusion in the old table does not complete AloneRL.
 
 ## README inventory evidence (2026-10-04)
 
-The redesigned README covers all **222** names declared by the current
+The redesigned README covers all **225** names declared by the current
 `FONT_PACKAGES`, `PROJECT_PACKAGES` and optional proprietary list in
-`Makefile:29-65`, including entries missing from the old 156-row table. It also
+`Makefile:29-66`, including entries missing from the old 156-row table. It also
 lists **11** exported definitions outside that default inventory separately:
 `noctalia`, `flaghack`, `flaghack-charm`, `cavechop`, `raelives`, `herdr`, `drl`,
 `gsplat-wasm`, `nhfourk`, `tassh` and the research/toolchain `pdp10-gcc` backend.
@@ -90,6 +91,151 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Agduria, Wenyan and Ludvig Lundgren's qBittorrent CLI — verified native paths
+
+Final local acceptance on **2026-10-04** used source-built programs and external
+native consumers, not installed synthetic smoke modes. Main ran the serial
+source builds, bit-identical `--check` rebuilds, scoped offline lint and the
+standalone/integrated proofs described below. Publication is established by
+signed channel history; no live service, deployed host or user profile change
+is claimed. The known unrelated Flex Launcher/NHFourk lint findings remain
+separate. The source collection stays at 629 snapshots.
+
+### Agduria
+
+`agduria` **0.0.1-0.92c20b1** compiles the original MIT/Expat C++20/ncurses
+game at [`paulpekkarinen/Agduria` revision
+`92c20b10724dcd7ba6ca3ccbf794600d8df01b7c`](https://github.com/paulpekkarinen/Agduria/tree/92c20b10724dcd7ba6ca3ccbf794600d8df01b7c).
+The fixed codeload source has Guix base32 SHA256
+`0y7w5r575ppdf466xlb8pc1w95jz1641hs9fvqzksmwa3d45h0mh`.
+The historical research hash was invalid Guix base32; it is not reused as
+verified provenance. The package preserves the original game, license and
+documentation with a native launcher and pinned ncurses terminfo; it needs an
+80×24 terminal with changeable color support.
+Upstream has **no automated test suite**; disabling its nonexistent check
+target is not a passing-suite claim. The interactive `T` command is exercised
+by the external native consumer instead.
+
+Final source build and reproducibility (bg985/bg986) produced
+`/gnu/store/k7acy6vn33vzhiaairi1vh09wma5pp5c-agduria-0.0.1-0.92c20b1`.
+Offline lint had no Agduria findings (bg991). The genuine native terminal run
+(bg987, `/tmp/agduria-native-final-v2`) passed `AGDURIA_RUNTIME_OK`, native
+exit 0 and external consumer exit 0. Actual arrow events moved the native
+player from (38,9) to (39,9) and back to (38,9), with camera (0,0); screen
+cells were (38,10), (39,10), (38,10), reflecting the header row.
+`R` preserved the gameplay map: upstream `Remake_Current_Level()` is an empty
+stub and performs only redraw, **not regeneration**. The `T` creature display
+showed “Insect: ant”, then returned without altering gameplay. The actual
+terminal/menu quit paths completed cleanly; no user-state files were created.
+Before/after output NAR hashes matched
+`0lfc9rwnhsvryhb7zn54gvflwicp4xbji0kqgzh0n6vajk6k02r9`.
+The independent integrated `make check-agduria` also passed exit 0
+(bg990, `/tmp/agduria-make-final`). Its integrated `evidence.json` also records
+exit 0, preserved redraw/creature gameplay, no user-state files and the same
+unchanged output NAR. Main inspected the
+[genuine native dungeon screenshot](.goocastle/evidence/agduria-native.png):
+magenta/white walls and the white `@` render, without a blank/error surface.
+Proof used fresh HOME/XDG, same UID 1000, loopback-only private networking and
+a read-only store. **Pinned upstream has no save/load**; no persistence,
+regeneration, full campaign or physical-terminal acceptance is claimed.
+
+### Wenyan
+
+`wenyan` **0.4.0** builds the original compiler at
+[`wenyan-lang/wenyan` revision
+`97f0a4b8c5a815467c5c2cac08215d722efde208`](https://github.com/wenyan-lang/wenyan/tree/97f0a4b8c5a815467c5c2cac08215d722efde208),
+reusing the reviewed source snapshot origin. Its Guix base32 SHA256 is
+`0ks2krir22n8jlpfazy8ifw26xvfz797cqx5mlgpmiyd3xam1pbi`
+(hex `71dd50551fcdc77a1fada56376d2f96e7723b88bc87fe52e95c80a91639e424f`).
+Upstream is MIT; installed compiler/dependency grants include MIT, ISC,
+Apache-2.0 and BSD-3-Clause. Its curated closure has 416 fixed npm archives and
+501 contextual locations with locked integrity/hashes. Thirty-four external
+`sync-request` runtime paths retain the real `sync-rpc` worker's `__dirname`.
+Twenty-seven missing full-notice supplements use archived explicit grants or
+exact upstream texts with provenance; original notices and TypeScript's
+CopyrightNotice/ThirdPartyNoticeText remain under `share/doc/wenyan/npm`.
+No curated native/WASM/font blobs are included; optional fsevents and unused
+PNG test/coverage assets are excluded.
+
+Upstream TypeScript declarations and Webpack CLI/core/render/browser-runtime
+bundles compile from source, development/unminified despite retaining upstream
+`index.min.js` filenames. Native `wenyan` provides JavaScript/Python/Ruby
+compilation, JavaScript execution, standard library and examples; the installed
+`require('wenyanlang')` library is available. The build check compiles the
+bundled recursive `factorial.wy` and captures exact `[[120]]` through
+`evalCompiled`: **this is a focused check, not the full upstream Jest suite**.
+Original Jest/lint/wiki/site development tools are outside this package closure.
+
+Final build/reproducibility (bg978/bg981) produced
+`/gnu/store/7qcd57z6zsv05f5al85k8a111i16xicp-wenyan-0.4.0`; final offline
+lint had no Wenyan findings (bg984). The integrated native consumer passed
+(bg988, `/tmp/wenyan-make-final`): bundled hello emitted `問天地好在。`;
+separate native CLI compile plus Node execution and direct CLI execution each
+emitted `120`, `40320`, `7` for factorial 5, factorial 8 and embedded 算經
+absolute-value of -7. Ordinary installed library import returned exact
+`[[120],[40320],[7]]`; every exercised process exited 0. Compiler API diagnostic
+records remain separate. The fresh-HOME/XDG, same-UID private user/mount/net/PID
+proof exposed only loopback and a read-only store; before/after output NAR was
+`1bsvvrvgnrh8h80fxvv31wlxzhv6jqwgs3xp2rl2i7k0hgj4qj0n`.
+No full Jest-suite, browser visual surface or remote-HTTP behavior is claimed.
+
+### Ludvig Lundgren's qBittorrent CLI
+
+`ludviglundgren-qbittorrent-cli` **2.3.0** is the canonical Go client at
+[`ludviglundgren/qbittorrent-cli` revision
+`7b5f87de149d699c0bd955867fe5d57418b6ec68`](https://github.com/ludviglundgren/qbittorrent-cli/tree/7b5f87de149d699c0bd955867fe5d57418b6ec68),
+with reviewed source origin base32 SHA256
+`19d52qki17mkq7x0g0y2fdmvyc1mpnnm0rdgmkfh2143qjscr3wy`.
+It is distinct from the separate project tracked by issue #119, which is
+untouched. Commands are native `qbt` and its `qbittorrent-cli` symlink. The
+client manages torrent, category, tag, transfer and application Web API calls;
+it **does not install a daemon or create/replace client configuration**. Its
+explicit updater is not exercised by acceptance.
+
+The offline Go 1.25.12 GOPATH closure uses 67 immutable Go ZIP source nodes,
+208 module notices plus compiler/stdlib notices and four retained full MPL
+source groups (torrent, generics, Hashicorp LRU, x/net). The client is MIT;
+compiled inputs retain MPL-2.0, Apache-2.0, BSD, public-domain, CC-BY-4.0 and
+CC0 grants. Exact x/net publicsuffix data and MPL license are pinned at
+`d6c92f1bbb7433e5db7b8405c25d4035fb8ff376`, with data hash
+`1gp79v8x2v57lqrl2lhixvr4n0idxbwpclvs28mr133y2n0q4qx5` and license hash
+`0wji1lq3xnj4b3zd0pa6747fvcnc8wharsjknym5i86nb9yi18v6`.
+
+Final source build/reproducibility (bg973/bg981) produced
+`/gnu/store/91arv85x4kr00d779kwcczz0l7gbk9ym-ludviglundgren-qbittorrent-cli-2.3.0`;
+offline lint had no package findings (bg984). Native acceptance passed
+(bg982, `/tmp/qbt-native-final-v2`) and independent integrated
+`make check-ludviglundgren-qbittorrent-cli` passed
+(bg989, `/tmp/qbt-make-final`). Help/version and alias-version created no
+configuration. The real scratch qBittorrent 5.1.4 daemon started empty at
+loopback Web UI, accepted a trackerless 74,000-byte generated torrent, and
+native CLI add/list/category-create/tag-create/category-assign/list/remove
+calls were checked independently through its real API. The torrent had hash
+`76a1443d91f47d5cc5c2e6cfada62154fee2c1f3`, category `native-proof` and tag
+`native-offline`; removal retained payload SHA256
+`774e816c41f53d0b40804114e96afaab73b6dc19dc01f53b8a0b067b4f9edf23` exactly.
+The daemon ended with no torrents and shutdown exit 0. Same-UID fresh
+HOME/XDG/user/mount/net/PID isolation exposed only loopback and a read-only
+store; output NAR was unchanged at
+`0rjzlzhdzd6mdyp0avv0dsdpjgi3nn0hsqls8lrvf3a47ygqhw5s`.
+This is genuine isolated local-daemon proof, **not** a live seedbox/service,
+tracker, peer-transfer or remote-network verification.
+
+### Wave 15 developer commands
+
+Use prebuilt outputs and fresh empty evidence directories; proof-only tools
+are resolved through `GUIX` before offline isolation:
+
+```sh
+make check-agduria AGDURIA_OUTPUT="$agduria_out" AGDURIA_EVIDENCE=/tmp/agduria-FRESH
+make check-wenyan WENYAN_OUTPUT="$wenyan_out" WENYAN_EVIDENCE=/tmp/wenyan-FRESH
+make check-ludviglundgren-qbittorrent-cli QBT_CLI_OUTPUT="$qbt_out" QBT_CLI_EVIDENCE=/tmp/qbt-FRESH
+```
+
+Exact synthetic contracts are accounted for by the integration owner; native
+acceptance does not imply any Goocastle executor or live deployment. No OKF
+service page/log update applies to these repository-only additions.
 
 
 ---
@@ -4784,14 +4930,18 @@ The `--check` rebuild reproduced both outputs bit-identically (bg945).
 Offline lint reported no package findings (bg946); the known unrelated
 Flex Launcher and NHFourk findings are not AloneRL acceptance failures.
 
-Build repairs use named upstream JUnit modules, source-built/shaded FastCSV
-4.2.0 with its MIT notice, full Rust 1.93 including `rustdoc`, and the exact
-Pillow interpreter as a proof input. Source compilation does not substitute a
-release terrain binary or online dependency resolution.
+Build repairs use upstream named JUnit module descriptors, source-built FastCSV
+4.2.0 relocated exactly inside the params dependency with its MIT notice, full
+Rust 1.93 including `rustdoc`, and the exact Pillow interpreter as a proof input.
+All original tests are retained and Rust/rustdoc tests remain enabled. Source
+compilation does not substitute a release terrain binary or online dependency
+resolution. Kotlin interoperability is unexercised; compile-only empty Kotlin
+module descriptors are not installed. Cross-compilation is unsupported.
 
 The final ordinary Swing/X11 consumer passed with exit status 0 and
 `ALONERL_RUNTIME_OK` (bg961, `/tmp/alone-rl-native-final-v6`). Its `evidence.json`
-records real New/world/character creation, F1 and Craft/back interaction,
+records real New/world/character creation, upstream F1 movement-delay debug
+control and Craft/back interaction,
 two successful moves from (512,512) to (513,512), then (513,514); same-process
 Continue retained loaded objects and further moves reached (514,514), then
 (514,515). An ordinary fresh launcher process used Continue, matched the
@@ -4823,6 +4973,10 @@ inventory, position, time, hidden-state or future-RNG persistence. No deployed
 host/profile change is established. Allure's separate final receipt below is
 unchanged; publication of either package is established by signed channel
 history rather than a temporary pending-publication sentence.
+Elevation is the native 1024×1024 row-major byte map; reload comparisons do not
+establish serialization of regenerated objects. First-use YAML seeding preserves
+user modifications and does not automatically refresh YAML on upgrade.
+
 
 
 ### Preserved source and earlier gate details
