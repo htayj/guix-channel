@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Installed LiteGraph library consumer</title>
+  <style>
+    body { margin: 0; background: #202020; color: #eee; font: 16px sans-serif; }
+    header { padding: 12px 24px; }
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    #surface { position: relative; width: 1150px; height: 720px; margin: 0 24px; }
+  </style>
+</head>
+<body>
+  <header><h1>Installed LiteGraph.js — upstream Editor and LGraphCanvas</h1>
+    <div id="result">Loading the installed library…</div></header>
+  <div id="surface"></div>
+  <script type="module">
+    const parameters = new URLSearchParams(location.search);
+    const root = parameters.get('root');
+    const bundle = parameters.get('bundle');
+    if (!root || !['litegraph.js', 'litegraph.min.js'].includes(bundle))
+      throw new Error('consumer requires installed ROOT and bundle');
+    const installed = (name) => new URL(name, root).href;
+    // Upstream Editor resolves its relative imgs/ paths against the document base.
+    const base = document.createElement('base');
+    base.href = installed('editor/');
+    document.head.prepend(base);
+    const load = (tag, attributes) => new Promise((resolve, reject) => {
+      const element = Object.assign(document.createElement(tag), attributes);
+      element.onload = resolve;
+      element.onerror = () => reject(new Error(`failed to load ${attributes.src || attributes.href}`));
+      document.head.append(element);
+    });
+    await load('link', { rel: 'stylesheet', href: installed('css/litegraph.css') });
+    await load('link', { rel: 'stylesheet', href: installed('css/litegraph-editor.css') });
+    await load('script', { src: installed(`build/${bundle}`) });
+    await load('script', { src: installed('src/litegraph-editor.js') });
+    if (typeof Editor !== 'function') throw new Error('installed upstream Editor absent');
+
+    const editor = new Editor('surface', { skip_maximize: true });
+    const { graph, graphcanvas: canvas } = editor;
+    const a = LiteGraph.createNode('basic/const');
+    const b = LiteGraph.createNode('basic/const');
+    const operation = LiteGraph.createNode('math/operation');
+    const watch = LiteGraph.createNode('basic/watch');
+    if (![a, b, operation, watch].every(Boolean)) throw new Error('standard nodes absent');
+    a.title = 'A — edit native number widget';
+    b.title = 'B';
+    operation.title = 'Addition';
+    watch.title = 'Observed output';
+    a.pos = [100, 110];
+    b.pos = [100, 320];
+    operation.pos = [490, 220];
+    watch.pos = [820, 220];
+    a.setProperty('value', 7);
+    b.setProperty('value', 5);
+    operation.setProperty('OP', '+');
+    for (const node of [a, b, operation, watch]) graph.add(node);
+    a.connect(0, operation, 0);
+    b.connect(0, operation, 1);
+    operation.connect(0, watch, 0);
+    const ids = { a: a.id, b: b.id, operation: operation.id, watch: watch.id };
+    const trusted = {};
+    for (const type of ['mousedown', 'mousemove', 'mouseup', 'keydown', 'input']) {
+      document.addEventListener(type, (event) => {
+        if (event.isTrusted) trusted[type] = (trusted[type] || 0) + 1;
+      }, true);
+    }
+    const current = () => canvas.graph;
+    const update = () => {
+      current().runStep(1, true);
+      canvas.draw(true, true);
+      document.getElementById('result').textContent =
+        `${bundle}: A=${current().getNodeById(ids.a).properties.value}, B=5, watch=${current().getNodeById(ids.watch).value}`;
+    };
+    const inspect = () => {
+      const g = current();
+      // Upstream serialization deletes output-slot _data, so refresh execution
+      // before each observation (the native input handlers alone change properties).
+      g.runStep(1, true);
+      const node = g.getNodeById(ids.a);
+      const rect = canvas.canvas.getBoundingClientRect();
+      const point = (x, y) => ({
+        x: rect.x + (x + canvas.ds.offset[0]) * canvas.ds.scale,
+        y: rect.y + (y + canvas.ds.offset[1]) * canvas.ds.scale,
+      });
+      return {
+        bundle, value: node.properties.value, widgetValue: node.widgets[0].value,
+        output: g.getNodeById(ids.operation).getOutputData(0),
+        watch: g.getNodeById(ids.watch).value,
+        position: Array.from(node.pos),
+        title: point(node.pos[0] + 65, node.pos[1] - LiteGraph.NODE_TITLE_HEIGHT / 2),
+        widget: point(node.pos[0] + node.size[0] / 2,
+                      node.pos[1] + node.widgets[0].last_y + LiteGraph.NODE_WIDGET_HEIGHT / 2),
+        canvas: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+        trusted: { ...trusted }, graph: g.serialize(),
+        nativeCanvas: canvas instanceof LGraphCanvas && canvas.canvas.classList.contains('graphcanvas'),
+        editorLoaded: editor instanceof Editor && Boolean(document.querySelector('.litegraph-editor #playnode_button')),
+        gridLoaded: Boolean(canvas._bg_img && canvas._bg_img.complete && canvas._bg_img.naturalWidth > 0),
+      };
+    };
+    // Ordinary library consumer operations; the installed package has no test hooks.
+    window.consumer = { ids, update, inspect,
+      roundtrip() {
+        const serialized = JSON.parse(JSON.stringify(current().serialize()));
+        const imported = new LGraph();
+        imported.configure(serialized);
+        imported.runStep(1, true);
+        editor.graph = imported;
+        imported.onAfterExecute = () => canvas.draw(true);
+        canvas.setGraph(imported);
+        canvas.draw(true, true);
+        // Read live output before serialize() clears upstream output-slot _data.
+        const result = {
+          output: imported.getNodeById(ids.operation).getOutputData(0),
+          watch: imported.getNodeById(ids.watch).value,
+          position: Array.from(imported.getNodeById(ids.a).pos),
+          value: imported.getNodeById(ids.a).properties.value,
+          graph: imported.serialize() };
+        document.getElementById('result').textContent =
+          `${bundle}: imported graph A=${result.value}, B=5, watch=${result.watch}`;
+        return result;
+      },
+    };
+    update();
+  </script>
+</body>
+</html>

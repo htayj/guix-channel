@@ -37,6 +37,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Developer validation commands](#validate)
 - [License](#license) and [third-party notices](THIRD_PARTY_NOTICES.md)
 - [Agduria, Wenyan and Ludvig Lundgren's qBittorrent CLI](#agduria-wenyan-and-ludvig-lundgrens-qbittorrent-cli--verified-native-paths)
+- [Lispy Rogue, bodge-nuklear and LiteGraph](#lispy-rogue-bodge-nuklear-and-litegraph--verified-native-paths)
 
 ## Relocation map (2026-10-04)
 
@@ -61,9 +62,9 @@ remain; especially, inclusion in the old table does not complete AloneRL.
 
 ## README inventory evidence (2026-10-04)
 
-The redesigned README covers all **225** names declared by the current
+The redesigned README covers all **228** names declared by the current
 `FONT_PACKAGES`, `PROJECT_PACKAGES` and optional proprietary list in
-`Makefile:29-66`, including entries missing from the old 156-row table. It also
+`Makefile:29-67`, including entries missing from the old 156-row table. It also
 lists **11** exported definitions outside that default inventory separately:
 `noctalia`, `flaghack`, `flaghack-charm`, `cavechop`, `raelives`, `herdr`, `drl`,
 `gsplat-wasm`, `nhfourk`, `tassh` and the research/toolchain `pdp10-gcc` backend.
@@ -91,6 +92,185 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Lispy Rogue, bodge-nuklear and LiteGraph — verified native paths
+
+Final local acceptance on **2026-10-04** uses source-built deliveries and
+external native consumers. Main owns all build/check/lint/proof runs; the
+documentation worker read the actual final JSON, NAR files and owner source
+reports without executing checks. Publication follows signed channel history,
+not a table label. No user profile, deployed host or live service changed;
+no OKF service page/log update applies. The source ledger stays at 629 snapshots.
+
+### Lispy Rogue
+
+`lispy-rogue` **0.0.2** uses the original [`lockie/lispy-rogue`](https://github.com/lockie/lispy-rogue)
+source revision `b2249bf7fe05e4ae53468d0f8855fcf4f4057337`, source base32 SHA256
+`1f0n7smll05hgn2syqvzqnyybcvcfbjdq7227vkq8zb4g11lmb4x`, reusing the
+reviewed snapshot origin. This graphical Common Lisp/Allegro Autumn Lisp Game
+Jam dungeon crawler installs original game assets, full MIT/CC0/OFL notices
+and Fantasque/Inconsolata font grants. Installer icons/cover, Tango artwork
+and unused Roboto are omitted, not substituted into the game surface.
+
+The compatible source closure includes MIT cl-astar
+`00d37d04187ce42211b2029402ee46a6813a5bce`
+(`1hx68wk2r290v1l5g4gp02rj33kc1zf7xbn5c5kmys83f9dq8j9f`), full zlib
+cl-liballegro 0.2.28 revision `f788b9245bc1391c82fdc3d0c6ba1f08ce7eb63d`
+(`0ap9gz6gvdprxrcbqvnkmk3jksrcddl58l5mmd6b58fxy73ds2vd`), MIT/public-domain
+cl-liballegro-nuklear `eb45ded76be495c59c82bc743850db275119cb2a`
+(`1nk9fxq170zf28c0rflgaffy7565jqvq9j7c8b0dpnjnmq0gk49n`), and zlib cl-tiled
+`80332bfbf18734f342c9c2c7b6228560f64a3d54`
+(`1wmh9df35sl4wd4n4nd050p9489zk4vwg32a5hsj2qqyrh2qvi8b`). Native Nuklear
+library/offsets are rebuilt; Allegro retains Guix's absolute library loader.
+Actual deploy revision `c9b869d` carries the zlib/Yukari Hafner 2017 grant,
+not the inherited Artistic-2.0 metadata; its actual license is retained.
+Actual Alexandria is `009b7e532071d9777bdbd63b82d776555da95916`, not the
+historical ticket's `49e82add` pin.
+
+The deterministic FASL launcher calls upstream
+`deploy::call-entry-prepared` with `lispy-rogue:main`, using explicit
+store ASDF source/output `conf.d` registries and `ignore-inherited-configuration`.
+The rejected nondeterministic core dump is not delivered. Final source build
+(bg1054), bit-identical rebuild (bg1058) and offline lint (bg1057) accepted
+`/gnu/store/72znkzks8a1jy34zxqx08rdkvhkx1fl0-lispy-rogue-0.0.2`.
+Native/integrated `make check-lispy-rogue` passed
+(bg1059, `/tmp/lispy-make-exact-final`, `evidence.json` status passed/exit 0).
+Actual input closed startup help, entered the dungeon, used `r` to produce
+“You stand still.”, opened Inventory, reopened CONTROLS with F1 and closed
+cleanly through `WM_PROTOCOLS/WM_DELETE_WINDOW`. A real Pulse stream was present.
+Final screenshots are verified by exact RGB matching against the actual
+source-font glyph coverage, not OCR, fuzzy recognition or replaced captures;
+the older OCR-based receipts are superseded. The decoder applies Allegro's
+exact integer blend `(175*c+127)//255` and exits before Xvfb teardown.
+The [actual native game frame](.goocastle/evidence/lispy-rogue-native.png)
+comes from this final run. Same-UID fresh-state private user/mount/net/PID
+isolation exposed only loopback and read-only store. Before/after NAR matched
+`0i9ja6xkbcqmkdkcza3p35zacy1syvq4x7dhifksb1lcsiizpd83`.
+Main inspected the actual native frame: dungeon/player HUD HP 100/120,
+MP 20/40, LVL 1 and the messages “You stand still.” / “You enter the dungeon.”
+are visible without an error surface; this does not broaden scenario coverage.
+Pinned upstream has **no save implementation**; selected help/dungeon/wait/
+inventory/close paths do not establish combat, campaign, persistence or every
+input control. Delivery is supported on x86_64-linux only.
+
+### bodge-nuklear
+
+`bodge-nuklear` **1.0.0-1.40adae4** builds the original
+[`borodust/bodge-nuklear`](https://github.com/borodust/bodge-nuklear) parent
+`40adae40e144143a4c3e12a9f4b96d5e2bb25155` with recursive Nuklear submodule
+`3e13d3667878747dcddc3fe970cf33e6fdae204e`, recursive source NAR hash
+`1qg3m1b1b43gbrqwpy9ryc8pnwz92wpxsfrkqqp85lghcnpj3sza`.
+Core ASDF systems `bodge-nuklear-bindings` and `bodge-nuklear` depend on the
+automatic source-built `nuklear-blob` adapter, delivered as `sbcl-nuklear-blob`.
+The original native Makefile compiles the library, not a downloaded blob.
+Optional generator/example systems are removed from the installed ASDF tree;
+**this is not acceptance of `bodge-nuklear/example`**. Supported system is
+x86_64-linux. The real `command-type` defect is corrected by returning CFFI's
+already-translated enum keyword rather than decoding it a second time.
+
+Wrapper MIT, generated bindings public domain, Nuklear MIT OR Unlicense,
+embedded stb public domain and ProggyClean MIT grants are retained in full,
+including parent/Nuklear/blob-ASD/font notices and submodule README. Exact
+blob-ASD notice is from `39eb9e8fff1105a7a745279eea363f09193869d4`; font
+author LICENSE is pinned at `139ec08a38096161291792313ef5803fc4f0e37b`.
+Final wrapper `/gnu/store/rb7sfdvkvdy9ylx2daashz12pcxr2ylc-bodge-nuklear-1.0.0-1.40adae4`
+and native adapter `/gnu/store/ariwyvf28lp5f2q2kx4d9grn6qicx67d-sbcl-nuklear-blob-1.0.0-1.40adae4`
+passed builds and bit-identical checks (wrapper bg1030, blob bg1018), final
+offline lint (bg1028), native proof (bg1029) and independent integrated proof
+(bg1036, `/tmp/bodge-nuklear-make-final/proof.json`). The external ordinary
+Lisp consumer registered/loaded the delivered library through
+bodge-blobs-support/CFFI, created native font/context, observed real button
+frames `[0,0,1]`, three label commands, 30 traversed draw commands and 21
+font-width callbacks. Clearing emptied the commands and font/context
+destruction completed. The unmodified original X11 demo source (with one
+external-ABI include adaptation) was linked to the **same** delivered library;
+native button release printed `button pressed` and WM_DELETE_WINDOW exited 0.
+The [actual X11 demo frame](.goocastle/evidence/bodge-nuklear-native.png)
+shows that native consumer, not the removed optional Lisp example.
+Main inspected the actual Demo panel with button, easy/hard radio controls and
+Compression 20; this is selected native demo-surface proof.
+Fresh HOME/XDG/private tmp, UID/EUID 1000, private user/net/mount/PID/IPC
+namespaces, loopback-only networking and read-only store left installed files
+unchanged. Wrapper NAR before/after was
+`1i2qjjikx34q69gch27zllw5crf22h6n3p7m10fx53qrnvxi4744`; blob NAR was
+`144zwjq9bbq9px85ia917r5p0asxw3k0gaqihiyl2pfs6djw3x94`.
+
+### LiteGraph
+
+`litegraph` **0.7.14-0.0555a2f** uses original
+[`jagenjo/litegraph.js`](https://github.com/jagenjo/litegraph.js) revision
+`0555a2f2a3df5d4657593c6d45eb192359888195`, source SHA256
+`2ed6280bc227a2676af01ff1061045ab1bf5343c047d16bb09760c20e3a270cb`
+(base32 `1jvhlbij033n16xicz847hsga6xb8l80dw8zy1m6g8i7q85jimif`).
+The original Grunt readable and minified bundles are regenerated using the
+114-archive fixed-hash closure with every lock SRI SHA512 verified: Grunt 1.5.3,
+CLI 1.4.3, concat 1.0.1, closure-tools 1.0.0 and task-closure-tools 0.1.10.
+Exact locked Closure Compiler **v20171112**, not the newer package.json range,
+is source-built; source hash is
+`0gz1w6p3yiahz155xcrkzz7k9rwih58njl97kh3da9xcg0b9pvim`.
+Its source-built Java closure includes protobuf C++/Java 3.0.2, jsinterop
+annotations 1.0.0, error-prone annotations 2.0.18, Gson 2.7, Guava 20.0,
+JavaPoet 1.7.0, AutoCommon 0.8, AutoService 1.0-rc2 annotations and AutoValue
+1.4.1, plus Guix args4j 2.33/jsr305 3.0.1 and IcedTea 8 javac. Java annotation
+processors, matching-protoc replacements for checked-in generated sources,
+polyfill tables, externs ZIP and fixed release ParserConfig are generated from
+source; no Maven/binary shade, npx or npm executable fetch replaces compilation.
+The jar merges runtime source-built dependencies unrelocated/unminimized and
+retains refactoring classes required by Linter. Guava's annotation-only
+Objective-C/Android dependencies are removed following the Guix pattern.
+Exact pins/hashes and retained copyright sources live in
+`guix/tay/packages/litegraph-compiler.scm`; full Apache/MPL texts, source
+copyright archives and dependency documentation remain under
+`share/doc/litegraph-closure-compiler`. Compiler grants include Apache-2.0,
+Rhino's alternative MPL-1.1/GPL-2+, args4j MIT and protobuf BSD-3.
+Matching Esprima 4.0.1 source is compiled from TypeScript (source hash
+`1dw4f6hp49xk0l2b9ldjr3lmy0bgsnwk13628zgr8d87g0jy8xa9`); async uses
+readable individual modules instead of prebuilt Rollup distribution.
+
+Only the inactive unlicensed Voxagon/Tuxedo Labs DOF **comment** is removed
+before concatenation; no executable graph code changes. Installed bundles,
+Editor, CSS, declarations and MIT interface images omit demo libraries/media.
+Full third-party notices cover original GPUImage BSD-3 Kuwahara (predating
+Shadertoy), webgl-meincraft BSD-3 FXAA, Raymond McGuire MIT XDoG, Wagner MIT
+lens and Catlike MIT-0 bloom, all build-tool notices and compiler copyright
+sources. Runtime bundle grants are MIT/BSD-3/Apache-2.0. Older outputs before
+the final FXAA notice are superseded, not final acceptance.
+
+Final licensed source build (bg1052), bit-identical check (bg1053) and offline
+lint (bg1057) accepted
+`/gnu/store/a2c02sg1l5bid5xr0h993vimjr507nvw-litegraph-0.7.14-0.0555a2f`;
+its source-built compiler output `/gnu/store/3y1n6rljby6bvyzbqw05yyv290wq1mjc-litegraph-closure-compiler-20171112`
+also passed `--check` (bg1049). Native/integrated proof passed
+(bg1056, `/tmp/litegraph-make-final/evidence.json`, status passed/exit 0).
+Independent Node processes executed both readable/minified engines: 7+5=12,
+serialize/import/rerun=12, then mutate 11+5=16. The original upstream browser
+Editor used trusted Chromium mouse/key/input events to drag a canvas node,
+edit its number prompt, obtain 16 and import/rerun the graph. Both bundle
+variants have genuine screenshots, including the
+[actual native browser editor](.goocastle/evidence/litegraph-native.png).
+Main inspected the actual Editor frame with connected A 11.000, B 5.000,
+plus and watch 16.000 nodes and the Play/Step/Live toolbar, without an error.
+Same-UID fresh-state isolated namespaces exposed only loopback/read-only store;
+only local file/data resources were requested and failures were empty.
+Before/after NAR matched
+`14rz94ipbk6r61f8mv9m979h3sw3q66924v54vvcsmk2h5f839bv`.
+Selected engine/serialization/editor interaction proof is not acceptance of
+every audio, WebGL, remote-network or demo-media node.
+
+### Wave 16 developer commands
+
+Use prebuilt outputs and new empty evidence directories; `GUIX` resolves proof
+dependencies before isolation:
+
+```sh
+make check-lispy-rogue LISPY_ROGUE_OUTPUT="$lispy_out" LISPY_ROGUE_EVIDENCE=/tmp/lispy-FRESH
+make check-bodge-nuklear BODGE_NUKLEAR_OUTPUT="$nuklear_out" BODGE_NUKLEAR_EVIDENCE=/tmp/nuklear-FRESH
+make check-litegraph LITEGRAPH_OUTPUT="$litegraph_out" LITEGRAPH_EVIDENCE=/tmp/litegraph-FRESH
+```
+
+The integration owner found no exact legacy registry objects 644/634/641;
+absence is not represented as deleting unrelated contracts. Shared Makefile
+and registry edits are outside this documentation change.
 
 ## Agduria, Wenyan and Ludvig Lundgren's qBittorrent CLI — verified native paths
 

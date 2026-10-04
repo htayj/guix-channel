@@ -336,6 +336,7 @@ publication, source-required, and build gates appear in the final table.
 | [`legcord`](guix/tay/packages/legcord.scm) | `1.3.0` | Discord desktop client with Shelter plugins | Verified logged-out desktop |
 | [`letter-hunt`](guix/tay/packages/letter-hunt.scm) | `002` | Seven Day Roguelike about spelling words with captured letters | Verified |
 | [`linerogue`](guix/tay/packages/linerogue.scm) | `2` | Turn-based terminal bike roguelike | Verified |
+| [`lispy-rogue`](guix/tay/packages/lispy-rogue.scm) | `0.0.2` | Common Lisp/Allegro graphical dungeon crawler; no save implementation | Verified selected GUI paths |
 | [`liveonce`](guix/tay/packages/liveonce.scm) | `005` | Seven Day Roguelike about a village's successive heroes | Verified |
 | [`martins-dungeon-bash`](guix/tay/packages/martins-dungeon-bash.scm) | `1.7` | Simple terminal roguelike game | Defined |
 | [`narwharl`](guix/tay/packages/narwharl.scm) | `0.0.1` | Full original source-built C++/ncurses roguelike with immutable definitions and XDG/HOME native saves | Verified |
@@ -364,8 +365,10 @@ publication, source-required, and build gates appear in the final table.
 | Package | Version | What it does | Status |
 | --- | --- | --- | --- |
 | [`astx`](guix/tay/packages/astx.scm) | `0.0.0-development-0.9f0ee21` | Structural JavaScript/TypeScript search-and-replace CLI | Defined |
+| [`bodge-nuklear`](guix/tay/packages/bodge-nuklear.scm) | `1.0.0-1.40adae4` | Common Lisp bindings and wrapper for source-built Nuklear immediate-mode GUI | Verified native API and X11 demo |
 | [`dart-sass`](guix/tay/packages/caelestia-cli.scm) | `1.105.0` | Reference Sass compiler with the module system, run on Node.js | Defined |
 | [`domainslib`](guix/tay/packages/domainslib.scm) | `0.5.2-1.2a88486` | OCaml multicore task pools, parallel algorithms and channels | Verified |
+| [`litegraph`](guix/tay/packages/litegraph.scm) | `0.7.14-0.0555a2f` | JavaScript node-graph engine and HTML5 canvas editor | Verified engine and browser editor |
 | [`miou`](guix/tay/packages/miou.scm) | `0.8.0-1.5fcb7e6` | OCaml concurrency and synchronization libraries | Verified |
 | [`notty`](guix/tay/packages/notty.scm) | `0.2.3` | OCaml composable terminal graphics and Unix/Lwt backends | Verified |
 | [`ocaml-irc-client`](guix/tay/packages/irc-client.scm) | `0.7.1-1.d6f8b2a` | IRC client library core | Defined |

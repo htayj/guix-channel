@@ -57,7 +57,8 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	the-smiths-hand tetraworld splicehack-rewrite space-privateers slashem shamogu revengate plomrogue obumbrata \
 	lambdahack kimchi keeperrl \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
-	agduria wenyan ludviglundgren-qbittorrent-cli
+	agduria wenyan ludviglundgren-qbittorrent-cli \
+	lispy-rogue bodge-nuklear litegraph
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -110,9 +111,9 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-revengate check-plomrogue check-obumbrata \
 	check-lambdahack check-kimchi check-keeperrl \
 	check-gearhead2 check-gearhead check-fiqhack \
-	check-evilhack check-dynahack check-alone-rl check-allure
-	check-agduria check-wenyan check-ludviglundgren-qbittorrent-cli
-
+	check-evilhack check-dynahack check-alone-rl check-allure \
+	check-agduria check-wenyan check-ludviglundgren-qbittorrent-cli \
+	check-lispy-rogue check-bodge-nuklear check-litegraph
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
 		{ echo "expected $(EXPECTED_SOURCE_PACKAGE_COUNT) exported source packages, found $(SOURCE_PACKAGE_COUNT)"; exit 1; }
@@ -665,8 +666,9 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-revengate check-plomrogue check-obumbrata \
 	check-lambdahack check-kimchi check-keeperrl \
 	check-gearhead2 check-gearhead check-fiqhack \
-	check-evilhack check-dynahack check-alone-rl check-allure
-	check-agduria check-wenyan check-ludviglundgren-qbittorrent-cli
+	check-evilhack check-dynahack check-alone-rl check-allure \
+	check-agduria check-wenyan check-ludviglundgren-qbittorrent-cli \
+	check-lispy-rogue check-bodge-nuklear check-litegraph
 	$(GUIX) build -L guix --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L guix --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
@@ -780,3 +782,18 @@ check-wenyan:
 check-ludviglundgren-qbittorrent-cli:
 	@test -n "$(QBT_CLI_OUTPUT)" -a -n "$(QBT_CLI_EVIDENCE)" || { echo 'Set QBT_CLI_OUTPUT and QBT_CLI_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/ludviglundgren-qbittorrent-cli-smoke.sh "$(QBT_CLI_OUTPUT)" "$(QBT_CLI_EVIDENCE)"
+
+.PHONY: check-lispy-rogue
+check-lispy-rogue:
+	@test -n "$(LISPY_ROGUE_OUTPUT)" -a -n "$(LISPY_ROGUE_EVIDENCE)" || { echo 'Set LISPY_ROGUE_OUTPUT and LISPY_ROGUE_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/lispy-rogue-smoke.sh "$(LISPY_ROGUE_OUTPUT)" "$(LISPY_ROGUE_EVIDENCE)"
+
+.PHONY: check-bodge-nuklear
+check-bodge-nuklear:
+	@test -n "$(BODGE_NUKLEAR_OUTPUT)" -a -n "$(BODGE_NUKLEAR_EVIDENCE)" || { echo 'Set BODGE_NUKLEAR_OUTPUT and BODGE_NUKLEAR_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/bodge-nuklear-smoke.sh "$(BODGE_NUKLEAR_OUTPUT)" "$(BODGE_NUKLEAR_EVIDENCE)"
+
+.PHONY: check-litegraph
+check-litegraph:
+	@test -n "$(LITEGRAPH_OUTPUT)" -a -n "$(LITEGRAPH_EVIDENCE)" || { echo 'Set LITEGRAPH_OUTPUT and LITEGRAPH_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/litegraph-smoke.sh "$(LITEGRAPH_OUTPUT)" "$(LITEGRAPH_EVIDENCE)"
