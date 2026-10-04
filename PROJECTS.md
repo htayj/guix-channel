@@ -6,7 +6,7 @@ the exact pinned Git tree.  The `htayj` entries are exported from
 `(tay packages projects)`; the `drbeefsupreme` entries are exported from their
 corresponding `(tay packages drbeefsupreme ...)` modules.  Entries in the
 additional-package column are current installable project packages; some are
-intentionally source-oriented data packages, as described in the README.
+intentionally source-oriented data packages, as described in the [channel guide](README.md).
 
 ## Current source collections
 
@@ -124,9 +124,10 @@ commands, pinned to tag `2026.9.0` at commit
 `cc0a3b40bcd9860d8b6382df1faf6122ec306a5b`.  Its locked frontend builds offline
 from fixed-hash npm archives, retaining pinned precompiled upstream WASM
 rather than claiming a complete source rebuild.  Upstream licenses and npm
-notices are installed with the package.  See the README for usage, dependency
-test exceptions, and the verified local `--no-grafts --no-offload` build path;
-this addition does not configure a host service or install a user profile.
+notices are installed with the package.  See [package accounting](ACCOUNTING.md#installable-packages)
+for usage, dependency test exceptions, and the verified local
+`--no-grafts --no-offload` build path; this addition does not configure a host
+service or install a user profile.
 
 `sentinelone` is the exception to the default build inventory: it is checked
 for enumeration, dry-run, and lint, but its authorized proprietary source must
