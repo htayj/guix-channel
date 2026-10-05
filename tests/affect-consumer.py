@@ -10,6 +10,7 @@ import sys
 
 out, evidence, scratch = map(Path, sys.argv[1:4])
 compiler, findlib, cmdliner, gcc = map(Path, sys.argv[4:8])
+profile = Path(sys.argv[8])
 
 
 def require(condition, message):
@@ -44,14 +45,21 @@ for key in ('HOME', 'XDG_CONFIG_HOME', 'XDG_CACHE_HOME', 'XDG_DATA_HOME',
     Path(os.environ[key]).mkdir(mode=0o700)
 os.chdir(scratch)
 
-# The package records the exact compiler that built its CMIs/CMXAs.  Never
-# resolve the distribution's default compiler or bring a second ABI into play.
-os.environ['PATH'] = ':'.join([str(compiler / 'bin'), str(findlib / 'bin'),
-                              str(gcc / 'bin'), os.environ['PATH']])
-os.environ['OCAMLLIB'] = str(compiler / 'lib/ocaml')
-os.environ['OCAMLPATH'] = ':'.join(map(str, [out / 'lib/ocaml/site-lib',
-    cmdliner / 'lib/ocaml/site-lib', compiler / 'lib/ocaml']))
-os.environ['CAML_LD_LIBRARY_PATH'] = str(out / 'lib/ocaml/site-lib/stublibs')
+# Consume the profile's generated environment, never synthesize OCAMLPATH or
+# compiler search paths.  Assert its public bins resolve to the recorded ABI.
+require(os.environ.get('GUIX_PROFILE') == str(profile), 'wrong temporary profile')
+ocamlopt = shutil.which('ocamlopt')
+ocamlfind = shutil.which('ocamlfind')
+require(ocamlopt and Path(ocamlopt).resolve() ==
+        (compiler / 'bin/ocamlopt').resolve(), 'profile selected another compiler')
+require(ocamlfind and Path(ocamlfind).resolve() ==
+        (findlib / 'bin/ocamlfind').resolve(), 'profile selected another findlib')
+require(Path(shutil.which('gcc') or '').resolve() ==
+        (gcc / 'bin/gcc').resolve(), 'profile did not export GCC')
+profile_environment = {key: os.environ.get(key) for key in
+    ('GUIX_PROFILE', 'PATH', 'OCAMLPATH', 'CAML_LD_LIBRARY_PATH', 'OCAMLLIB')}
+(evidence / 'profile-discovery.json').write_text(
+    json.dumps(profile_environment, indent=2) + '\n')
 
 
 def run(label, command):
@@ -62,16 +70,16 @@ def run(label, command):
     return (evidence / (label + '.stdout')).read_text()
 
 
-version = run('compiler-version', [compiler / 'bin/ocamlopt', '-version']).strip()
+version = run('compiler-version', [ocamlopt, '-version']).strip()
 require(tuple(map(int, version.split('.')[:2])) >= (5, 5), 'compiler below 5.5')
-findlib_version = run('findlib-compiler-version', [findlib / 'bin/ocamlfind',
-                                                'ocamlopt', '-version']).strip()
+findlib_version = run('findlib-compiler-version', [ocamlfind, 'ocamlopt', '-version']).strip()
 require(version == findlib_version, 'findlib selected a different compiler')
 for package, path in [('affect', out), ('affect.unix', out), ('affect.tmp', out),
                       ('affect.cli', out), ('cmdliner', cmdliner)]:
-    resolved = run('query-' + package, [findlib / 'bin/ocamlfind', 'query', package]).strip()
-    require(Path(resolved).is_relative_to(path), 'wrong installed library: ' + package)
-cmdliner_version = run('cmdliner-version', [findlib / 'bin/ocamlfind', 'query',
+    resolved = run('query-' + package, [ocamlfind, 'query', package]).strip()
+    require(Path(resolved).resolve().is_relative_to(path),
+            'profile discovered wrong installed library: ' + package)
+cmdliner_version = run('cmdliner-version', [ocamlfind, 'query',
     '-format', '%v', 'cmdliner']).strip()
 require(int(cmdliner_version.split('.')[0]) >= 2, 'Cmdliner below version 2')
 commit = (out / 'share/affect/source-commit').read_text().strip()
@@ -80,7 +88,7 @@ require(commit == '780faa266d62f9567fd9d23f84bddc77f77087c0', 'wrong source comm
 
 def compile_native(label, source, packages):
     executable = scratch / (label + '.native')
-    run('compile-' + label, [findlib / 'bin/ocamlfind', 'ocamlopt', '-thread',
+    run('compile-' + label, [ocamlfind, 'ocamlopt', '-thread',
         '-package', packages, '-linkpkg', source, '-o', executable])
     require(executable.read_bytes()[:4] == b'\x7fELF', 'consumer is not native ELF')
     return executable
@@ -194,6 +202,9 @@ for domains in (1, 2):
     'host_pid_namespace': os.environ['HOST_PID_NS'], 'interfaces': interfaces,
     'source_commit': commit, 'compiler': str(compiler), 'findlib': str(findlib),
     'compiler_version': version, 'cmdliner_version': cmdliner_version,
+    'temporary_profile': str(profile),
+    'temporary_profile_store': str(profile.resolve()),
+    'profile_exported_environment': profile_environment,
     'native_elf_consumers': ['quick_start', 'blueprint_cli', 'consumer'],
     'domain_counts': [1, 2],
     'scenarios': ['upstream quick-start', 'Cmdliner CLI', 'async values and exception',

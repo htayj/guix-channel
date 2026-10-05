@@ -47,7 +47,10 @@ find_output()
 coreutils=$(find_output bin/timeout coreutils)
 util_linux=$(find_output bin/unshare util-linux)
 python=$(find_output bin/python3 python)
-gcc=$(find_output bin/gcc gcc-toolchain)
+# Use the same package object as the profile manifest; the CLI spec selects
+# the newest gcc-toolchain variant, while the exported binding is Guix's default.
+gcc=$(find_output bin/gcc -e '(@ (gnu packages commencement) gcc-toolchain)')
+shell=$(find_output bin/sh bash-minimal)
 if ! "$util_linux/bin/unshare" --user --map-current-user --keep-caps \
     --mount --propagation private --net --pid --kill-child --fork "$coreutils/bin/true"; then
     echo 'affect smoke requires same-UID user, mount, network and PID namespaces' >&2
@@ -58,6 +61,26 @@ trap '"$coreutils/bin/rm" -rf "$scratch"' EXIT HUP INT TERM
 "$coreutils/bin/mkdir" -p "$evidence"
 before=$("$guix_bin" hash -S nar "$out")
 printf '%s\n' "$before" >"$evidence/output-nar-before.txt"
+# A separate evidence-owned profile proves actual Guix installation and its
+# generated search paths, without changing any user profile or generation.
+# Use package objects: raw store-item installs carry no search-path metadata.
+profile="$evidence/profile"
+"$guix_bin" package -L "$channel_dir/guix" --no-grafts \
+    --profile="$profile" --manifest="$channel_dir/tests/affect-profile-manifest.scm" \
+    >"$evidence/profile-install.stdout" 2>"$evidence/profile-install.stderr"
+"$guix_bin" package --profile="$profile" --list-installed \
+    >"$evidence/profile-installed.txt"
+for identity in "$out" "$compiler" "$findlib" "$cmdliner" "$gcc"; do
+    "$coreutils/bin/cut" -f4 "$evidence/profile-installed.txt" |
+        "$coreutils/bin/sort" -u | {
+            while IFS= read -r installed; do
+                test "$installed" = "$identity" && exit 0
+            done
+            exit 1
+        } || fail "temporary profile does not install prebuilt identity $identity"
+done
+test -r "$profile/etc/profile" || fail 'temporary profile lacks exported search paths'
+"$coreutils/bin/cp" "$profile/etc/profile" "$evidence/profile-environment.sh"
 status=0
 "$coreutils/bin/env" -i LC_ALL=C.UTF-8 PATH="$coreutils/bin" \
     HOME="$scratch/home" TMPDIR="$scratch" \
@@ -70,8 +93,15 @@ status=0
     "$coreutils/bin/timeout" --kill-after=10 300 \
     "$util_linux/bin/unshare" --user --map-current-user --keep-caps \
     --mount --propagation private --net --pid --kill-child --fork \
+    "$shell/bin/sh" -c '
+        GUIX_PROFILE=$1
+        export GUIX_PROFILE
+        . "$GUIX_PROFILE/etc/profile"
+        shift
+        exec "$@"
+    ' affect-profile "$profile" \
     "$python/bin/python3" -I -B "$channel_dir/tests/affect-consumer.py" \
-    "$out" "$evidence" "$scratch" "$compiler" "$findlib" "$cmdliner" "$gcc" \
+    "$out" "$evidence" "$scratch" "$compiler" "$findlib" "$cmdliner" "$gcc" "$profile" \
     >"$evidence/driver.stdout" 2>"$evidence/driver.stderr" || status=$?
 # Preserve NAR evidence even when a native assertion or compilation fails.
 after=$("$guix_bin" hash -S nar "$out")

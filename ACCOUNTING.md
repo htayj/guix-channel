@@ -201,11 +201,20 @@ unrelated repository load/deprecation warnings (deprecated `flex`, Fourk and
 the excluded WinRM module); these are not Affect/toolchain acceptance claims
 or changes owned by this addition.
 
-Main's integrated `make check-affect` native131 passed in **7.48 s** with
-`AFFECT_NATIVE_RUNTIME_OK`, evidence `/tmp/affect-native-final`. The harness
-resolves all four installed Affect findlib
-libraries and Cmdliner 2.1.1, confirms compiler and Findlib both select OCaml
-5.5.0, and compiles three genuine native ELF consumers outside the build tree:
+Main's integrated `make check-affect` profile-native136 passed in **10.25 s**
+with `AFFECT_NATIVE_RUNTIME_OK`, evidence `/tmp/affect-profile-native-3`,
+superseding native131's manually constructed consumer environment. The harness
+actually installs Affect, its recorded compiler/Findlib/Cmdliner and GCC 14.3.0
+in an evidence-owned temporary Guix profile using the real package objects in
+[`tests/affect-profile-manifest.scm`](tests/affect-profile-manifest.scm).
+Package objects preserve native search-path metadata; raw store-item installs
+do not. The generated `etc/profile` is sourced in an empty inherited environment,
+with **no manual OCAMLPATH, OCAMLLIB or stub-path workaround**. Profile exports
+provide `PATH`, `OCAMLPATH` and `CAML_LD_LIBRARY_PATH`; `OCAMLLIB` remains unset.
+The installed manifest and public executable/library discovery are checked
+against the exact prebuilt store identities, including all four Affect findlib
+libraries and Cmdliner 2.1.1. Compiler and Findlib both select OCaml 5.5.0;
+the harness compiles three genuine native ELF consumers outside the build tree:
 the original quick-start (result `3`), original CLI blueprint (plain help and
 `-P 2`), and an actual API consumer. At both **one and two domains**, that
 consumer exercises 100 yielding async jobs (sum 5,050), child-exception
@@ -218,6 +227,13 @@ The final output records these exact compiler-matched consumer dependencies:
 - OCaml: `/gnu/store/z4nnc6wbcp1ihmwcf0lq5wkhnp6igvnz-ocaml-affect-5.5.0`.
 - Findlib: `/gnu/store/s8p96bwigx7kiy95dwb600c7szvzjl4h-ocaml-findlib-affect-1.9.8-1.1faecd4`.
 - Cmdliner: `/gnu/store/vpwxzv76nrmxqfv8j8frpyd104pq2icz-ocaml-cmdliner-affect-2.1.1`.
+- GCC: `/gnu/store/5sh58d0kdqc8kbq4i3bzvd8zbph2jfnc-gcc-toolchain-14.3.0`.
+
+The actual temporary profile resolves to
+`/gnu/store/vxwi0aq2ygmind3zy5qsgi0cc8lihw6v-profile`; retained
+`profile-installed.txt`, `profile-environment.sh`, `profile-discovery.json`
+and `evidence.json` record installation, generated exports and observed native
+execution. This changes no user profile or profile generation.
 
 The run uses private network/PID namespaces, only loopback, temporary
 HOME/XDG paths and a read-only store while preserving UID/GID. Before/after
@@ -225,7 +241,7 @@ output NAR hashes match
 `0v87ag5k15ygggydvh2d7bz6i508whl3f30h3njq6b2ppz0ahg5x`.
 `affect.tmp` is installed, resolved and included in native consumer linking;
 this evidence does **not** establish external networking interoperability or
-full temporary-networking runtime coverage. No profile/system deployment,
+full temporary-networking runtime coverage. No user-profile/system deployment,
 host/service change or material network-catalog correction is established;
 no OKF page/log update applies to this repository-only addition.
 
@@ -236,15 +252,18 @@ installed Affect interfaces is not supported. For an application `app.ml`:
 
 ```sh
 guix build -L guix --no-grafts affect
-guix shell -L guix affect ocaml-affect ocaml-findlib-affect gcc-toolchain -- \
+guix shell -L guix -m tests/affect-profile-manifest.scm -- \
   ocamlfind ocamlopt -thread -package affect.unix,affect.tmp,affect.cli \
   -linkpkg -o app app.ml
 ./app
 ```
 
 `make check-affect` consumes a prebuilt output and requires an absolute, fresh
-nonexistent evidence directory. It does not choose a default compiler: it reads
-the exact store-backed toolchain recorded by that output.
+nonexistent evidence directory. It installs an evidence-owned temporary profile
+from the package-object manifest, verifies its contents against the exact
+store-backed toolchain recorded by that output, and sources Guix's generated
+environment before offline native compilation and execution. It neither
+changes the user's profile nor hand-assembles compiler/library search paths.
 
 ```sh
 out=$(guix build -L guix --no-grafts affect)
