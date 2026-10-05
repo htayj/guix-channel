@@ -150,7 +150,7 @@ publication, source-required, and build gates appear in the final table.
 | [`dorxng-mcp`](guix/tay/packages/dorxng-mcp.scm) | `0.1.0` | MCP server and its packaged Python dependencies | Defined |
 | [`eca`](guix/tay/packages/editor-code-assistant-eca.scm) | `0.154.0` | Editor Code Assistant JVM server and CLI | Verified |
 | [`eca-emacs`](guix/tay/packages/eca-emacs.scm) | `0.0.1-0.f145505` | Emacs client for Editor Code Assistant | Verified |
-| [`emacs-aidermacs`](guix/tay/packages/aidermacs.scm) | `1.11-0.2fc9939` | Emacs interface for the Aider coding assistant | Defined |
+| [`emacs-aidermacs`](guix/tay/packages/aidermacs.scm) | `1.11-0.2fc9939` | Emacs extension for a separately supplied Aider; Aider itself not packaged | Verified offline terminal prompt-file path, no Aider/model session; [limits](ACCOUNTING.md#aidermacs--verified-native-emacs-extension-path) |
 | [`emigo`](guix/tay/packages/emigo.scm) | `0.5-0.91d122a` | Emacs coding assistant with local Python backend | Verified local backend; no provider/chat proof |
 | [`hermes-agent`](guix/tay/packages/hermes-agent.scm) | `0.21.5` | Hermes CLI, JSON-RPC and WebSocket agent backend | Verified |
 | [`hermes-desktop`](guix/tay/packages/hermes-desktop.scm) | `2026.9.24` | Hermes Electron desktop with the packaged local backend | Verified local desktop; no model calls |

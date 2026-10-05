@@ -639,7 +639,8 @@ check-emacs-forth-mode:
 	GUIX="$(GUIX)" tests/emacs-forth-mode-smoke.sh
 
 check-emacs-aidermacs:
-	GUIX="$(GUIX)" tests/emacs-aidermacs-smoke.sh
+	@test -n "$(AIDERMACS_OUTPUT)" -a -n "$(AIDERMACS_EVIDENCE)" || { echo 'Set AIDERMACS_OUTPUT and AIDERMACS_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/emacs-aidermacs-smoke.sh "$(AIDERMACS_OUTPUT)" "$(AIDERMACS_EVIDENCE)"
 
 check-emacs-mentor-pinned:
 	GUIX="$(GUIX)" tests/emacs-mentor-pinned-smoke.sh
@@ -661,7 +662,7 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
 	check-tinyfugue check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-klh10 check-suppty check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-bell-labs-rogue7 check-astx check-acehack check-avanor check-bootrogue check-wanderers check-hack check-emacs-org-popup-posframe \
-	check-emacs-forth-mode check-emacs-aidermacs check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-aquarium-arena check-atlas-warriors check-bcrawl check-chessrogue check-corerl check-cutlassrl check-dhack check-cryptrover check-dnethack check-dragonslayer check-grippy-socks check-hunger-games check-gruesome check-hydra-slayer check-martins-dungeon-bash check-nlarn check-robotfindskitten check-fontra \
+	check-emacs-forth-mode check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-aquarium-arena check-atlas-warriors check-bcrawl check-chessrogue check-corerl check-cutlassrl check-dhack check-cryptrover check-dnethack check-dragonslayer check-grippy-socks check-hunger-games check-gruesome check-hydra-slayer check-martins-dungeon-bash check-nlarn check-robotfindskitten check-fontra \
 	check-aiwnios check-aiwnios-bytecode check-wrogue check-babel7drl \
 	check-smiths-hand check-tetraworld check-splicehack-rewrite \
 	check-space-privateers check-slashem check-shamogu \

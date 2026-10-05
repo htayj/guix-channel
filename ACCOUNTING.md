@@ -41,6 +41,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Medley and Maiko](#medley-and-maiko--verified-native-path)
 - [Natron core host](#natron--verified-core-host-path)
 - [Faugus Launcher GTK path](#faugus-launcher--verified-native-gtk-path)
+- [Aidermacs Emacs extension path](#aidermacs--verified-native-emacs-extension-path)
 
 ## Relocation map (2026-10-04)
 
@@ -277,6 +278,101 @@ make check-faugus-launcher FAUGUS_OUTPUT=/gnu/store/vhy3nfn8s5fcnjz9bpcviw553nk5
 ```
 
 The target consumes a prebuilt output and a new/empty evidence directory.
+
+## Aidermacs — verified native Emacs extension path
+
+Local evidence on **2026-10-05** establishes the installed Emacs extension in a
+real terminal Emacs, a bit-identical rebuild and upstream's prompt-file
+workflow, **not an Aider session, LLM session, model call or network use**.
+Aider is deliberately not packaged; the missing-Aider failure below is the
+expected outcome, not a stubbed one. Main reports the final build (bg107)
+passed for
+`/gnu/store/7b59c0d2asjjm838r9gq1kgq7jzcg3dv-emacs-aidermacs-1.11-0.2fc9939`,
+derivation `i5yphgy38210yx9w2cnc65344g5736q8`, and the `--check` rebuild
+(bg108) passed. The integrated `make check-emacs-aidermacs` (bg113) passed in
+**17.67s**, printing `AIDERMACS_NATIVE_PROMPT_OK (no Aider or LLM session)`;
+`/tmp/aidermacs-native-3/evidence.json` records status `passed`, exit status 0,
+`aider_session`, `llm_session` and `model_calls` all false, and the unchanged
+output NAR hash `0z8cap1m1iwrr0s9d329hn67d5xhg7c9rps90ry7k6ndp62hk7j4`.
+Scoped lint (bg109) retains only two Aidermacs informational notes: no Guix
+refresh updater for the snapshot origin, and source not archived in Software
+Heritage/Disarchive. Unrelated Flex Launcher/Fourk and excluded WinRM
+diagnostics also remain; **this is not a clean-lint claim**. Publication,
+issue closure and deployment are not established by this receipt. No
+described host or service changed; no OKF page/log update applies.
+
+### Source pin, scope and licensing
+
+[`emacs-aidermacs`](guix/tay/packages/aidermacs.scm) **1.11-0.2fc9939**
+builds the preserved
+[`MatthewZMD/aidermacs` revision `2fc993932d2df9270c3f85f8215f73600b78145c`](https://github.com/MatthewZMD/aidermacs/tree/2fc993932d2df9270c3f85f8215f73600b78145c),
+Guix base32 SHA256 `1x2v8i2kzbnlvx7b55fc9b47bg46xf669kghfhyiw6jdc5vpxvl4`.
+Every library declares version 1.11, but the revision is not a release tag,
+so the commit suffix is kept. The intended scope is **the extension only**:
+the output installs exactly the six runtime libraries (`aidermacs`,
+`-backend-comint`, `-backend-vterm`, `-backends`, `-models`, `-output`) and
+their byte-compiled `.elc` files, without README images, workflows or other
+development material. It does not package `aider`/`aider-ce`, Vterm, API keys
+or provider configuration; users supply an Aider program on `PATH` or through
+`aidermacs-program`.
+
+Aidermacs propagates `emacs-compat`, `emacs-markdown-mode` and
+`emacs-transient`; Transient in turn propagates `emacs-llama` and
+`emacs-cond-let`. The proof loads this **complete transitive propagated
+closure** from the package definition (compat 31.0.0.1, markdown-mode 2.8,
+transient 0.13.5, llama 1.0.5, cond-let 1.1.3) rather than only direct inputs.
+
+All six libraries carry upstream's `SPDX-License-Identifier: Apache-2.0`
+header, retained in the installed `.el` files, and the recipe's license is
+`asl2.0`. Upstream's Apache License 2.0 `LICENSE` is installed as
+`share/doc/emacs-aidermacs/LICENSE`. The pinned tree has no `NOTICE` file,
+so no additional Apache notice text applies.
+
+### Native terminal evidence
+
+The external `tests/emacs-aidermacs-native.py` consumer runs the normal
+`emacs-minimal` 30.2 binary as `emacs -nw` with no site files, loading only
+the installed output and its propagated closure, in private user, mount, PID
+and network namespaces (only `lo`; Uid 1000/Gid 998 same-ID mappings, not
+root) with `/gnu/store` read-only. It types real keystrokes into a PTY; each
+step is retained as raw terminal output, a parsed text frame and frame JSON:
+
+- Emacs opens a real `sample.py` source buffer in Python mode.
+- `M-x aidermacs-transient-menu` draws the native transient menu, truthfully
+  showing `a Start Session (NOT RUNNING)`; `C-g` quits it without an action.
+- `M-x aidermacs-setup-minor-mode`, then `M-x aidermacs-open-prompt-file`,
+  creates upstream's `.aider.prompt.org` template in Org mode with the
+  `aidermacs` minor-mode lighter. A source-specific `/ask` line is typed and
+  saved with `C-x C-s`, the buffer is killed, and reopening shows the exact
+  persisted 325-byte file. The source file's SHA256
+  `5f4d30e86d2e94a1e4b2d5f9aaaf352cbad0f122fc873e082ffd865a54493d19` is
+  unchanged.
+- The minor mode's `C-c C-n` (`aidermacs-send-line-or-region`) on that task
+  line reaches the genuine upstream error `Aider executable not found.
+  Checked: (aider-ce aider)`, also recorded in `*Messages*`. A batch
+  preflight first asserts this exact message with an empty `exec-path`, plus
+  upstream's multi-line message wrapping.
+
+The visual evidence is these terminal text frames in
+`/tmp/aidermacs-native-3`, not an image screenshot. Emacs exits normally with
+`C-x C-c`.
+
+### Limits and developer command
+
+No Aider or `aider-ce` program, Comint or Vterm session, prompt delivery,
+file add/drop, code change, Ediff review, model selection or provider model
+list fetch, voice or web-content command was exercised; those require a
+separately supplied Aider and, usually, provider credentials and network
+access. The package build's own check is limited to byte compilation, feature
+and command availability, multi-line wrapping and the missing-Aider error,
+with `url-retrieve-synchronously` made to fail.
+
+```sh
+make check-emacs-aidermacs AIDERMACS_OUTPUT=/gnu/store/7b59c0d2asjjm838r9gq1kgq7jzcg3dv-emacs-aidermacs-1.11-0.2fc9939 AIDERMACS_EVIDENCE=/tmp/aidermacs-new-evidence
+```
+
+The target consumes a prebuilt output and a new/empty evidence directory; it
+does not build the package or start Aider.
 
 ## Natron — verified core host path
 
