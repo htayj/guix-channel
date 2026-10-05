@@ -2743,6 +2743,72 @@ save or score files.  `.goocastle/evidence/issue-718.png` shows the restored
 game's welcome-back message and character sheet; the image alone is
 not the save/restore evidence, which is asserted by the PTY runner.
 
+## Brogue
+
+`brogue` 1.15.1 builds Brogue Community Edition from the pinned upstream
+`tmewett/BrogueCE` commit `1ba4240b7a928ddf0ffb772717bf1d433cd63804` (tag
+v1.15.1), Guix base32 source hash
+`031qj38vnsjgc9qjkkqa8z6z3vkfm5zx2djk25hdrash31l37s3b`.  One binary carries
+the original SDL2 frontend with the licensed graphical tiles and the
+ncurses frontend (`brogue -t`); the web frontend is not built.  Engine code
+is AGPL-3.0-or-later, platform code GPL-3.0-or-later, and `tiles.png` with
+its derived `tiles.bin` cache is CC BY-SA 4.0.  Upstream `README.md`,
+`CHANGELOG.md`, `LICENSE.txt` and the asset `LICENSE.txt` are installed
+under `share/doc/brogue`.  Upstream `icon.png` carries no license, so it is
+not installed and its mandatory load is removed from `src/platform/tiles.c`;
+SDL keeps its default window icon, while the licensed tiles and native
+renderer remain intact.  The launcher runs the immutable `libexec/brogue`
+from `$XDG_STATE_HOME/brogue` (fallback `~/.local/state/brogue`), copies the
+editable keymap there once and always appends the packaged `--data-dir`.
+No installed smoke runner or test mode exists; the former one is removed.
+
+On 2026-10-05, the source build and a reproducibility rebuild (`guix build
+--check`) passed for derivation
+`xaxfpqlcapq9y3yr7b95dr6rk4v5q527`, output
+`/gnu/store/hxhhj08irn0ai5q8j12dhxkx1q55jip7-brogue-1.15.1`.  Its
+`check-seed-catalogs` phase runs upstream `test/compare_seed_catalog.py`
+against the shipped catalogs and both match identically: 25 seeds to depth
+40 for standard Brogue and 25 seeds to depth 10 for Rapid Brogue
+(`--variant rapid_brogue`).  The upstream recording regression harness stays
+disabled because this release omits the recording directories it references.
+The final lint, run with its network check enabled, reported no Brogue
+findings; its only findings are the known unrelated deprecated `flex` symbol,
+NHFourk and WinRM ones.
+
+`make check-brogue BROGUE_OUTPUT=OUTPUT BROGUE_EVIDENCE=DIR` runs
+`tests/brogue-smoke.sh OUTPUT EVIDENCE_DIR` on an already-built output and a
+new or empty evidence directory outside the store.  It runs
+`tests/brogue-smoke.py` in private user (current UID, not root), mount,
+network (loopback only) and PID namespaces with a recursively read-only
+`/gnu/store`, fresh HOME/XDG state, a private TCP-disabled Xvfb display and
+SDL's `--no-gpu` software renderer, and records the output NAR hash before
+and after.
+
+On 2026-10-05, `make check-brogue` passed (`BROGUE_NATIVE_SAVE_RESTORE_OK`,
+64.13 s) for the final `hxhhj08irn0ai5q8j12dhxkx1q55jip7` output, evidence
+`/tmp/brogue-make-final-1`.  Both the ncurses (`-t`) and SDL frontends started
+seed 1 at depth 1 through the launcher's packaged keymap and data directory,
+made a real `h` move with the exact player delta (59,29)→(58,29), saved, were
+restored from the native `.broguesave` by a second `-o` process and took one
+continued turn.  The decoded native recordings carry the CE 1.15.1 header in
+normal (non-wizard) play, grow from turn 1 (43 bytes) to turn 2 (49 bytes),
+preserve the saved event prefix, include the saved-game-loaded event and
+match between the two frontends.  The package output NAR stayed
+`17w99p2mj4m280ci9m3abh32awdw07581gfd00v4j1bwl19yjqlm`; the installed files
+match the declared scope with no icon and no smoke helper or mode.
+
+`.goocastle/evidence/brogue-native.png` is the game's own SDL PrintScreen
+capture `restored-after-movement.png` (1024×640, SHA-256
+`a69e2321149813323d1ece0240869eb8ce41cf9f3f8a7835ee92fc6b0332d21f`).  It
+shows the restored depth-1 game with the welcome messages, `Str: 12  Armor:
+3` and the explored map in the default text glyph mode.  The screenshot is
+for inspection only; the recordings are what prove the save and restore.
+The SDL save dialogs are driven by paced XTest inputs derived from the
+source.  GPU acceleration, desktop window-manager integration, a capture in
+tiles mode and full-campaign play were not verified.  This is
+repository/store verification, not a profile or OKF deployment, and the
+source collection remains 629 snapshots.
+
 ## RapidBrogue
 
 `rapidbrogue` 1.4.0 builds the pinned upstream commit

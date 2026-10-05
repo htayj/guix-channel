@@ -212,36 +212,6 @@
       }
     },
     {
-      "issueNumber": 663,
-      "packageName": "brogue",
-      "artifactPath": ".goocastle/evidence/issue-663.png",
-      "runtime": {
-        "executable": "brogue",
-        "invocation": {
-          "file": "brogue",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "brogue isolated smoke passed"
-      }
-    },
-    {
-      "issueNumber": 664,
-      "packageName": "brogue",
-      "artifactPath": ".goocastle/evidence/issue-664.png",
-      "runtime": {
-        "executable": "brogue",
-        "invocation": {
-          "file": "brogue",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "brogue isolated smoke passed"
-      }
-    },
-    {
       "issueNumber": 665,
       "packageName": "brogue-lite",
       "artifactPath": ".goocastle/evidence/issue-665.png",
