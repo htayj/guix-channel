@@ -367,6 +367,7 @@ publication, source-required, and build gates appear in the final table.
 
 | Package | Version | What it does | Status |
 | --- | --- | --- | --- |
+| [`affect`](guix/tay/packages/affect.scm) | `0.0.0-0.780faa2` | OCaml structured async, cooperative Unix I/O, temporary networking and Cmdliner CLI libraries | Verified native API ([receipt and limits](ACCOUNTING.md#affect--native-libraries-and-isolated-ocaml-55-toolchain)) |
 | [`astx`](guix/tay/packages/astx.scm) | `0.0.0-development-0.9f0ee21` | Structural JavaScript/TypeScript search-and-replace CLI | Defined |
 | [`bodge-nuklear`](guix/tay/packages/bodge-nuklear.scm) | `1.0.0-1.40adae4` | Common Lisp bindings and wrapper for source-built Nuklear immediate-mode GUI | Verified native API and X11 demo |
 | [`dart-sass`](guix/tay/packages/caelestia-cli.scm) | `1.105.0` | Reference Sass compiler with the module system, run on Node.js | Defined |
@@ -374,11 +375,16 @@ publication, source-required, and build gates appear in the final table.
 | [`litegraph`](guix/tay/packages/litegraph.scm) | `0.7.14-0.0555a2f` | JavaScript node-graph engine and HTML5 canvas editor | Verified engine and browser editor |
 | [`miou`](guix/tay/packages/miou.scm) | `0.8.0-1.5fcb7e6` | OCaml concurrency and synchronization libraries | Verified |
 | [`notty`](guix/tay/packages/notty.scm) | `0.2.3` | OCaml composable terminal graphics and Unix/Lwt backends | Verified |
+| [`ocaml-affect`](guix/tay/packages/ocaml-affect-toolchain.scm) | `5.5.0` | Isolated source-built compiler matching Affect's library ABI | Built; compiler tests exercised |
+| [`ocaml-cmdliner-affect`](guix/tay/packages/ocaml-affect-toolchain.scm) | `2.1.1` | Compiler-matched Cmdliner library, tool and completions | Built; Affect CLI exercised |
+| [`ocaml-findlib-affect`](guix/tay/packages/ocaml-affect-toolchain.scm) | `1.9.8-1.1faecd4` | Compiler-matched Findlib with pinned, unmerged OCaml 5.5 adaptation | Built; native consumer exercised |
 | [`ocaml-irc-client`](guix/tay/packages/irc-client.scm) | `0.7.1-1.d6f8b2a` | IRC client library core | Defined |
 | [`ocaml-irc-client-lwt`](guix/tay/packages/irc-client.scm) | `0.7.1-1.d6f8b2a` | Lwt backend for the OCaml IRC client | Defined |
 | [`ocaml-irc-client-lwt-ssl`](guix/tay/packages/irc-client.scm) | `0.7.1-1.d6f8b2a` | Lwt OpenSSL backend for the OCaml IRC client | Defined |
 | [`ocaml-irc-client-unix`](guix/tay/packages/irc-client.scm) | `0.7.1-1.d6f8b2a` | Unix blocking I/O backend for the OCaml IRC client | Defined |
 | [`ocaml-lwt-ssl`](guix/tay/packages/irc-client.scm) | `1.2.0` | OpenSSL binding with concurrent Lwt I/O | Defined |
+| [`ocaml-topkg-affect`](guix/tay/packages/ocaml-affect-toolchain.scm) | `1.1.1` | Compiler-matched Topkg package-building library | Built for Affect |
+| [`ocamlbuild-affect`](guix/tay/packages/ocaml-affect-toolchain.scm) | `0.16.1` | Compiler-matched OCamlbuild with corrected Digest interface | Built for Affect |
 | [`proiel`](guix/tay/packages/proiel.scm) | `1.3.3` | Corpus-free Ruby PROIEL XML treebank library | Verified |
 | [`qiling`](guix/tay/packages/qiling.scm) | `1.4.10` | Multi-architecture binary emulation framework | Verified |
 | [`react-blessed`](guix/tay/packages/react-blessed.scm) | `0.7.2` | React renderer for Blessed terminal interfaces | Defined |

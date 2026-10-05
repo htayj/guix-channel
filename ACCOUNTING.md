@@ -43,6 +43,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Faugus Launcher GTK path](#faugus-launcher--verified-native-gtk-path)
 - [Aidermacs Emacs extension path](#aidermacs--verified-native-emacs-extension-path)
 - [Wanderers native save/restore path](#wanderers--verified-native-saverestore-path)
+- [Affect libraries and isolated OCaml 5.5 toolchain](#affect--native-libraries-and-isolated-ocaml-55-toolchain)
 
 ## Relocation map (2026-10-04)
 
@@ -97,6 +98,162 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Affect — native libraries and isolated OCaml 5.5 toolchain
+
+[`affect`](guix/tay/packages/affect.scm) **0.0.0-0.780faa2** is the full
+source-built library package, not a renamed preservation snapshot. It reuses
+the ISC-licensed [`dbuenzli/affect`](https://github.com/dbuenzli/affect/tree/780faa266d62f9567fd9d23f84bddc77f77087c0)
+revision `780faa266d62f9567fd9d23f84bddc77f77087c0` and the exact origin of
+`dbuenzli-affect-source`, with Guix base32 SHA-256
+`1ngs4g3si1nf2jknh5jwz146gw8hy7g1fkjz623r5nvgr56pc9bi`.
+The existing source-snapshot package and 629-source preservation ledger are
+unchanged. Version watermarking is confined to the private build's `pkg/META`;
+the installed external quick-start/CLI example sources retain the original
+snapshot bytes.
+
+The installed findlib surface contains **all four libraries**: `affect`
+(structured async functions, actions, parallel execution and cancellation),
+`affect.unix` (cooperative Unix I/O and native time stubs), `affect.tmp`
+(upstream temporary networking API), and `affect.cli` (Cmdliner integration).
+Bytecode archives, native archives and native dynlink plugins are installed,
+alongside interfaces and sources. Cmdliner is propagated; the optional CLI
+component is enabled rather than omitted. `doc/affect` retains the README,
+changelog, ISC notice and odoc source pages. `share/affect` records the source
+commit and exact consumer compiler/Findlib/Cmdliner outputs and supplies the
+unmodified quick-start and CLI examples. This is a library package, not a
+standalone `affect` command; the CLI proof runs upstream's example consumer.
+
+### Compiler-matched source closure
+
+[`ocaml-affect-toolchain.scm`](guix/tay/packages/ocaml-affect-toolchain.scm)
+exports five isolated definitions. They do **not** replace the channel's
+default OCaml compiler or change the ABI of Notty, Miou, Domainslib or other
+existing OCaml packages. Affect requires OCaml **at least 5.5.0** and Cmdliner
+**at least 2.0.0**; consumers must use the recorded matching compiler, not the
+distribution's default compiler.
+
+| Definition | Version and source | Guix base32 SHA-256 |
+| --- | --- | --- |
+| `ocaml-affect` | `5.5.0`, [complete official INRIA distribution](https://caml.inria.fr/pub/distrib/ocaml-5.5/ocaml-5.5.0.tar.gz) | `0xx4fc2xi6mxx1y8sc38vfk8iddsfp2xp3mgs1f36hysmg13g58s` |
+| `ocaml-findlib-affect` | `1.9.8-1.1faecd4`, [exact upstream revision](https://github.com/ocaml/ocamlfind/tree/1faecd4016c615e1d8806643c8e4eb3d08dcdf97) `1faecd4016c615e1d8806643c8e4eb3d08dcdf97` | `124dkqsqdvsymvlzbqgidlrq0grhb6w6bnnrwb59c1dw0f08pzbz` |
+| `ocamlbuild-affect` | `0.16.1`, [exact upstream revision](https://github.com/ocaml/ocamlbuild/tree/131ba63a1b96d00f3986c8187677c8af61d20a08) `131ba63a1b96d00f3986c8187677c8af61d20a08` | `1jhrga6v51pfyyli4z3hcrvr3hk0mkxbdp3y22f4dcks09jcahjy` |
+| `ocaml-topkg-affect` | `1.1.1`, [official release archive](https://erratique.ch/software/topkg/releases/topkg-1.1.1.tbz) | `1z7n2abmabc018b60ck41qqmfg9yxn3cj8lgf9f1p8nfr4nhdni0` |
+| `ocaml-cmdliner-affect` | `2.1.1`, [official release archive](https://erratique.ch/software/cmdliner/releases/cmdliner-2.1.1.tbz) | `1dnn42hhmndlgk32m3yr3r1i0ic348l9iwbqh53lrxglvv8kif85` |
+
+The compiler uses stable OCaml 5.5.0, not a development snapshot. The source
+selection was corrected from a GitHub archive to the complete official tarball:
+GitHub export archives omit the compiler testsuite and manual, so they cannot
+satisfy the inherited compiler check phase. The definition preserves Guix's
+source bootstrap, compiler tests and search paths, explicitly enables zstd
+compressed compilation artefacts, and records the release's LGPL-2.1 license
+with its OCaml linking exception rather than obsolete inherited QPL metadata.
+The actual build126 compiler log ran `make -C testsuite parallel`: **1,501
+passed, 55 skipped, zero failed, zero unexpected errors**, out of 1,556 tests
+considered; the check phase succeeded in 109.2 s. This is not a claim that
+every compiler test ran without inherited exclusions or upstream skips.
+
+Released Findlib 1.9.8's opam constraint excludes OCaml 5.5. The exact pinned
+adaptation in upstream [PR #122](https://github.com/ocaml/ocamlfind/pull/122)
+was **unmerged at this task's source review**. It updates topfind generation
+and relative `ld.conf` handling; this is an explicit source dependency, not
+a claim that released 1.9.8 supports this compiler or a suppression of loader
+warnings. OCamlbuild 0.16.1 includes the
+[PR #325](https://github.com/ocaml/ocamlbuild/pull/325) Digest interface fix:
+`Digest.channel` is a value, not the obsolete `caml_md5_chan` external.
+Topkg 1.1.1 is the build library only, not the separate `topkg-care` package;
+its obsolete Result dependency is removed. Cmdliner 2.1.1 builds with its own
+source bootstrap Makefile and installs the library, tool, completions and
+documentation; its release license is ISC, not the older BSD metadata.
+The toolchain's inherited per-package test policies are not evidence that
+Findlib/OCamlbuild/Cmdliner's full development suites ran.
+Topkg's native `test/test.native` was actually compiled and run in build126;
+its check phase printed `The test is ok` and passed in 1.0 s.
+
+### Dated native evidence and scope
+
+On **2026-10-05**, Main's final build130 passed for derivation
+`/gnu/store/411g1r7d3d41j1wazs939y60ks5g77s2-affect-0.0.0-0.780faa2.drv`,
+output `/gnu/store/6cpafq23pxb79kiazck90ccf8k5n9wgv-affect-0.0.0-0.780faa2`.
+This supersedes the earlier build126/native127/check128 output identity after
+the toolchain's input labels and package metadata were corrected. The Affect
+build check compiles and runs the
+four standalone offline upstream programs `quick_start`, `blueprint_minimal`,
+`blueprint_minimal_unix` and `blueprint_cli`. The separate **B0_testing and
+full stress suites were not run**, and no such coverage is claimed.
+
+Main's serial all-six `guix build --check`132 passed in **423.46 s**. Affect
+and each of its five isolated toolchain packages were rebuilt and matched
+their existing outputs; this is bit-identical local rebuild evidence, not
+substitute/publication or deployment evidence. In addition to Affect and the
+three recorded consumer dependencies below, the matching build-only outputs
+are `/gnu/store/q5rcf8b0q2jkyjwb0pswy13qaf1ppj5p-ocamlbuild-affect-0.16.1`
+and `/gnu/store/1xwhvslk9rnyw7y7rsz8ahms8yl4nw2s-ocaml-topkg-affect-1.1.1`.
+
+Main's final six-package lint133 command completed successfully in **24.04 s**,
+but **was not warning-free**. Remaining scoped diagnostics concern Software
+Heritage archival status for all six sources and automatic-refresh metadata:
+the compiler's generic-HTML updater found no releases, Findlib has no updater,
+and the renamed OCamlbuild/Topkg/Cmdliner package names are not found in opam.
+Actionable input-label, long-line, redundant `#:tests? #t` and description
+spacing findings were corrected, not suppressed. The run also reported
+unrelated repository load/deprecation warnings (deprecated `flex`, Fourk and
+the excluded WinRM module); these are not Affect/toolchain acceptance claims
+or changes owned by this addition.
+
+Main's integrated `make check-affect` native131 passed in **7.48 s** with
+`AFFECT_NATIVE_RUNTIME_OK`, evidence `/tmp/affect-native-final`. The harness
+resolves all four installed Affect findlib
+libraries and Cmdliner 2.1.1, confirms compiler and Findlib both select OCaml
+5.5.0, and compiles three genuine native ELF consumers outside the build tree:
+the original quick-start (result `3`), original CLI blueprint (plain help and
+`-P 2`), and an actual API consumer. At both **one and two domains**, that
+consumer exercises 100 yielding async jobs (sum 5,050), child-exception
+propagation, cooperative pipe read/write and EOF, cancellation of a genuinely
+blocked pipe read, execution of its protected finalizer, and `EBADF` from both
+readable and writable watchers on a closed descriptor.
+
+The final output records these exact compiler-matched consumer dependencies:
+
+- OCaml: `/gnu/store/z4nnc6wbcp1ihmwcf0lq5wkhnp6igvnz-ocaml-affect-5.5.0`.
+- Findlib: `/gnu/store/s8p96bwigx7kiy95dwb600c7szvzjl4h-ocaml-findlib-affect-1.9.8-1.1faecd4`.
+- Cmdliner: `/gnu/store/vpwxzv76nrmxqfv8j8frpyd104pq2icz-ocaml-cmdliner-affect-2.1.1`.
+
+The run uses private network/PID namespaces, only loopback, temporary
+HOME/XDG paths and a read-only store while preserving UID/GID. Before/after
+output NAR hashes match
+`0v87ag5k15ygggydvh2d7bz6i508whl3f30h3njq6b2ppz0ahg5x`.
+`affect.tmp` is installed, resolved and included in native consumer linking;
+this evidence does **not** establish external networking interoperability or
+full temporary-networking runtime coverage. No profile/system deployment,
+host/service change or material network-catalog correction is established;
+no OKF page/log update applies to this repository-only addition.
+
+### Local build and consumer checks
+
+Use the isolated definitions together; mixing another OCaml ABI with the
+installed Affect interfaces is not supported. For an application `app.ml`:
+
+```sh
+guix build -L guix --no-grafts affect
+guix shell -L guix affect ocaml-affect ocaml-findlib-affect gcc-toolchain -- \
+  ocamlfind ocamlopt -thread -package affect.unix,affect.tmp,affect.cli \
+  -linkpkg -o app app.ml
+./app
+```
+
+`make check-affect` consumes a prebuilt output and requires an absolute, fresh
+nonexistent evidence directory. It does not choose a default compiler: it reads
+the exact store-backed toolchain recorded by that output.
+
+```sh
+out=$(guix build -L guix --no-grafts affect)
+make check-affect AFFECT_OUTPUT="$out" AFFECT_EVIDENCE=/tmp/affect-native-new
+```
+
+These commands document the existing build/harness interfaces; this
+documentation worker ran no commands, checks, cleanup or signals.
+
 
 ## Wanderers — verified native save/restore path
 
