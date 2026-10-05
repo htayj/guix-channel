@@ -7,6 +7,7 @@
   #:use-module (guix gexp)
   #:use-module (guix packages)
   #:use-module (gnu packages bash)
+  #:use-module (gnu packages freedesktop)
   #:use-module (gnu packages games)
   #:use-module (gnu packages gettext)
   #:use-module (gnu packages glib)
@@ -39,6 +40,34 @@ files.  Faugus Launcher uses its @command{icoextract} executable for optional
 shortcut-icon extraction.")
     (license license:expat)))
 
+;; assets/gamecontrollerdb.txt is the unmodified Git blob
+;; 4f5607a1d29260368b37604962f309651aca9395 from SDL_GameControllerDB at
+;; 513c72e34569e0f471dde7aa26eecb23946c3ef7.  Preserve its original LICENSE:
+;; https://github.com/mdqinc/SDL_GameControllerDB/blob/
+;; 513c72e34569e0f471dde7aa26eecb23946c3ef7/LICENSE
+(define %gamecontrollerdb-license
+  (plain-file
+   "SDL_GameControllerDB-LICENSE"
+   "Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
+  
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+  
+1. The origin of this software must not be misrepresented; you must not
+   claim that you wrote the original software. If you use this software
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required. 
+2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
+
+"))
+
 (define-public faugus-launcher
   (package
     (name "faugus-launcher")
@@ -46,10 +75,15 @@ shortcut-icon extraction.")
     (source (package-source faugus-faugus-launcher-source))
     (build-system meson-build-system)
     (inputs
-     (list bash-minimal cairo gdk-pixbuf glib gobject-introspection graphene gtk harfbuzz libadwaita libmanette pango python python-dbus
+     ;; GObject Introspection supplies runtime cairo/fontconfig/freetype/xlib
+     ;; typelibs needed by GTK and Pango; it is not just a build tool here.
+     (list bash-minimal cairo gdk-pixbuf glib gobject-introspection graphene gtk
+           harfbuzz libadwaita libmanette pango python python-dbus
            python-icoextract python-pillow python-psutil python-pygobject
-           python-requests python-vdf))
-    (native-inputs (list gettext-minimal `(,gtk "bin")))
+           python-requests python-vdf shared-mime-info))
+    (native-inputs
+     (list (list "gettext-minimal" gettext-minimal)
+           (list "gtk:bin" gtk "bin")))
     (arguments
      (list
       #:phases
@@ -61,37 +95,69 @@ shortcut-icon extraction.")
               (substitute* "faugus/runner.py"
                 (("if not force_off or not self.components_exists:")
                  "if not force_off:")
-                (("if self.proton_latest and \\(not force_off or not self.proton_exists\\):")
+                (((string-append "if self.proton_latest and "
+                                 "\\(not force_off or not self.proton_exists\\):"))
                  "if self.proton_latest and not force_off:"))))
           (add-before 'configure 'preserve-asset-license
             (lambda _
-              (let ((licenses (string-append #$output "/share/licenses/faugus-launcher")))
+              (let ((licenses
+                     (string-append #$output "/share/licenses/faugus-launcher")))
                 (mkdir-p licenses)
-                (copy-file "assets/LICENSE" (string-append licenses "/ASSETS-LICENSE")))))
+                (copy-file "assets/LICENSE"
+                           (string-append licenses "/ASSETS-LICENSE"))
+                (copy-file #$%gamecontrollerdb-license
+                           (string-append licenses
+                                          "/SDL_GameControllerDB-LICENSE")))))
           (add-after 'install 'install-guix-wrapper
             (lambda _
-              (let* ((bin (string-append #$output "/bin"))
-                     (program (string-append bin "/faugus-launcher"))
-                     (licenses (string-append #$output "/share/licenses/faugus-launcher"))
-                     (python-path
-                      (string-append #$output "/lib/python3.12/site-packages:"
-                                     #$python-pygobject "/lib/python3.12/site-packages:"
-                                     #$python-requests "/lib/python3.12/site-packages:"
-                                     #$python-pillow "/lib/python3.12/site-packages:"
-                                     #$python-vdf "/lib/python3.12/site-packages:"
-                                     #$python-psutil "/lib/python3.12/site-packages:"
-                                     #$python-dbus "/lib/python3.12/site-packages:"
-                                     #$python-icoextract "/lib/python3.12/site-packages")))
-                (call-with-output-file program
-                  (lambda (port)
-                    (format port "#!~a/bin/sh\n" #$bash-minimal)
-                    (display "if [ \"${1-}\" = --help ] || [ \"${1-}\" = -h ]; then\n  echo 'Usage: faugus-launcher [--shortcut FILE | --game FILE | --run COMMAND]'\n  exit 0\nfi\n" port)
-                    (format port "export PYTHONPATH=~s\n" python-path)
-                    (format port "export XDG_DATA_DIRS=~s\n" (string-append #$output "/share:" #$gtk "/share:" #$libadwaita "/share:" #$libmanette "/share"))
-                    (format port "export GI_TYPELIB_PATH=~s\n" (string-append #$gtk "/lib/girepository-1.0:" #$libadwaita "/lib/girepository-1.0:" #$libmanette "/lib/girepository-1.0:" #$graphene "/lib/girepository-1.0:" #$pango "/lib/girepository-1.0:" #$gdk-pixbuf "/lib/girepository-1.0:" #$glib "/lib/girepository-1.0:" #$gobject-introspection "/lib/girepository-1.0:" #$cairo "/lib/girepository-1.0:" #$harfbuzz "/lib/girepository-1.0"))
-                    (display "export FAUGUS_DISABLE_UPDATES=${FAUGUS_DISABLE_UPDATES:-1}\nexport UMU_RUNTIME_UPDATE=${UMU_RUNTIME_UPDATE:-0}\n" port)
-                    (format port "exec ~a/bin/python3 -m faugus.tray_only \"$@\"\n" #$python)))
-                (chmod program #o555)))))))
+              (let* ((program (string-append #$output "/bin/faugus-launcher"))
+                     (site-packages
+                      (string-append #$output "/lib/python3.12/site-packages")))
+                ;; Keep upstream's shortcut/game/run dispatch and tray bootstrap.
+                ;; The bootstrap opens the GUI unless configured to start hidden.
+                (substitute* program
+                  (("^#!/bin/sh")
+                   (string-append "#!" #$bash-minimal "/bin/sh"))
+                  (("SCRIPT_DIR=.*")
+                   (string-append "SCRIPT_DIR=" site-packages "\n"))
+                  (("/usr/bin/python3")
+                   (string-append #$python "/bin/python3"))
+                  (("export GTK_IM_MODULE=.*" line)
+                   (string-append
+                    line
+                    "export FAUGUS_DISABLE_UPDATES="
+                    "${FAUGUS_DISABLE_UPDATES:-1}\n"
+                    "export UMU_RUNTIME_UPDATE=${UMU_RUNTIME_UPDATE:-0}\n")))
+                (wrap-program program
+                  #:sh (string-append #$bash-minimal "/bin/bash")
+                  `("PYTHONPATH" prefix
+                    (,site-packages ,(getenv "GUIX_PYTHONPATH")))
+                  `("PATH" prefix (,(string-append #$python-icoextract "/bin")))
+                  ;; The Meson phase builds this combined raster/SVG cache,
+                  ;; but its environment does not survive into installed runs.
+                  `("GDK_PIXBUF_MODULE_FILE" =
+                    (,(string-append #$output
+                                     "/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache")))
+                  `("XDG_DATA_DIRS" prefix
+                    (,(string-append #$output "/share")
+                     ,(string-append #$gtk "/share")
+                     ,(string-append #$libadwaita "/share")
+                     ,(string-append #$libmanette "/share")
+                     ;; GdkPixbuf uses GIO MIME sniffing, including for its
+                     ;; built-in PNG/JPEG decoders, not only loader signatures.
+                     ,(string-append #$shared-mime-info "/share")))
+                  `("GI_TYPELIB_PATH" prefix
+                    (,(string-append #$gtk "/lib/girepository-1.0")
+                     ,(string-append #$libadwaita "/lib/girepository-1.0")
+                     ,(string-append #$libmanette "/lib/girepository-1.0")
+                     ,(string-append #$graphene "/lib/girepository-1.0")
+                     ,(string-append #$pango "/lib/girepository-1.0")
+                     ,(string-append #$gdk-pixbuf "/lib/girepository-1.0")
+                     ,(string-append #$glib "/lib/girepository-1.0")
+                     ,(string-append #$gobject-introspection
+                                     "/lib/girepository-1.0")
+                     ,(string-append #$cairo "/lib/girepository-1.0")
+                     ,(string-append #$harfbuzz "/lib/girepository-1.0"))))))))))
     (synopsis "GTK game launcher with opt-in runtime downloads")
     (description "Faugus Launcher is a GTK game launcher.  This package uses
 only fixed free build inputs and disables unattended update and runtime

@@ -284,8 +284,8 @@ check-pdp10-xpl-pdp-10:
 		"$$($(GUIX) build -L guix --no-grafts pdp10-xpl-pdp-10)"
 
 check-faugus-launcher:
-	GUIX="$(GUIX)" tests/faugus-launcher-smoke.sh \
-		"$$($(GUIX) build -L guix --no-grafts faugus-launcher)"
+	@test -n "$(FAUGUS_OUTPUT)" -a -n "$(FAUGUS_EVIDENCE)" || { echo 'Set FAUGUS_OUTPUT and FAUGUS_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/faugus-launcher-smoke.sh "$(FAUGUS_OUTPUT)" "$(FAUGUS_EVIDENCE)"
 
 check-react-blessed:
 	GUIX="$(GUIX)" tests/react-blessed-smoke.sh

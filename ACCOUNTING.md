@@ -40,6 +40,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Lispy Rogue, bodge-nuklear and LiteGraph](#lispy-rogue-bodge-nuklear-and-litegraph--verified-native-paths)
 - [Medley and Maiko](#medley-and-maiko--verified-native-path)
 - [Natron core host](#natron--verified-core-host-path)
+- [Faugus Launcher GTK path](#faugus-launcher--verified-native-gtk-path)
 
 ## Relocation map (2026-10-04)
 
@@ -184,6 +185,98 @@ make check-weidu WEIDU_OUTPUT=/gnu/store/0nf080qr7ggfk6wdc2d31b7ivcz9q5xc-weidu-
 
 The target consumes a prebuilt output and a new/empty evidence directory;
 it does not build WeiDU or touch a user's game installation.
+
+## Faugus Launcher — verified native GTK path
+
+Local evidence on **2026-10-05** establishes the normal installed GTK launcher,
+a bit-identical rebuild and native add/edit/persist/reopen of a Linux entry,
+**not execution of any game, Proton, UMU or Windows title**. Main reports the
+final build (bg103) passed for
+`/gnu/store/vhy3nfn8s5fcnjz9bpcviw553nk5p8q9-faugus-launcher-2.1.0-0.5b2316c`,
+derivation `v2f4gb0whbd8d49ywb43y8vsfxax4yl0`, and the `--check` rebuild
+(bg105) passed in 3.81s. The integrated `make check-faugus-launcher` (bg104)
+passed in **37.37s**; `/tmp/faugus-native-final/evidence.json` records status
+`passed`, exit status 0 and the unchanged output NAR hash
+`0lmcq16nj7jxk66vc9yql0kjkw8753wql0irlf8vnq2kk34i6wqc`. Final scoped lint
+(bg106) retains three Faugus notes: the `gobject-introspection` input "should
+probably be native", which is intentionally kept because the launcher loads
+its DBus/cairo/fontconfig/freetype/xlib typelibs at run time; no Guix refresh
+updater for the snapshot origin; and source not archived in Software
+Heritage/Disarchive. Unrelated deprecated `flex` symbol, Fourk, WinRM and
+libcamera duplicate-package diagnostics also remain; **this is not a
+clean-lint claim**.
+Publication, issue closure and deployment are not established by this receipt.
+No described host or service changed; no OKF page/log update applies.
+
+### Source pin, recipe and licensing
+
+[`faugus-launcher`](guix/tay/packages/faugus-launcher.scm) **2.1.0-0.5b2316c**
+builds the preserved
+[`Faugus/faugus-launcher`](https://github.com/Faugus/faugus-launcher) snapshot
+at `5b2316c3a977359092392635b608ab497fd01cfd`, Guix base32 SHA256
+`0p7v0l49y3h2rnxjx3k5xwanlcmh1vvn23h72009rqigkskj2imy`, with Meson. The
+recipe keeps upstream's own `faugus-launcher` shell dispatcher (shortcut,
+game, run and tray bootstrap) rather than a replacement entrypoint or invented
+help mode, binding its interpreter and `SCRIPT_DIR` to the store. The wrapper
+supplies the complete Python transitive closure through `PYTHONPATH`, the
+private source-built `icoextract` 0.3.0 (Expat) on `PATH` for shortcut icons,
+GTK/libadwaita/libmanette/graphene/Pango/GdkPixbuf/GLib/cairo/HarfBuzz
+typelibs, the build-generated GdkPixbuf loader cache and `shared-mime-info`
+data. The last two fix an actual crash when adding an entry image: GdkPixbuf
+relies on GIO MIME sniffing even for its built-in PNG/JPEG decoders.
+
+The output installs upstream `LICENSE` (MIT/Expat) and `ASSETS-LICENSE`
+(CC BY 4.0 icons and notification sound) under
+`share/licenses/faugus-launcher`; upstream metainfo declares CC0-1.0 metadata.
+The recipe's license field lists Expat, CC BY 4.0, zlib and CC0. The installed
+`share/faugus-launcher/gamecontrollerdb.txt` SDL controller mappings carry no
+in-file notice, but are the unmodified Git blob
+`4f5607a1d29260368b37604962f309651aca9395` (599249 bytes; locally confirmed
+with `git hash-object` on the pinned source) of
+[`mdqinc/SDL_GameControllerDB` revision `513c72e34569e0f471dde7aa26eecb23946c3ef7`](https://github.com/mdqinc/SDL_GameControllerDB/tree/513c72e34569e0f471dde7aa26eecb23946c3ef7)
+(26 June 2026, before Faugus added the asset in `17afd9f` on 12 July 2026).
+Its [LICENSE at that revision](https://github.com/mdqinc/SDL_GameControllerDB/blob/513c72e34569e0f471dde7aa26eecb23946c3ef7/LICENSE)
+is zlib, Copyright (C) 1997-2025 Sam Lantinga. The recipe preserves that
+notice verbatim, and the final output installs it as
+`share/licenses/faugus-launcher/SDL_GameControllerDB-LICENSE`. No separate CC0
+notice file is installed for the metadata.
+
+Faugus can manage Proton, UMU and related runtimes, but **none are bundled**.
+The recipe removes upstream's unattended runtime fetch when no local
+components exist, and the wrapper defaults `FAUGUS_DISABLE_UPDATES=1` and
+`UMU_RUNTIME_UPDATE=0` while leaving explicit user overrides possible. Any
+runtime a user later chooses to download is mutable third-party software
+outside this package's pins, licenses and verification.
+
+### Native GTK evidence
+
+The external `tests/faugus-native-driver.py` consumer starts the normal
+installed launcher with no test mode, imported application module or
+pre-created configuration. It runs in private user, mount, PID and network
+namespaces (only `lo`; Uid 1000/Gid 998 same-ID mappings, not root), with
+`/gnu/store` read-only, a fresh HOME/XDG tree, Xvfb, a session bus and
+read-only AT-SPI observation driven by real X11 input:
+
+- The toolbar Add dialog creates **Linux Game** `Offline Native Entry` for the
+  store `coreutils` `true` executable with **Disable UMU** checked, then saves.
+- Edit → Tools sets the supported **Game Arguments** field to
+  `--offline-native-proof`; the saved library (`library-edited.json`) records
+  runner `Linux-Native`, `disable_umu: true` and those game arguments.
+- After a normal Alt+F4 close (exit 0, log free of tracebacks/errors) and
+  relaunch, the persisted library is identical, and reopening Edit and Tools
+  shows the exact title, path, Disable UMU state and arguments.
+
+The [reopened Tools screenshot](.goocastle/evidence/faugus-launcher-native.png),
+copied from the final run's `reopened-tools-1.png`, shows the legible
+persisted argument.
+The entry is never played, so no game, Wine/Proton, UMU, controller, Steam or
+SteamGridDB path is exercised; no network access is available in the proof.
+
+```sh
+make check-faugus-launcher FAUGUS_OUTPUT=/gnu/store/vhy3nfn8s5fcnjz9bpcviw553nk5p8q9-faugus-launcher-2.1.0-0.5b2316c FAUGUS_EVIDENCE=/tmp/faugus-new-evidence
+```
+
+The target consumes a prebuilt output and a new/empty evidence directory.
 
 ## Natron — verified core host path
 
