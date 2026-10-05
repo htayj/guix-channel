@@ -95,6 +95,96 @@ package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
 
+## WeiDU — verified offline native path
+
+Local evidence on **2026-10-05** establishes a source-built native executable,
+a bit-identical rebuild and the exercised game-free operations below, **not
+acceptance on a real Infinity Engine game**. Main reports the final build
+(bg66) passed for `/gnu/store/0nf080qr7ggfk6wdc2d31b7ivcz9q5xc-weidu-252.01`,
+derivation `w75v53wckxqpscp1pq0f33gszqnglqkz`, and the `--check` rebuild
+(bg67) passed for the same output. The final integrated `make check-weidu`
+(bg72) passed in **6.65s**, printing `WEIDU_OFFLINE_TP2_OK`; its authoritative
+evidence is `/tmp/weidu-native-final-2/proof.json`. Scoped lint (bg68) retains
+two WeiDU informational limitations: no Guix refresh updater for the snapshot
+origin, and source not archived in Software Heritage/Disarchive. Unrelated
+Flex Launcher/Fourk and excluded WinRM module diagnostics also remain;
+**this is not a clean-lint claim**. Publication, issue closure and deployment
+are not established by this receipt. No described host or service changed;
+no OKF page/log update applies to this repository-only change.
+
+### Source-built toolchain and licensing
+
+[`weidu`](guix/tay/packages/weidu.scm) **252.01** compiles the preserved
+[`WeiDUorg/weidu`](https://github.com/WeiDUorg/weidu) snapshot at
+`13f207b12833ce9bbbb119625a9b43b287738c52`, Guix base32 SHA256
+`0wpdg49dzcrr98a2izdg938l81nab83r6vy4zx6n7f1wa4ggvcsn`.
+`src/version.ml` identifies this fixed development revision as 252.01.
+The unchanged recipe privately rebuilds Guix's OCaml 4.14.3 source with
+`--disable-force-safe-string`; the pinned WeiDU Makefile supplies
+`-unsafe-string` for its historical mutable-string code. Its private
+source-built Elkhound GLR generator uses revision
+`b8f5589de119c89b36b1fc21d2f51c4a942ee3a8`, Guix base32 SHA256
+`04hypc95nnvab8nzxy76vvsbf7061wajn3rh6kn5rvwq24m2sjgj` (BSD-3 root and
+public-domain smbase), rather than upstream CI's moving prebuilt archive.
+Builds run serially because a generated-parser dependency omits a tlexer edge.
+
+The output installs only `bin/weidu`, not updater aliases or game data.
+`share/doc/weidu` contains GPL `COPYING`, `README.md` and
+`README-WeiDU-Changes.txt`; its `third-party-notices` directory preserves
+Elkhound's `license.txt`, `fcase.c`, `zlib.h`, `xinclude.h`, `batList.ml`,
+`myhashtbl.ml`, `parsing.ml` and `myarg.ml`. The recipe records
+GPL2/BSD-3/Expat/LGPL2.1. Native `--licence` also retains the GPL notice with
+upstream's additional permission for unmodified binaries, plus Keith Bauer's
+fcaseopen permission notice.
+
+### Native offline evidence
+
+The final proof runs the normal installed binary with an empty inherited
+environment, fresh HOME/XDG/TMPDIR and empty `PATH`, in private user, mount,
+PID and network namespaces. Only `lo` is present; Uid 1000 and Gid 998 are
+unchanged across all four identity fields with matching same-ID mappings,
+not a root mapping. `/gnu/store` is recursively bind-mounted private and
+read-only. All five calls — `--help`, `--licence`, TP2 installation,
+game-free dialog compilation and traify — exit 0 **and contain no
+line-anchored `ERROR:`/`FATAL ERROR:` diagnostics**. The help pager receives
+32 newlines and completes normally; a zero exit status alone is insufficient
+because WeiDU can emit native failures while exiting 0.
+
+- `weidu --nogame --noautoupdate --no-exit-pause --yes --force-install 0
+  fixture.tp2` installs a real TP2 `COPY ~input.txt~ ~output.txt~` operation,
+  reporting `SUCCESSFULLY INSTALLED offline copy`. Its output equals all
+  26 input bytes, `Guix offline copy fixture\n`, SHA256
+  `d29d13e94de5d4fe638edee9be25084a1f6c7c2fa06c43e7f89869ecbfaff6dd`.
+- Pinned upstream `test/no-game/make-foozle.d` compiles with `--nogame` to
+  the exact source-derived **180-byte `FOOZLE.dlg`**, SHA256
+  `5cf89d8667db8a7c136e8b1aa87996839168019923f8d58a3f990b1caff31f3a`.
+- The documented game-free `--nogame --traify test.tp2` fixture matches
+  both expected output MD5s pinned by `test/traify/run_tests.pl`:
+  `b9d17b468280c1b15d95a4ee091e033b` (TP2) and
+  `7eb0fdcc7f221e4f7437b7b14e692a46` (TRA). These receipts and exclusions
+  are retained in `/tmp/weidu-native-final-2/upstream-tests.json`.
+
+Fresh HOME/XDG state stays empty, installed files are non-writable, and the
+output NAR hash before/after is unchanged:
+`1db44h6035qqscblq3b26az4s7q009vn4qwcic6s480dlqp03psp`.
+
+### Limits and developer command
+
+The package build skips upstream tests; the external installed-output smoke
+exercises **only the documented game-free subsets**, not the entire upstream
+suite. No real game installation, proprietary-game dialog roundtrip, full TP2
+regression mod, Quitch rollback case, or game-dependent traify/old-TRA path was
+tested. See the pinned `test/README` and retained upstream-test exclusions.
+The lint refresh-updater note concerns Guix packaging metadata, not WeiDU's
+runtime mod-update options; archival availability remains a separate limit.
+
+```sh
+make check-weidu WEIDU_OUTPUT=/gnu/store/0nf080qr7ggfk6wdc2d31b7ivcz9q5xc-weidu-252.01 WEIDU_EVIDENCE=/tmp/weidu-new-evidence
+```
+
+The target consumes a prebuilt output and a new/empty evidence directory;
+it does not build WeiDU or touch a user's game installation.
+
 ## Natron — verified core host path
 
 Local evidence on **2026-10-04** establishes a source-built **core host**, an

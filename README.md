@@ -399,7 +399,7 @@ publication, source-required, and build gates appear in the final table.
 | [`computer-builder`](guix/tay/packages/computer-builder.scm) | `0.1.0` | Offline-built PC component catalog web application | Defined |
 | [`faugus-launcher`](guix/tay/packages/faugus-launcher.scm) | `2.1.0-0.5b2316c` | GTK game launcher with opt-in runtime downloads | Defined |
 | [`heroic-gogdl`](guix/tay/packages/heroic-gogdl.scm) | `1.3.0` | GOG downloader used by Heroic Games Launcher | Verified |
-| [`weidu`](guix/tay/packages/weidu.scm) | `252.01` | Offline-built Infinity Engine modding command-line tool | Defined |
+| [`weidu`](guix/tay/packages/weidu.scm) | `252.01` | Offline-built Infinity Engine modding command-line tool | Verified native/repro and game-free fixtures; [limits and lint caveat](ACCOUNTING.md#weidu--verified-offline-native-path) |
 
 ### Source-oriented collections
 
