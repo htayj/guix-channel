@@ -296,7 +296,7 @@ derivation `i5yphgy38210yx9w2cnc65344g5736q8`, and the `--check` rebuild
 output NAR hash `0z8cap1m1iwrr0s9d329hn67d5xhg7c9rps90ry7k6ndp62hk7j4`.
 Scoped lint (bg109) retains only two Aidermacs informational notes: no Guix
 refresh updater for the snapshot origin, and source not archived in Software
-Heritage/Disarchive. Unrelated Flex Launcher/Fourk and excluded WinRM
+Heritage/Disarchive. Unrelated deprecated `flex` symbol, Fourk and excluded WinRM
 diagnostics also remain; **this is not a clean-lint claim**. Publication,
 issue closure and deployment are not established by this receipt. No
 described host or service changed; no OKF page/log update applies.
