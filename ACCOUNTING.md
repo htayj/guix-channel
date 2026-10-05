@@ -42,6 +42,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Natron core host](#natron--verified-core-host-path)
 - [Faugus Launcher GTK path](#faugus-launcher--verified-native-gtk-path)
 - [Aidermacs Emacs extension path](#aidermacs--verified-native-emacs-extension-path)
+- [Wanderers native save/restore path](#wanderers--verified-native-saverestore-path)
 
 ## Relocation map (2026-10-04)
 
@@ -96,6 +97,87 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Wanderers — verified native save/restore path
+
+Local acceptance on **2026-10-05** covers the installed seeded game, cardinal
+movement, timed Rest, normal save/quit, default restore and continued movement.
+Main reports build115 passed for
+`/gnu/store/dy8v6h8y6i75dczlrxbdams5wkk23c34-wanderers-0-054c1cd`,
+derivation `7l68sfj685jj1lwraxchyz2z4alzfqba`, and the bit-identical `--check`
+rebuild (check117) passed. Integrated `make check-wanderers` (native122) passed
+in **35.29s**, printing `WANDERERS_NATIVE_SAVE_RESTORE_OK`; the authoritative
+decoded proof is `/tmp/wanderers-native-3/proof.json`, with individual saves,
+states, input records and captures in its `gameplay/` directory.
+Lint119 retains Wanderers refresh/updater and source-archive informational
+notes; known unrelated deprecated `flex` symbol, Fourk and excluded WinRM
+diagnostics remain. **This is not a clean-lint claim.** Publication, issue
+closure and deployment are not established by this local receipt.
+
+### Source pin, build and licensing
+
+[`wanderers`](guix/tay/packages/wanderers.scm) **0-054c1cd** uses the fixed
+[`a-nikolaev/wanderers`](https://github.com/a-nikolaev/wanderers) commit
+`054c1cdc6dd833d8938357e6d898def510531d67` (2019-01-05), fetched from
+`https://codeload.github.com/a-nikolaev/wanderers/tar.gz/054c1cdc6dd833d8938357e6d898def510531d67`.
+The recipe's Guix base32 SHA256 is
+`0wivxq23h149c6s26j1ql52aqr2sc2k10xcp00hhabxz2cjaxcq0`;
+archive SHA256 is
+`00b3ae2413bf2f052100977510a6605a64ac44a1384823b46189043804ee3b72`.
+The existing recipe builds the upstream native OCaml target with OCaml 4.07,
+SDL 1.2 compatibility and Mesa; upstream has no test target. The game/assets
+are **GPL-3.0-or-later**, GLCaml **BSD-2-Clause**, bundled SDL binding
+**LGPL-2.0-only**, and OCamlMakefile **LGPL-2.1**. Installed documentation
+preserves `COPYING`, `README.markdown`, `OCamlMakefile` and the binding sources
+with their notices. No production recipe change was warranted.
+
+### Exercised native behavior and limits
+
+The installed wrapper starts a normal `wanderers guix-smoke` game, not debug
+mode, under fresh HOME/XDG directories. Later launches have no arguments and
+restore the saved seed, region 374, controller 0 and player 24. The launcher
+keeps writable `game.save` below `${XDG_DATA_HOME}/wanderers` (default
+`~/.local/share/wanderers`) and links immutable packaged data there. The native
+run has isolated user/mount/PID/network namespaces, only loopback networking,
+an empty PATH and recursively read-only `/gnu/store`.
+
+- Decoded baseline location **(4,6)** and simulation clock **0.693** advance
+  through a real Right key to **(5,6)** and **2.7279999999999993**; both old and
+  new source-derived map cells change visibly.
+- Normal `t` Rest requests **10 simulation units**. The decoded clock reaches
+  **14.035999999999998**, elapsed **11.307999999999998**, satisfying
+  `10 + previous reaction <= elapsed < 10 + previous reaction + 2` for the
+  native timed-action and Wait phase. Acceptance does not freeze the world
+  or require unchanged HP/location: real combat displacement/damage is allowed,
+  and continued movement is chosen from the actual restored state. This run's
+  Rest retained **(5,6)** and HP **101.38512817468151**, with no damage
+  notifications; it does **not** claim combat occurred.
+- Normal Ctrl+Q save/quit and no-action default restore/save preserve the
+  **entire 948,808-byte native save byte-for-byte**, SHA256
+  `55374280cfd09da5060694be47d0f5de685ac316fa3bef7f7bd19e7a3ca7340b`.
+  Continued Right movement then reaches **(6,6)**, clock
+  **16.653999999999996**, followed by another normal save/quit. All sessions
+  exit normally.
+- Clock glyphs and the player sprite are checked against the installed source
+  tileset, not visually estimated. Sprite checks respect source opacity and
+  exclude only source-derived opaque notification texels, retaining exact
+  visible evidence for every source-occupied row, column and palette color.
+  Numeric clocks above come from decoded saves; rendered HUD clock text rounds
+  them and is not numeric proof.
+- Before/after output NAR hashes are identical:
+  `0r7q4f5ia01gikni23r8slgfllryfhraqr2chs977wbcnk0wj5x3`.
+  [Retained native screenshot](.goocastle/evidence/wanderers-native.png) is the
+  actual `continued-before-save.png` capture. Main inspected the real
+  map/player/HUD with no visible errors; the screenshot supplements, rather
+  than replaces, decoded state and pixel evidence.
+
+Coverage uses software OpenGL on private 24-bit Xvfb and dummy audio; physical
+GPU, audible output, desktop integration and all gameplay features are not
+established. Main owns all executed checks; this documentation worker only
+read the authoritative recipe and evidence, without running checks. The
+629-source snapshot ledger and unrelated work are unchanged. No described
+host/service or user profile changed; no OKF page/log update applies to this
+repository-only receipt.
 
 ## WeiDU — verified offline native path
 

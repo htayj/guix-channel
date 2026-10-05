@@ -360,7 +360,7 @@ publication, source-required, and build gates appear in the final table.
 | [`the-smiths-hand`](guix/tay/packages/smiths-hand.scm) | `2014-03-16` | Village-smith roguelike with adventurer equipment trading | Verified |
 | [`trial-by-combat`](guix/tay/packages/trial-by-combat.scm) | `0.1.0` | Tactical browser arena served over HTTP and WebSocket | Verified |
 | [`umoria`](guix/tay/packages/umoria.scm) | `5.7.15` | Full original source-built C++/ncurses Moria with immutable data and XDG scores/default save | Verified |
-| [`wanderers`](guix/tay/packages/wanderers.scm) | `0-054c1cd` | Open-world adventure and dungeon-crawling game | Defined |
+| [`wanderers`](guix/tay/packages/wanderers.scm) | `0-054c1cd` | Open-world adventure and dungeon-crawling game | Verified ([receipt](ACCOUNTING.md#wanderers--verified-native-saverestore-path)) |
 | [`wrogue`](guix/tay/packages/wrogue.scm) | `0.8.0` | Warp Rogue science-fiction SDL roguelike | Verified |
 
 ### Programming libraries and developer tools
