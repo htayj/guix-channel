@@ -1,0 +1,82 @@
+Preserve interpreter prefixes when using an unbundled Python installation.
+
+Py_GetPythonHome may be null when Python discovers its own installation.  Do
+not pass that null pointer to PyUnicode_FromWideChar or replace the prefixes
+that Python has already determined.  Keep the bundled-home workaround for
+Py_SetPath and share its one string object between the two assignments.
+Select the actual compiled PySide major version for QtPy consumers.
+
+Natron embeds the full Python API rather than building an abi3 module.  Remove
+only Py_LIMITED_API from the imported Shiboken target's interface definitions,
+leaving its other flags and imported abi3 binaries, headers, and links intact.
+Remove the redundant source-level overrides so all consumers use this policy.
+
+Upstream: source runtime fixes for pinned 3763d805d7d277d10af10025ae41af677682b3e6.
+
+--- a/Global/PythonUtils.cpp
++++ b/Global/PythonUtils.cpp
+@@ -21,5 +21,4 @@
+ // from <https://docs.python.org/3/c-api/intro.html#include-files>:
+ // "Since Python may define some pre-processor definitions which affect the standard headers on some systems, you must include Python.h before any standard headers are included."
+-#undef Py_LIMITED_API  // Needed for Py_NoUserSiteDirectory, PyBytes_AS_STRING
+ #include <Python.h>
+ // ***** END PYTHON BLOCK *****
+@@ -259,8 +258,11 @@
+     // Py_SetPath clears sys.prefix and sys.exec_prefix
+     // https://github.com/NatronGitHub/Natron/issues/696
+-    PyObject *prefix = PyUnicode_FromWideChar(Py_GetPythonHome(), -1);
+-    PySys_SetObject(const_cast<char*>("prefix"), prefix);
+-    Py_XDECREF(prefix);
+-    PyObject *exec_prefix = PyUnicode_FromWideChar(Py_GetPythonHome(), -1);
+-    PySys_SetObject(const_cast<char*>("exec_prefix"), exec_prefix);
+-    Py_XDECREF(exec_prefix);
++    const wchar_t* pythonHome = Py_GetPythonHome();
++    if (pythonHome) {
++        PyObject* prefix = PyUnicode_FromWideChar(pythonHome, -1);
++        if (prefix) {
++            PySys_SetObject(const_cast<char*>("prefix"), prefix);
++            PySys_SetObject(const_cast<char*>("exec_prefix"), prefix);
++            Py_DECREF(prefix);
++        }
++    }
+--- a/Engine/AppManager.cpp
++++ b/Engine/AppManager.cpp
+@@ -21,5 +21,4 @@
+ // from <https://docs.python.org/3/c-api/intro.html#include-files>:
+ // "Since Python may define some pre-processor definitions which affect the standard headers on some systems, you must include Python.h before any standard headers are included."
+-#undef Py_LIMITED_API  // Needed for PyRun_SimpleString, PyRun_String, Py_NoUserSiteDirectory
+ #include <Python.h>
+ // ***** END PYTHON BLOCK *****
+@@ -3004,4 +3003,8 @@
+     // Set QT_API for QtPy
+     // https://github.com/spyder-ide/qtpy
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++    qputenv("QT_API", "pyside6");
++#else
+     qputenv("QT_API", "pyside2");
++#endif
+ } // AppManager::initPython
+--- a/Engine/AppInstance.cpp
++++ b/Engine/AppInstance.cpp
+@@ -21,5 +21,4 @@
+ // from <https://docs.python.org/3/c-api/intro.html#include-files>:
+ // "Since Python may define some pre-processor definitions which affect the standard headers on some systems, you must include Python.h before any standard headers are included."
+-#undef Py_LIMITED_API  // Needed for PyRun_SimpleString
+ #include <Python.h>
+ // ***** END PYTHON BLOCK *****
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -100,6 +100,13 @@
+     set(SHIBOKEN_LIB Shiboken2::libshiboken)
+     set(PYSIDE_LIB PySide2::pyside2)
+ endif()
+ 
++# Natron embeds full Python; do not inherit Shiboken's abi3 compile restriction.
++get_target_property(NATRON_SHIBOKEN_DEFS ${SHIBOKEN_LIB} INTERFACE_COMPILE_DEFINITIONS)
++if(NATRON_SHIBOKEN_DEFS)
++    list(FILTER NATRON_SHIBOKEN_DEFS EXCLUDE REGEX "^Py_LIMITED_API(=|$)")
++    set_property(TARGET ${SHIBOKEN_LIB} PROPERTY INTERFACE_COMPILE_DEFINITIONS ${NATRON_SHIBOKEN_DEFS})
++endif()
++
+ if(IS_DEBUG_BUILD AND WIN32)
+     # Remove NDEBUG from Shiboken INTERFACE_COMPILE_DEFINITIONS so it is not inherited in debug builds.

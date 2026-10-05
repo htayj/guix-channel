@@ -8,7 +8,7 @@
   (make-github-source-snapshot "natrongithub-natron-source" "NatronGitHub" "NatronGitHub" "Natron"
                                "3763d805d7d277d10af10025ae41af677682b3e6" "1x4pwgxnzjdg5mvzyr2bf7i55x4aaw58yfwvpgiglhp0jpn9rxyn"
                                "source snapshot of NatronGitHub/Natron" "https://github.com/NatronGitHub/Natron"
-                               license:gpl2))
+                               license:gpl2+))
 
 (define-public nearoo-music-tool-source
   (make-github-source-snapshot "nearoo-music-tool-source" "Nearoo" "Nearoo" "music-tool"

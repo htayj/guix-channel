@@ -38,6 +38,8 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [License](#license) and [third-party notices](THIRD_PARTY_NOTICES.md)
 - [Agduria, Wenyan and Ludvig Lundgren's qBittorrent CLI](#agduria-wenyan-and-ludvig-lundgrens-qbittorrent-cli--verified-native-paths)
 - [Lispy Rogue, bodge-nuklear and LiteGraph](#lispy-rogue-bodge-nuklear-and-litegraph--verified-native-paths)
+- [Medley and Maiko](#medley-and-maiko--verified-native-path)
+- [Natron core host](#natron--verified-core-host-path)
 
 ## Relocation map (2026-10-04)
 
@@ -92,6 +94,203 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Natron — verified core host path
+
+Local evidence on **2026-10-04** establishes a source-built **core host**, an
+empty native GUI and one external OpenFX render, not a complete plugin-equipped
+compositing application. Main reports the final build (bg40) passed for
+`/gnu/store/5vix1plx3csv0yqbxx2vcvxgphgxbzx8-natron-2.6.0-0.20260724`
+after lint-driven recipe fixes. The integrated `make check-natron` run (bg41)
+passed; its authoritative native proof is
+`/tmp/natron-make-final-1/proof.json`. Main reports the final `--check` rebuild
+(bg42) passed bit-identically for the same output, with all 23 selected tests
+passing again. Final scoped lint (bg43) exited 0 with no Natron findings;
+remaining unrelated Flex Launcher/Fourk and excluded WinRM module diagnostics
+are outside this receipt, **not a whole-channel clean-lint claim**. Earlier
+bg36/bg38/bg37 receipts describe an intermediate output, not this final one.
+Publication, issue closure and deployment are not established. This worker
+read recipes and receipts only, running no commands/checks. No user profile,
+described host or service changed; no OKF page/log update applies.
+
+### Source pins and redistribution notices
+
+[`natron`](guix/tay/packages/natron.scm) **2.6.0-0.20260724** recursively fetches
+the original [`NatronGitHub/Natron`](https://github.com/NatronGitHub/Natron)
+source at `3763d805d7d277d10af10025ae41af677682b3e6`, Guix base32 SHA256
+`0jmjjpk8lzw574q50iad36igdiy67sd3x426k7y2whiz1r30vg83`.
+The recipe records these exact source gitlinks:
+
+| Component | Revision |
+| --- | --- |
+| google-mock | `17945db42c0b42496b2f3c6530307979f2e2a5ce` |
+| google-test | `50d6fc317c843a2e40dbf08c2efd3f068801ae6d` |
+| OpenFX | `2303ff811bee3ffe085287602f684fe5fe5357e0` |
+| SequenceParsing | `3c93fcc488632b0bdfeee3181586809932357598` |
+| tinydir | `64fb1d4376d7580aa1013fdbacddbbeba67bb085` |
+| google-breakpad | `9474c3f7f9939391f281d46c42bfe20cc0f0abd9` |
+
+The host is built with Qt 6, embedded Python and the selected Qt-for-Python
+modules. Local Qt API/regular-expression/signal and Python-runtime patches
+are listed in the recipe; installed launchers bind their Python, fontconfig
+and Qt plugin paths to store inputs. The OpenFX gitlink supplies the host/API
+source, **not** the separately maintained normal effect and I/O plugins.
+`openfx-io`, `openfx-misc`, `openfx-arena`, FFmpeg, OpenImageIO readers/writers
+and OCIO configurations are not bundled. Explicit external plugins may be
+composed through `OFX_PLUGIN_PATH`; the proof fixture does not supply a normal
+application plugin collection or establish OCIO workflows.
+
+The installed `share/doc/natron/licenses/` retains the full upstream
+`tools/license` inventory and source LICENSE/COPYING/COPYRIGHT/NOTICE files,
+plus specific embedded-code notices and the patched `Global/QtCompat.h`.
+Natron's main grant is GPL-2.0-or-later; the recipe also records the Qt
+wildcard-port GPL-2.0-only alternative, BSD-3-Clause, MPL-2.0, Expat,
+SGI Free Software License B 2.0 and Disney SeExpr-derived Noise's modified
+Apache-2.0 trademark clause (retained in `source/Engine/Noise.h`). The retained
+upstream component inventory describes broader historical binaries, including
+optional plugin dependencies and older Python/Qt grants; it is **not** proof
+that every listed library/plugin is installed in this core-only output.
+
+### Build tests and integrated native receipt
+
+The build compiles the complete upstream `Tests` target but runs only
+**23 plugin-independent tests in 11 test cases**, using
+`--gtest_filter=-BaseTest.*:OSGLContext.*:GPUContextPool.*`.
+`BaseTest` needs separately supplied SeNoise/ReadOIIO/WriteOIIO plugins, and
+the GPU/OpenGL-context tests are excluded. This is **not an entire upstream
+suite pass** or a GPU-acceleration acceptance claim.
+
+The integrated proof uses the actual installed `Natron` and `NatronRenderer`
+under Xvfb/XCB with software GL, fresh HOME/XDG state, UID 1000 and private
+user/mount/network/PID namespaces. Only loopback is present; the store is
+read-only, and the only explicit host-writable bind is the evidence directory.
+`natron-empty-project.png` captures the real 1190×952 empty GUI with zero nodes
+and File/Edit/Layout/Display/Render/Cache/Help menus. The 31×23 File-menu crop
+matches the independently rendered Droid Sans 11 reference exactly (131 glyph
+pixels, both RGBA SHA256
+`10356c96c128e96b96f16d13cafc8ae2645723c3ec44272263a129e1290f07eb`).
+Capture uses `QScreen.grabWindow` on the live X framebuffer, not a synthetic
+screenshot or OCR. `app.closeProject()` closes the GUI cleanly; exit status is 0.
+
+A temporary **external** `NatronProof.ofx` fixture is compiled against the
+pinned OpenFX headers outside the store (exit 0). Actual `NatronRenderer`
+hosts `org.guix.NatronProofGenerator` connected to `org.guix.NatronProofWriter`
+and renders **frame 1, 2×2 pixels** to `frame.ppm` (exit 0). Expected and actual
+P6 bytes match exactly:
+`50360a3220320a3235350aff000000ff000000ffffffff`, SHA256
+`69d84c9c40bbfe1bfa0519120af54a299af34be4eebb31bb6a34b67aaae22f00`.
+This proves the selected host/plugin/render path, not normal media decoding,
+video encoding, a full creative workflow or the usual upstream plugin set.
+`nar-before.txt` and `nar-after.txt` both contain
+`02wx53j6vxl974ydwr3gcv5d3v8sagcs7k0v6h1azwk29rqhwl2f`, establishing
+unchanged delivered output across the native proof.
+
+To repeat the integrated proof, use the prebuilt output and a new/empty
+evidence directory:
+
+```sh
+make check-natron NATRON_OUTPUT="$natron_out" NATRON_EVIDENCE=/tmp/natron-FRESH
+```
+
+## Medley and Maiko — verified native path
+
+Final local acceptance on **2026-10-04** covers the source-built Maiko VM,
+pinned Medley runtime and an external native consumer. Main owns all source
+builds, bit-identical `--check` rebuilds, lint and standalone/integrated proof
+runs; this documentation worker only read their receipts and authoritative
+recipes, without running checks. Publication and issue closure are not
+established by this local receipt. No user profile, deployed host or service
+changed; no OKF page/log update applies. The 629-source snapshot ledger remains
+unchanged.
+
+### Source, boot images and licensed scope
+
+[`interlisp-medley`](guix/tay/packages/interlisp-medley.scm) **2026.08.10** uses
+the recursive original [`Interlisp/medley`](https://github.com/Interlisp/medley)
+source at `634d092ed802314ada447878418686fbfeeb3048`, Guix base32 SHA256
+`1d3dmhwcbwqi060679a9dsxsw45r37ppjskfn3a6n8d61h83bl95`.
+[`maiko`](guix/tay/packages/maiko.scm) **2026.03.19** compiles the recursive
+original [`Interlisp/maiko`](https://github.com/Interlisp/maiko) C source at
+`9259716e9a797fefcdb59b6418b00f434c48dc40`, base32 SHA256
+`1sd8w4rfjmc485qkg8jm0qv7hfcfy6nvxaa240sin03fjb1w7992`.
+The source recipes are authoritative for these pins, not historical ticket
+metadata or updater tag formatting. Maiko builds `lde`, X11 `ldex` and
+`ldeinit` with deterministic revision/date metadata; SDL is disabled.
+Both deliveries support **x86_64-linux only**.
+
+The separate upstream [loadups archive](https://github.com/Interlisp/medley/releases/download/medley-260810-634d092e_260319-9259716e/medley-260810-634d092e-loadups.tgz)
+is `medley-260810-634d092e-loadups.tgz`, release
+`medley-260810-634d092e_260319-9259716e`, base32 SHA256
+`0b6pnpckdsfxlxf2m7i9w6aj6s5618yhlvdqpz3ldm2aq1zqdw19`
+(hex `29f0867fc04ad446c7bfb86d0a3d0aa6682395e1299e2a5ca7dde936d9b5d72c`).
+Only `full.sysout` and `lisp.sysout` are extracted. These are **upstream-built
+boot images, not images bootstrapped from source by Guix**; compiling Maiko
+does not change that provenance. The proof boots `full.sysout`, SHA256
+`cafd4c726ca338a6f6e7dab110f6e189482e8f55a593940817bebba6730d0ff5`.
+
+The narrow installed scope retains Medley sources, CLTL2, library/lispusers,
+CLOS, rooms, greetfiles, launcher/doctools/dinfo, internal runtime files,
+Medley display fonts, PostScript c0 fonts and Xerox Unicode text tables.
+Full Medley MIT and Maiko MIT LICENSE/NOTICE, historical file-level notices
+and installed `share/doc/interlisp-medley/PROVENANCE` remain available.
+Excluded are `apps.sysout`, Notecards, LOOPS, vendor/eastasia/iso8859 Unicode,
+XCCStoUni binary, Xerox PDF and unaudited font trees; Maiko legacy build
+metadata is not installed. Ethernet/Nethub support is disabled, **not native
+Lisp sockets**. The acceptance consumer's offline namespace, not the program,
+enforces network isolation.
+
+### Final build and native evidence
+
+Main's final source builds and bit-identical `--check` rebuilds passed for:
+
+- `/gnu/store/ljgkdd2rig5y49qh8xygs57x1w5ynq25-interlisp-medley-2026.08.10`
+- `/gnu/store/jfi95n7az8cplijqg2bx11yiff545v7f-maiko-2026.03.19`
+
+Final scoped lint (bg16) exited 0 after initial actionable recipe warnings
+were fixed. Its remaining updater suggestions are Maiko `260319-9259716e`
+(the same pin) and Medley `260608.82054b35` (older June than the August pin),
+not demonstrated upgrades. This does **not** claim whole-channel lint is clean;
+unrelated Flex Launcher/Fourk and excluded unfinished WinRM diagnostics remain
+outside this receipt.
+
+Standalone proof `/tmp/medley-native-final-1/evidence.json` passed. Integrated
+`make check-interlisp-medley` also passed (bg17,
+`/tmp/medley-make-final-1/evidence.json`). The actual installed `ldex` process
+resolved to the delivered Maiko closure. A real mouse click selected Exec;
+real keyboard input evaluated `(IL:PLUS 273819 640572)` to **914391**, then
+entered `(IL:SAVEVM)` and `(IL:LOGOUT T 0)`, exiting 0 without a forced kill.
+Native screenshot recognition uses exact installed source-font bitmaps:
+Helvetica10-MRR for the Exec title, Helvetica10-BRR for input echoes and
+Gacha10-MRR for the arithmetic result, absent before evaluation. It does not
+substitute OCR, fuzzy text or synthetic screenshots. Actual evaluated/saved
+frames and `lisp.virtualmem` are retained in each evidence directory.
+The saved virtual memory was 11,361,792 bytes and unchanged by logout; this
+establishes SAVEVM output, **not verified restoration/resume**.
+
+Fresh HOME/XDG/private temporary state, same UID 1000, private user/mount/net/
+PID namespaces, only loopback and a read-only store isolated the external
+consumer. Medley before/after NAR matched
+`1674jzxjnbqjay0zkngiw3qf2w9r82zgv0r2bfh13xp8wlhnpw11` in both proofs.
+Upstream supplies no full automated test suite (Maiko has no CTest suite);
+disabled in-package tests are not a suite-pass claim. Selected boot/Exec/
+arithmetic/save/logout paths do not establish every editor, library, optional
+application, networking primitive or restored session.
+
+### Usage and developer command
+
+`guix shell -L guix interlisp-medley -- medley` starts the upstream graphical
+environment with the full image by default. The installed `medley` launcher
+binds its Maiko directory and runtime tools to store inputs while respecting
+the user's HOME/LOGINDIR. `medley --continue` requests saved virtual memory
+instead; this supported launcher option was not exercised by the acceptance
+scenario.
+
+Use a prebuilt output and a new empty evidence directory; `GUIX` resolves proof
+dependencies before isolation:
+
+```sh
+make check-interlisp-medley INTERLISP_MEDLEY_OUTPUT="$medley_out" INTERLISP_MEDLEY_EVIDENCE=/tmp/medley-FRESH
+```
 
 ## Lispy Rogue, bodge-nuklear and LiteGraph — verified native paths
 

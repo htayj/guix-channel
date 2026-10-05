@@ -188,6 +188,7 @@ publication, source-required, and build gates appear in the final table.
 | [`gpu-screen-recorder`](guix/tay/packages/caelestia-cli.scm) | `6.1.3` | VA-API/Vulkan screen recorder and `gsr-kms-server` | Defined |
 | [`kraken`](guix/tay/packages/kraken.scm) | `7.1` | OCR command-line tools for historical and multilingual documents | Verified offline CPU OCR path |
 | [`ludviglundgren-qbittorrent-cli`](guix/tay/packages/ludviglundgren-qbittorrent-cli.scm) | `2.3.0` | Go qBittorrent Web API client; commands `qbt` and `qbittorrent-cli` | Verified isolated daemon path |
+| [`natron`](guix/tay/packages/natron.scm) | `2.6.0-0.20260724` | Core node-graph compositor and NatronRenderer; normal plugin collections/OCIO configs not bundled | Verified empty GUI and external OFX render; [limits](ACCOUNTING.md#natron--verified-core-host-path) |
 | [`nrl-text-to-phoneme`](guix/tay/packages/nrl-text-to-phoneme.scm) | `0-f99c64a` | NRL text-to-phoneme command and rule tables | Defined |
 | [`praat`](guix/tay/packages/praat.scm) | `7.0.02` | GTK speech analysis/editor and batch scripting | Verified analysis and GTK path |
 | [`pyrosimple`](guix/tay/packages/pyrosimple.scm) | `2.14.2-16.d24655a` | Command-line tools for rTorrent and BitTorrent metainfo files | Verified |
@@ -249,10 +250,12 @@ publication, source-required, and build gates appear in the final table.
 | [`apout`](guix/tay/packages/apout.scm) | `0-bd9af21` | PDP-11 Unix a.out user-mode emulator | Defined |
 | [`blincolnlights`](guix/tay/packages/blincolnlights.scm) | `0-932d2ce` | Virtual front panels and emulators for historic computers | Defined |
 | [`image-tape`](guix/tay/packages/image-tape.scm) | `0-0402e21` | Magnetic-tape image reader with safe output handling | Defined |
+| [`interlisp-medley`](guix/tay/packages/interlisp-medley.scm) | `2026.08.10` | Graphical Interlisp/Common Lisp environment with source-built Maiko and pinned upstream boot images | Verified native evaluation/save/logout; [limits](ACCOUNTING.md#medley-and-maiko--verified-native-path) |
 | [`itstar`](guix/tay/packages/itstar.scm) | `1.10-0.b709cd8` | Create, inspect, extract and append ITS DUMP tape images | Verified |
 | [`klh10`](guix/tay/packages/klh10.scm) | `2.0l-guix-0.6d733f2` | KL10/KS10 host emulator with console and disk/tape-image converters | Verified |
 | [`ks10-udis`](guix/tay/packages/ks10-udis.scm) | `0-c41bced` | KS10 microcode disassembler and offline fixture | Defined |
 | [`lbforth`](guix/tay/packages/lbforth.scm) | `0-20230213` | Self-hosted portable Forth interpreter and standard wordsets | Verified |
+| [`maiko`](guix/tay/packages/maiko.scm) | `2026.03.19` | Source-built X11 Lisp-machine VM for Medley, without Ethernet/Nethub | Verified through Medley |
 | [`modus`](guix/tay/packages/modus.scm) | `0.2.0-0.501f2ee` | Self-hosting Common Lisp implementation with a hosted CLI | Verified |
 | [`pdp10-its-disassembler`](guix/tay/packages/pdp10-its-disassembler.scm) | `0-c745bb5` | Disassemble and manipulate PDP-10 ITS files | Verified |
 | [`pdp10-suppty`](guix/tay/packages/suppty.scm) | `0-2da0135` | Original GTK 2 and CLI SUPDUP terminal clients | Verified |

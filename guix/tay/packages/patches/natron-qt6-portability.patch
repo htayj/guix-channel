@@ -1,0 +1,432 @@
+Fix Qt6 headers, bindings, CLI ranges, lockers and concurrent member calls.
+
+Qt6 declares QStringList as a QList alias, so include its public declaration
+instead of forward-declaring a class.  Include QEnterEvent where the existing
+QtCompat alias needs it.  Pass the same build number to both standalone
+Shiboken parsers as the C++ targets via --clang-option (bare -D arguments are
+not accepted by Shiboken6); do not alter the exposed version method.
+Include QCursor directly for the GUI manager's by-value cursor fields rather
+than depending on transitive Qt headers.
+Use the supported PySequence generator type in the Engine render and GUI
+renderBlocking bindings while retaining the wrappers' explicit list checks.
+Correct the bundled HTTP property's declared type to
+match its existing accessor.  The CLI range expression remains a whole-string
+match (including the empty string), not a substring search.
+Deduce concrete QMutex/QRecursiveMutex locker types on Qt5 and Qt6, keeping
+render lock owners in the enclosing scope through rendering and GL attach/detach.
+Cast the QChar code unit to uint before passing it to QString::arg so the
+integral overload is selected on Qt 6.9 (where char16_t is excluded), keeping
+the same 4-digit hexadecimal \u escaping semantics.
+Parse the existing Natron/Qt headers before Xlib defines Status and Bool;
+retain the X11 macro environment for the platform implementation.
+Use lambdas for QtConcurrent member calls on Qt5.15 and Qt6, retaining raw
+target pointers, value-copied arguments and the existing watcher plumbing.
+Extract the key from Qt6's QKeyCombination after the existing modifier parsing,
+preserving the separate modifier result and the Qt5 integer extraction.
+Replace deprecated Qt::Modifier/Qt::Key operator+ shortcut arithmetic with
+bitwise OR composition (int-cast where Qt6 requires a combined-int
+QKeySequence), preserving each sequence's key as the last operand.
+
+Upstream: Qt6 portability for pinned 3763d805d7d277d10af10025ae41af677682b3e6.
+
+--- a/Engine/EngineFwd.h
++++ b/Engine/EngineFwd.h
+@@ -31,6 +31,8 @@
+ #include <memory>
+ #include <list>
+ #include <vector>
++
++#include <QStringList>
+ 
+ 
+ // boost
+@@ -61,7 +63,6 @@
+ class QProcess;
+ class QSettings;
+ class QString;
+-class QStringList;
+ class QThread;
+ class QTimer;
+ class QUrl;
+--- a/Global/QtCompat.h
++++ b/Global/QtCompat.h
+@@ -25,6 +25,9 @@
+ #include <QString>
+ #include <QUrl>
+ #include <QFileInfo>
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++#include <QtGui/QEnterEvent>
++#endif
+ 
+ NATRON_NAMESPACE_ENTER
+ 
+--- a/Engine/CMakeLists.txt
++++ b/Engine/CMakeLists.txt
+@@ -31,7 +31,7 @@
+ set(PYENGINE_HEADER PySide${PYSIDE_VERSION_MAJOR}_Engine_Python.h)
+ 
+ set(shiboken_args
+-    "-std=c++17" "--enable-parent-ctor-heuristic" "--use-isnull-as-nb_nonzero"
++    "-std=c++17" "--clang-option=-DNATRON_BUILD_NUMBER=0" "--enable-parent-ctor-heuristic" "--use-isnull-as-nb_nonzero"
+     "--avoid-protected-hack" "--enable-pyside-extensions"
+     "-I." "-I.." "-I../Global" "-I../libs/OpenFX/include" ${PYENGINE_INCS}
+     "-T${PYSIDE_TYPESYSTEMS}" "--output-directory=${PYENGINE_OUT}"
+--- a/Gui/CMakeLists.txt
++++ b/Gui/CMakeLists.txt
+@@ -35,7 +35,7 @@
+ endif()
+ 
+ set(shiboken_args
+-    "-std=c++17" "--enable-parent-ctor-heuristic" "--use-isnull-as-nb_nonzero"
++    "-std=c++17" "--clang-option=-DNATRON_BUILD_NUMBER=0" "--enable-parent-ctor-heuristic" "--use-isnull-as-nb_nonzero"
+     "--avoid-protected-hack" "--enable-pyside-extensions"
+     ${PYGUI_INCS}
+     "-T../Engine" "-T${PYSIDE_TYPESYSTEMS}" "--output-directory=${PYGUI_OUT}"
+--- a/Engine/typesystem_engine.xml
++++ b/Engine/typesystem_engine.xml
+@@ -792,7 +792,7 @@
+         <modify-function signature="renderInternal(bool,Effect*,int,int,int)" remove="all"/>
+         <modify-function signature="render(std::list&lt;Effect*&gt;,std::list&lt;int&gt;,std::list&lt;int&gt;,std::list&lt;int&gt;)">
+             <modify-argument index="1">
+-                <replace-type modified-type="PyList"/>
++                <replace-type modified-type="PySequence"/>
+             </modify-argument>
+             <modify-argument index="2">
+                 <remove-argument/>
+
+--- a/Gui/typesystem_natronGui.xml
++++ b/Gui/typesystem_natronGui.xml
+@@ -69,7 +69,7 @@
+         </modify-function>
+         <modify-function signature="renderBlocking(std::list&lt;Effect*&gt;,std::list&lt;int&gt;,std::list&lt;int&gt;,std::list&lt;int&gt;)">
+             <modify-argument index="1">
+-                <replace-type modified-type="PyList"/>
++                <replace-type modified-type="PySequence"/>
+             </modify-argument>
+             <modify-argument index="2">
+                 <remove-argument/>
+--- a/libs/qhttpserver/src/qhttprequest.h
++++ b/libs/qhttpserver/src/qhttprequest.h
+@@ -46,7 +46,7 @@
+     Q_PROPERTY(HeaderHash headers READ headers)
+     Q_PROPERTY(QString remoteAddress READ remoteAddress)
+     Q_PROPERTY(quint16 remotePort READ remotePort)
+-    Q_PROPERTY(QString method READ method)
++    Q_PROPERTY(HttpMethod method READ method)
+     Q_PROPERTY(QUrl url READ url)
+     Q_PROPERTY(QString path READ path)
+     Q_PROPERTY(QString httpVersion READ httpVersion)
+--- a/Engine/CLArgs.cpp
++++ b/Engine/CLArgs.cpp
+@@ -39,6 +39,7 @@
+ #include <QDebug>
+ #include <QFile>
+ #include <QFileInfo>
++#include <QRegularExpression>
+ 
+ #include "Global/GlobalDefines.h"
+ #include "Global/GitVersion.h"
+@@ -1142,7 +1143,8 @@
+-            QRegExp re( QString::fromUtf8("[0-9\\-,]*") ); // Matches frame ranges.
++            const QRegularExpression re(QRegularExpression::anchoredPattern(
++                QString::fromUtf8("[0-9\\-,]*"))); // Matches frame ranges.
+             if (!it->endsWith(QString::fromUtf8(".py"), Qt::CaseInsensitive) &&
+                 !it->endsWith(QString::fromUtf8(".ntp"), Qt::CaseInsensitive) &&
+-                !re.exactMatch(*it)) {
++                !re.match(*it).hasMatch()) {
+                 w.filename = *it;
+ #ifdef __NATRON_UNIX__
+                 w.filename = AppManager::qt_tildeExpansion(w.filename);
+--- a/Engine/EffectInstance.cpp
++++ b/Engine/EffectInstance.cpp
+@@ -4097,7 +4097,7 @@
+ {
+     NON_RECURSIVE_ACTION();
+     bool concurrentGLRender = supportsConcurrentOpenGLRenders();
+-    std::unique_ptr<QMutexLocker> locker;
++    std::unique_ptr<decltype(QMutexLocker(&_imp->attachedContextsMutex))> locker;
+     if (concurrentGLRender) {
+         locker.reset( new QMutexLocker(&_imp->attachedContextsMutex) );
+     } else {
+@@ -4158,7 +4158,7 @@
+ {
+     NON_RECURSIVE_ACTION();
+     bool concurrentGLRender = supportsConcurrentOpenGLRenders();
+-    std::unique_ptr<QMutexLocker> locker;
++    std::unique_ptr<decltype(QMutexLocker(&_imp->attachedContextsMutex))> locker;
+     if (concurrentGLRender) {
+         locker.reset( new QMutexLocker(&_imp->attachedContextsMutex) );
+     }
+--- a/Engine/EffectInstanceRenderRoI.cpp
++++ b/Engine/EffectInstanceRenderRoI.cpp
+@@ -1517,7 +1517,8 @@
+         ///locks belongs to an instance)
+ 
+ 
+-        std::unique_ptr<QMutexLocker> locker;
++        std::unique_ptr<decltype(QMutexLocker(&getNode()->getRenderInstancesSharedMutex()))> instanceLocker;
++        std::unique_ptr<decltype(QMutexLocker(getNode()->getPlugin()->getPluginLock()))> pluginLocker;
+ 
+ 
+         EffectInstancePtr renderInstance;
+@@ -1535,14 +1536,11 @@
+         assert(renderInstance);
+ 
+         if (safety == eRenderSafetyInstanceSafe) {
+-            locker.reset( new QMutexLocker( &getNode()->getRenderInstancesSharedMutex() ) );
++            instanceLocker.reset( new QMutexLocker( &getNode()->getRenderInstancesSharedMutex() ) );
+         } else if (safety == eRenderSafetyUnsafe) {
+             const Plugin* p = getNode()->getPlugin();
+             assert(p);
+-            locker.reset( new QMutexLocker( p->getPluginLock() ) );
+-        } else {
+-            // no need to lock
+-            Q_UNUSED(locker);
++            pluginLocker.reset( new QMutexLocker( p->getPluginLock() ) );
+         }
+ 
+ 
+--- a/Engine/NodeGroup.cpp
++++ b/Engine/NodeGroup.cpp
+@@ -1654,7 +1654,7 @@
+         } else {
+ #if PY_MAJOR_VERSION >= 3
+             // Python 3 strings are unicode
+-            ret.append(QString::fromUtf8("\\u%1").arg(str[i].unicode(), 4, 16, QLatin1Char('0')));
++            ret.append(QString::fromUtf8("\\u%1").arg(static_cast<uint>(str[i].unicode()), 4, 16, QLatin1Char('0')));
+ #else
+             // Python 2: convert to Utf8
+             QByteArray utf8 = QString(str[i]).toUtf8();
+--- a/Engine/OSGLContext_x11.cpp
++++ b/Engine/OSGLContext_x11.cpp
+@@ -33,18 +33,19 @@
+ 
+ #include <dlfcn.h>
+ 
++// Qt headers must precede Xlib's Status and Bool macros.
++#include "Engine/AppManager.h"
++#include "Engine/OSGLContext.h"
++#include "Global/GLIncludes.h"
++
+ extern "C"
+ {
+ #include <X11/Xlib.h>
+ #include <X11/Xutil.h>
+ #include <X11/Xmd.h>
+ #include <X11/Xresource.h>
+ }
+ 
+-#include "Engine/AppManager.h"
+-#include "Engine/OSGLContext.h"
+-#include "Global/GLIncludes.h"
+-
+ #define GLX_VENDOR 1
+ #define GLX_RGBA_BIT 0x00000001
+ #define GLX_WINDOW_BIT 0x00000001
+--- a/Engine/Project.cpp
++++ b/Engine/Project.cpp
+@@ -758,7 +758,7 @@
+     if (canAutoSave) {
+         std::shared_ptr<QFutureWatcher<void> > watcher = std::make_shared<QFutureWatcher<void> >();
+         QObject::connect( watcher.get(), SIGNAL(finished()), this, SLOT(onAutoSaveFutureFinished()) );
+-        watcher->setFuture( QtConcurrent::run(this, &Project::autoSave) );
++        watcher->setFuture( QtConcurrent::run([this] { autoSave(); }) );
+         _imp->autoSaveFutures.push_back(watcher);
+     } else {
+         ///If the auto-save failed because a render is in progress, try every 2 seconds to auto-save.
+--- a/Engine/TrackerNodeInteract.cpp
++++ b/Engine/TrackerNodeInteract.cpp
+@@ -1099,7 +1099,7 @@
+ 
+     imageGetterWatcher = std::make_shared<TrackWatcher>();
+     QObject::connect( imageGetterWatcher.get(), SIGNAL(finished()), this, SLOT(onTrackImageRenderingFinished()) );
+-    imageGetterWatcher->setFuture( QtConcurrent::run(marker.get(), &TrackMarker::getMarkerImage, time, roi) );
++    imageGetterWatcher->setFuture( QtConcurrent::run([markerPtr = marker.get(), time, roi] { return markerPtr->getMarkerImage(time, roi); }) );
+ }
+ 
+ void
+@@ -1130,7 +1130,7 @@
+         TrackWatcherPtr watcher( new TrackWatcher() );
+         QObject::connect( watcher.get(), SIGNAL(finished()), this, SLOT(onKeyFrameImageRenderingFinished()) );
+         trackRequestsMap[k] = watcher;
+-        watcher->setFuture( QtConcurrent::run(track.get(), &TrackMarker::getMarkerImage, time, k.roi) );
++        watcher->setFuture( QtConcurrent::run([trackPtr = track.get(), time, roi = k.roi] { return trackPtr->getMarkerImage(time, roi); }) );
+     }
+ }
+ 
+--- a/Gui/GuiApplicationManager.cpp
++++ b/Gui/GuiApplicationManager.cpp
+@@ -946,7 +946,7 @@
+     QObject::connect( &_imp->updateSplashscreenTimer, SIGNAL(timeout()), this, SLOT(onFontconfigTimerTriggered()) );
+     _imp->updateSplashscreenTimer.start(1000);
+ 
+-    _imp->fontconfigUpdateWatcher->setFuture( QtConcurrent::run(_imp.get(), &GuiApplicationManagerPrivate::updateFontConfigCache) );
++    _imp->fontconfigUpdateWatcher->setFuture( QtConcurrent::run([imp = _imp.get()] { imp->updateFontConfigCache(); }) );
+ 
+     Gui::loadStyleSheet();
+ 
+--- a/Gui/ActionShortcuts.h
++++ b/Gui/ActionShortcuts.h
+@@ -657,7 +657,11 @@
+     ///The nativeSeqStr now contains only the symbol
+     QKeySequence newSeq(nativeSeqStr, QKeySequence::NativeText);
+     if (newSeq.count() > 0) {
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++        symbol = newSeq[0].key();
++#else
+         symbol = (Qt::Key)newSeq[0];
++#endif
+     } else {
+         symbol = (Qt::Key)0;
+     }
+
+Note: DocumentationManager.cpp — construct the static-page QFileInfo with a
+path argument instead of assigning a QString to it (invalid under Qt 6),
+keeping a fresh default-constructed QFileInfo plus explicit setFile() calls
+so caching behavior is unchanged.
+
+--- a/Gui/DocumentationManager.cpp
++++ b/Gui/DocumentationManager.cpp
+@@ -198,6 +198,6 @@
+     }
+     if ( !staticPage.isEmpty() ) {
+-        QFileInfo staticFileInfo = docDir + staticPage;
++        QFileInfo staticFileInfo(docDir + staticPage);
+         if ( ( isStatic && !staticFileInfo.exists() ) ||
+              ( !isStatic && staticFileInfo.exists() ) ) {
+             // must redirect
+@@ -510,9 +510,9 @@
+         QFileInfo staticFileInfo;
+ 
+         if ( page.startsWith( QString::fromUtf8("LOCAL_FILE/") ) ) {
+-            staticFileInfo = page.replace( QString::fromUtf8("LOCAL_FILE/"), QString::fromUtf8("") ).replace( QString::fromUtf8("%2520"), QString::fromUtf8(" ") ).replace( QString::fromUtf8("%20"), QString::fromUtf8(" ") );
++            staticFileInfo.setFile( page.replace( QString::fromUtf8("LOCAL_FILE/"), QString::fromUtf8("") ).replace( QString::fromUtf8("%2520"), QString::fromUtf8(" ") ).replace( QString::fromUtf8("%20"), QString::fromUtf8(" ") ) );
+         } else {
+-            staticFileInfo = docDir + page;
++            staticFileInfo.setFile(docDir + page);
+         }
+ #ifdef DEBUG
+         qDebug() << "www client requested page" << page << "->file" << staticFileInfo.absoluteFilePath();
+--- a/Gui/Gui15.cpp
++++ b/Gui/Gui15.cpp
+@@ -147,46 +147,46 @@
+     switch ( static_cast<int>(v) ) {
+     case 0:
+ 
+-        return QKeySequence(Qt::CTRL + Qt::ALT +  Qt::Key_1);
++        return QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_1);
+         break;
+     case 1:
+ 
+-        return QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_2);
++        return QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_2);
+         break;
+     case 2:
+ 
+-        return QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_3);
++        return QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_3);
+         break;
+     case 3:
+ 
+-        return QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_4);
++        return QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_4);
+         break;
+     case 4:
+ 
+-        return QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_5);
++        return QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_5);
+         break;
+     case 5:
+ 
+-        return QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_6);
++        return QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_6);
+         break;
+     case 6:
+ 
+-        return QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_7);
++        return QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_7);
+         break;
+     case 7:
+ 
+-        return QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_8);
++        return QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_8);
+         break;
+     case 8:
+ 
+-        return QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_9);
++        return QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_9);
+         break;
+     case 9:
+ 
+-        return QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_0);
++        return QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_0);
+         break;
+     default:
+ 
+         return QKeySequence();
+     }
+ }
+@@ -250,13 +250,13 @@
+     if (viewsCount == 2) {
+         QAction* left = new QAction(this);
+         left->setCheckable(false);
+-        left->setShortcut( QKeySequence(Qt::CTRL + Qt::Key_1) );
++        left->setShortcut( QKeySequence(Qt::CTRL | Qt::Key_1) );
+         _imp->viewersViewMenu->addAction(left);
+         left->setText( tr("Display Left View") );
+         QObject::connect( left, SIGNAL(triggered()), this, SLOT(showView0()) );
+         QAction* right = new QAction(this);
+         right->setCheckable(false);
+-        right->setShortcut( QKeySequence(Qt::CTRL + Qt::Key_2) );
++        right->setShortcut( QKeySequence(Qt::CTRL | Qt::Key_2) );
+         _imp->viewersViewMenu->addAction(right);
+         right->setText( tr("Display Right View") );
+         QObject::connect( right, SIGNAL(triggered()), this, SLOT(showView1()) );
+--- a/Gui/ViewerTab.cpp
++++ b/Gui/ViewerTab.cpp
+@@ -319,7 +319,7 @@
+     _imp->refreshButton->setFixedSize(buttonSize);
+     _imp->refreshButton->setIconSize(buttonIconSize);
+     {
+-        QKeySequence seq(Qt::CTRL + Qt::SHIFT);
++        QKeySequence seq(static_cast<int>(Qt::CTRL) | static_cast<int>(Qt::SHIFT));
+         std::list<std::string> refreshActions;
+         refreshActions.push_back(kShortcutIDActionRefresh);
+         refreshActions.push_back(kShortcutIDActionRefreshWithStats);
+@@ -337,8 +337,8 @@
+     _imp->pauseButton->setCheckable(true);
+     _imp->pauseButton->setChecked(false);
+     _imp->pauseButton->setDown(false);
+     {
+-        QKeySequence seq(Qt::CTRL + Qt::SHIFT);
++        QKeySequence seq(static_cast<int>(Qt::CTRL) | static_cast<int>(Qt::SHIFT));
+         std::list<std::string> actions;
+         actions.push_back(kShortcutIDActionPauseViewerInputA);
+         actions.push_back(kShortcutIDActionPauseViewer);
+--- a/Gui/SequenceFileDialog.cpp
++++ b/Gui/SequenceFileDialog.cpp
+@@ -783,12 +783,12 @@
+ {
+     QAction *goHomeAction =  new QAction(this);
+ 
+-    goHomeAction->setShortcut(Qt::CTRL + Qt::Key_H + Qt::SHIFT);
++    goHomeAction->setShortcut(Qt::CTRL | Qt::SHIFT | Qt::Key_H);
+     QObject::connect( goHomeAction, SIGNAL(triggered()), this, SLOT(goHome()) );
+     addAction(goHomeAction);
+ 
+ 
+     QAction *goToParent =  new QAction(this);
+-    goToParent->setShortcut(Qt::CTRL + Qt::UpArrow);
++    goToParent->setShortcut(QKeySequence(static_cast<int>(Qt::CTRL) | static_cast<int>(Qt::UpArrow)));
+     QObject::connect( goToParent, SIGNAL(triggered()), this, SLOT(parentFolder()) );
+     addAction(goToParent);
+--- a/Gui/GuiApplicationManagerPrivate.h
++++ b/Gui/GuiApplicationManagerPrivate.h
+@@ -34,6 +34,7 @@
+ 
+ CLANG_DIAG_OFF(deprecated)
+ CLANG_DIAG_OFF(uninitialized)
++#include <QCursor>
+ #include <QFutureWatcher>
+ #include <QString>
+ #include <QTimer>

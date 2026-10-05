@@ -1,0 +1,39 @@
+Use the current Qt5.15/Qt6 signals for palette ids, file paths and errors.
+
+The old SIGNAL strings compile but fail to connect under Qt6, which removed
+buttonClicked(int), activated(QString) and error(QProcess::ProcessError).
+Typed connections use existing slots and retain the id/text/error values
+while catching incompatible future signatures at compile time.
+
+Upstream: Qt6 portability for pinned 3763d805d7d277d10af10025ae41af677682b3e6.
+
+--- a/Gui/ColorSelectorWidget.cpp
++++ b/Gui/ColorSelectorWidget.cpp
+@@ -649,2 +649,2 @@
+-    QObject::connect( _buttonColorGroup, SIGNAL( buttonClicked(int) ),
+-                      this, SLOT( handleButtonColorClicked(int) ) );
++    QObject::connect( _buttonColorGroup, &QButtonGroup::idClicked,
++                      this, &ColorSelectorWidget::handleButtonColorClicked );
+--- a/Engine/ProcessHandler.cpp
++++ b/Engine/ProcessHandler.cpp
+@@ -102,7 +102,7 @@
+     ///connect the useful slots of the process
+     QObject::connect( _process, SIGNAL(readyReadStandardOutput()), this, SLOT(onStandardOutputBytesWritten()) );
+     QObject::connect( _process, SIGNAL(readyReadStandardError()), this, SLOT(onStandardErrorBytesWritten()) );
+-    QObject::connect( _process, SIGNAL(error(QProcess::ProcessError)), this, SLOT(onProcessError(QProcess::ProcessError)) );
++    QObject::connect( _process, &QProcess::errorOccurred, this, &ProcessHandler::onProcessError );
+     QObject::connect( _process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(onProcessEnd(int,QProcess::ExitStatus)) );
+ 
+ 
+--- a/Gui/SequenceFileDialog.cpp
++++ b/Gui/SequenceFileDialog.cpp
+@@ -238,7 +238,8 @@
+     _lookInCombobox = new FileDialogComboBox(this, _buttonsWidget);
+     _lookInCombobox->setMinimumWidth(200);
+     _buttonsLayout->addWidget(_lookInCombobox);
+-    QObject::connect( _lookInCombobox, SIGNAL(activated(QString)), this, SLOT(onLookingComboboxChanged(QString)) );
++    QObject::connect( _lookInCombobox, &QComboBox::textActivated,
++                      this, &SequenceFileDialog::onLookingComboboxChanged );
+     _lookInCombobox->setInsertPolicy(QComboBox::NoInsert);
+     _lookInCombobox->setDuplicatesEnabled(false);
+ 

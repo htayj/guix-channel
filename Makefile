@@ -58,7 +58,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	lambdahack kimchi keeperrl \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
-	lispy-rogue bodge-nuklear litegraph
+	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -113,7 +113,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-gearhead2 check-gearhead check-fiqhack \
 	check-evilhack check-dynahack check-alone-rl check-allure \
 	check-agduria check-wenyan check-ludviglundgren-qbittorrent-cli \
-	check-lispy-rogue check-bodge-nuklear check-litegraph
+	check-lispy-rogue check-bodge-nuklear check-litegraph check-interlisp-medley check-natron
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
 		{ echo "expected $(EXPECTED_SOURCE_PACKAGE_COUNT) exported source packages, found $(SOURCE_PACKAGE_COUNT)"; exit 1; }
@@ -797,3 +797,13 @@ check-bodge-nuklear:
 check-litegraph:
 	@test -n "$(LITEGRAPH_OUTPUT)" -a -n "$(LITEGRAPH_EVIDENCE)" || { echo 'Set LITEGRAPH_OUTPUT and LITEGRAPH_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/litegraph-smoke.sh "$(LITEGRAPH_OUTPUT)" "$(LITEGRAPH_EVIDENCE)"
+
+.PHONY: check-interlisp-medley
+check-interlisp-medley:
+	@test -n "$(INTERLISP_MEDLEY_OUTPUT)" -a -n "$(INTERLISP_MEDLEY_EVIDENCE)" || { echo 'Set INTERLISP_MEDLEY_OUTPUT and INTERLISP_MEDLEY_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/interlisp-medley-smoke.sh "$(INTERLISP_MEDLEY_OUTPUT)" "$(INTERLISP_MEDLEY_EVIDENCE)"
+
+.PHONY: check-natron
+check-natron:
+	@test -n "$(NATRON_OUTPUT)" -a -n "$(NATRON_EVIDENCE)" || { echo 'Set NATRON_OUTPUT and NATRON_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/natron-smoke.sh "$(NATRON_OUTPUT)" "$(NATRON_EVIDENCE)"

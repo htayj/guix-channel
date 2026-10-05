@@ -1,0 +1,613 @@
+Migrate Natron's remaining regular expressions to QtCore's Qt6 API.
+
+Use QRegularExpression and explicit match objects, including highlighter
+members and the optional matched-length completion branch. Whole-string
+matches use anchoredPattern; backup suffixes use strict end-of-string
+anchoring. Keep Unicode character classes and dot-all behavior where the
+old patterns depend on them. Remove obsolete QRegExp and QDesktopWidget
+includes.
+
+Qt's standard wildcard conversion is not the old QRegExp dialect: it
+restricts path separators, changes [!...] semantics, and does not implement
+WildcardUnix escapes. Keep that dialect's focused pattern conversion in the
+existing QtCompat namespace, with direct QRegularExpression callers (no
+Core5Compat or QRegExp emulation). Searches remain unanchored; exact matches
+are anchored. No Qt6.6 API or new Qt minimum is required.
+
+The dialect translator is adapted from Qt's wc2rx:
+https://github.com/qt/qt5compat/blob/6.6/src/core5/text/qregexp.cpp
+Copyright (C) 2016 The Qt Company Ltd.
+Original license: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only
+OR GPL-3.0-only; attribution is also retained in the helper.
+
+Upstream: Qt6 portability for pinned 3763d805d7d277d10af10025ae41af677682b3e6.
+
+--- a/Global/QtCompat.h
++++ b/Global/QtCompat.h
+@@ -46,6 +46,99 @@
+     return extension;
+ }
+ 
++// Adapted from Qt's wc2rx, Copyright (C) 2016 The Qt Company Ltd.
++// Original license: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only
++// OR GPL-3.0-only. Source: qt5compat/src/core5/text/qregexp.cpp (Qt 6.6).
++// Convert Natron's legacy wildcard syntax, not filepath globbing: '*' and '?'
++// also match separators. Callers choose anchoring and enable dot-all matching.
++// unixEscaping distinguishes the former WildcardUnix and Wildcard modes.
++inline QString
++wildcardToRegularExpression(const QString& wildcard, bool unixEscaping = false)
++{
++    QString pattern;
++    pattern.reserve(wildcard.size());
++    bool escaping = false;
++    for (int i = 0; i < wildcard.size(); ++i) {
++        const QChar c = wildcard.at(i);
++        switch (c.unicode()) {
++        case '\\':
++            if (!unixEscaping || escaping) {
++                pattern += QLatin1String("\\\\");
++            }
++            if (unixEscaping && i + 1 == wildcard.size()) {
++                pattern += QLatin1String("\\\\");
++            }
++            escaping = true;
++            break;
++        case '*':
++        case '?':
++            if (escaping) {
++                pattern += QLatin1Char('\\');
++                pattern += c;
++                escaping = false;
++            } else {
++                pattern += QLatin1Char('.');
++                if (c == QLatin1Char('*')) {
++                    pattern += QLatin1Char('*');
++                }
++            }
++            break;
++        case '[':
++            if (escaping) {
++                pattern += QLatin1String("\\[");
++                escaping = false;
++            } else {
++                pattern += c;
++                if (i + 1 < wildcard.size() && wildcard.at(i + 1) == QLatin1Char('^')) {
++                    pattern += wildcard.at(++i);
++                }
++                if (i + 1 < wildcard.size() && wildcard.at(i + 1) == QLatin1Char(']')) {
++                    pattern += wildcard.at(++i);
++                }
++                while (i + 1 < wildcard.size() && wildcard.at(i + 1) != QLatin1Char(']')) {
++                    const QChar member = wildcard.at(++i);
++                    if (member == QLatin1Char('\\')) {
++                        pattern += QLatin1Char('\\');
++                    }
++                    pattern += member;
++                }
++            }
++            break;
++        case ']':
++            if (escaping) {
++                pattern += QLatin1Char('\\');
++                escaping = false;
++            }
++            pattern += c;
++            break;
++        case '$':
++        case '(':
++        case ')':
++        case '+':
++        case '.':
++        case '^':
++        case '{':
++        case '|':
++        case '}':
++            if (escaping) {
++                pattern += QLatin1String("\\\\");
++                escaping = false;
++            }
++            pattern += QLatin1Char('\\');
++            pattern += c;
++            break;
++        default:
++            if (escaping) {
++                pattern += QLatin1String("\\\\");
++                escaping = false;
++            }
++            pattern += c;
++            break;
++        }
++    }
++    return pattern;
++}
++
+ // Define compatibility typedefs so code builds with Qt5 & Qt6
+ #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+ typedef QEnterEvent QEnterEvent;
+--- a/Engine/FileSystemModel.cpp
++++ b/Engine/FileSystemModel.cpp
+@@ -47,6 +47,8 @@
+ #include <QDebug>
+ #include <QUrl>
+ #include <QMimeData>
++#include <QRegularExpression>
++#include "Global/QtCompat.h"
+ CLANG_DIAG_ON(deprecated)
+ CLANG_DIAG_ON(uninitialized)
+ 
+@@ -193,7 +195,7 @@
+     QStringList headers;
+     QDir::Filters filters;
+     QString encodedRegexps;
+-    std::list<QRegExp> regexps;
++    std::list<QRegularExpression> regexps;
+     mutable QMutex filtersMutex;
+     mutable QMutex sequenceModeEnabledMutex;
+     bool sequenceModeEnabled;
+@@ -1041,7 +1043,8 @@
+                 ++i;
+             }
+             if ( regExp != QString( QLatin1Char('*') ) ) {
+-                QRegExp rx(regExp, Qt::CaseInsensitive, QRegExp::Wildcard);
++                QRegularExpression rx(QRegularExpression::anchoredPattern(QtCompat::wildcardToRegularExpression(regExp)),
++                                      QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
+                 if ( rx.isValid() ) {
+                     _imp->regexps.push_back(rx);
+                 }
+@@ -1082,8 +1085,8 @@
+         return true;
+     }
+ 
+-    for (std::list<QRegExp>::const_iterator it = _imp->regexps.begin(); it != _imp->regexps.end(); ++it) {
+-        if ( it->exactMatch(path) ) {
++    for (std::list<QRegularExpression>::const_iterator it = _imp->regexps.begin(); it != _imp->regexps.end(); ++it) {
++        if ( it->match(path).hasMatch() ) {
+             return true;
+         }
+     }
+--- a/Engine/Markdown.cpp
++++ b/Engine/Markdown.cpp
+@@ -30,7 +30,7 @@
+ CLANG_DIAG_OFF(deprecated)
+ CLANG_DIAG_OFF(uninitialized)
+ #include <QTextStream>
+-#include <QRegExp>
++#include <QRegularExpression>
+ CLANG_DIAG_ON(deprecated)
+ CLANG_DIAG_ON(uninitialized)
+ 
+@@ -79,7 +79,7 @@
+ Markdown::parseCustomLinksForHTML(const QString& markdown)
+ {
+     QString result = markdown;
+-    QRegExp rx( QString::fromUtf8("(\\|html::[^|]*\\|)\\|rst::[^|]*\\|") );
++    QRegularExpression rx( QString::fromUtf8("(\\|html::[^|]*\\|)\\|rst::[^|]*\\|") );
+     result.replace( rx, QString::fromUtf8("\\1") );
+ 
+     return result;
+@@ -105,9 +105,8 @@
+     QStringList list = html.split( QString::fromUtf8("\n") );
+     Q_FOREACH(const QString &line, list) {
+         if ( line.startsWith(QString::fromUtf8("<h2>")) ) {
+-            QRegExp rx( QString::fromUtf8("<h2>(.*)</h2>") );
+-            rx.indexIn(line);
+-            QString header = rx.cap(1);
++            QRegularExpression rx( QString::fromUtf8("<h2>(.*)</h2>"), QRegularExpression::DotMatchesEverythingOption );
++            QString header = rx.match(line).captured(1);
+             QString headerLink = header.toLower();
+             headerLink.replace( QString::fromUtf8(" "), QString::fromUtf8("-") );
+             result.append(QString::fromUtf8("<h2 id=\"%1\">%2</h2>").arg(headerLink).arg(header));
+--- a/Engine/Node.cpp
++++ b/Engine/Node.cpp
+@@ -42,7 +42,6 @@
+ #include <QWaitCondition>
+ #include <QTextStream>
+ #include <QFile>
+-#include <QRegExp>
+ 
+ #include <ofxNatron.h>
+ 
+--- a/Engine/NodeDocumentation.cpp
++++ b/Engine/NodeDocumentation.cpp
+@@ -27,6 +27,7 @@
+ 
+ #include <QTextStream>
+ #include <QFile>
++#include <QRegularExpression>
+ 
+ #include "Engine/EffectInstance.h"
+ #include "Engine/KnobTypes.h"
+@@ -409,7 +410,7 @@
+             pluginDescription = NATRON_NAMESPACE::convertFromPlainText(pluginDescription, NATRON_NAMESPACE::WhiteSpaceNormal);
+ 
+             // replace URLs with links
+-            QRegExp re( QString::fromUtf8("((http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?)") );
++            QRegularExpression re( QString::fromUtf8("((http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?)"), QRegularExpression::UseUnicodePropertiesOption );
+             pluginDescription.replace( re, QString::fromUtf8("<a href=\"\\1\">\\1</a>") );
+         } else {
+             pluginDescription = convertFromPlainTextToMarkdown(pluginDescription, genHTML, false);
+--- a/Engine/OutputEffectInstance.cpp
++++ b/Engine/OutputEffectInstance.cpp
+@@ -35,7 +35,7 @@
+ #include <QReadWriteLock>
+ #include <QCoreApplication>
+ #include <QThread>
+-#include <QRegExp>
++#include <QRegularExpression>
+ #include <QtConcurrentMap> // QtCore on Qt4, QtConcurrent on Qt5
+ #include <QtConcurrentRun> // QtCore on Qt4, QtConcurrent on Qt5
+ 
+@@ -268,7 +268,7 @@
+         std::size_t foundHash = pattern.find_first_of("#");
+         if (foundHash == std::string::npos) {
+             // Look for printf style numbering
+-            QRegExp exp(QString::fromUtf8("%[0-9]*d"));
++            QRegularExpression exp(QString::fromUtf8("%[0-9]*d"));
+             QString qp(QString::fromUtf8(pattern.c_str()));
+             if (!qp.contains(exp)) {
+                 QString message = tr("You are trying to render the frame range [%1 - %2] but you did not specify any hash ('#') character(s) or printf-like format ('%d') for the padding. This will result in the same image being overwritten multiple times.").arg(first).arg(last);
+--- a/Engine/Project.cpp
++++ b/Engine/Project.cpp
+@@ -54,6 +54,7 @@
+ #include <QDebug>
+ #include <QTextStream>
+ #include <QHostInfo>
++#include <QRegularExpression>
+ #include <QtConcurrentRun> // QtCore on Qt4, QtConcurrent on Qt5
+ 
+ #include <ofxhXml.h> // OFX::XML::escape
+@@ -504,7 +505,7 @@
+         ret.append(filePath);
+     }
+     // find files matching filePath.~[0-9]+~
+-    QRegExp rx(QString::fromUtf8("\\.~(\\d+)~$"));
++    QRegularExpression rx(QString::fromUtf8("\\.~(\\d+)~\\z"), QRegularExpression::UseUnicodePropertiesOption);
+     QFileInfo fileInfo(filePath);
+     QString fileName = fileInfo.fileName();
+     QDirIterator it(fileInfo.dir());
+@@ -518,7 +519,7 @@
+ 
+         // If the filename contains target string - put it in the hitlist
+         QString fn = file.fileName();
+-        if (fn.startsWith(fileName) && rx.lastIndexIn(fn) == fileName.size()) {
++        if (fn.startsWith(fileName) && rx.match(fn).capturedStart() == fileName.size()) {
+             ret.append(file.filePath());
+         }
+     }
+@@ -532,10 +533,11 @@
+ static QString
+ nextBackup(const QString & filePath)
+ {
+-    QRegExp rx(QString::fromUtf8("\\.~(\\d+)~$"));
+-    int pos = rx.lastIndexIn(filePath);
+-    if (pos >= 0) {
+-        int i = rx.cap(1).toInt();
++    QRegularExpression rx(QString::fromUtf8("\\.~(\\d+)~\\z"), QRegularExpression::UseUnicodePropertiesOption);
++    QRegularExpressionMatch match = rx.match(filePath);
++    int pos = match.capturedStart();
++    if (match.hasMatch()) {
++        int i = match.captured(1).toInt();
+         return filePath.left(pos) + QString::fromUtf8(".~%1~").arg(i+1);
+     } else {
+         return filePath + QString::fromUtf8(".~1~");
+--- a/Gui/FileTypeMainWindow_win.cpp
++++ b/Gui/FileTypeMainWindow_win.cpp
+@@ -51,7 +51,7 @@
+ #include <QApplication>
+ #include <QDir>
+ #include <QFileInfo>
+-#include <QRegExp>
++#include <QRegularExpression>
+ 
+ NATRON_NAMESPACE_ENTER
+ 
+@@ -283,9 +283,11 @@
+         return true;
+     }
+ 
+-    QRegExp regCommand( QString::fromUtf8("^\\[(\\w+)\\((.*)\\)\\]$") );
+-    if ( regCommand.exactMatch(command) ) {
+-        executeDdeCommand( regCommand.cap(1), regCommand.cap(2) );
++    QRegularExpression regCommand(QRegularExpression::anchoredPattern(QString::fromUtf8("\\[(\\w+)\\((.*)\\)\\]")),
++                                  QRegularExpression::DotMatchesEverythingOption | QRegularExpression::UseUnicodePropertiesOption);
++    QRegularExpressionMatch match = regCommand.match(command);
++    if ( match.hasMatch() ) {
++        executeDdeCommand( match.captured(1), match.captured(2) );
+     }
+ 
+     *result = 0;
+@@ -345,15 +347,16 @@
+ DocumentWindow::executeDdeCommand(const QString& command,
+                                   const QString& params)
+ {
+-    QRegExp regCommand( QString::fromUtf8("^\"(.*)\"$") );
+-    bool singleCommand = regCommand.exactMatch(params);
++    QRegularExpression regCommand(QRegularExpression::anchoredPattern(QString::fromUtf8("\"(.*)\"")), QRegularExpression::DotMatchesEverythingOption);
++    QRegularExpressionMatch match = regCommand.match(params);
++    bool singleCommand = match.hasMatch();
+ 
+     if ( ( 0 == command.compare(QString::fromUtf8("open"), Qt::CaseInsensitive) ) && singleCommand ) {
+-        ddeOpenFile( regCommand.cap(1) );
++        ddeOpenFile( match.captured(1) );
+     } else if ( ( 0 == command.compare(QString::fromUtf8("new"), Qt::CaseInsensitive) ) && singleCommand ) {
+-        ddeNewFile( regCommand.cap(1) );
++        ddeNewFile( match.captured(1) );
+     } else if ( ( 0 == command.compare(QString::fromUtf8("print"), Qt::CaseInsensitive) ) && singleCommand ) {
+-        ddePrintFile( regCommand.cap(1) );
++        ddePrintFile( match.captured(1) );
+     } else {
+         executeUnknownDdeCommand(command, params);
+     }
+--- a/Gui/NodeCreationDialog.cpp
++++ b/Gui/NodeCreationDialog.cpp
+@@ -37,8 +37,8 @@
+ #include <QApplication>
+ #include <QListView>
+ #include <QSettings>
+-#include <QDesktopWidget>
+-#include <QRegExp>
++#include <QRegularExpression>
++#include "Global/QtCompat.h"
+ #include <QApplication>
+ #include <QStringListModel>
+ CLANG_DIAG_ON(deprecated)
+@@ -151,13 +151,16 @@
+             pattern.push_back(txt[i]);
+         }
+         pattern.push_back( QLatin1Char('*') );
+-        QRegExp expr(pattern, Qt::CaseInsensitive, QRegExp::WildcardUnix);
++        QRegularExpression expr(QtCompat::wildcardToRegularExpression(pattern, true),
++                                QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
+ 
+ #ifdef NODE_TAB_DIALOG_USE_MATCHED_LENGTH
++        QRegularExpression exactExpr(QRegularExpression::anchoredPattern(expr.pattern()), expr.patternOptions());
+         std::map<int, QStringList> matchOrdered;
+         for (PluginsNamesMap::iterator it = _imp->names.begin(); it != _imp->names.end(); ++it) {
+-            if ( expr.exactMatch(it->second.first) ) {
+-                QStringList& matchedForLength =  matchOrdered[expr.matchedLength()];
++            QRegularExpressionMatch match = exactExpr.match(it->second.first);
++            if ( match.hasMatch() ) {
++                QStringList& matchedForLength = matchOrdered[match.capturedLength()];
+                 matchedForLength.push_front(it->second.second);
+             }
+         }
+--- a/Gui/NodeGraph45.cpp
++++ b/Gui/NodeGraph45.cpp
+@@ -38,6 +38,7 @@
+ #include <QKeyEvent>
+ #include <QApplication>
+ #include <QCheckBox>
++#include <QRegularExpression>
+ GCC_DIAG_UNUSED_PRIVATE_FIELD_ON
+ CLANG_DIAG_ON(deprecated)
+ CLANG_DIAG_ON(uninitialized)
+@@ -368,14 +369,15 @@
+     }
+     Qt::CaseSensitivity sensitivity = _imp->caseSensitivity->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
+     const NodesGuiList& activeNodes = _imp->graph->getAllActiveNodes();
+-    QRegExp exp(_imp->matchWhole->isChecked() ? filter :
+-                ( QChar::fromLatin1('*') + filter + QChar::fromLatin1('*') ),
+-                sensitivity,
+-                QRegExp::Wildcard);
++    QRegularExpression exp(QRegularExpression::anchoredPattern(QtCompat::wildcardToRegularExpression(
++                               _imp->matchWhole->isChecked() ? filter :
++                               ( QChar::fromLatin1('*') + filter + QChar::fromLatin1('*') ))),
++                           QRegularExpression::DotMatchesEverythingOption |
++                           (sensitivity == Qt::CaseInsensitive ? QRegularExpression::CaseInsensitiveOption : QRegularExpression::NoPatternOption));
+ 
+     if ( exp.isValid() ) {
+         for (NodesGuiList::const_iterator it = activeNodes.begin(); it != activeNodes.end(); ++it) {
+-            if ( (*it)->isVisible() && exp.exactMatch( QString::fromUtf8( (*it)->getNode()->getLabel().c_str() ) ) ) {
++            if ( (*it)->isVisible() && exp.match( QString::fromUtf8( (*it)->getNode()->getLabel().c_str() ) ).hasMatch() ) {
+                 _imp->nodeResults.push_back(*it);
+             }
+         }
+--- a/Gui/PreferencesPanel.cpp
++++ b/Gui/PreferencesPanel.cpp
+@@ -42,6 +42,8 @@
+ #include <QStyledItemDelegate>
+ #include <QHeaderView>
+ #include <QPainter>
++#include <QRegularExpression>
++#include "Global/QtCompat.h"
+ CLANG_DIAG_ON(deprecated)
+ CLANG_DIAG_ON(uninitialized)
+ 
+@@ -819,7 +821,8 @@
+             pattern.push_back(txt[i]);
+         }
+         pattern.push_back( QLatin1Char('*') );
+-        QRegExp expr(pattern, Qt::CaseInsensitive, QRegExp::WildcardUnix);
++        QRegularExpression expr(QtCompat::wildcardToRegularExpression(pattern, true),
++                                QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
+         std::list<QTreeWidgetItem*> itemsToDisplay;
+         for (PluginTreeNodeList::iterator it = _imp->pluginsList.begin(); it != _imp->pluginsList.end(); ++it) {
+             if ( it->plugin && it->plugin->getLabelWithoutSuffix().contains(expr) ) {
+--- a/Gui/RenderStatsDialog.cpp
++++ b/Gui/RenderStatsDialog.cpp
+@@ -34,7 +34,8 @@
+ #include <QHeaderView>
+ #include <QCheckBox>
+ #include <QItemSelectionModel>
+-#include <QRegExp>
++#include <QRegularExpression>
++#include "Global/QtCompat.h"
+ 
+ #include "Engine/Node.h"
+ #include "Engine/Timer.h"
+@@ -1010,12 +1011,14 @@
+ 
+ 
+     if ( useUnixWildcardsCheckbox->isChecked() ) {
+-        QRegExp nameExpr(nameFilter, Qt::CaseInsensitive, QRegExp::Wildcard);
++        QRegularExpression nameExpr(QRegularExpression::anchoredPattern(QtCompat::wildcardToRegularExpression(nameFilter)),
++                                    QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
+         if ( !nameExpr.isValid() ) {
+             return;
+         }
+ 
+-        QRegExp idExpr(pluginIDFilter, Qt::CaseInsensitive, QRegExp::Wildcard);
++        QRegularExpression idExpr(QRegularExpression::anchoredPattern(QtCompat::wildcardToRegularExpression(pluginIDFilter)),
++                                  QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
+         if ( !idExpr.isValid() ) {
+             return;
+         }
+@@ -1028,8 +1031,8 @@
+                 continue;
+             }
+ 
+-            if ( ( nameFilter.isEmpty() || nameExpr.exactMatch( QString::fromUtf8( node->getLabel().c_str() ) ) ) &&
+-                 ( pluginIDFilter.isEmpty() || idExpr.exactMatch( QString::fromUtf8( node->getPluginID().c_str() ) ) ) ) {
++            if ( ( nameFilter.isEmpty() || nameExpr.match( QString::fromUtf8( node->getLabel().c_str() ) ).hasMatch() ) &&
++                 ( pluginIDFilter.isEmpty() || idExpr.match( QString::fromUtf8( node->getPluginID().c_str() ) ).hasMatch() ) ) {
+                 if ( view->isRowHidden(i, rootIdx) ) {
+                     view->setRowHidden(i, rootIdx, false);
+                 }
+--- a/Gui/ScriptTextEdit.cpp
++++ b/Gui/ScriptTextEdit.cpp
+@@ -33,7 +33,7 @@
+ #include <QScrollBar>
+ #include <QTextBlock>
+ #include <QPainter>
+-#include <QRegExp>
++#include <QRegularExpression>
+ #include <QMimeData>
+ CLANG_DIAG_ON(deprecated)
+ CLANG_DIAG_ON(uninitialized)
+@@ -58,13 +58,13 @@
+                     const QTextCharFormat &matchingFormat)
+     {
+         originalRuleStr = patternStr;
+-        pattern = QRegExp(patternStr);
++        pattern = QRegularExpression(patternStr, QRegularExpression::DotMatchesEverythingOption | QRegularExpression::UseUnicodePropertiesOption);
+         nth = n;
+         format = matchingFormat;
+     }
+ 
+     QString originalRuleStr;
+-    QRegExp pattern;
++    QRegularExpression pattern;
+     int nth;
+     QTextCharFormat format;
+ };
+@@ -77,8 +77,8 @@
+     QStringList braces;
+     QHash<QString, QTextCharFormat> basicStyles;
+     QList<PyHighLightRule> rules;
+-    QRegExp triSingleQuote;
+-    QRegExp triDoubleQuote;
++    QRegularExpression triSingleQuote;
++    QRegularExpression triDoubleQuote;
+ 
+     PySyntaxHighlighterPrivate(PySyntaxHighlighter* publicInterface)
+         : publicInterface(publicInterface)
+@@ -125,13 +125,13 @@
+ PySyntaxHighlighter::highlightBlock(const QString &text)
+ {
+     for (QList<PyHighLightRule>::Iterator it = _imp->rules.begin(); it != _imp->rules.end(); ++it) {
+-        int idx = it->pattern.indexIn(text, 0);
+-        while (idx >= 0) {
++        QRegularExpressionMatch match = it->pattern.match(text);
++        while (match.hasMatch()) {
+             // Get index of Nth match
+-            idx = it->pattern.pos(it->nth);
+-            int length = it->pattern.cap(it->nth).length();
++            int idx = match.capturedStart(it->nth);
++            int length = match.capturedLength(it->nth);
+             setFormat(idx, length, it->format);
+-            idx = it->pattern.indexIn(text, idx + length);
++            match = it->pattern.match(text, idx + length);
+         }
+     }
+ 
+@@ -186,7 +186,7 @@
+ 
+ bool
+ PySyntaxHighlighter::matchMultiline(const QString &text,
+-                                    const QRegExp &delimiter,
++                                    const QRegularExpression &delimiter,
+                                     const int inState,
+                                     const QTextCharFormat &style)
+ {
+@@ -201,18 +201,20 @@
+         start = 0;
+         add = 0;
+     } else {
+-        start = delimiter.indexIn(text);
++        QRegularExpressionMatch match = delimiter.match(text);
++        start = match.capturedStart();
+         // Move past this match
+-        add = delimiter.matchedLength();
++        add = match.capturedLength();
+     }
+ 
+     // As long as there's a delimiter match on this line...
+     while (start >= 0) {
+         // Look for the ending delimiter
+-        end = delimiter.indexIn(text, start + add);
++        QRegularExpressionMatch match = delimiter.match(text, start + add);
++        end = match.capturedStart();
+         // Ending delimiter on this line?
+         if (end >= add) {
+-            length = end - start + add + delimiter.matchedLength();
++            length = end - start + add + match.capturedLength();
+             setCurrentBlockState(0);
+         } else {
+             // No= multi-line string
+@@ -221,7 +223,7 @@
+         }
+         // Apply formatting and look for next
+         setFormat(start, length, style);
+-        start = delimiter.indexIn(text, start + length);
++        start = delimiter.match(text, start + length).capturedStart();
+     }
+     // Return True if still inside a multi-line string, False otherwise
+     if (currentBlockState() == inState) {
+--- a/Gui/ScriptTextEdit.h
++++ b/Gui/ScriptTextEdit.h
+@@ -34,6 +34,7 @@
+ #include <QTextEdit>
+ #include <QPlainTextEdit>
+ #include <QSyntaxHighlighter>
++#include <QRegularExpression>
+ CLANG_DIAG_ON(deprecated)
+ CLANG_DIAG_ON(uninitialized)
+ 
+@@ -59,7 +60,7 @@
+ private:
+ 
+     virtual void highlightBlock(const QString &text) OVERRIDE FINAL;
+-    bool matchMultiline(const QString &text, const QRegExp &delimiter, const int inState, const QTextCharFormat &style);
++    bool matchMultiline(const QString &text, const QRegularExpression &delimiter, const int inState, const QTextCharFormat &style);
+ 
+     std::unique_ptr<PySyntaxHighlighterPrivate> _imp;
+ };
+--- a/Gui/SequenceFileDialog.h
++++ b/Gui/SequenceFileDialog.h
+@@ -47,7 +47,6 @@
+ #include <QStringList>
+ #include <QDir>
+ #include <QUrl>
+-#include <QRegExp>
+ #include <QLatin1Char>
+ #include <QSize>
+ #include <QComboBox>
+--- a/Gui/ViewerGL.cpp
++++ b/Gui/ViewerGL.cpp
+@@ -39,6 +39,7 @@
+ #include <QApplication> // qApp
+ #include <QScreen>
+ #include <QWindow>
++#include <QRegularExpression>
+ 
+ GCC_DIAG_UNUSED_PRIVATE_FIELD_OFF
+ // /opt/local/include/QtGui/qmime.h:119:10: warning: private field 'type' is not used [-Wunused-private-field]
+@@ -1069,7 +1070,7 @@
+ static QStringList
+ explode(const QString& str)
+ {
+-    QRegExp rx( QString::fromUtf8("(\\ |\\-|\\.|\\/|\\t|\\n)") ); //RegEx for ' ' '/' '.' '-' '\t' '\n'
++    QRegularExpression rx( QString::fromUtf8("(\\ |\\-|\\.|\\/|\\t|\\n)") ); //RegEx for ' ' '/' '.' '-' '\t' '\n'
+     QStringList ret;
+     int startIndex = 0;
+ 
