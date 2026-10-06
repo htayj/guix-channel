@@ -58,7 +58,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	lambdahack kimchi keeperrl \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
-	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack
+	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -233,6 +233,11 @@ check-minttea:
 check-rust-effects:
 	@test -n "$(RUST_EFFECTS_OUTPUT)" -a -n "$(RUST_EFFECTS_EVIDENCE)" || { echo 'Set RUST_EFFECTS_OUTPUT and RUST_EFFECTS_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/rust-effects-smoke.sh "$(RUST_EFFECTS_OUTPUT)" "$(RUST_EFFECTS_EVIDENCE)"
+
+.PHONY: check-meta-typing
+check-meta-typing:
+	@test -n "$(META_TYPING_OUTPUT)" -a -n "$(META_TYPING_EVIDENCE)" || { echo 'Set META_TYPING_OUTPUT and META_TYPING_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/meta-typing-smoke.sh "$(META_TYPING_OUTPUT)" "$(META_TYPING_EVIDENCE)"
 
 check-tui:
 	GUIX="$(GUIX)" sh tests/tui-smoke.sh

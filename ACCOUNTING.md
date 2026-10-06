@@ -55,6 +55,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [UC Explorer native microcode parser](#uc-explorer--verified-native-microcode-parser)
 - [Blincolnlights native PDP-1 panel and PDP-5 memory path](#blincolnlights--verified-native-pdp-1-panel-and-pdp-5-memory-path)
 - [Rust Effects offline library and external consumer](#rust-effects--verified-offline-library-and-external-consumer)
+- [Meta Typing offline type-level library and external consumer](#meta-typing--verified-offline-type-level-library-and-external-consumer)
 
 ## Relocation map (2026-10-04)
 
@@ -120,6 +121,15 @@ Rust Effects and the unrelated unpublished Dualmaster entry. The 235 count
 is not the Rust Effects publication inventory or acceptance of Dualmaster.
 The earlier 234 integrated figure is the pre-Rust Effects snapshot, retained
 as dated history.
+Meta Typing's separate 2026-10-06 acceptance adds exactly **one**
+`PROJECT_PACKAGES` entry and one README library row. Main's published baseline
+`c7747f8` has **234** check names (226 project + 7 font + 1 optional
+proprietary); the Meta-only candidate inventory is **235** (227 + 7 + 1).
+The integrated working tree has **236**, including the unrelated unpublished
+Dualmaster entry. That integrated count does not accept or publish Dualmaster,
+and the candidate count is not itself evidence of Meta Typing publication.
+Its 246 private npm test-tool archives are dependency closure, not top-level
+programs or additions to the canonical 629 preservation snapshots.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -144,6 +154,122 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Meta Typing — verified offline type-level library and external consumer
+
+Local acceptance on **2026-10-06** covers
+[`meta-typing`](guix/tay/packages/meta-typing.scm) **0.1.0**, the original
+declaration-only library from
+[`ronami/meta-typing`](https://github.com/ronami/meta-typing/tree/03a4927933e3a6e6439d42f29d656353512fe308),
+pinned at **`03a4927933e3a6e6439d42f29d656353512fe308`**. The buildable Git
+origin's Guix base32 SHA-256 is
+`0g6vwiih3hvlsypvcvqkv6xv8ysn4139gm2zqj4yw21awf5kybdl`.
+The installed MIT/Expat license names **Ronen Amiel, copyright 2020**;
+upstream metadata retains author Ronen Amiel, version `0.1.0` and
+`types: ./src/index.d.ts`.
+
+This is a usable TypeScript declaration package, not a renamed source snapshot,
+CLI, compiler or JavaScript runtime. The unchanged preservation definition
+[`ronami-meta-typing-source`](guix/tay/packages/starred-n-r.scm) retains the
+same commit, its separate snapshot-origin hash
+`183hbcpz3343rgrh0xckdwfg9v0lk2np8hz5aqcdivcf4mz5n7i2` and Expat license.
+That source-only ledger and the canonical **629** source snapshots remain
+unchanged. Local acceptance does not establish signed channel publication,
+issue closure, profile installation or deployment; unrelated dirty work,
+including Dualmaster, remains outside this receipt.
+
+### Installed artifact and distinct compiler paths
+
+The accepted output is
+`/gnu/store/vbc5d1fdflz8cdbnfxadhy4552d22d86-meta-typing-0.1.0`.
+It installs the complete public declaration tree under
+`lib/node_modules/meta-typing/src`, preserving relative imports and the actual
+root entry point. Upstream `package.json`, `LICENSE`, `README.md` and illustrated
+assets are retained, with documentation links under `share/doc/meta-typing`.
+Development `.test-d.ts` files and compiler/test-tool dependencies are not
+installed into the public library. There is no runtime `main`, generated
+JavaScript, executable wrapper or fake runtime module.
+
+[`meta-typing-npm-sources.scm`](guix/tay/packages/meta-typing-npm-sources.scm)
+pins **246** npm archives for the Yarn-lock-selected **tsd 0.11.0** transitive
+runtime closure and standalone **TypeScript 3.7.4**. Fixed extraction locations
+provide Node resolution without npm/Yarn installation, lifecycle scripts,
+registry queries or current semver resolution during the build. This is the
+test-tool closure, not the entire unrelated lint/watch development graph.
+
+The build checks the complete original source tree with upstream's strict,
+`noEmit` `tsconfig.json` using standalone **TypeScript 3.7.4**. The check phase
+runs the actual **tsd 0.11.0 CLI and complete unmodified upstream assertion
+suite**; tsd carries and uses its own **TypeScript 3.7.2**, unchanged. The
+external installed-package consumer separately uses **TypeScript 3.7.4**.
+These compiler paths are deliberately distinct: no claim that tsd's assertions
+ran on 3.7.4, or that current TypeScript releases are supported, is made.
+
+### Main build and integrated receipts
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main288 passed in **6.63 s**, producing the accepted output above; artifact `13593`. Strict build and original tsd check phases ran. |
+| Reproducibility | Main289 `--check` passed in **4.49 s**, reproducing that same output with both phases; artifact `13594`. |
+| Full lint | Main290 exited **0** in **7.11 s**. Package diagnostics were `warning: no tags were found for meta-typing` at `meta-typing.scm:15:2`, and `meta-typing@0.1.0: updater 'github' failed to find upstream releases`, plus known unrelated deprecated `flex`, `nhfourk.scm:171:86` and `winrm.scm:325:1` diagnostics. This is bounded no-new-errors acceptance, **not warning-free lint**. |
+| Native installed-package proof | Main292 passed in **7.94 s** at `/tmp/meta-typing-native-1`; actual compiler acceptance, seven exact expected rejection cases, offline isolation and unchanged output are recorded in `evidence.json`. |
+| Final integrated target | Main293 `make check-meta-typing` passed in **9.82 s** at `/tmp/meta-typing-check-1`, printing **`META_TYPING_CONSUMER_OK`**. Its `evidence.json` records `status: passed`, `exit_status: 0`, the same output and all seven exact rejection cases. |
+
+The [smoke harness](tests/meta-typing-smoke.sh) requires a canonical,
+already-realized store output and a fresh nonexistent absolute evidence
+directory outside the store. It does not build or realize Meta Typing. Generic
+proof tools and the fixed compiler archive are realized before private user,
+mount, network and PID namespaces are entered. The consumer has fresh HOME,
+TMPDIR and all XDG roots, only loopback networking, and recursively read-only
+`/gnu/store`. Compiler trace resolution and program-file records show that
+`import ... from 'meta-typing'` uses the installed store root and declaration
+tree, not a checkout, copied declaration tree or consumer-local implementation.
+Compilation is strict and `noEmit`, with no `skipLibCheck` exemption.
+
+The independently authored [accepted consumer](tests/meta-typing-consumer/accepted.ts)
+checks exact bidirectional type equality and real typed assignments. Arithmetic
+proves `Add<2,5> = 7`, `Subtract<8,5> = 3`, `Multiply<2,3> = 6`, integer
+`Divide<9,4> = 2`, `Remainder<9,4> = 1` and `Sum<[2,1,4]> = 7`.
+MergeSort and QuickSort both produce `[0,2,4,4]`, retaining duplicates;
+Uniq produces `[4,0,2]`, retaining first-occurrence order. Membership, first
+index and missing index (`-1`), exclusive `Range<2,5> = [2,3,4]`, a partial
+final chunk and zipped tuples are asserted. A client-defined unequal-depth
+tree distinguishes depth-first `['root','left','twig','right']` from breadth-first
+`['root','left','right','twig']`; an empty tree yields `[]`. Two-disc Hanoi
+uses named pegs and asserts exactly the three source/spare/target moves.
+Empty Head and unsupported `Add<9,2>` both produce `never`.
+
+Each negative case independently exits **1** with only its expected diagnostics,
+captured in `rejections.json` and per-case stdout/stderr logs:
+
+- Wrong sum: assigning `8` to the computed `7`, **TS2322**.
+- Unsorted result: `[4,0,2]` against computed `[0,2,4]`, three **TS2322** errors.
+- Retained duplicate: an extra `4` where Uniq requires `2`, **TS2322**.
+- Depth-first ordering supplied for BreadthFirst: swapped `twig`/`right`, two
+  **TS2322** errors.
+- String in a numeric list: `["2",1]` violates `number[]`, **TS2344**.
+- Rounded-up quotient: asserting `Divide<9,4>` equals `3` fails the exact
+  equality constraint, **TS2344**. Division itself is accepted and truncates;
+  this is not a claim that non-exact division inputs are rejected.
+- Unsupported overflow: assigning `11` to `Add<9,2>` (`never`), **TS2322**.
+
+Both Main proof receipts record the identical before/after output NAR hash
+**`1pzjji6lgj3yafafadhj7p7j57y5nj2b4cjv84fgbk0ydr6wg5ld`** and
+`output_unchanged: true`. The compiler archive's SHA-256 is
+`e4f1543efc8d69ed0856b57a909b1786d63dfc3daaaa8056d4f601d98f35daad`.
+This proves those installed-root compile-time semantics, not runtime execution,
+every algorithm/input, arbitrary recursion depth, unbounded arithmetic or other
+compiler versions. Upstream calls the project a learning experiment, not a
+practical general-purpose library.
+
+The standalone `make check-meta-typing` accepts `META_TYPING_OUTPUT` and
+`META_TYPING_EVIDENCE`, propagates `GUIX`, and does not join aggregate smoke
+checks. The consumer worker's unauthorized `guix shell python` probe is **not
+Main verification evidence**; no success or check claim rests on that probe.
+This documentation worker ran no commands, checks, builds, tests, linters or
+formatters. No described host/service or material network-catalog correction
+changed, so no OKF page/log update applies to this repository-only delivery.
+
 
 ## Rust Effects — verified offline library and external consumer
 

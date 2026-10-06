@@ -383,6 +383,7 @@ on 2026-10-05. The proof covers normal `boohu` in a real terminal, not
 | [`dart-sass`](guix/tay/packages/caelestia-cli.scm) | `1.105.0` | Reference Sass compiler with the module system, run on Node.js | Defined |
 | [`domainslib`](guix/tay/packages/domainslib.scm) | `0.5.2-1.2a88486` | OCaml multicore task pools, parallel algorithms and channels | Verified |
 | [`litegraph`](guix/tay/packages/litegraph.scm) | `0.7.14-0.0555a2f` | JavaScript node-graph engine and HTML5 canvas editor | Verified engine and browser editor |
+| [`meta-typing`](guix/tay/packages/meta-typing.scm) | `0.1.0` | MIT declaration-only algorithms and data structures computed by TypeScript's type system; no JavaScript runtime | Verified strict external type consumer ([receipt and limits](ACCOUNTING.md#meta-typing--verified-offline-type-level-library-and-external-consumer)) |
 | [`minttea`](guix/tay/packages/minttea.scm) | `0.0.3-1.40ee449` | OCaml functional terminal UI framework with Leaves components and native examples | Verified native PTY ([receipt and limits](ACCOUNTING.md#minttea--native-terminal-ui-and-isolated-ocaml-52-closure)) |
 | [`miou`](guix/tay/packages/miou.scm) | `0.8.0-1.5fcb7e6` | OCaml concurrency and synchronization libraries | Verified |
 | [`notty`](guix/tay/packages/notty.scm) | `0.2.3` | OCaml composable terminal graphics and Unix/Lwt backends | Verified |
