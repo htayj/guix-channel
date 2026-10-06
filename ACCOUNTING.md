@@ -56,6 +56,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Blincolnlights native PDP-1 panel and PDP-5 memory path](#blincolnlights--verified-native-pdp-1-panel-and-pdp-5-memory-path)
 - [Rust Effects offline library and external consumer](#rust-effects--verified-offline-library-and-external-consumer)
 - [Meta Typing offline type-level library and external consumer](#meta-typing--verified-offline-type-level-library-and-external-consumer)
+- [Rot.js source-built toolkit and offline consumer](#rotjs--verified-source-built-toolkit-and-offline-consumer)
 
 ## Relocation map (2026-10-04)
 
@@ -130,6 +131,17 @@ Dualmaster entry. That integrated count does not accept or publish Dualmaster,
 and the candidate count is not itself evidence of Meta Typing publication.
 Its 246 private npm test-tool archives are dependency closure, not top-level
 programs or additions to the canonical 629 preservation snapshots.
+Rot.js's separate 2026-10-06 acceptance adds exactly **one**
+`PROJECT_PACKAGES` entry and one README library row. The committed baseline
+`9029529` has **235** check names (227 project + 7 font + 1 optional
+proprietary); the Rot-only candidate inventory is **236** (228 + 7 + 1).
+The integrated working tree has **237**, including the unrelated unpublished
+Dualmaster entry. That integrated count does not accept or publish Dualmaster,
+and the candidate count is not itself evidence of Rot.js publication. Its 260
+private npm build-tool archives and the private source-built Closure Compiler
+closure are dependency closure, not top-level programs or additions to the
+canonical 629 preservation snapshots; the existing `ondras-rot-js-source`
+snapshot is unchanged.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -154,6 +166,198 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Rot.js — verified source-built toolkit and offline consumer
+
+Local acceptance on **2026-10-06** covers
+[`rot-js`](guix/tay/packages/rot-js.scm) **2.2.1**, built from
+[`ondras/rot.js`](https://github.com/ondras/rot.js/tree/46782e248c2db9d379a5e4f13bb8323f18dff04b)
+commit `46782e248c2db9d379a5e4f13bb8323f18dff04b` ("#223 link+version"),
+Git origin base32 `0vd530vgkzg80bcwlcr8zcv5h2ywb8c1ij0cc4nfwigklrwrlrxk`.
+Upstream `package.json` says 2.2.1; the committed lockfile root still says
+2.2.0, and only the package version is claimed. The package license field is
+BSD-3-Clause for rot.js itself, Expat for Babel/lunr helpers emitted into the
+bundles and docs, and Apache-2.0 for TypeDoc-generated docs and any Closure
+runtime helpers in `dist/rot.min.js`. The unchanged preservation snapshot
+[`ondras-rot-js-source`](guix/tay/packages/starred-n-r.scm) pins the same
+commit (snapshot hash `0j8x32cadpwcn9niv7ka502pzkiknr54lch496zw5sbqp6kmkqis`,
+BSD-3); this acceptance adds no snapshot. Unrelated work in the tree, including
+Dualmaster, remains outside this receipt.
+
+### Source, toolchain and build boundary
+
+The configure phase deletes every committed generated artifact (`lib`, `dist`,
+`doc`, `.ts.flag` and `examples/bundled-modules/example.bundle.js`), so all
+installed JavaScript, declarations, bundles and API docs are rebuilt here.
+[`rot-js-npm.py`](guix/tay/packages/files/rot-js-npm.py) replays the fixed
+npm lock locations with no resolution and no lifecycle scripts; every archive
+is checked against its upstream lock SHA512 and name/version before use.
+[`rot-js-npm-sources.scm`](guix/tay/packages/rot-js-npm-sources.scm) pins
+**260** npm tarballs by SHA256 and replays every lock location except five:
+`fsevents` (macOS-only), `google-closure-compiler-java` (prebuilt
+`compiler.jar`) and the `google-closure-compiler-{linux,osx,windows}` native
+images. The google-closure-compiler JavaScript wrapper remains. The build then
+runs upstream `make all` (tsc → rollup → Babel → Closure Compiler → TypeDoc)
+and `examples/bundled-modules/run.sh`, and fails unless `dist/rot.js`,
+`dist/rot.min.js`, `lib/index.js`, `lib/index.d.ts`, `doc/index.html` and the
+rebuilt `example.bundle.js` exist and are non-empty.
+
+`node_modules/google-closure-compiler-java/compiler.jar` is a symlink to the
+private source-built
+[`rot-js-closure-compiler`](guix/tay/packages/rot-js-compiler.scm)
+**20211201.0.0**: `google/closure-compiler` tag `v20211201`, commit
+`0c03641ae285b528d00cf7770c94b07759a28f12`, base32
+`0w88bkzsjs9byhhshrz3zihk778b9bwaj6j3749020304lgkmvif`. It is compiled with
+javac, protoc (protobuf 3.11.4) and Ant 1.10.11 on IcedTea 8 against
+source-built Guava 31.0.1, failureaccess 1.0.1, Gson 2.7, RE2/J 1.3,
+protobuf-java 3.11.4, Error Prone annotations 2.3.2/2.7.1, Checker Qual
+3.12.0, J2ObjC annotations 1.3, JSR-305 3.0.2, JSR-250 1.0, AutoValue 1.6
+(with auto-common 1.1.2, AutoService 1.0 and JavaPoet 1.13.0) and args4j; no
+Maven resolution, downloaded bytecode or Bazel is used. Its
+`runtime_libs.typedast` is generated in two stages. Licenses are Apache-2.0,
+MPL-1.1, GPL-2.0-or-later, Expat, BSD-3-Clause and CDDL-1.0; upstream
+`COPYING`, `LICENSE.external`, `MPL-1.1.txt`, the Rhino source, copyright
+sources and dependency notices are installed under
+`share/doc/rot-js-closure-compiler`. The compiler package has
+**`#:tests? #f`**; its build log states that the test suite was not run. The
+**exhaustive upstream Closure Compiler JUnit suite was not run**, and no claim
+rests on it. The bounded compiler claim is only that this source-built jar
+produced the real `dist/rot.min.js`, which then passed the same upstream suite
+and runtime checks as `dist/rot.js`. Main's lint reports that this compiler
+could be upgraded to `20261005`; the exact upstream build pin is deliberate.
+
+**WASM is build-only.** TypeDoc's Node syntax highlighter loads
+`vscode-oniguruma@1.7.0` `release/onig.wasm`, SHA256
+`fd885c2d12e5951e59d761ebd4a006e06254b1491fd6f530c92b69fb4d8d77d9`; its
+`NOTICES.txt` identifies Oniguruma 6.9.5_rev1 (BSD-2-Clause) with Microsoft's
+MIT wrapper. That object is pinned from the npm archive, **not compiled from
+source by this channel and not installed** in rot-js. The separate unused
+browser WASM in `shiki@0.9.15` is deleted before the build, so only the
+attributed vscode-oniguruma object enters the docs build. A documentation-worker
+read-only `find` listed no `.wasm` file in the installed output; that
+observation is excluded from acceptance evidence.
+
+Build-tool legal notices are preserved, not relicensed: for each of the 260
+archives, its license/copying/notice/authors files, README and `package.json`
+are copied to `share/doc/rot-js/build-tools/npm/<package@version>/`, with an
+`inventory.json` of license, resolved URL, lock integrity and notices.
+[`rot-js-build-notices.txt`](guix/tay/packages/files/rot-js-build-notices.txt)
+is installed there as `SUPPLEMENTAL-NOTICES`. It supplies license texts missing
+from three pinned archives — entries for tr46@0.0.3 (MIT, Sebastian Mayr),
+vinyl-sourcemaps-apply@0.2.1 (ISC, Florian Reiterer) and
+`@nicolo-ribaudo/chokidar-2@2.1.8-no-fsevents.3` (MIT) — plus notices for the
+latter's bundled JavaScript, including webpack 5.53.0. These are build-time
+notices, not runtime dependencies of rot-js.
+
+### Installed artifact
+
+Main's accepted output is
+`/gnu/store/zf6i70g0anjdjg43bp4jqmbkzd6zfm4z-rot-js-2.2.1`, built with compiler
+output `/gnu/store/iyxmrwxhb2djxds33b5bbjcx2c090xg5-rot-js-closure-compiler-20211201.0.0`.
+`lib/node_modules/rot-js` contains upstream's published `files` set — `lib`
+(ESM plus 49 `.d.ts` declarations), `dist` (UMD `rot.js` and `rot.min.js`),
+`doc` (TypeDoc API), `examples`, `addons` and `manual` — with `package.json`,
+`license.txt` and `README.md`. `share/doc/rot-js` holds `license.txt`,
+`README.md`, an `api` link to the generated docs, the build-tool notices above
+and the build-time consumer script. Recorded runtime SHA256s are
+`lib/index.js` `c642974a9e2a6777d0c90a4ebcc46ba1270c0a24b9d48170085732299be0bef2`
+(854 B), `dist/rot.js` `31b61b69904b9a118bae795892e20b78792558e842caae6f23f84c1fb886f892`
+(184376 B) and `dist/rot.min.js`
+`08bb45765ea9a8d07ee741254ddcff898178e0836d0ceb63f3a85be7bb396cf9` (68729 B).
+
+The check phase runs upstream `make test` through
+[`rot-js-browser.cjs`](guix/tay/packages/files/rot-js-browser.cjs): Jasmine
+3.10.1 driven by puppeteer-core 13 in headless ungoogled-Chromium, with local
+files only (the upstream unpkg Jasmine URL is rewritten to local assets, and
+any non-local request fails the run) and a DejaVu fontconfig. It requires all
+**11** original spec files to load and every defined spec either to pass or to
+match a literal upstream `xit` declaration: **183 specs defined and reported,
+180 passed, 3 upstream-disabled `xit` specs**, `overallStatus=passed`. The
+three disabled specs, all in `fov.js`, are "FOV Precise Shadowcasting
+8-topology should compute single partially visible target / single visible
+target / single invisible target"; they did not run and are not claimed. The
+build-time [consumer](guix/tay/packages/files/rot-js-consumer.cjs) then
+reported `dist/rot.js` Digger 179 floor cells, AStar 31 steps, FOV 51 and a
+passing scheduler, with the same results for `dist/rot.min.js`. TypeDoc printed
+about 31 "not included in the documentation" warnings and a
+`listInvalidSymbolLinks` deprecation warning; generated docs are checked only
+for existence.
+
+### Main build and integrated receipts
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main312 passed in **46.50 s**, producing the accepted runtime and compiler outputs above; artifact `13847`. The browser suite printed `Original suite: 11/11 spec files loaded; 183 specs defined, 183 reported, 180 passed, 3 upstream-disabled; overallStatus=passed`. |
+| Reproducibility | Main314 `--check` of both packages passed in **32.77 s**, reproducing the same `iyx…` compiler and `zf6…` runtime outputs and the same suite line; artifact `13850`. |
+| Full lint | Main315 exited **0** in **27.93 s** with no `rot-js` findings. The only Rot-scope diagnostic was `rot-js-compiler.scm:62:2: rot-js-closure-compiler@20211201.0.0: can be upgraded to 20261005`, a deliberate exact upstream build pin; known unrelated `flex`, NHFourk, WinRM and libcamera diagnostics remain. This is bounded no-new-errors acceptance, **not warning-free lint**. |
+| Native installed-package proof | Main313 passed in **6.98 s** at `/tmp/rot-js-native-1`, printing `ROT_JS_RUNTIME_OK builds=3 seed=151 connectivity=all-floors shortest-paths=all-floors fov=exact schedulers=exact` and `ROT_JS_CONSUMER_OK`. |
+| Final integrated target | Main317 `make check-rot-js` passed in **9.22 s** at `/tmp/rot-js-check-1`, printing the same two lines. Its `evidence.json` records `status: passed`, `exit_status: 0`, the same `zf6…` output and both exact rejections. A documentation-worker `cmp` found its `runtime-semantics.json` byte-identical to Main313's; that comparison is disclosed but excluded from acceptance evidence. |
+
+The [smoke harness](tests/rot-js-smoke.sh) requires a canonical,
+already-realized direct store output and a fresh nonexistent absolute evidence
+directory outside the store; it never builds or realizes rot-js. Generic proof
+tools (Python, coreutils, util-linux, Node) and the lock-pinned TypeScript
+4.5.4 archive (the same `typescript@4.5.4` npm source used by the upstream
+build, SHA256 `5b2b014c4d6f9ad4615d7ced8cc32f882a4a96df8213722577b42277afb03cba`)
+are realized before
+[`native.py`](tests/rot-js-consumer/native.py) enters private user, mount,
+network and PID namespaces. Inside, only `lo` exists, `/gnu/store` is
+read-only (a write probe fails with EROFS), HOME, TMPDIR and every XDG root
+are fresh, and PATH supplies Node 24.18.0 only. Compiler trace resolution
+shows `import ... from 'rot-js'` resolving to the installed
+`lib/node_modules/rot-js/lib/index.d.ts`, with all 49 package declarations
+loaded under `strict`, `noImplicitReturns` and unused-local/parameter checks.
+Both receipts record before/after output NAR
+**`1ywf2ghik344sp6v1axpnfrsfpnrc0wppb3fhkgjym1q0yzrzypm`** and
+`output_unchanged: true`.
+
+The independently authored [accepted consumer](tests/rot-js-consumer/accepted.ts)
+compiles and runs, printing
+`{"arenaFloors":9,"path":[[1,1],[2,1],[3,1]],"visible":9,"actor":"typed-hero","time":0.5,"seed":151}`.
+Each rejection independently exits **2** with exactly its expected diagnostic:
+
+- Non-numeric speed: a Speed-scheduler actor whose `getSpeed` returns
+  `'fast'`, `rejected/actor.ts` 3:49, **TS2322** "Type 'string' is not
+  assignable to type 'number'."
+- Invalid topology: `topology: 5`, `rejected/topology.ts` 3:46, **TS2322**
+  "Type '5' is not assignable to type '4 | 6 | 8 | undefined'."
+
+[`runtime.cjs`](tests/rot-js-consumer/runtime.cjs) loads all three installed
+builds — `lib/index.js` (ESM), `dist/rot.js` and `dist/rot.min.js` (UMD) — and
+requires each to export exactly 18 names; `require.resolve('rot-js')` selects
+`dist/rot.js`. Digger at seed 151 on 40×25 (`timeLimit: Infinity`) yields 179
+floors, all connected by an independent BFS, 6 rooms, 9 corridors and maximum
+distance 36; resetting the seed reproduces the map. AStar and Dijkstra return
+shortest 4-topology routes to every floor, and a wall origin is unreachable.
+Precise shadowcasting FOV matches exact expectations for open radius 3, an
+enclosed origin, an opaque origin and radius 0. Simple, Speed
+(`[['fast',0.5],['slow',1],['fast',1],['fast',1.5],['slow',2],['fast',2]]`),
+Action and EventQueue orderings and an Engine run are exact. All semantics are
+identical across the three builds.
+
+Limits: this proves the headless upstream suite at build time and the
+installed Node/TypeScript API paths above. There is **no Display, canvas,
+terminal-backend, GUI, screenshot or interactive browser proof** beyond that
+build-time headless Chromium Jasmine run. The installed examples, manual and
+addons are shipped but not exercised (apart from rebuilding the bundled-module
+example), and API docs are checked only for presence. No claim is made for
+other TypeScript versions, other seeds or every generator/algorithm, the three
+`xit` specs, or the exhaustive Closure Compiler test suite.
+
+The standalone `make check-rot-js` accepts `ROT_JS_OUTPUT` and
+`ROT_JS_EVIDENCE`, propagates `GUIX`, and does not join aggregate smoke
+checks. Workers' unauthorized compiler release-jar probes, generic npm build
+probes, `unshare` Node/source probes and fontconfig build probes are **not
+Main verification evidence**; no success or check claim rests on them. This
+documentation worker ran no checks, builds, tests, linters or formatters. It
+did run read-only inspection commands on existing receipts and outputs:
+reading `evidence.json` fields, `ls`/`find` listings of the realized store
+outputs (including the `.wasm` absence and 260 notice directories), and `cmp`
+comparisons of consumer templates and of the two receipts'
+`runtime-semantics.json`. These are disclosed and excluded from acceptance
+evidence; no acceptance claim rests on them. No described host/service or
+material network-catalog correction changed, so no OKF page/log update applies
+to this repository-only delivery.
 
 ## Meta Typing — verified offline type-level library and external consumer
 

@@ -400,6 +400,7 @@ on 2026-10-05. The proof covers normal `boohu` in a real terminal, not
 | [`proiel`](guix/tay/packages/proiel.scm) | `1.3.3` | Corpus-free Ruby PROIEL XML treebank library | Verified |
 | [`qiling`](guix/tay/packages/qiling.scm) | `1.4.10` | Multi-architecture binary emulation framework | Verified |
 | [`react-blessed`](guix/tay/packages/react-blessed.scm) | `0.7.2` | React renderer for Blessed terminal interfaces | Defined |
+| [`rot-js`](guix/tay/packages/rot-js.scm) | `2.2.1` | BSD-3 JavaScript roguelike toolkit: maps, FOV, pathfinding, schedulers, RNG and terminal/canvas displays, with API docs, manual and examples | Verified headless upstream suite and offline Node/TypeScript consumer ([receipt and limits](ACCOUNTING.md#rotjs--verified-source-built-toolkit-and-offline-consumer)) |
 | [`ruby-memoist`](guix/tay/packages/proiel.scm) | `0.16.2` | MIT Ruby method-result caching library | Defined |
 | [`ruby-sax-machine`](guix/tay/packages/proiel.scm) | `1.3.2` | MIT declarative SAX parsing library with Nokogiri backend | Defined |
 | [`rust-computus`](guix/tay/packages/computus.scm) | `0.1.0` | Redistributable Rust simulation core | Defined |
