@@ -299,6 +299,8 @@ preservation ledger is unchanged; no snippet prunes the source.
 | Build and upstream tests | Main177: full upstream MDX/check suites and native examples passed. |
 | Native PTY | Main178 passed: `MINTTEA_BASIC_PTY_OK states=16 keys=14`. |
 | Reproducibility | Main179 `--check` passed for the same output, `/gnu/store/7bh37dm20dj1vrgvzip1zgc2ly2n9swj-minttea-0.0.3-1.40ee449`, wall 6.65 s. |
+| Lint | Main180 `guix lint -L guix minttea` exited 0 in 24.15 s but was not warning-free: its only Minttea diagnostic is that the source is not archived by Software Heritage/Disarchive. SQLite-busy and unrelated deprecated `flex` symbol, Fourk and excluded WinRM warnings appeared; neither is counted as a Minttea cleanliness result. |
+| Publication | Signed commit `747f74874bb5e7ab161997e37b7684be86081209` is on `origin/master`, verified through the normal authenticated pre-push path. |
 
 Main178's evidence (`/tmp/minttea-native-3/evidence.json`, status `passed`)
 installed a temporary profile containing that output,
@@ -318,9 +320,9 @@ UID/GID. Before/after output NAR hashes match
 `16rdw24z5lz40a31gh96x3rwl763vvgn5sks1skblgf1k1liryx8`.
 
 Limits: upstream Dune/MDX suites run in the package build, not the native
-harness, and only the basic example is driven on a PTY. Publication is not
-established. No user-profile/system deployment, host/service change or
-material network-catalog correction is established; no OKF update applies.
+harness, and only the basic example is driven on a PTY. Repository publication
+is not user-profile/system deployment. No host/service change or material
+network-catalog correction is established; no OKF update applies.
 
 ```sh
 out=$(guix build -L guix --no-grafts minttea)
