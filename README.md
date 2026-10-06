@@ -260,8 +260,8 @@ publication, source-required, and build gates appear in the final table.
 | [`pdp10-its-disassembler`](guix/tay/packages/pdp10-its-disassembler.scm) | `0-c745bb5` | Disassemble and manipulate PDP-10 ITS files | Verified |
 | [`pdp10-suppty`](guix/tay/packages/suppty.scm) | `0-2da0135` | Original GTK 2 and CLI SUPDUP terminal clients | Verified |
 | [`pdp10-xpl-pdp-10`](guix/tay/packages/pdp10-xpl.scm) | `0-0e57cbd` | PDP-10 XPL compiler port | Defined |
-| [`pdp11`](guix/tay/packages/pdp11.scm) | `0-5b5b734` | Host emulators for selected PDP-11 CPU models | Defined |
-| [`pdp6`](guix/tay/packages/pdp6.scm) | `0-2645ed9` | Local SDL console emulator for the PDP-6 | Defined |
+| [`pdp11`](guix/tay/packages/pdp11.scm) | `0-5b5b734` | Host emulators for selected PDP-11 CPU models | Verified `pdp1145` native microcycle diagnostic only; [limits](ACCOUNTING.md#pdp11--verified-native-microcycle-diagnostic) |
+| [`pdp6`](guix/tay/packages/pdp6.scm) | `0-2645ed9` | Local SDL console emulator for the PDP-6 | Verified native panel deposit/examine and clean quit; [limits](ACCOUNTING.md#pdp6--verified-native-panel-memory-path) |
 | [`tapeutils`](guix/tay/packages/tapeutils.scm) | `0.6-0.84a3a78` | Read, write, and inspect magnetic-tape image files | Verified |
 | [`uc-explorer`](guix/tay/packages/uc-explorer.scm) | `0.1.0` | Explore Lisp machine microcode | Defined |
 | [`vt05`](guix/tay/packages/vt05.scm) | `0.1-1.934fe88` | SDL emulators for six classic text terminals | Verified |

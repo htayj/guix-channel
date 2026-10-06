@@ -1,31 +1,121 @@
 #!/bin/sh
+# Prove installed PDP6 panel memory deposit/examine, retain a screenshot, and
+# exercise a clean CLI quit without modifying the installed store output.
+# Usage: GUIX=guix sh tests/pdp6-smoke.sh OUTPUT EVIDENCE
 set -eu
+
+fail() { printf 'pdp6-smoke: %s\n' "$*" >&2; exit 1; }
+test "$#" -eq 2 || { printf 'usage: GUIX=guix sh %s OUTPUT EVIDENCE\n' "$0" >&2; exit 64; }
 guix_bin=${GUIX:-guix}
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-out=${1:-$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes pdp6)}
-find_output() { for p in $($guix_bin build "$2"); do test -x "$p/$1" && { printf '%s\n' "$p"; return; }; done; return 1; }
+out=$1
+evidence=$2
+case "$out" in /gnu/store/*) ;; *) fail 'OUTPUT must be an absolute /gnu/store directory' ;; esac
+case "$evidence" in /*) ;; *) fail 'EVIDENCE must be absolute' ;; esac
+case "$evidence" in /gnu/store|/gnu/store/*) fail 'EVIDENCE must be outside /gnu/store' ;; esac
+test -d "$out" || fail 'OUTPUT must be a realized directory'
+test ! -e "$evidence" && test ! -L "$evidence" || fail 'EVIDENCE must be fresh and nonexistent'
+test -x "$out/bin/pdp6" || fail 'OUTPUT lacks executable bin/pdp6'
+test -x "$out/libexec/pdp6/pdp6" || fail 'OUTPUT lacks executable libexec/pdp6/pdp6'
+test -f "$out/libexec/pdp6/init.ini" || fail 'OUTPUT lacks libexec/pdp6/init.ini'
+
+find_output()
+{
+    program=$1
+    shift
+    candidates=$("$guix_bin" build -L "$channel_dir/guix" \
+        --no-grafts --no-offload --cores=1 --max-jobs=1 "$@") || return 1
+    for output in $candidates; do
+        if test -x "$output/$program"; then
+            printf '%s\n' "$output"
+            return 0
+        fi
+    done
+    fail "dependency lacks $program: $*"
+}
+
+# Realize proof dependencies serially on the host, before namespace isolation.
 python=$(find_output bin/python3 python)
+coreutils=$(find_output bin/env coreutils)
+util_linux=$(find_output bin/unshare util-linux)
 xorg=$(find_output bin/Xvfb xorg-server)
 xwininfo=$(find_output bin/xwininfo xwininfo)
-util=$(find_output bin/unshare util-linux)
-test -x "$out/bin/pdp6"; test -x "$out/libexec/pdp6/pdp6"
-test ! -e "$out/libexec/pdp6/init.ini" || ! grep -E 'net(mem|cons)|mount' "$out/libexec/pdp6/init.ini"
-exec "$util/bin/unshare" --user --map-root-user --net --fork "$python/bin/python3" - "$out" "$xorg/bin/Xvfb" "$xwininfo/bin/xwininfo" <<'PY'
-import os,pathlib,subprocess,sys,tempfile,time
-out,xvfb,xwininfo=map(pathlib.Path,sys.argv[1:])
-with tempfile.TemporaryDirectory() as t:
- p=pathlib.Path(t); env={'HOME':str(p),'XDG_RUNTIME_DIR':str(p),'DISPLAY':':99','SDL_VIDEODRIVER':'x11','SDL_AUDIODRIVER':'dummy','SDL_JOYSTICK_DISABLED':'1','PATH':''}
- x=subprocess.Popen([xvfb,':99','-screen','0','1399x740x24','-nolisten','tcp'],env=env)
- try:
-  time.sleep(.4); assert x.poll() is None
-  q=subprocess.Popen([out/'bin/pdp6'],env=env,cwd=p)
-  for _ in range(60):
-   r=subprocess.run([xwininfo,'-root','-tree'],env=env,text=True,stdout=subprocess.PIPE)
-   if '0x200001' in r.stdout: break
-   time.sleep(.1)
-  else: raise AssertionError('PDP-6 console window missing: '+r.stdout)
-  q.terminate(); q.wait(5)
- finally:
-  x.terminate(); x.wait(5)
-print('pdp6 offline smoke passed')
+xdotool=$(find_output bin/xdotool xdotool)
+imagemagick=$(find_output bin/import imagemagick)
+test -x "$imagemagick/bin/convert" || fail 'imagemagick output lacks bin/convert'
+strace=$(find_output bin/strace strace)
+
+canonical_out=$("$coreutils/bin/realpath" -e -- "$out")
+test "$out" = "$canonical_out" || fail 'OUTPUT must be canonical, without symlink components'
+case "${out#/gnu/store/}" in ''|*/*) fail 'OUTPUT must be one direct /gnu/store item' ;; esac
+canonical_evidence=$("$coreutils/bin/realpath" -m -- "$evidence")
+test "$evidence" = "$canonical_evidence" || fail 'EVIDENCE must be canonical, without symlink components'
+case "$canonical_evidence" in /gnu/store|/gnu/store/*) fail 'EVIDENCE must be outside /gnu/store' ;; esac
+# mkdir (without -p) also refuses an evidence directory created in the meantime.
+"$coreutils/bin/mkdir" -- "$evidence"
+
+status=0
+before=$("$guix_bin" hash -S nar "$out" 2>"$evidence/output-before.nar-hash.stderr") || status=$?
+printf '%s\n' "$before" >"$evidence/output-before.nar-hash"
+if test "$status" -eq 0; then
+    "$coreutils/bin/env" -i LC_ALL=C.UTF-8 PATH='' \
+        PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 \
+        HOST_UID="$("$coreutils/bin/id" -u)" \
+        HOST_GID="$("$coreutils/bin/id" -g)" \
+        HOST_USER_NS="$("$coreutils/bin/readlink" /proc/self/ns/user)" \
+        HOST_MOUNT_NS="$("$coreutils/bin/readlink" /proc/self/ns/mnt)" \
+        HOST_NET_NS="$("$coreutils/bin/readlink" /proc/self/ns/net)" \
+        HOST_PID_NS="$("$coreutils/bin/readlink" /proc/self/ns/pid)" \
+        XVFB="$xorg/bin/Xvfb" XWININFO="$xwininfo/bin/xwininfo" \
+        XDOTOOL="$xdotool/bin/xdotool" IMPORT="$imagemagick/bin/import" \
+        CONVERT="$imagemagick/bin/convert" STRACE="$strace/bin/strace" \
+        "$coreutils/bin/timeout" --kill-after=10 120 \
+        "$util_linux/bin/unshare" --user --map-current-user --keep-caps \
+        --mount --propagation private --net --pid --mount-proc --kill-child --fork \
+        "$python/bin/python3" -B -s "$channel_dir/tests/pdp6-native.py" \
+        "$out" "$evidence" \
+        >"$evidence/driver.stdout" 2>"$evidence/driver.stderr" || status=$?
+fi
+
+# A timeout, assertion failure or failed hash must still leave both hash files.
+hash_status=0
+after=$("$guix_bin" hash -S nar "$out" 2>"$evidence/output-after.nar-hash.stderr") || hash_status=$?
+printf '%s\n' "$after" >"$evidence/output-after.nar-hash"
+if test "$status" -eq 0 && test "$hash_status" -ne 0; then
+    status=$hash_status
+fi
+if "$coreutils/bin/env" -i LC_ALL=C.UTF-8 PATH='' \
+    PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 \
+    "$python/bin/python3" -B -s - "$evidence" "$status" "$before" "$after" <<'PY'
+import json
+from pathlib import Path
+import sys
+
+root, status, before, after = sys.argv[1:]
+path = Path(root) / 'evidence.json'
+try:
+    record = json.loads(path.read_text())
+    if not isinstance(record, dict):
+        raise ValueError('runner evidence is not an object')
+except (OSError, ValueError) as error:
+    record = {'status': 'fail', 'shell_evidence_error': str(error)}
+unchanged = bool(before) and before == after
+exit_status = int(status)
+if exit_status or not unchanged or record.get('status') != 'passed':
+    record['status'] = 'fail'
+    exit_status = exit_status or 1
+record.update(exit_status=exit_status, output_nar_before=before,
+              output_nar_after=after, output_unchanged=unchanged)
+path.write_text(json.dumps(record, indent=2) + '\n')
+raise SystemExit(0 if record['status'] == 'passed' else 1)
 PY
+then
+    :
+else
+    if test "$status" -eq 0; then status=1; fi
+fi
+if test "$status" -ne 0; then
+    printf 'pdp6-smoke: native proof failed (exit %s); evidence: %s\n' "$status" "$evidence" >&2
+    exit "$status"
+fi
+printf 'PDP6_NATIVE_PANEL_OK evidence=%s\n' "$evidence"

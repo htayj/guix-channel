@@ -46,6 +46,8 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Affect libraries and isolated OCaml 5.5 toolchain](#affect--native-libraries-and-isolated-ocaml-55-toolchain)
 - [Minttea terminal UI and isolated OCaml 5.2 closure](#minttea--native-terminal-ui-and-isolated-ocaml-52-closure)
 - [Boohu official Guix reuse and native terminal save/restore](#boohu--official-guix-reuse-and-native-terminal-saverestore)
+- [PDP11 native microcycle diagnostic](#pdp11--verified-native-microcycle-diagnostic)
+- [PDP6 native panel memory path](#pdp6--verified-native-panel-memory-path)
 
 ## Relocation map (2026-10-04)
 
@@ -274,6 +276,122 @@ make check-affect AFFECT_OUTPUT="$out" AFFECT_EVIDENCE=/tmp/affect-native-new
 
 These commands document the existing build/harness interfaces; this
 documentation worker ran no commands, checks, cleanup or signals.
+
+## PDP6 — verified native panel memory path
+
+Local acceptance on **2026-10-05** covers [`pdp6`](guix/tay/packages/pdp6.scm)
+**0-2645ed9**, pinned to [aap/pdp6](https://github.com/aap/pdp6/tree/2645ed907d0267710866fd8228863ce8867f4dc6)
+revision `2645ed907d0267710866fd8228863ce8867f4dc6`. The normal installed
+launcher uses the store-bound upstream emulator and its local-device
+`init.ini`; it excludes network, serial, FPGA and hardware-panel paths. The
+original 629 source snapshots and preservation accounting are unchanged.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main190 passed in 10.73 s for `/gnu/store/1cnyi42srsm5na8s8icrnc57b2ykpl9i-pdp6-0-2645ed9`. |
+| Reproducibility | Main191 paired PDP11/PDP6 `--check` passed in 9.86 s, reproducing both outputs. |
+| Lint | Main192 paired lint completed in 52.43 s, retaining no-updater and Software Heritage/Disarchive diagnostics for both packages, plus known unrelated deprecated `flex` symbol, Fourk and excluded WinRM diagnostics. This is not a warning-free lint claim. |
+| Native console | Main196 passed in 20.02 s at `/tmp/pdp6-native-1`, printing `PDP6_NATIVE_PANEL_OK`. |
+| Final integrated target | Main198 `make check-pdp6` passed in 22.62 s at `/tmp/pdp6-native-final`, printing `PDP6_NATIVE_PANEL_OK`. |
+
+The primary final receipt `/tmp/pdp6-native-final/evidence.json` has status `passed`; `console.raw`, seven
+genuine panel screenshots, window records and `network.strace` retain the
+actual proof. The real **PDP-6 console**, 1399 × 740, was powered on through
+its native control. CLI examination first showed address octal `000100`
+contained `000000000000`. Native keyboard controls set address `000100` and
+the 36-bit data-switch word octal **`525252525252`**; a real DEPOSIT click
+wrote the word, independently verified by the native CLI. The harness then
+cleared the data switches, selected untouched address `000101` and clicked
+EXAMINE: both CLI and memory lamps showed zero. Finally, selecting `000100`
+and clicking EXAMINE restored exactly the expected alternating 36 lamp bits,
+independently confirmed again by the CLI. The intervening zero examine rules
+out merely observing stale lamps left by DEPOSIT.
+
+The [genuine final capture](.goocastle/evidence/pdp6-native.png), from
+`07-native-memory-examined.png`, shows the actual console's MEMORY BUFFER,
+ARITHMETIC REGISTER, MEMORY and MEMORY ADDRESS labels and yellow lamp rows,
+with POWER lit and no visible error. The exact bit result comes from
+`panel_memory.examined_lamp_bits` in the receipt, not inferred OCR. No init
+file, memory fixture, injected emulator state, alternate executor or patched
+renderer was supplied by the harness.
+
+The normal installed emulator ran with private same-UID/GID user, mount,
+network and PID namespaces, loopback only and `/gnu/store` read-only.
+`network.strace` recorded **zero INET syscalls** during this measured path;
+the local Unix connection to Xvfb was observed. This is a scoped network
+observation, not a claim that every upstream code path has been audited.
+Native CLI `quit` exited 0, stderr was empty and no state files were created.
+The before/after output NAR hashes match
+`1yh5wx55jrnfssy1m91vjxff46v4yykpmaxrvs6pvb9ah1x95w02`.
+
+Limits: this proves local panel power, data/address controls, DEPOSIT,
+EXAMINE and clean quit. It does **not** establish firmware/guest boot,
+instruction execution, persistent emulator saves, external devices or any
+network/serial/FPGA/hardware-panel operation. Publication, issue closure and
+user-profile/system deployment are not established here. No OKF update
+applies to this repository-only work.
+
+```sh
+out=$(guix build -L guix --no-grafts pdp6)
+make check-pdp6 PDP6_OUTPUT="$out" PDP6_EVIDENCE=/tmp/pdp6-native-new
+```
+
+`PDP6_OUTPUT` and `PDP6_EVIDENCE` are required; use a new or empty evidence
+directory outside the store/output. The guarded target honors `GUIX` and
+invokes [the external smoke consumer](tests/pdp6-smoke.sh) with both arguments.
+This documentation worker ran no commands or checks and created no capture.
+
+## PDP11 — verified native microcycle diagnostic
+
+Local acceptance on **2026-10-05** covers [`pdp11`](guix/tay/packages/pdp11.scm)
+**0-5b5b734**, pinned to [aap/pdp11](https://github.com/aap/pdp11/tree/5b5b734f9b574cc3257670595eee6be084f2c8aa)
+revision `5b5b734f9b574cc3257670595eee6be084f2c8aa`. The four installed native
+programs build, but the exercised execution path is only **`pdp1145`'s built-in
+microcycle diagnostic**, not a general firmware or operating-system boot.
+The original 629 source snapshots and preservation accounting are unchanged.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main189 passed in 5.86 s, producing `/gnu/store/v4kn87i8hwxns9nymp8ph8vkns26d2cl-pdp11-0-5b5b734`; upstream compiler warnings remain, so this is not a warning-free build claim. |
+| Reproducibility | Main191 `--check` rebuilt PDP11 and PDP6 successfully in 9.86 s; PDP11 reproduced the same output. This does not establish PDP6 native runtime behavior. |
+| Lint | Main192 completed the paired lint in 52.43 s, retaining no-updater and Software Heritage/Disarchive diagnostics for both packages, plus known unrelated deprecated `flex` symbol, Fourk and excluded WinRM diagnostics. This is not a clean-lint claim. |
+| Native diagnostic | Main195 passed in 2.35 s: `PDP11_NATIVE_MICROCYCLE_OK runs=2 exact_states_per_run=16 deterministic=true`. |
+| Final integrated target | Main197 `make check-pdp11` passed in 3.84 s at `/tmp/pdp11-native-final`: `PDP11_NATIVE_MICROCYCLE_OK runs=2 exact_states_per_run=16 deterministic=true`. |
+
+The primary final receipt `/tmp/pdp11-native-final/evidence.json` has status `passed`; `runs.json`,
+`expected.stdout`, both run stdout/stderr files, `runtime.json` and isolation
+records retain the actual evidence. Two fresh invocations of the supplied
+normal `bin/pdp1145`, without arguments, each exited 0 with empty stderr.
+Each produced **2,279 bytes** exactly matching the pinned-source oracle,
+SHA-256 `5a854c78f1ab14b8c3938963bf11083085fa77d823916d1e9db245c363ceb7d6`.
+The oracle covers **16 register states per run**: three built-in microcycles
+and their final T1, with ROM addresses octal `200`, `352`, `170`, `70`.
+No package-specific executable patch, alternate executor or injected state
+was used. The upstream trace's `BEND (TODO)` and `BRQ STROBE (TODO)` messages
+are preserved observations, **not evidence of implemented bus behavior**.
+
+The diagnostic ran under private same-UID/GID user, mount, network and PID
+namespaces, with loopback only and `/gnu/store` read-only. The pre/post output
+NAR hashes both equal
+`0067b4p0wawsgn32dpgkcxbd7jg17pqz8nn6lv9k050gsazkxdyk`; the after-run output
+check also exited 0. This establishes no mutation of the measured output.
+
+Limits: `pdp1105`, `pdp1120` and `pdp1140` are checked only as installed ELF
+files, **not executed by this receipt**. No macroinstruction execution,
+firmware, guest operating system, peripherals or GUI interaction is proved.
+The native proof is a diagnostic stdout trace, not a screenshot or frontend
+claim. Publication, issue closure and user-profile/system deployment are not
+established here. No OKF update applies to this repository-only work.
+
+```sh
+out=$(guix build -L guix --no-grafts pdp11)
+make check-pdp11 PDP11_OUTPUT="$out" PDP11_EVIDENCE=/tmp/pdp11-native-new
+```
+
+`PDP11_OUTPUT` and `PDP11_EVIDENCE` are required; provide a new or empty
+evidence directory outside the store/output. The guarded target honors `GUIX`
+and invokes [the external smoke consumer](tests/pdp11-smoke.sh) with both
+arguments. This documentation worker ran no commands or checks.
 
 ## Boohu — official Guix reuse and native terminal save/restore
 

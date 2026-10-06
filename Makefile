@@ -281,13 +281,15 @@ check-itstar:
 	GUIX="$(GUIX)" tests/itstar-smoke.sh
 
 check-pdp11:
-	GUIX="$(GUIX)" tests/pdp11-smoke.sh
+	@test -n "$(PDP11_OUTPUT)" -a -n "$(PDP11_EVIDENCE)" || { echo 'Set PDP11_OUTPUT and PDP11_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/pdp11-smoke.sh "$(PDP11_OUTPUT)" "$(PDP11_EVIDENCE)"
 
 check-azurra-gtk-theme:
 	GUIX="$(GUIX)" tests/azurra-gtk-theme-smoke.sh
 
 check-pdp6:
-	GUIX="$(GUIX)" tests/pdp6-smoke.sh
+	@test -n "$(PDP6_OUTPUT)" -a -n "$(PDP6_EVIDENCE)" || { echo 'Set PDP6_OUTPUT and PDP6_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/pdp6-smoke.sh "$(PDP6_OUTPUT)" "$(PDP6_EVIDENCE)"
 
 check-pdp10-xpl-pdp-10:
 	GUIX="$(GUIX)" tests/pdp10-xpl-pdp-10-smoke.sh \
