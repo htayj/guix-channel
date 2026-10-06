@@ -50,6 +50,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [PDP6 native panel memory path](#pdp6--verified-native-panel-memory-path)
 - [Apout native V7 guest contract](#apout--verified-native-v7-guest-contract)
 - [PDP10 XPL native compiler object semantics](#pdp10-xpl--verified-native-compiler-object-semantics)
+- [Tassh isolated native clipboard relay](#tassh--verified-isolated-native-clipboard-relay)
 
 ## Relocation map (2026-10-04)
 
@@ -74,12 +75,15 @@ remain; especially, inclusion in the old table does not complete AloneRL.
 
 ## README inventory evidence (2026-10-04)
 
-The redesigned README covers all **228** names declared by the current
-`FONT_PACKAGES`, `PROJECT_PACKAGES` and optional proprietary list in
-`Makefile:29-67`, including entries missing from the old 156-row table. It also
-lists **11** exported definitions outside that default inventory separately:
-`noctalia`, `flaghack`, `flaghack-charm`, `cavechop`, `raelives`, `herdr`, `drl`,
-`gsplat-wasm`, `nhfourk`, `tassh` and the research/toolchain `pdp10-gcc` backend.
+At the 2026-10-04 redesign, the README covered all **228** names declared by
+`FONT_PACKAGES`, `PROJECT_PACKAGES` and the optional proprietary list in
+`Makefile:29-67`, including entries missing from the old 156-row table. That
+default inventory is unchanged by the Tassh acceptance recorded on 2026-10-06.
+Of the **11** additional exported definitions originally listed separately,
+**10** remain research-only: `noctalia`, `flaghack`, `flaghack-charm`, `cavechop`,
+`raelives`, `herdr`, `drl`, `gsplat-wasm`, `nhfourk` and the research/toolchain
+`pdp10-gcc` backend. The eleventh, `tassh`, now appears under installable utilities
+with a bounded native receipt; it still is not in the default `make build` list.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -104,6 +108,112 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Tassh — verified isolated native clipboard relay
+
+### Package and source boundary (2026-10-06)
+
+[`tassh`](guix/tay/packages/drbeefsupreme/tassh.scm) **20260228-1.672569a** is an
+installable, source-built Rust CLI/daemon for `x86_64-linux`, not just a research
+definition or preservation snapshot. Its MIT-licensed upstream is
+[`drbeefsupreme/tassh`](https://github.com/drbeefsupreme/tassh/tree/672569a55e6f2a0ae4274103a99b8b9abac87f4d),
+commit `672569a55e6f2a0ae4274103a99b8b9abac87f4d`, with Guix base32 source SHA-256
+`1r14hx37jz04cvjljc8vy063qy10sy8lmlaxsn2ckmxafl6qhw7y`. The package supplies
+all 181 external registry records from the upstream Cargo.lock as hashed source
+inputs, retains the locked dependency graph and builds/installs offline. The
+installed `share/doc/tassh/LICENSE` and `third-party-licenses/` retain upstream
+and statically linked dependency notices. No prebuilt Tassh executable is used.
+
+The independent `drbeefsupreme-tassh-source` output continues to preserve source
+under `share/drbeefsupreme/projects/tassh`; it does not provide a CLI. The
+**629-source snapshot ledger is unchanged**. Native acceptance does not add
+Tassh to `PROJECT_PACKAGES` or the default `make build` inventory. Its external
+installed-consumer entry point is [tests/tassh-smoke.sh](tests/tassh-smoke.sh),
+with [tests/tassh-native.py](tests/tassh-native.py) and `make check-tassh`.
+
+### Build and reproducibility receipt
+
+The integrating agent ran the following source build, then the same invocation
+with `--check` added (not a substitute-only realization):
+
+```sh
+/home/tay/.config/guix/current/bin/guix build -L guix \
+  --no-grafts --no-offload --cores=1 --max-jobs=1 --keep-failed \
+  -e '(@ (tay packages drbeefsupreme tassh) tassh)'
+```
+
+The build passed in **499.98 s**; the `--check` rebuild passed in **435.89 s**.
+Both identify the accepted output:
+`/gnu/store/yam5xcyjzf3ny2xr2qwz3bnxcrqpqk6q-tassh-20260228-1.672569a`.
+The recorded lint invocation exited zero in **5.56 s**, but this is not a
+warning-free lint claim: Tassh's reported warnings concern missing tags/upstream
+releases, with unrelated existing repository warnings also reported.
+
+### Actual installed native evidence
+
+The initial successful consumer run is retained at `/tmp/tassh-native-2`
+(**14.48 s**). The final integrated `make check-tassh` run passed in **12.16 s**
+at `/tmp/tassh-native-3`. Both emitted:
+
+```text
+TASSH_NATIVE_LOOPBACK_CLIPBOARD_OK x11=true inject=true wayland=true fixture_backed=true
+```
+
+The final `evidence.json`, `isolation.json`, `*.process.json`, `commands.json`,
+`transfers.json` and captured PNGs—not the marker alone—establish these results:
+
+- The installed output's CLI and daemons used separate temporary HOME/XDG trees,
+  with source and receiving endpoints at `127.0.0.1` and `127.0.0.2`, port 19987.
+  Source daemon PIDs 195 (X11) and 352 (Wayland), and receiver PID 167, ran in the
+  recorded user/mount/network/PID namespaces as UID 1000/GID 998. The only network
+  interface was loopback, there were no routes, `/tmp` and `/run` were private,
+  and `/gnu/store` was mounted read-only.
+- Real Unix-socket `notify`, `status` and `inject` IPC registered peers and
+  relayed images over real loopback TCP. X11 clipboard observation used
+  Xvfb/xclip. Wayland clipboard observation used real Sway 1.12 (PID 347), a
+  headless backend with the pixman renderer and a seat, plus wl-copy/wl-paste;
+  received PNGs were read from the receiving daemon's X11 clipboard with xclip.
+- Three distinct generated 1×1 RGBA PNGs each arrived as exactly **70 bytes**,
+  with equal expected/received SHA-256 and successful clipboard reads:
+
+| Native transfer | Expected and received SHA-256 |
+| --- | --- |
+| X11 clipboard watch | `4ff6ab670a58c14270e034e2090d9a432caa263a14e0a25785386b0c12f880b5` |
+| CLI inject | `619b0e8b0c8741604b8628c64323444df334846a0dfe13963662586a3603f14c` |
+| Wayland clipboard watch | `6a34118ba2e0bf5da5ab14cb63b121e2e8b2987a876668a9b2f9c30e1357470b` |
+
+- The monitored lifetime PIDs 221 and 378 were real `sleep` processes, not SSH
+  sessions. Their exits triggered peer cleanup; final status returned
+  `daemon running, no active connections`. Cleanup reaped the daemon/compositor
+  processes, and `remaining-processes.json` was `[]`.
+- The output NAR hash was identical before and after both successful runs:
+  `155vqz4nqcf8mxrc143i3rqxw6hmhw2x3n964xqf1j34vn0q95p5`. Post-run checks of
+  installed license/notices and read-only output modes exited zero. The consumer
+  did not modify or rebuild the accepted package output.
+
+### Fixture and operational limits
+
+The Tailscale resolver was an explicit fixture supporting only `tailscale ip -4`
+and returning the selected loopback address. `systemctl`/`loginctl` fixtures
+recorded setup requests and returned success without running a service manager.
+`setup daemon --yes --port 19987` wrote a unit pointing to the installed wrapper,
+an SSH LocalCommand stanza and shell display hooks **only in a temporary HOME**.
+This proves generated setup material, not systemd-user activation or linger.
+
+**No live Tailscale, authenticated SSH, systemd-user, physical desktop-session
+or cross-host integration was established.** The upstream relay is PNG-image
+only; native loopback acceptance must not be read as an authenticated-network
+security review. The wrapper supplies Xvfb, xclip, wl-clipboard and other package
+tools while preserving the caller PATH for host commands. Real use requires
+operator-provided Tailscale/OpenSSH configuration and a suitable clipboard
+session. `tassh setup daemon` mutates user configuration and invokes host
+service-manager commands; it is a systemd-user convenience, **not a Guix
+service**, and installation/building does not activate it.
+
+These are repository/package receipts, not publication or deployment claims.
+No described host/service changed, so no OKF page or catalog log update applies.
+The documentation worker ran no commands or checks; the reported verification
+was performed by the integrating agent.
 
 ## Affect — native libraries and isolated OCaml 5.5 toolchain
 
@@ -6625,6 +6735,7 @@ GUIX=guix sh tests/allure-smoke.sh "$allure_out" /tmp/allure-native-FRESH
 | `trebuchet` | Trebuchet 1082 | Tcl/Tk graphical MUD, MUCK, and MUSH client with MCP support |
 | `vt05` | aap/vt05 | SDL emulators for six classic text terminals |
 | `weidu` | WeiDU 252.01 | Offline-built Infinity Engine modding command-line tool |
+| `tassh` | drbeefsupreme/tassh `672569a55e6f2a0ae4274103a99b8b9abac87f4d` | Source-built PNG clipboard relay CLI/daemon and license notices; verified isolated X11/Wayland loopback path, outside default build inventory; [limits](#tassh--verified-isolated-native-clipboard-relay) |
 | `emacs-treesit-sexp` | alexispurslane/treesit-sexp | Tree-sitter-aware structural editing for Emacs |
 | `dipc` | doprz/dipc | Offline-built image palette converter |
 | `nrl-text-to-phoneme` | greg-kennedy/p5-NRL-TextToPhoneme | NRL text-to-phoneme command and rule tables |

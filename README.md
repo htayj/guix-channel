@@ -414,6 +414,7 @@ on 2026-10-05. The proof covers normal `boohu` in a real terminal, not
 | [`computer-builder`](guix/tay/packages/computer-builder.scm) | `0.1.0` | Offline-built PC component catalog web application | Defined |
 | [`faugus-launcher`](guix/tay/packages/faugus-launcher.scm) | `2.1.0-0.5b2316c` | GTK game launcher with opt-in runtime downloads | Verified native GTK add/edit/reopen, no game run; [limits and lint caveat](ACCOUNTING.md#faugus-launcher--verified-native-gtk-path) |
 | [`heroic-gogdl`](guix/tay/packages/heroic-gogdl.scm) | `1.3.0` | GOG downloader used by Heroic Games Launcher | Verified |
+| [`tassh`](guix/tay/packages/drbeefsupreme/tassh.scm) | `20260228-1.672569a` | Source-built Tailscale/SSH PNG clipboard relay | Verified isolated X11/Wayland loopback transfers; outside default build; [integration limits](ACCOUNTING.md#tassh--verified-isolated-native-clipboard-relay) |
 | [`weidu`](guix/tay/packages/weidu.scm) | `252.01` | Offline-built Infinity Engine modding command-line tool | Verified native/repro and game-free fixtures; [limits and lint caveat](ACCOUNTING.md#weidu--verified-offline-native-path) |
 
 ### Source-oriented collections
@@ -490,7 +491,6 @@ verified program list.
 | [`noctalia`](guix/tay/packages/noctalia.scm) | `5.0.0-0.ab2cfdf` | Desktop shell definition; outside normal build inventory | Research / definition only |
 | [`pdp10-gcc`](guix/tay/packages/pdp10-gcc.scm) | `3.2-20020416` | GCC C backend that emits PDP-10 TOPS-20 assembly | Research / definition only |
 | [`raelives`](guix/tay/packages/raelives.scm) | `0.0.1-0.20140305` | Original RaeLives game definition | Research / definition only |
-| [`tassh`](guix/tay/packages/drbeefsupreme/tassh.scm) | `20260228-1.672569a` | Tailscale and SSH PNG clipboard relay | Research / definition only |
 
 ## Caveats
 

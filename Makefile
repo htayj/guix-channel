@@ -829,3 +829,8 @@ check-interlisp-medley:
 check-natron:
 	@test -n "$(NATRON_OUTPUT)" -a -n "$(NATRON_EVIDENCE)" || { echo 'Set NATRON_OUTPUT and NATRON_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/natron-smoke.sh "$(NATRON_OUTPUT)" "$(NATRON_EVIDENCE)"
+
+.PHONY: check-tassh
+check-tassh:
+	@test -n "$(TASSH_OUTPUT)" -a -n "$(TASSH_EVIDENCE)" || { echo 'Set TASSH_OUTPUT and TASSH_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/tassh-smoke.sh "$(TASSH_OUTPUT)" "$(TASSH_EVIDENCE)"
