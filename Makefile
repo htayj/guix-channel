@@ -30,7 +30,7 @@ RELEASE_FONT_PACKAGES := cadr-fonts-latin cadr-fonts-symbols dec-fonts \
 	genera-fonts-latin genera-fonts-symbols
 FONT_PACKAGES := atarist-font amstelvar $(RELEASE_FONT_PACKAGES)
 PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
-	computer-builder rust-computus custom-nix-pkgs databases-team75 dorxng-mcp buzz \
+	computer-builder rust-computus rust-effects custom-nix-pkgs databases-team75 dorxng-mcp buzz \
 	hyprland-preview-share-picker hy3 dank-material-shell-shell-only sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape klh10 pdp10-suppty ks10-udis emacs-treesit-sexp \
 	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a emacs-aidermacs emacs-mentor-pinned emacs-vim-region org-mind-map \
@@ -228,6 +228,11 @@ check-affect:
 check-minttea:
 	@test -n "$(MINTTEA_OUTPUT)" -a -n "$(MINTTEA_EVIDENCE)" || { echo 'Set MINTTEA_OUTPUT and MINTTEA_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/minttea-smoke.sh "$(MINTTEA_OUTPUT)" "$(MINTTEA_EVIDENCE)"
+
+.PHONY: check-rust-effects
+check-rust-effects:
+	@test -n "$(RUST_EFFECTS_OUTPUT)" -a -n "$(RUST_EFFECTS_EVIDENCE)" || { echo 'Set RUST_EFFECTS_OUTPUT and RUST_EFFECTS_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/rust-effects-smoke.sh "$(RUST_EFFECTS_OUTPUT)" "$(RUST_EFFECTS_EVIDENCE)"
 
 check-tui:
 	GUIX="$(GUIX)" sh tests/tui-smoke.sh

@@ -54,6 +54,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Tassh isolated native clipboard relay](#tassh--verified-isolated-native-clipboard-relay)
 - [UC Explorer native microcode parser](#uc-explorer--verified-native-microcode-parser)
 - [Blincolnlights native PDP-1 panel and PDP-5 memory path](#blincolnlights--verified-native-pdp-1-panel-and-pdp-5-memory-path)
+- [Rust Effects offline library and external consumer](#rust-effects--verified-offline-library-and-external-consumer)
 
 ## Relocation map (2026-10-04)
 
@@ -104,6 +105,21 @@ names (226 project + 7 font + 1 optional proprietary), versus 233 immediately
 before adding SporkHack. This count includes unrelated unpublished user
 changes, notably Dualmaster; it is **not** the published channel inventory
 or evidence that those changes were accepted by the SporkHack task.
+Rust Effects' 2026-10-06 acceptance adds exactly **one** `PROJECT_PACKAGES`
+entry and one README library row. This is a separate +1 delta from the dated
+SporkHack counts above, not a rewrite of that history. Its 35 private registry
+crate sources are dependency closure, not 35 new top-level programs or source
+snapshots. Unrelated unpublished changes, including Dualmaster and other
+shared Makefile edits, remain outside the Rust Effects acceptance boundary.
+The publisher verified the committed baseline at **`6275c4a`** as **233**
+check names (225 project + 7 font + 1 optional proprietary). The Rust Effects-only
+publication inventory is therefore **234** (226 project + 7 font + 1 optional).
+The verified integrated working tree contains **235** (227 project + 7 font +
+1 optional), with exactly two additions against that committed baseline:
+Rust Effects and the unrelated unpublished Dualmaster entry. The 235 count
+is not the Rust Effects publication inventory or acceptance of Dualmaster.
+The earlier 234 integrated figure is the pre-Rust Effects snapshot, retained
+as dated history.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -128,6 +144,123 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Rust Effects — verified offline library and external consumer
+
+Local acceptance on **2026-10-06** covers
+[`rust-effects`](guix/tay/packages/rust-effects.scm) **0.1.0-0.d7fe96d**,
+the source-built MIT/Expat Rust library from
+[kitsuneninetails/rust-effects](https://github.com/kitsuneninetails/rust-effects/tree/d7fe96deb196fed0a222d0d3b796145f78420f39),
+revision `d7fe96deb196fed0a222d0d3b796145f78420f39`, with Guix base32 source
+SHA-256 `1z3a1g3wvqja9b5gsih5k6z88cx9jnnan96rqyy705x3vxf1lclb`.
+The installed license is Michael Micucci's 2019 MIT license. This is a usable
+library delivery, not a renamed preservation snapshot, CLI or prebuilt `rlib`
+tied to one compiler. The canonical **629** source snapshots and their dated
+preservation inventory remain unchanged; local acceptance does not establish
+signed channel publication, issue closure or deployment.
+The unchanged preservation definition
+[`kitsuneninetails-rust-effects-source`](guix/tay/packages/starred-i-m.scm)
+pins the same commit, with its separate snapshot-origin hash
+`1mxxs22da4jzhhkhmsgk3gqbckq5as091zpqmz4zqwlzbnrl11da` and Expat license.
+The buildable package's Git-origin hash above is not substituted into that
+canonical source ledger.
+
+### Installed library and offline graph
+
+The accepted output is
+`/gnu/store/q68f2gh4pibix1nsid31s1g2p6nnzg19-rust-effects-0.1.0-0.d7fe96d`.
+It installs the actual crate source and pinned lockfile under
+`share/cargo/src/rust-effects-0.1.0`, the packaged archive at
+`share/cargo/registry/rust-effects-0.1.0.crate`, the complete vendored graph
+under `share/rust-effects/vendor`, and an absolute-path, offline-only Cargo
+source replacement at `share/rust-effects/cargo-config.toml`. A copy of that
+configuration lives in the installed source's `.cargo/config.toml`.
+Upstream `LICENSE` and `README.md` are retained in `share/doc/rust-effects`.
+External consumers need the installed Cargo configuration explicitly when
+their working directory is outside that source tree; the proof uses a separate
+`[patch.crates-io]` configuration pointing at the installed source.
+
+Upstream supplied wildcard dependencies and no lockfile. Packaging replaces
+them with exact constraints: **`futures = "=0.3.32"`**, **`futures-util =
+"=0.3.32"`**, and **`tokio = "=1.52.3"`**, preserving Futures' `std` and
+Tokio's `full` features. The manifest records Rust **1.86** as the minimum;
+the exercised toolchain is the full **Rust 1.93.0**, with explicitly selected
+matching **rustdoc 1.93.0** (both report `254b59607`, 2026-01-19), not the
+bootstrap-only 1.86 compiler that lacks rustdoc. This receipt does not prove
+a build with the declared minimum compiler.
+
+[`rust-effects-cargo-sources.scm`](guix/tay/packages/rust-effects-cargo-sources.scm)
+pins **35** registry archives for the full lock graph, including non-host
+target dependencies. The installed closure retains these versions:
+
+- `bitflags 2.13.1`, `bytes 1.11.1`, `cfg-if 1.0.4`, `errno 0.3.14`;
+- `futures`, `futures-channel`, `futures-core`, `futures-executor`,
+  `futures-io`, `futures-macro`, `futures-sink`, `futures-task`, and
+  `futures-util`, all **0.3.32**;
+- `libc 0.2.189`, `lock_api 0.4.14`, `memchr 2.8.3`, `mio 1.2.1`,
+  `parking_lot 0.12.5`, `parking_lot_core 0.9.12`, `pin-project-lite 0.2.17`;
+- `proc-macro2 1.0.107`, `quote 1.0.47`, `redox_syscall 0.5.18`,
+  `scopeguard 1.2.0`, `signal-hook-registry 1.4.8`, `slab 0.4.12`,
+  `smallvec 1.15.2`, `socket2 0.6.4`, `syn 2.0.119`;
+- `tokio 1.52.3`, `tokio-macros 2.7.0`, `unicode-ident 1.0.24`,
+  `wasi 0.11.1+wasi-snapshot-preview1`, `windows-link 0.2.1`,
+  `windows-sys 0.61.2`.
+
+The package installs its retained lockfile after Cargo configure removes the
+upstream lock; registry checksum fields are removed under Guix's standard
+vendor policy. Build, tests and crate packaging use `--locked`, and the
+configured Cargo operation is offline. Cross-target graph completeness is
+not cross-compilation or target-runtime acceptance.
+
+### Build and native receipts
+
+| Gate | Main receipt |
+| --- | --- |
+| Final source build | Main278 passed in 63 s, producing the accepted `q68f…` output above; artifact `13525`. Upstream tests and doctests ran. |
+| Reproducibility | Main280 `--check` passed in 56.62 s, reproducing the same output with **63 unit tests and 19 doctests**; artifact `13531`. |
+| Full lint | Main281 exited 0 in 7.80 s. Package diagnostics were `warning: no tags were found for rust-effects` at `rust-effects.scm:13:2`, and `rust-effects@0.1.0-0.d7fe96d: updater 'github' failed to find upstream releases`, plus the known unrelated deprecated `flex`, Fourk and WinRM diagnostics. This passes the issue's no-new-errors criterion, **not** warning-free lint. |
+| Native installed-source proof | Main279 passed in 61.42 s; `/tmp/rust-effects-native-1/evidence.json` records exit 0, **63 unit tests and 19 doctests**, external metadata/build/runtime success and unchanged output. |
+| Final integrated target | Main282 `make check-rust-effects` passed in 50.16 s at `/tmp/rust-effects-check-1`, printing `RUST_EFFECTS_NATIVE_RUNTIME_OK`; the receipt records the same output, **63 unit tests and 19 doctests**, all four runtime observations and unchanged NAR. |
+
+[`tests/rust-effects-smoke.sh`](tests/rust-effects-smoke.sh) requires a canonical,
+already-realized output and a fresh absolute evidence directory outside the
+store. It does not build or realize the target library: generic proof tools
+are realized before entering private user, mount, network and PID namespaces.
+The consumer runs with fresh HOME, TMPDIR, Cargo and all XDG roots, an explicit
+compiler/linker environment, only loopback networking, and recursively
+read-only `/gnu/store`. Metadata proves the dependency manifest is the
+installed store source, not the checkout or a consumer-local substitute.
+`cargo test --offline --locked` runs the installed upstream unit tests and
+doctests; a separate consumer is then compiled with `cargo build --offline
+--locked`, without changing its retained lockfile.
+
+The independently compiled
+[`consumer`](tests/rust-effects-consumer/src/main.rs) exercises an externally
+implemented `FreeEffect`, not merely a built-in map. Composition causes no
+dispatch; interpretation logs add/multiply/add, then bind and map in the
+expected order, producing **`[6, 5]`**. The Option rejection returns `None`
+without executing the following map, and empty Option input bypasses the
+closures. A map-only Vec program returns **`[4, 6]`**. The custom async effect
+uses a real Tokio timer and yielded bind; `CFuture` stays lazy until awaited,
+completes with **26**, and a cloned shared future returns **26** without
+re-running the effect trace. The runtime log and observations are retained
+alongside copied manifests, lockfiles, compiler versions and namespace/mount
+evidence under `/tmp/rust-effects-native-1`.
+
+The output's before/after NAR hash is identical:
+`1wvc4aii42m7jbhnncd3aw8nj2jx2hckiibwnjvpc6l0wlr6r0c3`.
+The receipt's crate archive SHA-256 is
+`1340397ce4fc51a9f31a45eb7c784a3fed8759373bb419384671e52fd4fd4d2d`.
+These receipts prove the installed-source offline path and those asserted
+effect/future semantics, not every feature, arbitrary consumer dependency
+graph, minimum-version build, other target or production workload.
+
+The standalone `make check-rust-effects` accepts `RUST_EFFECTS_OUTPUT` and
+`RUST_EFFECTS_EVIDENCE`, propagates `GUIX`, and adds no aggregate smoke-test
+dependency. Documentation workers ran no commands or checks. No host/service
+state or material network-catalog correction changed, so no OKF page/log update
+applies to this repository-only library delivery.
+
 
 ## Blincolnlights — verified native PDP-1 panel and PDP-5 memory path
 

@@ -1,0 +1,14 @@
+[package]
+name = "rust-effects-consumer"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.86"
+publish = false
+
+# tests/rust-effects-consumer/native.py patches rust-effects to OUTPUT's
+# installed source with Cargo's [patch.crates-io] configuration.  The other
+# dependencies are already in OUTPUT's pinned, vendored dependency graph.
+[dependencies]
+rust-effects = "=0.1.0"
+parking_lot = "=0.12.5"
+tokio = { version = "=1.52.3", features = ["rt", "time"] }
