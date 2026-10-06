@@ -80,9 +80,9 @@ remain; especially, inclusion in the old table does not complete AloneRL.
 
 At the 2026-10-04 redesign, the README covered all **228** names declared by
 `FONT_PACKAGES`, `PROJECT_PACKAGES` and the optional proprietary list in
-`Makefile:29-67`, including entries missing from the old 156-row table. That
-default inventory is unchanged by the Tassh and PDP10 GCC acceptances recorded
-on 2026-10-06. Of the **11** additional exported definitions originally listed
+`Makefile:29-67`, including entries missing from the old 156-row table. The
+Tassh and PDP10 GCC acceptances on 2026-10-06 do not change that default
+inventory. Of the **11** additional exported definitions originally listed
 separately, **9** remain research-only: `noctalia`, `flaghack`, `flaghack-charm`,
 `cavechop`, `raelives`, `herdr`, `drl`, `gsplat-wasm` and `nhfourk`. The other two,
 `tassh` and `pdp10-gcc`, now appear under installable utilities and historical
@@ -92,6 +92,18 @@ not assembly, linking or target execution.
 UC Explorer's 2026-10-06 native acceptance promotes its existing “Defined” row
 within historical computing, not a research-only entry: `uc-explorer` is already
 in `PROJECT_PACKAGES` at `Makefile:42`. None of these inventory counts changes.
+SporkHack's 2026-10-06 acceptance adds **one** new `PROJECT_PACKAGES` entry
+and README program row, unlike those existing-entry promotions. The dated
+228 redesign count is historical, not a recount of the current working tree.
+The pre-SporkHack committed Makefile inventory contains **232** check names
+(224 project + 7 font + 1 optional proprietary). This SporkHack-only change
+raises that inventory to **233** (225 project + 7 font + 1 optional), without
+including unrelated unpublished user additions.
+The integrated working-tree inventory on 2026-10-06 contains **234** check
+names (226 project + 7 font + 1 optional proprietary), versus 233 immediately
+before adding SporkHack. This count includes unrelated unpublished user
+changes, notably Dualmaster; it is **not** the published channel inventory
+or evidence that those changes were accepted by the SporkHack task.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -2813,6 +2825,138 @@ evidence of the real game, not Goocastle execution or an artificial frontend.
 The proof covers the exercised gameplay/save/restore paths, not a full
 campaign or the optional graphical ports.  No profile or deployed system
 changed; no network OKF update applies to this repository-only addition.
+
+## SporkHack silent native game and save continuity
+
+Local acceptance on **2026-10-06** covers [`sporkhack`](guix/tay/packages/sporkhack.scm)
+**0.7.0-0.4ed114f**, the original native Unix game from
+[`k21971/SporkHack` revision `4ed114fc29b9d03f9b2857c730afd9563513ddad`](https://github.com/k21971/SporkHack/tree/4ed114fc29b9d03f9b2857c730afd9563513ddad).
+The exact codeload archive has SHA-256
+`26ff9a80a8309f3c471506e5c9bdf2688dfd9ced48cebca1ea483ee7f88cc79a`
+and Guix base32 hash
+`16n7ikwffgj8xahvrkj8xnfgv3b8yaywkr862m3kr7rhm209mzr6`.
+This is a silent terminal roguelike, not a replacement frontend or an audio
+package. Both native tty and curses interfaces are built; acceptance below
+exercises tty. No sound sample, proprietary Macintosh sound payload, audio
+backend or bring-your-own playback capability is included or claimed.
+
+### Source rights and distribution boundary
+
+The retained README directs recipients of the source distribution to
+`dat/license`, the **NetHack General Public License** (NGPL). Its paragraph
+2(b) grants distribution of derivative works under the same terms; missing
+repetition in an individual source/header/map/text file is not a different
+license. Guix records the actual grant with `license:fsdg-compatible` and the
+[canonical NGPL URL](https://nethack.org/common/license.html), not a guessed
+GPL/SPDX substitution. The selected source review covers **314 upstream
+files**: root 5, dat 39, doc 30, include 90, src 107, util 10, sys/unix 11,
+sys/share 3 (including sounds/README), tty 4 and curses 15. The public-domain
+LibTomCrypt RNG notice in `src/rnd.c` and the NGPL header/literary attributions
+in `dat/data.base` remain intact. This is a bounded source-rights review,
+not legal certification or a claim to have established rights in every
+unselected historical port or asset.
+
+Filtering occurs in the **source origin**, not merely the installed output.
+The Roland instrument `.uu` samples have no redistribution grant: their
+README's speculation about absent copyright marks does not supply one.
+Unused ports/tiles/encoded or binary resources, `sys/mac/NHsound.hqx`,
+`sys/unix/cpp*.shr` and `snd86unx.shr` are excluded. `doc/tmac.n` prohibits
+sale and redistribution of modifications; unused `include/bitmfile.h` has
+a MAXON copyright without a grant. Unused graphics headers `gem_rsc.h`,
+`load_img.h` and `qt_xpms.h` are also excluded. The original sound README is
+retained as `share/doc/sporkhack/sounds-README`, not as permission to ship its
+samples. Flex/Bison regenerate the parsers from native source inputs instead
+of distributing historical generated skeletons.
+
+The executable is accompanied by the **complete selected, patched source**
+under `share/doc/sporkhack/source`, satisfying the source-accompanying route
+in NGPL paragraph 3(a), not its noncommercial-only archive-URL alternative.
+Original notices and verbatim `license` are retained; modified files carry
+dated downstream notices. Installed `SOURCE`, `sporkhack.scm` and
+`sporkhack-private-state.patch` document the pin, filtering and changes.
+The full native game rules, level sources and locally generated `nhdat`
+remain, with help and the shipped plain-text Guidebook. Build changes select
+native internal compression, pinned build/version timestamps and immutable
+data; the private-state patch routes mutable native files to the launcher
+state rather than changing gameplay to satisfy the consumer.
+
+### Native state and use
+
+The normal `bin/sporkhack` launcher runs `libexec/sporkhack-real`. Immutable
+data lives in `share/sporkhack`; saves, bones, levels, scores, locks, logs,
+whereis/extrainfo and dumps use
+`${XDG_STATE_HOME:-$HOME/.local/state}/sporkhack` with private permissions,
+without setuid/setgid or ownership changes. `XDG_STATE_HOME` must be absolute.
+Native configuration is `~/.sporkrc` (fallback `~/.nethackrc`) or
+`NETHACKOPTIONS`; installation does not edit it. Confirm the ordinary
+character selector with `.` (play), use movement and `s` (search), inspect
+inventory with `i`, then use `S` and `y` to save. An ordinary subsequent
+invocation restores and consumes that native save before continued play.
+
+```sh
+guix build -L guix --no-grafts sporkhack
+guix build -L guix --source sporkhack
+sporkhack
+# Supply the already-realized output and a fresh, nonexistent evidence path:
+make check-sporkhack GUIX=guix SPORKHACK_OUTPUT=/gnu/store/h8cpgw057hznn1vdvrizvzivwxarqw64-sporkhack-0.7.0-0.4ed114f SPORKHACK_EVIDENCE=/tmp/new-sporkhack-proof
+```
+
+### Exercised receipt and harness corrections
+
+The final source build passed in **45.36 s**; the independent `--check`
+rebuild passed in **42.89 s**, retaining the same accepted output:
+`/gnu/store/h8cpgw057hznn1vdvrizvzivwxarqw64-sporkhack-0.7.0-0.4ed114f`.
+There is no upstream noninteractive test target; these timings do not claim
+an upstream unit-test suite. Offline lint exited zero in **6.48 s**, with
+SporkHack no-updater/archive (Software Heritage/Disarchive) findings and known
+unrelated channel findings; this is not a warning-free whole-channel claim.
+
+The final integrated `make check-sporkhack` passed in **12.90 s** with
+evidence in `/tmp/sporkhack-check-1`. It is a standalone target, not part of
+aggregate `make check`; both `SPORKHACK_OUTPUT` and `SPORKHACK_EVIDENCE` are
+required, with no defaults, and evidence must not already exist. It invokes
+`tests/sporkhack-smoke.sh` on an already-realized output and never builds the
+game. Generic Python/pyte/namespace tools are test-only, not game runtime
+dependencies. An earlier direct consumer run also passed in **11.50 s**
+(`/tmp/sporkhack-native-3`) against the same output and NAR.
+
+Two genuine 100×24 PTY processes run the normal launcher/native ELF with
+private HOME/XDG state, empty PATH, separate user, mount, network and PID
+namespaces (only loopback), and a recursively read-only store. Both save
+normally and exit **0**; the consumer exit status is 0. `continuity.json`, raw
+`session-*.pty`, screen/HUD/inventory snapshots, input/process receipts and
+native save copies retain the observations; copies are evidence only and are
+never injected into the game.
+
+The selected character is OmpProof, lawful human **Female Valkyrie**. The
+observed turn sequence is **1 → 4 → 7**, with native 80×21 zero-based map
+coordinates **(58, 5) → (57, 5) → (57, 6)**: each process makes a real floor
+move and two search turns before saving. The second process's restore
+exactly matches the first saved **entire map, HUD, position, stats, HP,
+turn and every inventory letter/description**, consumes the native save,
+then advances and resaves. St 18/02, Dx 12, Co 18, In 8, Wi 9, Ch 8,
+HP 16/16, Pw 2/2, AC 6 and Exp 1 persist. Inventory retains `a` +1 long sword
+(weapon in hand), `b` +0 dagger, `c` uncursed +3 small shield (being worn),
+`d` 2 uncursed food rations and `e` uncursed oil lamp. Saved `whereis`
+records turns 4 and 7 and HP 16/16, matching the pre-exit HUD. The host game
+state is unchanged, and the before/after read-only output NAR is
+`0zhahjhc3vb424vin93zgzqsrq04655yf4yxhx3fix1x8dzgwanb`.
+
+Earlier retained attempts are **not passes**: `/tmp/sporkhack-native-1`
+timed out at the ordinary character selector because the harness omitted
+`.`; `/tmp/sporkhack-native-2` saved successfully but failed an incorrect
+`whereis` gender expectation. At this upstream pin `whereis` reads
+`u.mfemale`, the pre-polymorph field initialized to zero, rather than the
+selected `flags.female`; a never-polymorphed Female therefore reports
+`gender=Mal`. The selector's `F + Female` proves the selection independently.
+`whereis` updates at startup, level change and save, not every turn. The
+consumer now uses normal selector confirmation and the actual saved-field
+semantics; **no game patch masks these harness errors or changes the
+character's gender**. This metadata limitation is not a save-continuity
+failure. The receipt covers exercised tty gameplay/save/restore/resave,
+not a full campaign, curses runtime or audio playback. The 629 preservation
+snapshots are unchanged; no profile or deployed system changed, so no
+network OKF update applies to this repository-only addition.
 
 ## NLarn original-game save continuity
 

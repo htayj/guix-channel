@@ -286,6 +286,7 @@ publication, source-required, and build gates appear in the final table.
 | [`nitrohack`](guix/tay/packages/nitrohack.scm) | `4.0.4` | Wide-curses NetHack variant with native menus and saves | Verified |
 | [`slashem`](guix/tay/packages/slashem.scm) | `0.0.8E0F2-0.aae9ef2` | Extended NetHack terminal dungeon game | Verified |
 | [`splicehack-rewrite`](guix/tay/packages/splicehack-rewrite.scm) | `0.8.2-0.0cf23cb` | SpliceHack Rewrite terminal NetHack variant | Verified |
+| [`sporkhack`](guix/tay/packages/sporkhack.scm) | `0.7.0-0.4ed114f` | Silent native Unix NetHack roguelike with NGPL source/data and private XDG state | Verified ([receipt](ACCOUNTING.md#sporkhack-silent-native-game-and-save-continuity)) |
 | [`srogue`](guix/tay/packages/srogue.scm) | `9.0` | Robert Kindelberger's expanded version of the Rogue dungeon game | Verified |
 | [`unnethack`](guix/tay/packages/unnethack.scm) | `6.0.4` | NGPL full native TTY game/data/recovery/docs | Verified |
 | [`urogue`](guix/tay/packages/ultrarogue.scm) | `1.0.8` | Classic terminal dungeon crawl with an expanded bestiary | Verified |

@@ -58,7 +58,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	lambdahack kimchi keeperrl \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
-	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron
+	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -113,7 +113,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-gearhead2 check-gearhead check-fiqhack \
 	check-evilhack check-dynahack check-alone-rl check-allure \
 	check-agduria check-wenyan check-ludviglundgren-qbittorrent-cli \
-	check-lispy-rogue check-bodge-nuklear check-litegraph check-interlisp-medley check-natron
+	check-lispy-rogue check-bodge-nuklear check-litegraph check-interlisp-medley check-natron check-sporkhack
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
 		{ echo "expected $(EXPECTED_SOURCE_PACKAGE_COUNT) exported source packages, found $(SOURCE_PACKAGE_COUNT)"; exit 1; }
@@ -839,6 +839,11 @@ check-interlisp-medley:
 check-natron:
 	@test -n "$(NATRON_OUTPUT)" -a -n "$(NATRON_EVIDENCE)" || { echo 'Set NATRON_OUTPUT and NATRON_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/natron-smoke.sh "$(NATRON_OUTPUT)" "$(NATRON_EVIDENCE)"
+
+.PHONY: check-sporkhack
+check-sporkhack:
+	@test -n "$(SPORKHACK_OUTPUT)" -a -n "$(SPORKHACK_EVIDENCE)" || { echo 'Set SPORKHACK_OUTPUT and SPORKHACK_EVIDENCE (prebuilt output and nonexistent evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/sporkhack-smoke.sh "$(SPORKHACK_OUTPUT)" "$(SPORKHACK_EVIDENCE)"
 
 .PHONY: check-tassh
 check-tassh:
