@@ -50,6 +50,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [PDP6 native panel memory path](#pdp6--verified-native-panel-memory-path)
 - [Apout native V7 guest contract](#apout--verified-native-v7-guest-contract)
 - [PDP10 XPL native compiler object semantics](#pdp10-xpl--verified-native-compiler-object-semantics)
+- [PDP10 GCC assembler-free C code generation](#pdp10-gcc--verified-assembler-free-c-code-generation)
 - [Tassh isolated native clipboard relay](#tassh--verified-isolated-native-clipboard-relay)
 - [UC Explorer native microcode parser](#uc-explorer--verified-native-microcode-parser)
 - [Blincolnlights native PDP-1 panel and PDP-5 memory path](#blincolnlights--verified-native-pdp-1-panel-and-pdp-5-memory-path)
@@ -80,12 +81,14 @@ remain; especially, inclusion in the old table does not complete AloneRL.
 At the 2026-10-04 redesign, the README covered all **228** names declared by
 `FONT_PACKAGES`, `PROJECT_PACKAGES` and the optional proprietary list in
 `Makefile:29-67`, including entries missing from the old 156-row table. That
-default inventory is unchanged by the Tassh acceptance recorded on 2026-10-06.
-Of the **11** additional exported definitions originally listed separately,
-**10** remain research-only: `noctalia`, `flaghack`, `flaghack-charm`, `cavechop`,
-`raelives`, `herdr`, `drl`, `gsplat-wasm`, `nhfourk` and the research/toolchain
-`pdp10-gcc` backend. The eleventh, `tassh`, now appears under installable utilities
-with a bounded native receipt; it still is not in the default `make build` list.
+default inventory is unchanged by the Tassh and PDP10 GCC acceptances recorded
+on 2026-10-06. Of the **11** additional exported definitions originally listed
+separately, **9** remain research-only: `noctalia`, `flaghack`, `flaghack-charm`,
+`cavechop`, `raelives`, `herdr`, `drl`, `gsplat-wasm` and `nhfourk`. The other two,
+`tassh` and `pdp10-gcc`, now appear under installable utilities and historical
+computing respectively, with bounded native receipts. Neither joins the default
+`make build` list; PDP10 GCC acceptance is assembler-free C code generation,
+not assembly, linking or target execution.
 UC Explorer's 2026-10-06 native acceptance promotes its existing “Defined” row
 within historical computing, not a research-only entry: `uc-explorer` is already
 in `PROJECT_PACKAGES` at `Makefile:42`. None of these inventory counts changes.
@@ -677,6 +680,131 @@ The guarded target requires both variables and honors `GUIX`; its external
 smoke consumer requires a **fresh nonexistent evidence directory** outside
 the store/output and uses the pre-realized supplied compiler. This
 documentation worker ran no commands or checks.
+
+## PDP10 GCC — verified assembler-free C code generation
+
+Local acceptance on **2026-10-06** covers
+[`pdp10-gcc`](guix/tay/packages/pdp10-gcc.scm) **3.2-20020416**, built from
+[`larsbrinkhoff/pdp10-gcc`](https://github.com/larsbrinkhoff/pdp10-gcc/tree/3c67a2b56b8a02041bdfca00d012bcccbe4168e5)
+commit `3c67a2b56b8a02041bdfca00d012bcccbe4168e5`. It reuses the immutable
+`larsbrinkhoff-pdp10-gcc-source` origin, source SHA-256
+`1ll89jjpfxfxr4fvxmx5yrjyxhp1zscrj0w2dbirgzr5rm3r9p8c` (Guix base32),
+without repinning or altering that preservation definition. The **629-source
+snapshot ledger is unchanged**. This promotes an existing research definition
+to a bounded native compiler delivery, not a new default inventory member:
+`pdp10-gcc` remains outside `PROJECT_PACKAGES` and the default `make build` list.
+
+The supported host is **`x86_64-linux`** and target is
+**`pdp10-unknown-tops20`**. The source-built native GCC driver, standalone
+preprocessor, private `cc1` and specs can preprocess freestanding C and emit
+TOPS-20 **MACRO assembly text with `-S`**. The package contains no target
+assembler, linker, headers, C library, `libgcc` target archive, guest operating
+system or executable runtime. Host GCC/binutils are build inputs for the native
+compiler programs, not target-tool fallbacks in the installed consumer.
+
+The pinned-tree license audit records `COPYING`/`gcc/COPYING` **GPL-2.0**,
+`COPYING.LIB`/`gcc/COPYING.LIB` **LGPL-2.1**, `libffi/LICENSE` **Expat/MIT**, the
+**zlib** notice in `zlib/zlib.h`, and the **Boehm GC permissive notice** in
+`boehm-gc/doc/README` (including copyright/notice retention and modified-code
+disclosure). The package license list reflects these notices instead of
+treating the whole bundled tree as GPL alone. The historical libgcj GPL linking
+exception is retained as `libjava/LIBGCJ_LICENSE`; retaining its notice does
+not install Java or a target runtime. Installed notices under
+`share/doc/pdp10-gcc-3.2-20020416/` are `COPYING`, `COPYING.LIB`, `README`,
+`LICENSE`, `zlib.h` and `LIBGCJ_LICENSE`, all checked by the native consumer.
+This is the bundled-notice audit, not a claim that every bundled library is
+built or linked into the installed compiler.
+
+The recipe fixes actual legacy-source/build causes rather than suppressing
+diagnostics: GNU89 is used for the K&R-era configure probes; obsolete cast
+post-increment in `obstack.h` is replaced by explicit pointer advancement;
+`CONFIG_SHELL` supplies the store shell; and **all generated `tmpmultilib`
+shebangs** inside `gcc/genmultilib` are patched, not merely the generator's own
+shebang. The preserved GNU-as backend branch lacks helpers needed by this
+revision, so `--with-as=macro` selects the self-contained MACRO dialect. The
+recursive `all-gcc` goal is constrained to `start.encap`, avoiding target
+`libgcc.a` and its assembler dependency; installation keeps only the compiler
+components rather than invoking legacy target-header `fixincludes`.
+
+Crucially, selecting the MACRO dialect formerly also emitted
+`DEFAULT_ASSEMBLER="macro"`. GCC's driver tried that relative executable in
+the working directory before restricted PATH lookup. The earlier native-1
+probe caught a deliberately successful cwd `macro` trap. The fix removes the
+`DEFAULT_ASSEMBLER` **definition emitter in `gcc/configure` before configure**,
+while preserving `gcc_cv_as` for dialect selection, so `config.status` cannot
+regenerate the unsafe default. The prior end-anchored replacement had been a
+no-op because Guix `substitute*` retains the line's terminating newline;
+`[^\n]*` now matches the definition without relying on `$`. The installed
+wrapper restricts `PATH` to this output's `bin` and `GCC_EXEC_PREFIX` to its
+private `lib/gcc-lib`, preventing normal host `as`/`ld` fallback too.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main244 final source build passed in 35.41 s for `/gnu/store/qsg5lrp6mwapr8y8390qjwv26p6m7d4q-pdp10-gcc-3.2-20020416`. |
+| Reproducibility | Main247 final serial `--check` passed in 33.35 s, reproducing the same `qsg5lrp…` output. |
+| Full lint | Main246 exited 0 in 4.94 s with no recipe line-length findings. It reports no updater, source not archived on Software Heritage and missing from Disarchive; known unrelated deprecated `flex`, `nhfourk` unexpected `)` and excluded WinRM unexpected EOF diagnostics remain. This is not a clean-lint claim. |
+| Actual installed consumer (pre-formatting identity) | Main240 passed in 3.32 s at `/tmp/pdp10-gcc-native-2` for `/gnu/store/l2sg1fc4cgrpkksqz1fj3fqz5rf6mckg-pdp10-gcc-3.2-20020416`, printing the bounded code-generation marker. |
+| Final guarded Makefile/native integration | Main245 `make check-pdp10-gcc` passed in 4.79 s at `/tmp/pdp10-gcc-check-final` with the final `qsg5lrp…` output and `PDP10_GCC_NATIVE_CODEGEN_OK (not assembly/link/runtime)`. |
+
+Wrapping the recipe's long expression for lint changed its derivation/output
+identity despite leaving the patched source expression's value unchanged. The
+earlier `/tmp/pdp10-gcc-native-2/evidence.json` remains an actual native receipt,
+not the final output identity. Final integrated evidence is
+`/tmp/pdp10-gcc-check-final/evidence.json`, with status `passed` and explicit
+scope **real native cross-GCC preprocessing and `-S` code generation only**.
+Both runs' assembly observations have the same SHA-256 below. On the final
+output, the normal installed `pdp10-unknown-tops20-cpp -P codegen.c codegen.i`
+and `pdp10-unknown-tops20-gcc -S -O0 -ffreestanding -fno-builtin -mregparm=7
+codegen.c -o codegen.s` both exited 0 with empty stdout/stderr. The C input
+contains a compile-time `sizeof(int) == 4` target-byte check, arithmetic
+`(a+b)*c-b`, and a signed countdown loop adding `n` below 4 and subtracting it
+otherwise. This is real compiler output, not observer-generated assembly.
+
+The source-backed [assembly observer](tests/pdp10-gcc-native.py) checks complete
+MACRO `TITLE codegen`/`END`, both exported function bodies, `ADD`/`IMUL`/`SUB`,
+signed `JUMPG`/`CAILE`, the loop's `ADDM`/`SUB`/`SOS`, resolved local labels and
+a backward `JRST %3`, and `POPJ 17,` returns. The retained actual `codegen.s`
+SHA-256 is `9cb577fd93712d69fa6a2281bf913a008877fd8314b8c5b481de1349bc08bde6`.
+`assembly-observation.json`, exact `codegen.c`/`codegen.i`, compiler
+stdout/stderr and command records preserve the structural evidence. This is
+**not assembling the text, interpreting instructions or proving executed
+arithmetic/control-flow semantics**.
+
+The negative probes use self-tested, deliberately successful trap executables
+named `as`, `ld`, `collect2`, `pdp10-unknown-tops20-as` and
+`pdp10-unknown-tops20-ld` on hostile PATH, plus `macro` in the compiler cwd.
+Their setup invocations establish the marker mechanism; they are **not real
+target tools or replacement compilers**. None was invoked by successful `-S`
+or either unsupported operation. `-c codegen.i -o codegen.o` exited **1** with
+`installation problem, cannot exec 'as': No such file or directory`;
+`-nostdlib -nostartfiles opaque.o -o codegen` exited **1** with the analogous
+missing `ld` diagnostic. The retained `.stderr` files use GCC's original
+backtick/apostrophe quoting. Neither operation produced its output or a trap
+marker, and neither failed by a compiler crash. `opaque.o` is explicitly
+**opaque lookup-fixture bytes, not an assembled PDP-10 object**: it bypasses
+compilation solely to reach unavailable linker lookup, not to claim linking.
+
+The consumer runs with caller **UID 1000/GID 998**, private user/mount/network/
+PID namespaces, only `lo`, fresh HOME/TMPDIR/XDG directories, no inherited
+compiler environment and recursively read-only `/gnu/store`. Before/after
+final output NAR hashes both equal
+`05dgyzzla52zmq1z0awyfc97pc6pasj3rhxjqbzaaa3kdd3w308s`.
+The earlier native-2 output was also unchanged before/after its consumer run,
+with its distinct NAR hash
+`0c4mwjgdy55vdjf7ahxfb5g97fj1yha0lrypbdslq0gp3ny4466r`.
+The external [smoke entry point](tests/pdp10-gcc-smoke.sh) consumes a supplied
+pre-realized output; it never builds or repairs that compiler in place.
+
+```sh
+make check-pdp10-gcc PDP10_GCC_OUTPUT=/gnu/store/qsg5lrp6mwapr8y8390qjwv26p6m7d4q-pdp10-gcc-3.2-20020416 PDP10_GCC_EVIDENCE=/tmp/pdp10-gcc-native-new
+```
+
+The guarded target honors `GUIX` and requires both variables; the evidence
+path must be fresh, nonexistent, absolute and canonical outside the store.
+No upstream suite, target assembly/linking/PDP-10 execution, publication,
+issue closure or user-profile/system deployment is established. No OKF page
+update applies to this repository-only acceptance. This documentation worker
+ran no commands or checks.
 
 ## Apout — verified native V7 guest contract
 

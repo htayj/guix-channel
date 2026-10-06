@@ -1,149 +1,95 @@
 #!/bin/sh
-# Offline smoke test for the PDP-10 GCC code-generation backend.
+# Installed GCC code-generation proof only; never builds OUTPUT or target tools.
+# Usage: GUIX=guix sh tests/pdp10-gcc-smoke.sh OUTPUT EVIDENCE
 set -eu
-
+fail() { printf 'pdp10-gcc-smoke: %s\n' "$*" >&2; exit 1; }
+test "$#" -eq 2 || { printf 'usage: GUIX=guix sh %s OUTPUT EVIDENCE\n' "$0" >&2; exit 64; }
 guix_bin=${GUIX:-guix}
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-
-if test "$#" -gt 1; then
-    echo "usage: $0 [pdp10-gcc-output]" >&2
-    exit 64
-fi
-
-if test "$#" -eq 1; then
-    pdp10_out=$1
-else
-    pdp10_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes pdp10-gcc)
-fi
-
-find_output ()
+out=$1
+evidence=$2
+case "$out" in /gnu/store/*) ;; *) fail 'OUTPUT must be a realized /gnu/store item' ;; esac
+case "$evidence" in /*) ;; *) fail 'EVIDENCE must be absolute' ;; esac
+case "$evidence" in /gnu/store|/gnu/store/*) fail 'EVIDENCE must be outside the store' ;; esac
+test -d "$out" || fail 'OUTPUT is not realized'
+test ! -e "$evidence" && test ! -L "$evidence" || fail 'EVIDENCE must be fresh and nonexistent'
+find_output()
 {
     program=$1
-    package=$2
-    for candidate in $($guix_bin build --no-grafts --no-substitutes "$package"); do
+    shift
+    candidates=$("$guix_bin" build --no-grafts --no-offload --cores=1 --max-jobs=1 "$@") || return 1
+    for candidate in $candidates; do
         if test -x "$candidate/$program"; then
             printf '%s\n' "$candidate"
             return 0
         fi
     done
-    echo "could not find $program in Guix package $package" >&2
-    return 1
+    fail "dependency lacks $program: $*"
 }
-
-bash_out=$(find_output bin/bash bash)
-coreutils_out=$(find_output bin/mktemp coreutils)
-diffutils_out=$(find_output bin/cmp diffutils)
-findutils_out=$(find_output bin/find findutils)
-grep_out=$(find_output bin/grep grep)
-util_linux_out=$(find_output bin/unshare util-linux)
-
-target=pdp10-unknown-tops20
-compiler=$pdp10_out/bin/$target-gcc
-preprocessor=$pdp10_out/bin/$target-cpp
-license_dir=$pdp10_out/share/doc/pdp10-gcc-3.2-20020416
-
-test -x "$compiler"
-test -x "$preprocessor"
-test -x "$pdp10_out/lib/gcc-lib/$target/3.2/cc1"
-test ! -e "$pdp10_out/bin/$target-as"
-test ! -e "$pdp10_out/bin/$target-ld"
-if "$findutils_out/bin/find" "$pdp10_out" -type f \
-    \( -name 'libgcc*.a' -o -name 'libgcc*.o' \) -print |
-    "$grep_out/bin/grep" -q .; then
-    echo "pdp10-gcc unexpectedly installed target libgcc material" >&2
-    exit 1
+# Generic proof dependencies are realized serially before isolation.  The
+# installed compiler output is strictly caller-supplied, never realized here.
+python=$(find_output bin/python3 python)
+coreutils=$(find_output bin/env coreutils)
+util_linux=$(find_output bin/unshare util-linux)
+bash=$(find_output bin/bash bash-minimal)
+canonical_out=$("$coreutils/bin/realpath" -e -- "$out")
+test "$out" = "$canonical_out" || fail 'OUTPUT must be canonical'
+case "${out#/gnu/store/}" in ''|*/*) fail 'OUTPUT must be one direct store item' ;; esac
+test "$evidence" = "$("$coreutils/bin/realpath" -m -- "$evidence")" || fail 'EVIDENCE must be canonical'
+"$coreutils/bin/mkdir" -- "$evidence"
+scratch=$("$coreutils/bin/mktemp" -d /tmp/pdp10-gcc-native.XXXXXXXX)
+trap '"$coreutils/bin/rm" -rf -- "$scratch"' EXIT HUP INT TERM
+status=0
+before=$("$guix_bin" hash -S nar "$out" 2>"$evidence/output-before.nar-hash.stderr") || status=$?
+printf '%s\n' "$before" >"$evidence/output-before.nar-hash"
+if test "$status" -eq 0; then
+    "$coreutils/bin/env" -i LC_ALL=C PATH='' \
+        HOME="$scratch/home" TMPDIR="$scratch/tmp" \
+        XDG_CONFIG_HOME="$scratch/config" XDG_DATA_HOME="$scratch/data" \
+        XDG_CACHE_HOME="$scratch/cache" XDG_STATE_HOME="$scratch/state" \
+        XDG_RUNTIME_DIR="$scratch/runtime" \
+        EXPECTED_UID="$("$coreutils/bin/id" -u)" EXPECTED_GID="$("$coreutils/bin/id" -g)" \
+        HOST_USER_NS="$("$coreutils/bin/readlink" /proc/self/ns/user)" \
+        HOST_MNT_NS="$("$coreutils/bin/readlink" /proc/self/ns/mnt)" \
+        HOST_NET_NS="$("$coreutils/bin/readlink" /proc/self/ns/net)" \
+        HOST_PID_NS="$("$coreutils/bin/readlink" /proc/self/ns/pid)" \
+        "$coreutils/bin/timeout" --kill-after=10 180 \
+        "$util_linux/bin/unshare" --user --map-current-user --keep-caps \
+        --mount --propagation private --net --pid --mount-proc --kill-child --fork \
+        "$python/bin/python3" -I -B "$channel_dir/tests/pdp10-gcc-native.py" \
+        "$out" "$evidence" "$scratch" "$util_linux/bin/mount" "$bash/bin/bash" \
+        >"$evidence/driver.stdout" 2>"$evidence/driver.stderr" || status=$?
 fi
-for notice in COPYING COPYING.LIB README LICENSE zlib.h LIBGCJ_LICENSE; do
-    test -f "$license_dir/$notice"
-done
-"$grep_out/bin/grep" -F "GNU GENERAL PUBLIC LICENSE" "$license_dir/COPYING"
-"$grep_out/bin/grep" -F "GNU LESSER GENERAL PUBLIC LICENSE" "$license_dir/COPYING.LIB"
-"$grep_out/bin/grep" -F "Permission is hereby granted to use or copy" \
-    "$license_dir/README"
-"$grep_out/bin/grep" -F "Cygnus Solutions" "$license_dir/LICENSE"
-"$grep_out/bin/grep" -F "Permission is granted to anyone" "$license_dir/zlib.h"
-"$grep_out/bin/grep" -F "special exception" "$license_dir/LIBGCJ_LICENSE"
-
-temporary=$("$coreutils_out/bin/mktemp" -d "${TMPDIR:-/tmp}/pdp10-gcc-smoke.XXXXXX")
-trap 'rm -rf "$temporary"' EXIT HUP INT TERM
-"$coreutils_out/bin/mkdir" "$temporary/home" "$temporary/config" \
-    "$temporary/data" "$temporary/cache" "$temporary/state" "$temporary/work" \
-    "$temporary/work/host-tools"
-
-# Record store contents before execution.  A package output must never change
-# while a compiler is running, even if its old driver has an unexpected path.
-manifest_before=$temporary/manifest-before
-manifest_after=$temporary/manifest-after
-record_manifest ()
-{
-    output=$1
-    manifest=$2
-    "$findutils_out/bin/find" "$output" -printf '%P %m %s %T@\n' | \
-        "$coreutils_out/bin/sort" >"$manifest"
-    "$findutils_out/bin/find" "$output" -type f \
-        -exec "$coreutils_out/bin/sha256sum" {} + | \
-        "$coreutils_out/bin/sort" >>"$manifest"
-}
-record_manifest "$pdp10_out" "$manifest_before"
-
-export PDP10_GCC_SMOKE_COMPILER=$compiler
-export PDP10_GCC_SMOKE_PREPROCESSOR=$preprocessor
-export PDP10_GCC_SMOKE_COREUTILS=$coreutils_out
-export PDP10_GCC_SMOKE_BASH=$bash_out/bin/bash
-export PDP10_GCC_SMOKE_DIFFUTILS=$diffutils_out
-export PDP10_GCC_SMOKE_GREP=$grep_out
-export PDP10_GCC_SMOKE_WORK=$temporary/work
-export HOME=$temporary/home
-export XDG_CONFIG_HOME=$temporary/config
-export XDG_DATA_HOME=$temporary/data
-export XDG_CACHE_HOME=$temporary/cache
-export XDG_STATE_HOME=$temporary/state
-export LC_ALL=C
-
-# No guest runtime or target binutils are packaged.  A network namespace and a
-# package-only PATH make the -S proof isolated and ensure a -c attempt cannot
-# silently discover a host assembler or linker.
-"$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
-    "$bash_out/bin/bash" -eu -c '
-      cd "$PDP10_GCC_SMOKE_WORK"
-      export PATH=/nonexistent
-      "$PDP10_GCC_SMOKE_COREUTILS/bin/printf" "%s\n" \
-        "int add(int a,int b){return a+b;}" >add.c
-      "$PDP10_GCC_SMOKE_PREPROCESSOR" -P add.c add.i
-      "$PDP10_GCC_SMOKE_GREP/bin/grep" -F "int add" add.i
-
-      # These deliberately successful fake host tools detect an unsafe
-      # fallback: a compiler without the package wrapper would find them in
-      # PATH during -c or linking.
-      "$PDP10_GCC_SMOKE_COREUTILS/bin/printf" "%s\n" \
-        "#!$PDP10_GCC_SMOKE_BASH" \
-        ": > \"$PDP10_GCC_SMOKE_WORK/as-used\"" "exit 0" >host-tools/as
-      "$PDP10_GCC_SMOKE_COREUTILS/bin/printf" "%s\n" \
-        "#!$PDP10_GCC_SMOKE_BASH" \
-        ": > \"$PDP10_GCC_SMOKE_WORK/ld-used\"" "exit 0" >host-tools/ld
-      "$PDP10_GCC_SMOKE_COREUTILS/bin/chmod" 755 host-tools/as host-tools/ld
-
-      "$PDP10_GCC_SMOKE_COMPILER" -S -O0 -ffreestanding add.c -o add.s
-      test -s add.s
-      "$PDP10_GCC_SMOKE_GREP/bin/grep" -Ei "MOVE|ADD|POPJ" add.s
-      export PATH="$PDP10_GCC_SMOKE_WORK/host-tools"
-      if "$PDP10_GCC_SMOKE_COMPILER" -c add.c -o add.o \
-          >assemble.stdout 2>assemble.stderr; then
-        echo "pdp10-gcc unexpectedly assembled with an unavailable target assembler" >&2
-        exit 1
-      fi
-      test ! -e add.o
-      test ! -e as-used
-      if "$PDP10_GCC_SMOKE_COMPILER" add.c -o add \
-          >link.stdout 2>link.stderr; then
-        echo "pdp10-gcc unexpectedly linked with unavailable target tools" >&2
-        exit 1
-      fi
-      test ! -e add
-      test ! -e ld-used
-    '
-
-record_manifest "$pdp10_out" "$manifest_after"
-"$diffutils_out/bin/cmp" "$manifest_before" "$manifest_after"
-
-printf '%s\n' "pdp10-gcc offline smoke passed: PDP-10 assembly, notices, and no target tool fallback"
+hash_status=0
+after=$("$guix_bin" hash -S nar "$out" 2>"$evidence/output-after.nar-hash.stderr") || hash_status=$?
+printf '%s\n' "$after" >"$evidence/output-after.nar-hash"
+if test "$status" -eq 0 && test "$hash_status" -ne 0; then status=$hash_status; fi
+if "$coreutils/bin/env" -i LC_ALL=C PATH='' \
+    "$python/bin/python3" -I -B - "$evidence" "$status" "$before" "$after" <<'PY'
+import json
+from pathlib import Path
+import sys
+root, status, before, after = sys.argv[1:]
+path = Path(root) / 'evidence.json'
+try:
+    record = json.loads(path.read_text())
+    if not isinstance(record, dict):
+        raise ValueError('native evidence is not an object')
+except (OSError, ValueError) as error:
+    record = {'status': 'failed', 'shell_evidence_error': str(error)}
+unchanged = bool(before) and before == after
+exit_status = int(status)
+if exit_status or not unchanged or record.get('status') != 'passed':
+    record['status'] = 'failed'
+    exit_status = exit_status or 1
+record.update(exit_status=exit_status, output_nar_before=before,
+              output_nar_after=after, output_unchanged=unchanged)
+path.write_text(json.dumps(record, indent=2) + '\n')
+raise SystemExit(0 if record['status'] == 'passed' else 1)
+PY
+then :; else if test "$status" -eq 0; then status=1; fi; fi
+if test "$status" -ne 0; then
+    printf 'pdp10-gcc-smoke: native proof failed (exit %s); evidence: %s\n' "$status" "$evidence" >&2
+    exit "$status"
+fi
+printf 'PDP10_GCC_NATIVE_CODEGEN_OK (not assembly/link/runtime) evidence=%s\n' "$evidence"

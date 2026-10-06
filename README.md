@@ -257,6 +257,7 @@ publication, source-required, and build gates appear in the final table.
 | [`lbforth`](guix/tay/packages/lbforth.scm) | `0-20230213` | Self-hosted portable Forth interpreter and standard wordsets | Verified |
 | [`maiko`](guix/tay/packages/maiko.scm) | `2026.03.19` | Source-built X11 Lisp-machine VM for Medley, without Ethernet/Nethub | Verified through Medley |
 | [`modus`](guix/tay/packages/modus.scm) | `0.2.0-0.501f2ee` | Self-hosting Common Lisp implementation with a hosted CLI | Verified |
+| [`pdp10-gcc`](guix/tay/packages/pdp10-gcc.scm) | `3.2-20020416` | Assembler-free GCC C backend emitting PDP-10 TOPS-20 MACRO assembly | Verified native preprocessing/`-S` code generation only; outside default build inventory, no assembly/link/runtime; [limits](ACCOUNTING.md#pdp10-gcc--verified-assembler-free-c-code-generation) |
 | [`pdp10-its-disassembler`](guix/tay/packages/pdp10-its-disassembler.scm) | `0-c745bb5` | Disassemble and manipulate PDP-10 ITS files | Verified |
 | [`pdp10-suppty`](guix/tay/packages/suppty.scm) | `0-2da0135` | Original GTK 2 and CLI SUPDUP terminal clients | Verified |
 | [`pdp10-xpl-pdp-10`](guix/tay/packages/pdp10-xpl.scm) | `0-0e57cbd` | PDP-10 XPL compiler port | Verified native compiler/REL object semantics, not PDP-10 execution; [limits](ACCOUNTING.md#pdp10-xpl--verified-native-compiler-object-semantics) |
@@ -489,7 +490,6 @@ verified program list.
 | [`herdr`](guix/tay/packages/herdr.scm) | `0.8.0` | Terminal workspace manager for AI coding agents | Research / definition only |
 | [`nhfourk`](guix/tay/packages/nhfourk.scm) | `4.3.0.4` | NetHack 4 fork definition; module-load caveat recorded | Research / definition only |
 | [`noctalia`](guix/tay/packages/noctalia.scm) | `5.0.0-0.ab2cfdf` | Desktop shell definition; outside normal build inventory | Research / definition only |
-| [`pdp10-gcc`](guix/tay/packages/pdp10-gcc.scm) | `3.2-20020416` | GCC C backend that emits PDP-10 TOPS-20 assembly | Research / definition only |
 | [`raelives`](guix/tay/packages/raelives.scm) | `0.0.1-0.20140305` | Original RaeLives game definition | Research / definition only |
 
 ## Caveats

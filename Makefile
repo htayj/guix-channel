@@ -72,7 +72,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
 	check-kitty-bitmap check-kitty-bitmap-oldguix check-lyntin check-pycat check-rune check-tinyfugue check-weidu lint lint-cve \
 	check-secretpathway check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-apout \
 	check-blincolnlights check-klh10 check-suppty check-pdp10-its-disassembler \
-	check-itstar check-pdp11 check-azurra-gtk-theme check-pdp6 check-pdp10-xpl-pdp-10 check-faugus-launcher \
+	check-itstar check-pdp11 check-azurra-gtk-theme check-pdp6 check-pdp10-xpl-pdp-10 check-pdp10-gcc check-faugus-launcher \
 	check-react-blessed check-shadow-over-darkmoor \
 	check-clojure-roguelike \
 	check-aquarium-arena \
@@ -301,6 +301,10 @@ check-uc-explorer:
 check-pdp10-xpl-pdp-10:
 	@test -n "$(PDP10_XPL_OUTPUT)" -a -n "$(PDP10_XPL_EVIDENCE)" || { echo 'Set PDP10_XPL_OUTPUT and PDP10_XPL_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/pdp10-xpl-pdp-10-smoke.sh "$(PDP10_XPL_OUTPUT)" "$(PDP10_XPL_EVIDENCE)"
+
+check-pdp10-gcc:
+	@test -n "$(PDP10_GCC_OUTPUT)" -a -n "$(PDP10_GCC_EVIDENCE)" || { echo 'Set PDP10_GCC_OUTPUT and PDP10_GCC_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/pdp10-gcc-smoke.sh "$(PDP10_GCC_OUTPUT)" "$(PDP10_GCC_EVIDENCE)"
 
 check-faugus-launcher:
 	@test -n "$(FAUGUS_OUTPUT)" -a -n "$(FAUGUS_EVIDENCE)" || { echo 'Set FAUGUS_OUTPUT and FAUGUS_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }

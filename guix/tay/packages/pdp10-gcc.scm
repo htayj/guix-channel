@@ -66,8 +66,22 @@
               ;; rejects incrementing that cast result; advance next_free
               ;; explicitly after storing the pointer instead.
               (substitute* "include/obstack.h"
-                (("\\*\\(\\(void \\*\\*\\)__o->next_free\\)\\+\\+ = \\(\\(void \\*\\)datum\\);")
-                 "(*((void **) __o->next_free) = ((void *) datum), __o->next_free += sizeof (void *));"))))
+                (((string-append
+                   "\\*\\(\\(void \\*\\*\\)__o->next_free\\)\\+\\+ = "
+                   "\\(\\(void \\*\\)datum\\);"))
+                 (string-append
+                  "(*((void **) __o->next_free) = ((void *) datum), "
+                  "__o->next_free += sizeof (void *));")))))
+          (add-before 'configure 'fix-genmultilib-shell
+            (lambda _
+              ;; genmultilib emits recursive tmpmultilib scripts with literal
+              ;; /bin/sh shebangs inside quoted here-documents.  Patching only
+              ;; the generator's own shebang or setting CONFIG_SHELL does not
+              ;; fix their direct execution in the isolated build environment.
+              (substitute* "gcc/genmultilib"
+                (("^#!/bin/sh")
+                 (string-append "#!"
+                                #$(file-append bash-minimal "/bin/sh"))))))
           (replace 'configure
             (lambda* (#:key configure-flags #:allow-other-keys)
               ;; GCC requires a separate build directory.  Use Guix's
@@ -95,6 +109,18 @@
                 (apply invoke "../configure"
                        (string-append "--prefix=" #$output)
                        configure-flags))))
+          (add-before 'configure 'unset-default-assembler
+            (lambda _
+              ;; --with-as=macro selects the TOPS-20 assembly dialect, but
+              ;; also defines a relative executable default.  gcc.c tests
+              ;; that default in the current directory before its prefix or
+              ;; PATH search, bypassing the wrapper's target-tool restriction.
+              ;; Keep the shell variable for config.gcc's macro.h selection,
+              ;; but do not emit its executable default into confdefs.h:
+              ;; config.status can regenerate auto-host.h during the build.
+              (substitute* "gcc/configure"
+                (("^#define DEFAULT_ASSEMBLER[^\n]*")
+                 "/* This compiler has no default target assembler. */"))))
           (replace 'install
             (lambda _
               ;; The legacy install-gcc target also runs fixincludes, which
