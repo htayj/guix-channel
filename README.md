@@ -247,7 +247,7 @@ publication, source-required, and build gates appear in the final table.
 | --- | --- | --- | --- |
 | [`aiwnios`](guix/tay/packages/aiwnios.scm) | `0.9.0-0.e155e87` | Source-built HolyC compiler and runtime environment | Verified |
 | [`aiwnios-bytecode`](guix/tay/packages/aiwnios.scm) | `0.9.0-0.e155e87` | Aiwnios environment using upstream bytecode | Verified |
-| [`apout`](guix/tay/packages/apout.scm) | `0-bd9af21` | PDP-11 Unix a.out user-mode emulator | Defined |
+| [`apout`](guix/tay/packages/apout.scm) | `0-bd9af21` | PDP-11 Unix a.out user-mode emulator | Verified original V7 guest CPU/write/error/exit; [limits](ACCOUNTING.md#apout--verified-native-v7-guest-contract) |
 | [`blincolnlights`](guix/tay/packages/blincolnlights.scm) | `0-932d2ce` | Virtual front panels and emulators for historic computers | Defined |
 | [`image-tape`](guix/tay/packages/image-tape.scm) | `0-0402e21` | Magnetic-tape image reader with safe output handling | Defined |
 | [`interlisp-medley`](guix/tay/packages/interlisp-medley.scm) | `2026.08.10` | Graphical Interlisp/Common Lisp environment with source-built Maiko and pinned upstream boot images | Verified native evaluation/save/logout; [limits](ACCOUNTING.md#medley-and-maiko--verified-native-path) |
@@ -259,7 +259,7 @@ publication, source-required, and build gates appear in the final table.
 | [`modus`](guix/tay/packages/modus.scm) | `0.2.0-0.501f2ee` | Self-hosting Common Lisp implementation with a hosted CLI | Verified |
 | [`pdp10-its-disassembler`](guix/tay/packages/pdp10-its-disassembler.scm) | `0-c745bb5` | Disassemble and manipulate PDP-10 ITS files | Verified |
 | [`pdp10-suppty`](guix/tay/packages/suppty.scm) | `0-2da0135` | Original GTK 2 and CLI SUPDUP terminal clients | Verified |
-| [`pdp10-xpl-pdp-10`](guix/tay/packages/pdp10-xpl.scm) | `0-0e57cbd` | PDP-10 XPL compiler port | Defined |
+| [`pdp10-xpl-pdp-10`](guix/tay/packages/pdp10-xpl.scm) | `0-0e57cbd` | PDP-10 XPL compiler port | Verified native compiler/REL object semantics, not PDP-10 execution; [limits](ACCOUNTING.md#pdp10-xpl--verified-native-compiler-object-semantics) |
 | [`pdp11`](guix/tay/packages/pdp11.scm) | `0-5b5b734` | Host emulators for selected PDP-11 CPU models | Verified `pdp1145` native microcycle diagnostic only; [limits](ACCOUNTING.md#pdp11--verified-native-microcycle-diagnostic) |
 | [`pdp6`](guix/tay/packages/pdp6.scm) | `0-2645ed9` | Local SDL console emulator for the PDP-6 | Verified native panel deposit/examine and clean quit; [limits](ACCOUNTING.md#pdp6--verified-native-panel-memory-path) |
 | [`tapeutils`](guix/tay/packages/tapeutils.scm) | `0.6-0.84a3a78` | Read, write, and inspect magnetic-tape image files | Verified |

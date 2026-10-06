@@ -48,6 +48,8 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Boohu official Guix reuse and native terminal save/restore](#boohu--official-guix-reuse-and-native-terminal-saverestore)
 - [PDP11 native microcycle diagnostic](#pdp11--verified-native-microcycle-diagnostic)
 - [PDP6 native panel memory path](#pdp6--verified-native-panel-memory-path)
+- [Apout native V7 guest contract](#apout--verified-native-v7-guest-contract)
+- [PDP10 XPL native compiler object semantics](#pdp10-xpl--verified-native-compiler-object-semantics)
 
 ## Relocation map (2026-10-04)
 
@@ -276,6 +278,139 @@ make check-affect AFFECT_OUTPUT="$out" AFFECT_EVIDENCE=/tmp/affect-native-new
 
 These commands document the existing build/harness interfaces; this
 documentation worker ran no commands, checks, cleanup or signals.
+
+## PDP10 XPL — verified native compiler object semantics
+
+Local acceptance on **2026-10-05** covers
+[`pdp10-xpl-pdp-10`](guix/tay/packages/pdp10-xpl.scm) **0-0e57cbd** at
+[PDP-10/xpl-pdp-10](https://github.com/PDP-10/xpl-pdp-10/tree/0e57cbd9e2e2997134332f6784dccc262a069d99)
+revision `0e57cbd9e2e2997134332f6784dccc262a069d99`. Its private XPL-to-C
+bootstrap **1.4** comes from
+[SourceForge](https://sourceforge.net/p/xpl-compiler/code/ci/643907731538b4e2256f11c48e3166bf5bb2609c/tree/)
+revision `643907731538b4e2256f11c48e3166bf5bb2609c`, source NAR SHA-256
+`10pf9s43wrhv7xb7ajagwkgdxnbayllzvlf53lzq48yv8m6k2c0a`. Both upstream
+trees carry **Free Public License 1.0.0**; the compiler/bootstrap are
+source-built, not fetched executable compilers. The original 629 source
+snapshots and preservation accounting are unchanged.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main200 passed in 5.61 s, including the source-only bootstrap, for `/gnu/store/4n66bbvgfin0f4qhnsllanzcc2ynaqpp-pdp10-xpl-pdp-10-0-0e57cbd`. |
+| Reproducibility | Main201 paired Apout/XPL `--check` passed in 3.68 s, reproducing both outputs. |
+| Lint | Main202 completed in 8.34 s with no-updater and Software Heritage/Disarchive notes plus known unrelated deprecated `flex` symbol, Fourk and excluded WinRM diagnostics. This is not a clean-lint claim. |
+| Integrated native compiler | Main205 `make check-pdp10-xpl-pdp-10` passed in 6.04 s at `/tmp/pdp10-xpl-native-2`, printing `PDP10_XPL_NATIVE_OBJECT_OK`. |
+
+The primary `/tmp/pdp10-xpl-native-2/evidence.json` has status `passed` and
+explicit scope **installed-compiler REL semantics, not PDP-10 execution**.
+The supplied normal installed compiler ran
+`xpl -K -o hello.rel /gnu/store/4n66bbvgfin0f4qhnsllanzcc2ynaqpp-pdp10-xpl-pdp-10-0-0e57cbd/share/pdp10-xpl/hello.xpl`
+and exited 0 with empty stderr. Its input is the exact pinned, installed
+upstream source `output = 'Hello world!';` followed by `eof;`, not a substituted
+frontend or driver-generated object. The actual compiler log says no errors
+were detected. Its wall-clock listing header is not used as a reproducibility
+oracle.
+
+The source-backed [REL observer](tests/pdp10-xpl-native.py) decoded the actual
+**2,565-byte / 570-word** object, SHA-256
+`887a3d63815a24a4914cce45a93186c6d2204e39fad973f402f687075cf95b5c`.
+It validates packed pairs of **36-bit words**, block tags/lengths and
+relocation bitmaps, the `HELLO` module name, high-segment definition, START
+and END records, internal relocation requests and the external **`XPLLIB`**
+symbol reference. Object observations retain **353 code words, 73 emitted
+data words and 34 internal requests**; these are decoded emitted words, not a
+claim that the compiler's larger allocated-data statistic is an emitted REL
+payload count. Entry is octal `400163`, code end `400541`, data end `1131`.
+
+The observer finds a length/address descriptor for the exact **9-bit
+`Hello world!`** string, checks that generated code loads it into register 1
+for `.outp.` at octal `400537` (descriptor `1130`), and that the final emitted
+instruction is `.exit.`. `rel-observation.json`, `hello.rel`, copied exact
+input and actual compiler stdout/stderr retain the evidence. This is object
+structure/semantics inspection, **not executing those instructions or
+resolving `XPLLIB` through a linker**.
+
+The native host compiler ran in private same-UID/GID user, mount, network and
+PID namespaces, loopback only and `/gnu/store` read-only. Before/after output
+NAR hashes match
+`1v3fmnw5wz4y6p2i7iqqb67pcc4wlfm7yin5aigka2c2wkzkwbm9`.
+No PDP-10 executor, guest runtime, alternate compiler or mocked object was
+used. Limits: no PDP-10 program execution, linked runtime, guest operating
+system or GUI behavior is established. Publication, issue closure and
+user-profile/system deployment are not established here. No OKF update
+applies to this repository-only work.
+
+```sh
+out=$(guix build -L guix --no-grafts pdp10-xpl-pdp-10)
+make check-pdp10-xpl-pdp-10 PDP10_XPL_OUTPUT="$out" PDP10_XPL_EVIDENCE=/tmp/pdp10-xpl-native-new
+```
+
+The guarded target requires both variables and honors `GUIX`; its external
+smoke consumer requires a **fresh nonexistent evidence directory** outside
+the store/output and uses the pre-realized supplied compiler. This
+documentation worker ran no commands or checks.
+
+## Apout — verified native V7 guest contract
+
+Local acceptance on **2026-10-05** covers [`apout`](guix/tay/packages/apout.scm)
+**0-bd9af21**, pinned to [DoctorWkt/Apout](https://github.com/DoctorWkt/Apout/tree/bd9af21bd8bb2fa956dcda5db0b0aeec2cffc8f7)
+revision `bd9af21bd8bb2fa956dcda5db0b0aeec2cffc8f7`. The original 629 source
+snapshots and preservation accounting are unchanged. The normal installed
+native emulator runs original, locally assembled lawful V7 PDP-11 programs;
+no historical executable, firmware or guest filesystem is obtained or
+redistributed for the proof. The source-backed guest generator and octal
+listings are retained by [the native consumer](tests/apout-native.py).
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main199 passed in 4.38 s for `/gnu/store/vsnpxnqkydvldxsilw78l3iz9j1vxic5-apout-0-bd9af21`. |
+| Reproducibility | Main201 paired Apout/XPL `--check` passed in 3.68 s, reproducing both outputs. This does not establish XPL runtime behavior. |
+| Lint | Main202 completed in 8.34 s with no-updater and Software Heritage/Disarchive diagnostics, plus known unrelated deprecated `flex` symbol, Fourk and excluded WinRM diagnostics. This is not a warning-free lint claim. |
+| Native guest | Main203 passed in 3.40 s at `/tmp/apout-native-1`: two deterministic repetitions of the V7 guest CPU/syscall and unset-root contract. |
+| Final integrated target | Main206 `make check-apout` passed in 4.13 s at `/tmp/apout-native-final`, preserving the same two-run CPU/write/EBADF/exit/unset-root contract and output NAR. |
+
+The primary final receipt `/tmp/apout-native-final/evidence.json` has status `passed`; `runs.json`, original
+`v7-exit-{0,37}.aout` files and octal listings, exact expected output, actual
+stdout/stderr and runtime/isolation records retain the proof. Each repetition
+runs both exit variants and the unset-root case. Actual guest instructions
+compute **3 + 4 − 2 = 5**, branch on the result and execute MOVB to replace
+the data-segment `?` digit with `5`; the driver does not synthesize the result.
+An invalid V7 write to fd −1 must return **carry set and r0 = EBADF = 9**.
+A successful write must return **carry clear and the exact byte count**, and
+emits `APOUT_NATIVE cpu=5 write=ok ebadf=9`. The two variants exit with exactly
+**0 and 37**, with empty stderr. With `APOUT_ROOT` unset, native Apout exits
+**1**, with empty stdout and the exact diagnostic
+`APOUT_ROOT env variable not set before running apout`.
+
+Both 126-byte, original V7 0407 images are repeatable: exit-0 SHA-256
+`31cf5e71a2a6813d549f1e13284ac00d748e4a47cba0a35f05730c3bfdde0aa2`;
+exit-37 SHA-256
+`3b6a95eccc73753239fd84da81bc2cb9407212474c2bbb70b7b8b458215ccffd`.
+The supplied normal emulator runs under private same-UID/GID user, mount,
+network and PID namespaces, loopback only and `/gnu/store` read-only.
+Isolation belongs to the external harness, **not Apout**. The pre/post output
+NAR hashes match
+`0x4043lpchfkxbnymmf1nrfkbxr7v8qg07hakhdv3q46dfzjpi8c`; the after-run output
+check also exited 0. No alternate executor, emulator patch or historical
+binary fixture is used.
+
+Limits: only this **V7 0407 CPU/write/error/exit** path is exercised; other
+Unix ABIs, `NATIVES` host-binary dispatch, sockets and historical guest images
+remain untested. `APOUT_ROOT` is a **pathname prefix, not a security sandbox**;
+upstream host filesystem, process and socket APIs make running untrusted
+guests unsafe without independent isolation. Publication, issue closure and
+user-profile/system deployment are not established by this local receipt.
+No OKF update applies to this repository-only work.
+
+```sh
+out=$(guix build -L guix --no-grafts apout)
+make check-apout APOUT_OUTPUT="$out" APOUT_EVIDENCE=/tmp/apout-native-new
+```
+
+The guarded target requires both variables, honors `GUIX`, and invokes
+[the external smoke consumer](tests/apout-smoke.sh). Evidence must be new or
+empty and outside the store/output; no external guest fixture or provenance
+environment variables are needed. This documentation worker ran no commands
+or checks.
 
 ## PDP6 — verified native panel memory path
 
@@ -6387,7 +6522,7 @@ GUIX=guix sh tests/allure-smoke.sh "$allure_out" /tmp/allure-native-FRESH
 | `klh10` | PDP-10/klh10 `6d733f2` | Source-built KL10/KS10 host emulator, console, disk/tape helpers and image converters; custom eight-clause Free-Fork license, modified source/notices included; no guest systems or network services |
 | `pdp10-suppty` | PDP-10/SUPPTY `2da0135` | MIT/Expat source-built GTK 2 `suppty` and CLI `suppty-plink`; original SUPDUP host clients, namespaced commands/manuals; only isolated local SUPDUP runtime verified, not old-SSH security |
 | `itstar` | PDP-10/itstar V1.10 (`b709cd8`) | GPL-3.0-or-later native ITS DUMP image create/list/extract/append tool, store-bound gzip and relicensing permission; remote rmt disabled, physical tape untested |
-| `apout` | DoctorWkt/Apout 2.4.0 | PDP-11 Unix a.out user-mode emulator; supply a user-owned `APOUT_ROOT` |
+| `apout` | DoctorWkt/Apout `0-bd9af21` (upstream 2.4.0) | PDP-11 Unix a.out user-mode emulator; [verified original V7 guest contract](#apout--verified-native-v7-guest-contract), `APOUT_ROOT` prefix is not a sandbox |
 | `kitty-bitmap` | Kitty 0.49.1 (pinned tag `v0.49.1`) | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
 | `halloy` | squidowl/halloy 2026.8 | Upstream x86_64 Linux desktop IRC client release with Wayland/X11 runtime libraries |
 | `shader-slang` | shader-slang/slang 2026.14.1 | `slangc` Slang shader compiler and libraries; build dependency of `kitty-bitmap` |
@@ -6646,9 +6781,9 @@ so it exercises output framing and write failures without tape hardware.
 `apout` runs PDP-11 a.out binaries against host system-call implementations.
 Set `APOUT_ROOT` to a user-owned guest root; it is not a security sandbox,
 because Apout can access host filesystem, process, and socket APIs directly.
-Its optional smoke needs an externally supplied V7 `echo` a.out fixture whose
-provenance and redistribution clearance have been reviewed; it never fetches
-or packages a guest binary or filesystem image.
+Its native smoke locally assembles original lawful V7 PDP-11 CPU/write/error/
+exit programs, without historical executable or filesystem downloads. Supply
+`APOUT_OUTPUT` and a new/empty `APOUT_EVIDENCE`; see the [dated receipt](#apout--verified-native-v7-guest-contract).
 `you-can-datamosh-on-linux` invokes FFmpeg with
 argument vectors rather than shell-command strings, so filenames and options
 containing shell metacharacters are not interpreted by a shell; its dedicated
@@ -7383,7 +7518,7 @@ make check-narwharl # six isolated real PTYs, native movement/save/restore/re-sa
 make check-stoat-soup # isolated real console PTYs, three waits, exact native save/restore, continued turn/re-save and NAR integrity
 make check-rapidbrogue # fresh evidence, original SDL/terminal native save/resume and NAR integrity
 make build-fontra   # local --no-grafts --no-offload build
-APOUT_FIXTURE=/path/to/cleared-v7-echo APOUT_FIXTURE_PROVENANCE='recorded source' APOUT_FIXTURE_REDISTRIBUTION_CLEARANCE=yes make check-apout
+make check-apout APOUT_OUTPUT="$(guix build -L guix --no-grafts apout)" APOUT_EVIDENCE=/tmp/apout-native-new # original lawful V7 guest CPU/syscall proof
 make check-durthang  # headless keyring failure plus loopback Telnet/GMCP map smoke
 make check-frostbite # namespaced Xvfb, XDG state, Ruby API, and loopback MUD smoke
 make check-go-mud   # fresh-HOME PTY, UTF-8, and Telnet negotiation smoke

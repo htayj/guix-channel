@@ -1,120 +1,132 @@
 #!/bin/sh
-# Offline smoke test for a locally generated V7 PDP-11 echo a.out fixture.
-# The fixture is generated from documented PDP-11 instructions so the package
-# proof has no dependency on redistribution-restricted historical binaries.
+# Installed host-only apout consumer: exact V7 guest CPU/syscall contract run
+# by the isolated native driver tests/apout-native.py.
+# Usage: GUIX=guix sh tests/apout-smoke.sh OUTPUT EVIDENCE
 set -eu
-
+fail() { printf 'apout-smoke: %s\n' "$*" >&2; exit 1; }
 guix_bin=${GUIX:-guix}
 channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-
-if test "$#" -gt 1; then
-    echo "usage: $0 [apout-output]" >&2
-    exit 64
-fi
-
-if test "$#" -eq 1; then
-    apout_out=$1
-else
-    apout_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes apout)
-fi
-
-find_output ()
+test "$#" -eq 2 || { echo "usage: GUIX=guix sh $0 OUTPUT EVIDENCE" >&2; exit 64; }
+out=$1
+evidence=$2
+case "$out" in /gnu/store/*) ;; *) fail 'OUTPUT must be a realized /gnu/store path' ;; esac
+case "$evidence" in /*) ;; *) fail 'EVIDENCE must be absolute' ;; esac
+case "$evidence" in /gnu/store|/gnu/store/*) fail 'EVIDENCE must be outside /gnu/store' ;; esac
+test -d "$out" || fail 'OUTPUT is not a realized directory'
+test ! -e "$evidence" && test ! -L "$evidence" || fail 'EVIDENCE must be a fresh nonexistent directory'
+find_output()
 {
     program=$1
-    package=$2
-    for candidate in $($guix_bin build --no-grafts --no-substitutes "$package"); do
-        if test -x "$candidate/$program"; then
-            printf '%s\n' "$candidate"
+    shift
+    candidates=$("$guix_bin" build --no-grafts --no-offload --cores=1 --max-jobs=1 "$@") || return 1
+    for output in $candidates; do
+        if test -x "$output/$program"; then
+            printf '%s\n' "$output"
             return 0
         fi
     done
-    echo "could not find $program in Guix package $package" >&2
-    return 1
+    fail "dependency lacks $program: $*"
 }
-
-bash_out=$(find_output bin/bash bash)
-coreutils_out=$(find_output bin/sha256sum coreutils)
-findutils_out=$(find_output bin/find findutils)
-grep_out=$(find_output bin/grep grep)
-diffutils_out=$(find_output bin/cmp diffutils)
-util_linux_out=$(find_output bin/unshare util-linux)
-
-test -x "$apout_out/bin/apout"
-test -f "$apout_out/share/man/man1/apout.1.zst"
-for document in README CHANGES LIMITATIONS TODO LICENSE COPYRIGHT; do
-    test -f "$apout_out/share/doc/apout-0-bd9af21/$document"
-done
-"$grep_out/bin/grep" -F "GNU GENERAL PUBLIC LICENSE" \
-    "$apout_out/share/doc/apout-0-bd9af21/LICENSE"
-"$grep_out/bin/grep" -F "Warren Toomey" \
-    "$apout_out/share/doc/apout-0-bd9af21/COPYRIGHT"
-"$grep_out/bin/grep" -F "Eric A. Edwards" \
-    "$apout_out/share/doc/apout-0-bd9af21/COPYRIGHT"
-
-temporary=$("$coreutils_out/bin/mktemp" -d "${TMPDIR:-/tmp}/apout-smoke.XXXXXX")
-trap 'rm -rf "$temporary"' EXIT HUP INT TERM
-"$coreutils_out/bin/mkdir" "$temporary/home" "$temporary/config" \
-    "$temporary/data" "$temporary/cache" "$temporary/state" \
-    "$temporary/work" "$temporary/root"
-# PDP-11 a.out header followed by a V7 program that writes A P O U T _ S M O K E
-# and a newline to stdout, then exits.  The header and instructions are emitted
-# little-endian, as required by the package-supported PDP-11 target.
-"$coreutils_out/bin/printf" \
-    '\007\001\030\000\014\000\000\000\000\000\000\000\000\000\000\000\100\003\001\000\101\003\030\000\102\003\014\000\004\021\030\000\014\000\100\003\000\000\001\021APOUT_SMOKE\n' \
-    >"$temporary/work/v7-echo"
-
-# Record package contents and metadata before execution.  The store output is
-# immutable; this catches accidental writes if that invariant is ever broken.
-manifest_before=$temporary/manifest-before
-manifest_after=$temporary/manifest-after
-record_manifest ()
+# All generic dependencies are realized before namespace entry.  The apout
+# package itself is never built here: OUTPUT must already be realized.
+coreutils=$(find_output bin/timeout coreutils)
+util_linux=$(find_output bin/unshare util-linux)
+python=$(find_output bin/python3 python)
+scratch=$("$coreutils/bin/mktemp" -d /tmp/apout-native.XXXXXXXX)
+trap '"$coreutils/bin/rm" -rf "$scratch"' EXIT HUP INT TERM
+"$coreutils/bin/mkdir" -p "$evidence"
+check_output()
 {
-    output=$1
-    manifest=$2
-    "$findutils_out/bin/find" "$output" -printf '%P %m %s %T@\n' | \
-        "$coreutils_out/bin/sort" >"$manifest"
-    "$findutils_out/bin/find" "$output" -type f \
-        -exec "$coreutils_out/bin/sha256sum" {} + | \
-        "$coreutils_out/bin/sort" >>"$manifest"
+    "$python/bin/python3" -I -B - "$out" <<'PY'
+import os
+from pathlib import Path
+import stat
+import sys
+root = Path(sys.argv[1]).resolve(strict=True)
+if root.parent != Path('/gnu/store'):
+    raise SystemExit('OUTPUT must resolve to one direct /gnu/store item')
+apout = root / 'bin' / 'apout'
+if not apout.is_file() or apout.is_symlink() or not os.access(apout, os.X_OK):
+    raise SystemExit('missing real installed executable: bin/apout')
+with apout.open('rb') as stream:
+    if stream.read(4) != b'\x7fELF':
+        raise SystemExit('installed apout is not native ELF')
+license_path = root / 'share/doc/apout-0-bd9af21/LICENSE'
+copyright_path = root / 'share/doc/apout-0-bd9af21/COPYRIGHT'
+if not license_path.is_file() or not license_path.stat().st_size:
+    raise SystemExit('missing installed license')
+if b'GNU GENERAL PUBLIC LICENSE' not in license_path.read_bytes():
+    raise SystemExit('installed license is not the GNU GPL text')
+if not copyright_path.is_file() or not copyright_path.stat().st_size:
+    raise SystemExit('missing installed copyright notice')
+copyright_text = copyright_path.read_text()
+for name in ('Warren Toomey', 'Eric A. Edwards'):
+    if name not in copyright_text:
+        raise SystemExit('copyright notice missing author: ' + name)
+# The recipe installs the binary, manual page and six documents; Guix's
+# standard ldconfig phase additionally generates this exact non-executable
+# metadata.  No fixture bytes, guest images or mutable files are allowed.
+files = {str(p.relative_to(root)) for p in root.rglob('*') if not p.is_dir()}
+required = {
+    'bin/apout',
+    'share/man/man1/apout.1.zst',
+} | {
+    'share/doc/apout-0-bd9af21/' + name
+    for name in ('README', 'CHANGES', 'LIMITATIONS', 'TODO', 'LICENSE', 'COPYRIGHT')
 }
-record_manifest "$apout_out" "$manifest_before"
-
-# A V7 echo a.out needs no guest executable lookup: it is loaded from the
-# supplied fixture and performs a native write(2).  The expected transcript is
-# fixed so a cleared fixture cannot turn this into an arbitrary host command.
-export APOUT_SMOKE_APOUT=$apout_out/bin/apout
-export APOUT_SMOKE_FIXTURE=v7-echo
-export APOUT_SMOKE_COREUTILS=$coreutils_out
-export APOUT_SMOKE_GREP=$grep_out
-export APOUT_SMOKE_DIFFUTILS=$diffutils_out
-export APOUT_SMOKE_WORK=$temporary/work
-export APOUT_SMOKE_ROOT=$temporary/root
-export HOME=$temporary/home
-export XDG_CONFIG_HOME=$temporary/config
-export XDG_DATA_HOME=$temporary/data
-export XDG_CACHE_HOME=$temporary/cache
-export XDG_STATE_HOME=$temporary/state
-export LC_ALL=C
-
-"$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
-    "$bash_out/bin/bash" -eu -c '
-      cd "$APOUT_SMOKE_WORK"
-      export APOUT_ROOT="$APOUT_SMOKE_ROOT"
-      export APOUT_UNIX_VERSION=V7
-      "$APOUT_SMOKE_APOUT" "$APOUT_SMOKE_FIXTURE" APOUT_SMOKE >actual 2>stderr
-      "$APOUT_SMOKE_COREUTILS/bin/printf" "APOUT_SMOKE\\n" >expected
-      "$APOUT_SMOKE_DIFFUTILS/bin/cmp" expected actual
-      if "$APOUT_SMOKE_COREUTILS/bin/env" -u APOUT_ROOT \
-          "$APOUT_SMOKE_APOUT" "$APOUT_SMOKE_FIXTURE" \
-          >no-root.stdout 2>no-root.stderr; then
-        echo "apout unexpectedly accepted an unset APOUT_ROOT" >&2
-        exit 1
-      fi
-      "$APOUT_SMOKE_GREP/bin/grep" -F \
-        "APOUT_ROOT env variable not set before running apout" no-root.stderr
-    '
-
-record_manifest "$apout_out" "$manifest_after"
-"$diffutils_out/bin/cmp" "$manifest_before" "$manifest_after"
-
-printf '%s\n' "apout offline smoke passed: V7 echo, APOUT_ROOT contract, and GPL notices"
+if files - {'etc/ld.so.cache'} != required:
+    raise SystemExit('output contains files outside the installed apout scope')
+for name in required:
+    path = root / name
+    if path.is_symlink() or not path.is_file() or not path.stat().st_size:
+        raise SystemExit('installed member is not a regular non-empty file: ' + name)
+cache = root / 'etc/ld.so.cache'
+if cache.exists() and (cache.is_symlink() or not cache.is_file() or cache.stat().st_mode & 0o111):
+    raise SystemExit('Guix ld.so.cache must be regular non-executable metadata')
+for path in [root, *root.rglob('*')]:
+    mode = path.lstat().st_mode
+    if (stat.S_ISREG(mode) or stat.S_ISDIR(mode)) and mode & 0o222:
+        raise SystemExit('writable installed store member: ' + str(path))
+PY
+}
+check_output
+before=$("$guix_bin" hash -S nar "$out")
+printf '%s\n' "$before" >"$evidence/output-nar-before.txt"
+status=0
+"$coreutils/bin/env" -i LC_ALL=C PATH="$coreutils/bin" \
+    HOST_USER_NS="$("$coreutils/bin/readlink" /proc/self/ns/user)" \
+    HOST_MNT_NS="$("$coreutils/bin/readlink" /proc/self/ns/mnt)" \
+    HOST_NET_NS="$("$coreutils/bin/readlink" /proc/self/ns/net)" \
+    HOST_PID_NS="$("$coreutils/bin/readlink" /proc/self/ns/pid)" \
+    EXPECTED_UID="$("$coreutils/bin/id" -u)" EXPECTED_GID="$("$coreutils/bin/id" -g)" \
+    "$coreutils/bin/timeout" --kill-after=10 90 \
+    "$util_linux/bin/unshare" --user --map-current-user --keep-caps \
+    --mount --propagation private --net --pid --mount-proc --kill-child --fork \
+    "$python/bin/python3" -I -B "$channel_dir/tests/apout-native.py" \
+    "$out" "$evidence" "$scratch" "$util_linux/bin/mount" \
+    >"$evidence/driver.stdout" 2>"$evidence/driver.stderr" || status=$?
+# Retain both NAR hashes and failed native output, even when assertions fail.
+after=$("$guix_bin" hash -S nar "$out")
+printf '%s\n' "$after" >"$evidence/output-nar-after.txt"
+modes=0
+check_output >"$evidence/output-check-after.stdout" 2>"$evidence/output-check-after.stderr" || modes=$?
+"$python/bin/python3" -I -B - "$evidence" "$out" "$status" "$modes" "$before" "$after" <<'PY'
+import json
+from pathlib import Path
+import sys
+root, output, status, modes, before, after = sys.argv[1:]
+evidence = Path(root)
+record = json.loads((evidence / 'runtime.json').read_text()) if (evidence / 'runtime.json').exists() else {'status': 'failed'}
+record.update(output=output, exit_status=int(status), output_check_after_status=int(modes),
+              output_nar_before=before, output_nar_after=after,
+              output_unchanged=before == after)
+if int(status) or int(modes) or before != after:
+    record['status'] = 'failed'
+(evidence / 'evidence.json').write_text(json.dumps(record, indent=2) + '\n')
+PY
+"$coreutils/bin/cat" "$evidence/driver.stdout" "$evidence/driver.stderr" \
+    "$evidence/output-check-after.stdout" "$evidence/output-check-after.stderr"
+test "$before" = "$after" || fail "installed output NAR changed; evidence: $evidence"
+test "$modes" -eq 0 || fail "installed output scope/modes changed; evidence: $evidence"
+test "$status" -eq 0 || fail "isolated native proof exited $status; evidence: $evidence"
+printf 'apout exact native V7 guest CPU/syscall proof passed (two deterministic runs, unchanged NAR); evidence: %s\n' "$evidence"

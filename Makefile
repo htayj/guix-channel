@@ -149,7 +149,8 @@ check-image-tape:
 # This proof uses a locally generated V7 write/exit fixture, avoiding any
 # dependency on redistribution-restricted historical Unix binaries.
 check-apout:
-	GUIX="$(GUIX)" tests/apout-smoke.sh
+	@test -n "$(APOUT_OUTPUT)" -a -n "$(APOUT_EVIDENCE)" || { echo 'Set APOUT_OUTPUT and APOUT_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/apout-smoke.sh "$(APOUT_OUTPUT)" "$(APOUT_EVIDENCE)"
 
 check-durthang:
 	GUIX="$(GUIX)" tests/durthang-smoke.sh
@@ -292,8 +293,8 @@ check-pdp6:
 	GUIX="$(GUIX)" sh tests/pdp6-smoke.sh "$(PDP6_OUTPUT)" "$(PDP6_EVIDENCE)"
 
 check-pdp10-xpl-pdp-10:
-	GUIX="$(GUIX)" tests/pdp10-xpl-pdp-10-smoke.sh \
-		"$$($(GUIX) build -L guix --no-grafts pdp10-xpl-pdp-10)"
+	@test -n "$(PDP10_XPL_OUTPUT)" -a -n "$(PDP10_XPL_EVIDENCE)" || { echo 'Set PDP10_XPL_OUTPUT and PDP10_XPL_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/pdp10-xpl-pdp-10-smoke.sh "$(PDP10_XPL_OUTPUT)" "$(PDP10_XPL_EVIDENCE)"
 
 check-faugus-launcher:
 	@test -n "$(FAUGUS_OUTPUT)" -a -n "$(FAUGUS_EVIDENCE)" || { echo 'Set FAUGUS_OUTPUT and FAUGUS_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
