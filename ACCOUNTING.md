@@ -45,6 +45,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Wanderers native save/restore path](#wanderers--verified-native-saverestore-path)
 - [Affect libraries and isolated OCaml 5.5 toolchain](#affect--native-libraries-and-isolated-ocaml-55-toolchain)
 - [Minttea terminal UI and isolated OCaml 5.2 closure](#minttea--native-terminal-ui-and-isolated-ocaml-52-closure)
+- [Boohu official Guix reuse and native terminal save/restore](#boohu--official-guix-reuse-and-native-terminal-saverestore)
 
 ## Relocation map (2026-10-04)
 
@@ -273,6 +274,74 @@ make check-affect AFFECT_OUTPUT="$out" AFFECT_EVIDENCE=/tmp/affect-native-new
 
 These commands document the existing build/harness interfaces; this
 documentation worker ran no commands, checks, cleanup or signals.
+
+## Boohu — official Guix reuse and native terminal save/restore
+
+Local acceptance on **2026-10-05** reuses official Guix's
+`(@ (gnu packages games) boohu)` **0.14.1**, without a duplicate channel recipe,
+`PROJECT_PACKAGES` addition or aggregate-check dependency. The original 629
+source snapshots and their preservation accounting are unchanged. The source
+is the unchanged [upstream revision](https://github.com/anaseto/boohu/tree/686c990bf30e8f8e57d8ef561641079d3a75b6a5)
+`686c990bf30e8f8e57d8ef561641079d3a75b6a5`, realized at
+`/gnu/store/mmk78hyxkvqdwwcf1ln21i9jmmdypicb-boohu-0.14.1-checkout`.
+Its embedded game/save version is `v0.14`; that is not a different package pin.
+
+### Dated evidence
+
+| Gate | Main receipt |
+| --- | --- |
+| Initial realization | Main181 realized the official output using substitutes; this alone is not a source-build claim. |
+| Source rebuild and upstream tests | Main182 `--check` performed the actual source build, passed all eight upstream tests, and reproduced `/gnu/store/abc9m9kcr9x3mlyi86whak5lsyln1idf-boohu-0.14.1`, wall 69.26 s. |
+| Lint | Main184 completed in 8.64 s; the official description retains a period diagnostic. Unrelated deprecated `flex` symbol, Fourk and excluded WinRM diagnostics also appeared. This is not a warning-free lint claim. |
+| Integrated native terminal | Main188 `make check-boohu` passed in 21.56 s, printing `BOOHU_NATIVE_SAVE_RESTORE_OK evidence=/tmp/boohu-native-2`. |
+
+The authoritative evidence is `/tmp/boohu-native-2/receipt.json` and
+`proof.json`, with four native saves, decoded states, input records and real
+xterm/Xvfb screenshots. The supplied normal `bin/boohu` ran in private
+same-UID/GID user, mount, network and PID namespaces, with `/gnu/store`
+read-only; prerequisites were realized serially before gameplay. The
+before/after output NAR hashes both equal
+`11ij4511ml3g5r31m2d97cpi59svlc6hhd3i3qxwqbcra1xil25n`.
+No game-state injection, alternate renderer, smoke frontend or patched game
+was used.
+
+Four fresh native sessions exercised wait (`.`), normal save/exit, default
+no-argument restore, continued wait and a second no-action restore. Decoded
+event ranks were **10, 10, 20, 20**, with native action counters **1, 1, 2, 2**.
+Both restore pairs exactly preserved authoritative player/world/event/stat
+state, including the player FOV payload, dungeon generation/cells, event queue
+and current event. The player position remained unchanged by waiting. Only
+`$XDG_DATA_HOME/boohu/save` was written; isolated home, work, config, cache,
+state, runtime and temporary directories remained free of game files.
+
+The comparison is deliberately source-backed, not byte-identical saves or
+whole-screen identity. At the pinned source, `events.go:105-119` recomputes
+noise and log/automation state on a resumed player event, and
+`draw.go:368-383` stores wall-clock draw timestamps. Derived
+UI/path/noise/log/automation fields are outside the authoritative comparison;
+complete decoded saves remain evidence. Exact map/HUD cell attributes compare
+outside only the union of the two saved native `Noise` coordinate maps, not
+heuristic glyph or OCR masks. Message/log rows are outside that map/HUD
+comparison. Upstream gob does not serialize unexported UI/runtime/RNG state;
+neither save-byte identity nor restoration of that unexported state is claimed.
+
+The genuine [terminal capture](.goocastle/evidence/boohu-native.png) is session
+three's `screen-3.png`: a cyan `@` in the dungeon, robe and dagger, **HP 42,
+MP 3, Depth 1, Turns 2.0**, with no visible error. This is terminal gameplay
+evidence, **not `boohu-tk` or another game GUI**. Combat, deeper exploration,
+completion and GUI behavior are not established by this bounded wait/save/
+restore proof. Publication, issue closure and user-profile/system deployment
+are separate from this local receipt. No host/service change or OKF update
+applies to this repository-only work.
+
+```sh
+out=$(guix build --no-grafts -e '(@ (gnu packages games) boohu)')
+make check-boohu BOOHU_OUTPUT="$out" BOOHU_EVIDENCE=/tmp/boohu-native-new
+```
+
+`BOOHU_OUTPUT` and `BOOHU_EVIDENCE` are required; evidence must be a new or
+empty directory outside the store/output. The guarded target passes `GUIX`
+through to [the external smoke consumer](tests/boohu-smoke.sh).
 
 ## Minttea — native terminal UI and isolated OCaml 5.2 closure
 

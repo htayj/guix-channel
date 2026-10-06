@@ -338,6 +338,11 @@ check-brogue:
 	@test -n "$(BROGUE_OUTPUT)" -a -n "$(BROGUE_EVIDENCE)" || { echo 'Set BROGUE_OUTPUT and BROGUE_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/brogue-smoke.sh "$(BROGUE_OUTPUT)" "$(BROGUE_EVIDENCE)"
 
+.PHONY: check-boohu
+check-boohu:
+	@test -n "$(BOOHU_OUTPUT)" -a -n "$(BOOHU_EVIDENCE)" || { echo 'Set BOOHU_OUTPUT and BOOHU_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/boohu-smoke.sh "$(BOOHU_OUTPUT)" "$(BOOHU_EVIDENCE)"
+
 check-brogue-lite:
 	GUIX="$(GUIX)" tests/brogue-lite-smoke.sh
 

@@ -363,6 +363,14 @@ publication, source-required, and build gates appear in the final table.
 | [`wanderers`](guix/tay/packages/wanderers.scm) | `0-054c1cd` | Open-world adventure and dungeon-crawling game | Verified ([receipt](ACCOUNTING.md#wanderers--verified-native-saverestore-path)) |
 | [`wrogue`](guix/tay/packages/wrogue.scm) | `0.8.0` | Warp Rogue science-fiction SDL roguelike | Verified |
 
+#### Official Guix game reuse
+
+**Boohu 0.14.1** is reused from official Guix (`(@ (gnu packages games) boohu)`),
+not duplicated as a channel package. Its source rebuild and terminal save/restore
+path are [locally verified](ACCOUNTING.md#boohu--official-guix-reuse-and-native-terminal-saverestore)
+on 2026-10-05. The proof covers normal `boohu` in a real terminal, not
+`boohu-tk`; it adds neither a channel package nor a source-snapshot count.
+
 ### Programming libraries and developer tools
 
 | Package | Version | What it does | Status |
