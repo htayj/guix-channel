@@ -44,6 +44,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Aidermacs Emacs extension path](#aidermacs--verified-native-emacs-extension-path)
 - [Wanderers native save/restore path](#wanderers--verified-native-saverestore-path)
 - [Affect libraries and isolated OCaml 5.5 toolchain](#affect--native-libraries-and-isolated-ocaml-55-toolchain)
+- [Minttea terminal UI and isolated OCaml 5.2 closure](#minttea--native-terminal-ui-and-isolated-ocaml-52-closure)
 
 ## Relocation map (2026-10-04)
 
@@ -272,6 +273,61 @@ make check-affect AFFECT_OUTPUT="$out" AFFECT_EVIDENCE=/tmp/affect-native-new
 
 These commands document the existing build/harness interfaces; this
 documentation worker ran no commands, checks, cleanup or signals.
+
+## Minttea — native terminal UI and isolated OCaml 5.2 closure
+
+[`minttea`](guix/tay/packages/minttea.scm) **0.0.3-1.40ee449** builds the
+complete MIT/Expat [`leostera/minttea`](https://github.com/leostera/minttea/tree/40ee44920bda53bd2838065374c9b188c06f8cba)
+revision `40ee44920bda53bd2838065374c9b188c06f8cba` from the exact unchanged
+origin of `leostera-minttea-source` (Guix base32 SHA-256
+`00vp2j275d9f81vsr36fdls62397pvwa9jsmsrngdmzxwi1rvc0p`). The 629-source
+preservation ledger is unchanged; no snippet prunes the source.
+
+| Decision | Recipe behavior |
+| --- | --- |
+| Sole Spices provider | `ocaml-spices-minttea` builds Spices from the same origin. `minttea` installs only `minttea` and `leaves`, propagates that one provider and records its store path in `share/minttea/spices-provider`. |
+| Original examples | Upstream `examples/` are archived before any edit and installed byte-exact under `share/minttea`. Only the built basic example receives four local `Event.KeyDown` rewrites to the documented `(key, modifier)` tuple; native `minttea-basic` and `minttea-counter` are installed. |
+| Libc archive collision | `ocaml-libc-minttea` names its Dune library `ocaml_libc`, keeping public `libc`, so no `libc.a` shadows GCC's implicit `-lc`; helper modules keep the original `Libc__` namespace. |
+| Riot exit race | `ocaml-riot-minttea` 0.0.9 reads and CASes one atomic state snapshot in `mark_as_running`, so a cross-domain exit cannot resurrect a terminal process or crash the scheduler. |
+| Pinned compiler | [`ocaml-minttea`](guix/tay/packages/ocaml-minttea-toolchain.scm) is official INRIA OCaml **5.2.1** (Riot needs ≥ 5.1, < 5.3) with upstream `e3919fef`'s OSEC-2026-01 / CVE-2026-28364 Marshal bounds fix backported. It does not replace the channel's default OCaml. |
+
+### Dated evidence (2026-10-05)
+
+| Gate | Main receipt |
+| --- | --- |
+| Compiler | Main174 passed for the security-backported 5.2.1 compiler. |
+| Build and upstream tests | Main177: full upstream MDX/check suites and native examples passed. |
+| Native PTY | Main178 passed: `MINTTEA_BASIC_PTY_OK states=16 keys=14`. |
+| Reproducibility | Main179 `--check` passed for the same output, `/gnu/store/7bh37dm20dj1vrgvzip1zgc2ly2n9swj-minttea-0.0.3-1.40ee449`, wall 6.65 s. |
+
+Main178's evidence (`/tmp/minttea-native-3/evidence.json`, status `passed`)
+installed a temporary profile containing that output,
+`/gnu/store/xn1hh59in8fh7fvj82yq40q8k74d1xv9-ocaml-minttea-5.2.1`,
+`/gnu/store/1dc3jlpi7lhmw4w0092g163jz7xfy41x-ocaml-findlib-minttea-1.9.8`
+and GCC toolchain 14.3.0. It resolved Spices from
+`/gnu/store/kicf8ibl0p3wy75dqc37qrh2kmlmz7zk-ocaml-spices-minttea-0.0.3-1.40ee449`
+and ran `ocamlfind ocamlopt -thread -package minttea,spices,leaves -linkpkg`
+on the upstream basic example (git blob
+`40b4891184ca911e5e367cf1c6e9abc275fa2d87`) after the same four tuple rewrites,
+consumer SHA-256
+`5291c7b43a7f650b08b855a60eafb7ba65a271c6f90918fd2b982c241fecae87`.
+On a PTY, 14 keys yielded 16 rendered cursor/selection states; `q` exited with
+status 0, and termios matched before and after the raw-mode run. The run used
+private network/PID namespaces, loopback only, a read-only store and preserved
+UID/GID. Before/after output NAR hashes match
+`16rdw24z5lz40a31gh96x3rwl763vvgn5sks1skblgf1k1liryx8`.
+
+Limits: upstream Dune/MDX suites run in the package build, not the native
+harness, and only the basic example is driven on a PTY. Publication is not
+established. No user-profile/system deployment, host/service change or
+material network-catalog correction is established; no OKF update applies.
+
+```sh
+out=$(guix build -L guix --no-grafts minttea)
+make check-minttea MINTTEA_OUTPUT="$out" MINTTEA_EVIDENCE=/tmp/minttea-native-new
+```
+
+This documentation worker ran no commands, checks, cleanup or signals.
 
 
 ## Wanderers — verified native save/restore path

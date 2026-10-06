@@ -37,7 +37,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	dipc nrl-text-to-phoneme you-can-datamosh-on-linux ffglitch praat@7.0.02 xq apout kitty-bitmap shader-slang opencode \
 	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin shadow-over-darkmoor \
 	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy notion-river mushkin mushtato ocaml-irc-client \
-	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl notty miou domainslib affect tui proiel ruby-memoist ruby-sax-machine halloy \
+	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl notty miou domainslib affect minttea tui proiel ruby-memoist ruby-sax-machine halloy \
 	kbredir potato pycat rune secretpathway tinyfugue trebuchet tapeutils heroic-gogdl \
 	vt05 weidu blincolnlights pdp10-its-disassembler itstar pdp11 pdp6 uc-explorer \
 	azurra-gtk-theme pdp10-xpl-pdp-10 faugus-launcher react-blessed wanderers \
@@ -222,6 +222,11 @@ check-miou:
 check-affect:
 	@test -n "$(AFFECT_OUTPUT)" -a -n "$(AFFECT_EVIDENCE)" || { echo 'Set AFFECT_OUTPUT and AFFECT_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/affect-smoke.sh "$(AFFECT_OUTPUT)" "$(AFFECT_EVIDENCE)"
+
+.PHONY: check-minttea
+check-minttea:
+	@test -n "$(MINTTEA_OUTPUT)" -a -n "$(MINTTEA_EVIDENCE)" || { echo 'Set MINTTEA_OUTPUT and MINTTEA_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/minttea-smoke.sh "$(MINTTEA_OUTPUT)" "$(MINTTEA_EVIDENCE)"
 
 check-tui:
 	GUIX="$(GUIX)" sh tests/tui-smoke.sh

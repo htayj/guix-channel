@@ -373,6 +373,7 @@ publication, source-required, and build gates appear in the final table.
 | [`dart-sass`](guix/tay/packages/caelestia-cli.scm) | `1.105.0` | Reference Sass compiler with the module system, run on Node.js | Defined |
 | [`domainslib`](guix/tay/packages/domainslib.scm) | `0.5.2-1.2a88486` | OCaml multicore task pools, parallel algorithms and channels | Verified |
 | [`litegraph`](guix/tay/packages/litegraph.scm) | `0.7.14-0.0555a2f` | JavaScript node-graph engine and HTML5 canvas editor | Verified engine and browser editor |
+| [`minttea`](guix/tay/packages/minttea.scm) | `0.0.3-1.40ee449` | OCaml functional terminal UI framework with Leaves components and native examples | Verified native PTY ([receipt and limits](ACCOUNTING.md#minttea--native-terminal-ui-and-isolated-ocaml-52-closure)) |
 | [`miou`](guix/tay/packages/miou.scm) | `0.8.0-1.5fcb7e6` | OCaml concurrency and synchronization libraries | Verified |
 | [`notty`](guix/tay/packages/notty.scm) | `0.2.3` | OCaml composable terminal graphics and Unix/Lwt backends | Verified |
 | [`ocaml-affect`](guix/tay/packages/ocaml-affect-toolchain.scm) | `5.5.0` | Isolated source-built compiler matching Affect's library ABI | Built; compiler tests exercised |
