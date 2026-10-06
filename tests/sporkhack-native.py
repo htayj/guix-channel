@@ -369,15 +369,23 @@ class Session:
                   'native inventory menu', more=False)
         items, pages = [], set()
         for page in range(20):
-            marker = re.search(r'\(end\)|\((\d+) of (\d+)\)', self.text())
-            require(marker is not None, 'inventory marker missing')
+            # win/tty/wintty.c:1298-1305 places a corner menu at offx; the map
+            # remains visible to its left.  Native dmore writes (end)/(x of y)
+            # at that same offx on the final menu row, so locate the column
+            # from the marker and parse every row above it from that column.
+            located = [(row, match) for row, line in enumerate(self.screen.display)
+                       for match in [re.search(r'\(end\)|\((\d+) of (\d+)\)', line)] if match]
+            require(len(located) == 1, 'exactly one native inventory marker required')
+            marker_row, marker = located[0]
+            column = marker.start()
             require(marker.group(0) not in pages, 'inventory pagination stalled')
             pages.add(marker.group(0))
             self.snapshot(label + '-page-' + str(page + 1))
-            for line in self.screen.display:
-                item = re.match(r'^\s*([a-zA-Z$])\s+[-+]\s+(.+?)\s*$', line)
+            for line in self.screen.display[:marker_row]:
+                item = re.match(r'([a-zA-Z$]) [-+] (.+?)\s*$', line[column:])
                 if item:
-                    items.append({'letter': item.group(1), 'description': item.group(2)})
+                    items.append({'letter': item.group(1), 'description': item.group(2),
+                                  'menu_column': column})
             if marker.group(0) == '(end)' or marker.group(1) == marker.group(2):
                 self.send(' ')
                 break

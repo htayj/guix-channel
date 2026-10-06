@@ -2831,10 +2831,12 @@ changed; no network OKF update applies to this repository-only addition.
 Local acceptance on **2026-10-06** covers [`sporkhack`](guix/tay/packages/sporkhack.scm)
 **0.7.0-0.4ed114f**, the original native Unix game from
 [`k21971/SporkHack` revision `4ed114fc29b9d03f9b2857c730afd9563513ddad`](https://github.com/k21971/SporkHack/tree/4ed114fc29b9d03f9b2857c730afd9563513ddad).
-The exact codeload archive has SHA-256
-`26ff9a80a8309f3c471506e5c9bdf2688dfd9ced48cebca1ea483ee7f88cc79a`
-and Guix base32 hash
-`16n7ikwffgj8xahvrkj8xnfgv3b8yaywkr862m3kr7rhm209mzr6`.
+The current origin uses Guix `git-fetch` for that exact commit with NAR hash
+`0l6h5znm3l14v4dzb8zghv3c5xbf9rs9ca3mbjcc090v76wgdg7a`; the same source
+filters and private-state patch still apply. The earlier codeload archive for
+this tree had SHA-256
+`26ff9a80a8309f3c471506e5c9bdf2688dfd9ced48cebca1ea483ee7f88cc79a` and Guix
+base32 hash `16n7ikwffgj8xahvrkj8xnfgv3b8yaywkr862m3kr7rhm209mzr6`.
 This is a silent terminal roguelike, not a replacement frontend or an audio
 package. Both native tty and curses interfaces are built; acceptance below
 exercises tty. No sound sample, proprietary Macintosh sound payload, audio
@@ -2898,27 +2900,28 @@ guix build -L guix --no-grafts sporkhack
 guix build -L guix --source sporkhack
 sporkhack
 # Supply the already-realized output and a fresh, nonexistent evidence path:
-make check-sporkhack GUIX=guix SPORKHACK_OUTPUT=/gnu/store/h8cpgw057hznn1vdvrizvzivwxarqw64-sporkhack-0.7.0-0.4ed114f SPORKHACK_EVIDENCE=/tmp/new-sporkhack-proof
+make check-sporkhack GUIX=guix SPORKHACK_OUTPUT=/gnu/store/3r67msrx90g8q5q2rg75zvdp1chbaikr-sporkhack-0.7.0-0.4ed114f SPORKHACK_EVIDENCE=/tmp/new-sporkhack-proof
 ```
 
 ### Exercised receipt and harness corrections
 
-The final source build passed in **45.36 s**; the independent `--check`
-rebuild passed in **42.89 s**, retaining the same accepted output:
-`/gnu/store/h8cpgw057hznn1vdvrizvzivwxarqw64-sporkhack-0.7.0-0.4ed114f`.
-There is no upstream noninteractive test target; these timings do not claim
-an upstream unit-test suite. Offline lint exited zero in **6.48 s**, with
-SporkHack no-updater/archive (Software Heritage/Disarchive) findings and known
-unrelated channel findings; this is not a warning-free whole-channel claim.
+The current `git-fetch` source build passed in **47.71 s**, producing
+`/gnu/store/3r67msrx90g8q5q2rg75zvdp1chbaikr-sporkhack-0.7.0-0.4ed114f`.
+There is no upstream noninteractive test target; build timing does not claim
+an upstream unit-test suite. Current offline lint exited zero in **5.48 s**
+with no SporkHack archival or no-updater finding. It still reports that no
+upstream tags were found and that GitHub failed to find upstream releases,
+plus known unrelated channel findings; this is not a warning-free
+whole-channel claim. The source-origin change is not a complete
+release-tracking or archival-gate claim.
 
-The final integrated `make check-sporkhack` passed in **12.90 s** with
-evidence in `/tmp/sporkhack-check-1`. It is a standalone target, not part of
-aggregate `make check`; both `SPORKHACK_OUTPUT` and `SPORKHACK_EVIDENCE` are
-required, with no defaults, and evidence must not already exist. It invokes
+The current standalone `make check-sporkhack` passed in **12.99 s** with
+evidence in `/tmp/sporkhack-vcs-check-2`. It is not part of aggregate
+`make check`; both `SPORKHACK_OUTPUT` and `SPORKHACK_EVIDENCE` are required,
+with no defaults, and evidence must not already exist. It invokes
 `tests/sporkhack-smoke.sh` on an already-realized output and never builds the
 game. Generic Python/pyte/namespace tools are test-only, not game runtime
-dependencies. An earlier direct consumer run also passed in **11.50 s**
-(`/tmp/sporkhack-native-3`) against the same output and NAR.
+dependencies.
 
 Two genuine 100×24 PTY processes run the normal launcher/native ELF with
 private HOME/XDG state, empty PATH, separate user, mount, network and PID
@@ -2930,17 +2933,35 @@ never injected into the game.
 
 The selected character is OmpProof, lawful human **Female Valkyrie**. The
 observed turn sequence is **1 → 4 → 7**, with native 80×21 zero-based map
-coordinates **(58, 5) → (57, 5) → (57, 6)**: each process makes a real floor
+coordinates **(38, 15) → (39, 15) → (40, 15)**: each process makes a real floor
 move and two search turns before saving. The second process's restore
 exactly matches the first saved **entire map, HUD, position, stats, HP,
 turn and every inventory letter/description**, consumes the native save,
-then advances and resaves. St 18/02, Dx 12, Co 18, In 8, Wi 9, Ch 8,
+then advances and resaves. The corrected parser records the actual menu
+column separately from native map text; all five inventory items in JSON
+match the retained native inventory screens at startup, save, restore and
+continued play. St 16, Dx 16, Co 18, In 9, Wi 8, Ch 8,
 HP 16/16, Pw 2/2, AC 6 and Exp 1 persist. Inventory retains `a` +1 long sword
 (weapon in hand), `b` +0 dagger, `c` uncursed +3 small shield (being worn),
 `d` 2 uncursed food rations and `e` uncursed oil lamp. Saved `whereis`
 records turns 4 and 7 and HP 16/16, matching the pre-exit HUD. The host game
-state is unchanged, and the before/after read-only output NAR is
-`0zhahjhc3vb424vin93zgzqsrq04655yf4yxhx3fix1x8dzgwanb`.
+state is unchanged, and the
+before/after read-only output NAR is
+`0nn0bfxfy8gd4frxqz837z8may9w8szlm48wiz11bhbf8jlf0vhy`.
+
+The earlier same-output `/tmp/sporkhack-vcs-check-1` run exited zero in
+**13.15 s**, but its JSON inventory parser missed item `d` when native map
+text preceded the inventory column on that row. Its retained screens show
+the item; that earlier run alone did not establish complete inventory-parser
+coverage. The corrected `/tmp/sporkhack-vcs-check-2` receipt above supersedes
+that limitation without altering the game or reinjecting native save files.
+
+Historical pre-`git-fetch` receipts remain distinct: the codeload-source
+output `/gnu/store/h8cpgw057hznn1vdvrizvzivwxarqw64-sporkhack-0.7.0-0.4ed114f`
+built in **45.36 s**, passed `--check` in **42.89 s**, passed integrated
+`make check-sporkhack` in **12.90 s** (`/tmp/sporkhack-check-1`) and had output
+NAR `0zhahjhc3vb424vin93zgzqsrq04655yf4yxhx3fix1x8dzgwanb`. Its earlier lint
+passed in **6.48 s** with SporkHack no-updater/archive findings.
 
 Earlier retained attempts are **not passes**: `/tmp/sporkhack-native-1`
 timed out at the ordinary character selector because the harness omitted

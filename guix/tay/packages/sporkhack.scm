@@ -4,7 +4,7 @@
 
 (define-module (tay packages sporkhack)
   #:use-module (guix build-system gnu)
-  #:use-module (guix download)
+  #:use-module (guix git-download)
   #:use-module (guix gexp)
   #:use-module (guix packages)
   #:use-module (guix utils)
@@ -28,15 +28,16 @@
     (version "0.7.0-0.4ed114f")
     (source
      (origin
-       (method url-fetch)
-       (uri (string-append
-             "https://codeload.github.com/k21971/SporkHack/tar.gz/"
-             %sporkhack-commit))
-       (file-name (string-append name "-" version ".tar.gz"))
-       ;; SHA-256 of the exact codeload archive, fetched 2026-10-06:
-       ;; 26ff9a80a8309f3c471506e5c9bdf2688dfd9ced48cebca1ea483ee7f88cc79a.
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/k21971/SporkHack")
+             (commit %sporkhack-commit)))
+       (file-name (git-file-name name version))
+       ;; NAR hash of the unfiltered checkout of this exact commit, fetched
+       ;; 2026-10-06.  It equals the tree of the former codeload archive,
+       ;; SHA-256 26ff9a80a8309f3c471506e5c9bdf2688dfd9ced48cebca1ea483ee7f88cc79a.
        (sha256
-        (base32 "16n7ikwffgj8xahvrkj8xnfgv3b8yaywkr862m3kr7rhm209mzr6"))
+        (base32 "0l6h5znm3l14v4dzb8zghv3c5xbf9rs9ca3mbjcc090v76wgdg7a"))
        (patches (list %sporkhack-state-patch))
        (patch-flags '("-p1" "--fuzz=0"))
        (modules '((guix build utils) (ice-9 ftw) (srfi srfi-1)))
