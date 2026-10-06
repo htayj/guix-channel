@@ -52,6 +52,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [PDP10 XPL native compiler object semantics](#pdp10-xpl--verified-native-compiler-object-semantics)
 - [Tassh isolated native clipboard relay](#tassh--verified-isolated-native-clipboard-relay)
 - [UC Explorer native microcode parser](#uc-explorer--verified-native-microcode-parser)
+- [Blincolnlights native PDP-1 panel and PDP-5 memory path](#blincolnlights--verified-native-pdp-1-panel-and-pdp-5-memory-path)
 
 ## Relocation map (2026-10-04)
 
@@ -112,6 +113,99 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Blincolnlights — verified native PDP-1 panel and PDP-5 memory path
+
+Local acceptance on **2026-10-06** covers
+[`blincolnlights`](guix/tay/packages/blincolnlights.scm) **0-932d2ce**, pinned
+to [aap/blincolnlights](https://github.com/aap/blincolnlights/tree/932d2cedfaec3368d6e1890b15645decc4815429)
+revision `932d2cedfaec3368d6e1890b15645decc4815429` (no upstream releases),
+Guix base32 source SHA-256 `1dq8h2y8hc7avszsb36b5war8cahkiyyig3z1fx7f1fhxb6246s9`.
+The non-recursive fetch omits the unused Lua gitlink. The package declares
+**MIT/Expat** and installs upstream `LICENSE`, `README.md` and a `README.guix`
+state/collision note under `share/doc/blincolnlights`. Only the host SDL
+B18/PDP-1/Whirlwind panels, PDP-1/PDP-1-B18/PDP-5/TX-0/Whirlwind emulators and
+`mkptyfl`/`mkptyfio` are built; the root Makefile's GPIO, Raspberry Pi,
+peripheral and Lua targets are excluded. The original 629 source snapshots and
+preservation accounting are unchanged.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main223 passed in 14.29 s for `/gnu/store/a6rzkcfvlvhzcia9c5agsv11255z89v9-blincolnlights-0-932d2ce`. |
+| Reproducibility | Main224 `--check` passed in 9.65 s, reproducing that output. |
+| Lint | Main226 completed with exit 0 in 187.35 s. Its only package diagnostics were no tags/no updater, as upstream has no releases, plus the known unrelated deprecated `flex` symbol, Fourk and WinRM diagnostics. This is not a warning-free whole-channel lint claim. |
+| Native panel/emulator | Main225 passed in 45.76 s at `/tmp/blincolnlights-native-1`. |
+| Final integrated target | Main227 `make check-blincolnlights` passed in 49.78 s at `/tmp/blincolnlights-check-1`, printing `BLINCOLNLIGHTS_NATIVE_PANEL_MEMORY_OK`. |
+
+The primary final receipt `/tmp/blincolnlights-check-1/evidence.json` has status
+`passed`, `exit_status` 0 and driver marker
+`deposit/examine/zero/restore/visible-lamps/native-exit`, with empty driver
+stderr. Nine actual 800 × 448 `PDP-1 console` window captures, X11 window
+records, both `coremem` dumps, emulator/panel/Xvfb logs and mount records
+retain the proof. The [external consumer](tests/blincolnlights-native.py)
+records the pinned source files behind every control mapping.
+
+The installed `blincolnlights-panel-pdp1` SDL window and normal
+`blincolnlights-pdp5` launcher ran under Xvfb with software rendering. Real
+X11 mouse clicks on the panel, not shared-memory writes, operated POWER, the
+TA switches (PDP-5 switch register), LOAD ADDRESS, DEPOSIT and EXAMINE. The
+harness only read the 15-word `/tmp/pdp1_panel` file; it supplied no memory
+fixture, injected state or alternate renderer. POWER lit, address octal
+`0100` was loaded and word octal **`5252`** deposited. After loading untouched
+adjacent address `0102`, EXAMINE showed zero; reloading `0100` with the
+switch register **cleared** then examined `5252`. Lamp-image analysis of the
+actual window pixels decoded the 18 memory-buffer lamps as the exact
+alternating pattern for `5252`, ruling out switch or DEPOSIT residue.
+
+The PDP-5 has no quit command. Upstream's SIGTERM handler calls `exit(0)`,
+whose cleanup writes `coremem` and extinguishes lamps; the signal alone is not
+the success criterion. Both emulator processes exited **0** and their lamps went
+out. The first `coremem` dump in
+`$XDG_STATE_HOME/blincolnlights/blincolnlights-pdp5` records `000100: 005252`
+and no nonzero `0102`; the launcher's `maindec`/`tapes` links resolve to the
+installed data. A second installed-launcher process restored that memory:
+`0102` again examined zero, and `0100` with a cleared switch register
+displayed exact `5252` lamp bits. The panel closed through
+WM_DELETE_WINDOW → SDL_QUIT with exit 0.
+
+The run used same-UID/GID private user, mount, network and PID namespaces with
+only loopback, a read-only `/gnu/store`, an empty `PATH` and fresh, initially
+empty HOME/XDG directories under a private `/tmp`. The before/after output NAR
+hashes match `1cj6v2c3442swjp748115qyph5rx6bvfzxh9a2z4v5vksywkv1db`.
+The [genuine final capture](.goocastle/evidence/blincolnlights-native.png) is
+the final run's `08-restarted-word-restored.png` (SHA-256
+`009f5bcd0a3125f6aa1d8230f65ff91ef52fe6cb10abd7b6ec5b08ae4794af1c`). Main
+inspected the legible actual panel: POWER on, the memory-buffer lamps lit and
+no visible error. The exact bits come from `panel_memory.visible_mb_bits` and
+pixel analysis in the receipt, not inferred from the image.
+
+Limits: only the installed PDP-1 SDL panel with the PDP-5 emulator's power,
+switch-register, LOAD ADDRESS, DEPOSIT, EXAMINE and `coremem` restore path is
+operated. Other installed panels and emulators are only scope/ELF checked.
+No program execution, tape, peripheral, audio, guest TTY, host/tailnet TCP,
+GPIO, Raspberry Pi, physical panel or Lua hardware path is established. The
+panels use fixed shared files `/tmp/b18_panel`, `/tmp/pdp1_panel` and
+`/tmp/whirlwind_panel`, and the emulators listen on fixed TCP ports; these
+collide across users or sessions outside isolation, so run one compatible
+session per panel and port. The proof confined those paths and the listener
+to its private namespaces; the package itself provides no isolation. Normal
+use keeps `coremem`/`punch.out` in
+`$XDG_STATE_HOME/blincolnlights/blincolnlights-<emulator>` (default
+`~/.local/state`). Publication, issue closure and user-profile/system
+deployment are not established. No OKF update applies to this
+repository-only work.
+
+```sh
+out=$(guix build -L guix --no-grafts blincolnlights)
+make check-blincolnlights BLINCOLNLIGHTS_OUTPUT="$out" \
+  BLINCOLNLIGHTS_EVIDENCE=/tmp/blincolnlights-native-new
+```
+
+Both variables are required. The output must be one canonical realized store
+item, and the absolute evidence directory must not yet exist and must be
+outside the store. The guarded target honors `GUIX` and invokes
+[the external smoke consumer](tests/blincolnlights-smoke.sh). This
+documentation worker ran no commands or checks and created no capture.
 
 ## UC Explorer — verified native microcode parser
 
@@ -6758,6 +6852,7 @@ GUIX=guix sh tests/allure-smoke.sh "$allure_out" /tmp/allure-native-FRESH
 | `pdp10-suppty` | PDP-10/SUPPTY `2da0135` | MIT/Expat source-built GTK 2 `suppty` and CLI `suppty-plink`; original SUPDUP host clients, namespaced commands/manuals; only isolated local SUPDUP runtime verified, not old-SSH security |
 | `itstar` | PDP-10/itstar V1.10 (`b709cd8`) | GPL-3.0-or-later native ITS DUMP image create/list/extract/append tool, store-bound gzip and relicensing permission; remote rmt disabled, physical tape untested |
 | `apout` | DoctorWkt/Apout `0-bd9af21` (upstream 2.4.0) | PDP-11 Unix a.out user-mode emulator; [verified original V7 guest contract](#apout--verified-native-v7-guest-contract), `APOUT_ROOT` prefix is not a sandbox |
+| `blincolnlights` | aap/blincolnlights `0-932d2ce` | MIT/Expat SDL B18/PDP-1/Whirlwind virtual panels, PDP-1/PDP-5/TX-0/Whirlwind host emulators with XDG-state launchers; [verified PDP-1 panel/PDP-5 memory path](#blincolnlights--verified-native-pdp-1-panel-and-pdp-5-memory-path), fixed `/tmp` panel files and TCP ports are not isolated |
 | `kitty-bitmap` | Kitty 0.49.1 (pinned tag `v0.49.1`) | Kitty variant that selects native bitmap fonts and encodes XKB Meta as terminal Alt |
 | `halloy` | squidowl/halloy 2026.8 | Upstream x86_64 Linux desktop IRC client release with Wayland/X11 runtime libraries |
 | `shader-slang` | shader-slang/slang 2026.14.1 | `slangc` Slang shader compiler and libraries; build dependency of `kitty-bitmap` |
@@ -7755,6 +7850,7 @@ make check-stoat-soup # isolated real console PTYs, three waits, exact native sa
 make check-rapidbrogue # fresh evidence, original SDL/terminal native save/resume and NAR integrity
 make build-fontra   # local --no-grafts --no-offload build
 make check-apout APOUT_OUTPUT="$(guix build -L guix --no-grafts apout)" APOUT_EVIDENCE=/tmp/apout-native-new # original lawful V7 guest CPU/syscall proof
+make check-blincolnlights BLINCOLNLIGHTS_OUTPUT="$(guix build -L guix --no-grafts blincolnlights)" BLINCOLNLIGHTS_EVIDENCE=/tmp/blincolnlights-native-new # isolated real SDL PDP-1 panel/PDP-5 deposit, examine and coremem restore
 make check-durthang  # headless keyring failure plus loopback Telnet/GMCP map smoke
 make check-frostbite # namespaced Xvfb, XDG state, Ruby API, and loopback MUD smoke
 make check-go-mud   # fresh-HOME PTY, UTF-8, and Telnet negotiation smoke

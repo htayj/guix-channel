@@ -248,7 +248,7 @@ publication, source-required, and build gates appear in the final table.
 | [`aiwnios`](guix/tay/packages/aiwnios.scm) | `0.9.0-0.e155e87` | Source-built HolyC compiler and runtime environment | Verified |
 | [`aiwnios-bytecode`](guix/tay/packages/aiwnios.scm) | `0.9.0-0.e155e87` | Aiwnios environment using upstream bytecode | Verified |
 | [`apout`](guix/tay/packages/apout.scm) | `0-bd9af21` | PDP-11 Unix a.out user-mode emulator | Verified original V7 guest CPU/write/error/exit; [limits](ACCOUNTING.md#apout--verified-native-v7-guest-contract) |
-| [`blincolnlights`](guix/tay/packages/blincolnlights.scm) | `0-932d2ce` | Virtual front panels and emulators for historic computers | Defined |
+| [`blincolnlights`](guix/tay/packages/blincolnlights.scm) | `0-932d2ce` | Virtual front panels and emulators for historic computers | Verified installed PDP-1 panel/PDP-5 deposit/examine/core restore; [limits](ACCOUNTING.md#blincolnlights--verified-native-pdp-1-panel-and-pdp-5-memory-path) |
 | [`image-tape`](guix/tay/packages/image-tape.scm) | `0-0402e21` | Magnetic-tape image reader with safe output handling | Defined |
 | [`interlisp-medley`](guix/tay/packages/interlisp-medley.scm) | `2026.08.10` | Graphical Interlisp/Common Lisp environment with source-built Maiko and pinned upstream boot images | Verified native evaluation/save/logout; [limits](ACCOUNTING.md#medley-and-maiko--verified-native-path) |
 | [`itstar`](guix/tay/packages/itstar.scm) | `1.10-0.b709cd8` | Create, inspect, extract and append ITS DUMP tape images | Verified |

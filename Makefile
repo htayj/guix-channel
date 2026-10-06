@@ -267,7 +267,8 @@ check-vt05:
 	GUIX="$(GUIX)" tests/vt05-smoke.sh
 
 check-blincolnlights:
-	GUIX="$(GUIX)" tests/blincolnlights-smoke.sh
+	@test -n "$(BLINCOLNLIGHTS_OUTPUT)" -a -n "$(BLINCOLNLIGHTS_EVIDENCE)" || { echo 'Set BLINCOLNLIGHTS_OUTPUT and BLINCOLNLIGHTS_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/blincolnlights-smoke.sh "$(BLINCOLNLIGHTS_OUTPUT)" "$(BLINCOLNLIGHTS_EVIDENCE)"
 
 check-klh10:
 	GUIX="$(GUIX)" tests/klh10-smoke.sh
