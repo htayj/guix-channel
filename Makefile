@@ -292,6 +292,11 @@ check-pdp6:
 	@test -n "$(PDP6_OUTPUT)" -a -n "$(PDP6_EVIDENCE)" || { echo 'Set PDP6_OUTPUT and PDP6_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/pdp6-smoke.sh "$(PDP6_OUTPUT)" "$(PDP6_EVIDENCE)"
 
+.PHONY: check-uc-explorer
+check-uc-explorer:
+	@test -n "$(UC_EXPLORER_OUTPUT)" -a -n "$(UC_EXPLORER_EVIDENCE)" || { echo 'Set UC_EXPLORER_OUTPUT and UC_EXPLORER_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/uc-explorer-smoke.sh "$(UC_EXPLORER_OUTPUT)" "$(UC_EXPLORER_EVIDENCE)"
+
 check-pdp10-xpl-pdp-10:
 	@test -n "$(PDP10_XPL_OUTPUT)" -a -n "$(PDP10_XPL_EVIDENCE)" || { echo 'Set PDP10_XPL_OUTPUT and PDP10_XPL_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/pdp10-xpl-pdp-10-smoke.sh "$(PDP10_XPL_OUTPUT)" "$(PDP10_XPL_EVIDENCE)"

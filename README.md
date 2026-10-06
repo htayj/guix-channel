@@ -263,7 +263,7 @@ publication, source-required, and build gates appear in the final table.
 | [`pdp11`](guix/tay/packages/pdp11.scm) | `0-5b5b734` | Host emulators for selected PDP-11 CPU models | Verified `pdp1145` native microcycle diagnostic only; [limits](ACCOUNTING.md#pdp11--verified-native-microcycle-diagnostic) |
 | [`pdp6`](guix/tay/packages/pdp6.scm) | `0-2645ed9` | Local SDL console emulator for the PDP-6 | Verified native panel deposit/examine and clean quit; [limits](ACCOUNTING.md#pdp6--verified-native-panel-memory-path) |
 | [`tapeutils`](guix/tay/packages/tapeutils.scm) | `0.6-0.84a3a78` | Read, write, and inspect magnetic-tape image files | Verified |
-| [`uc-explorer`](guix/tay/packages/uc-explorer.scm) | `0.1.0` | Explore Lisp machine microcode | Defined |
+| [`uc-explorer`](guix/tay/packages/uc-explorer.scm) | `0.1.0` | Inspect local Lisp-machine microcode files | Verified native parser semantics and malformed-input detection; synthetic fixtures, not ROM/emulation; [limits](ACCOUNTING.md#uc-explorer--verified-native-microcode-parser) |
 | [`vt05`](guix/tay/packages/vt05.scm) | `0.1-1.934fe88` | SDL emulators for six classic text terminals | Verified |
 
 ### Roguelikes and other games

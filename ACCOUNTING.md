@@ -51,6 +51,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Apout native V7 guest contract](#apout--verified-native-v7-guest-contract)
 - [PDP10 XPL native compiler object semantics](#pdp10-xpl--verified-native-compiler-object-semantics)
 - [Tassh isolated native clipboard relay](#tassh--verified-isolated-native-clipboard-relay)
+- [UC Explorer native microcode parser](#uc-explorer--verified-native-microcode-parser)
 
 ## Relocation map (2026-10-04)
 
@@ -84,6 +85,9 @@ Of the **11** additional exported definitions originally listed separately,
 `raelives`, `herdr`, `drl`, `gsplat-wasm`, `nhfourk` and the research/toolchain
 `pdp10-gcc` backend. The eleventh, `tassh`, now appears under installable utilities
 with a bounded native receipt; it still is not in the default `make build` list.
+UC Explorer's 2026-10-06 native acceptance promotes its existing “Defined” row
+within historical computing, not a research-only entry: `uc-explorer` is already
+in `PROJECT_PACKAGES` at `Makefile:42`. None of these inventory counts changes.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -108,6 +112,127 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## UC Explorer — verified native microcode parser
+
+### Package and source boundary (2026-10-06)
+
+[`uc-explorer`](guix/tay/packages/uc-explorer.scm) **0.1.0** is a source-built
+native CLI for inspecting local Lisp-machine microcode files, with bounded
+parser acceptance rather than an emulator or an authentic-ROM claim. Its
+upstream pin is
+[`larsbrinkhoff/uc-explorer`](https://github.com/larsbrinkhoff/uc-explorer/tree/fc4f9f3324d3497f553512b661ad37cbdde89ccb),
+commit `fc4f9f3324d3497f553512b661ad37cbdde89ccb`, with Guix base32 source SHA-256
+`1f167p0200283aflm831gvbyzahiwdbsss470cq263dgrinbjqj6`.
+The executable package declares **GPL-3.0-or-later** and installs the GNU GPL
+text at `share/doc/uc-explorer-0.1.0/COPYING`. The separate, unchanged
+`larsbrinkhoff-uc-explorer-source` preservation definition records GPL-3.0.
+Its source pin and the **629-source snapshot ledger remain unchanged**.
+
+All **15** registry crate versions in the reviewed upstream `Cargo.lock` are
+fixed, hashed source inputs, including its target-specific Windows/Redox graph.
+The [exact-version license audit](https://forge.nogroup.group/tay/guix-channel/issues/55#issuecomment-1343)
+records MIT for `ansi_term`, `atty`, `clap`, `redox_syscall`, `redox_termios`,
+`strsim`, `termion` and `textwrap`; MIT/Apache-2.0 alternatives for `bitflags`,
+`libc`, `unicode-width`, `vec_map`, `winapi` and both Windows GNU crates.
+The package restores the original lockfile after the generic Cargo configure
+phase and supplies each verified archive checksum in the vendored manifest;
+build, test and installation use the same graph offline and locked, without
+dependency re-resolution. Origin snippets remove the unused prebuilt Windows
+GNU `.a` import libraries from `winapi-i686-pc-windows-gnu` and
+`winapi-x86_64-pc-windows-gnu` after archive verification, retaining their
+manifests/build scripts for locked resolution. This is source removal, not
+suppression of the pre-generated-file checker. No prebuilt UC Explorer binary
+is used.
+
+UC Explorer was already in the default `PROJECT_PACKAGES` inventory. Acceptance
+adds no application definition, research-only promotion count or source
+snapshot. The installed-consumer proof is external to the store:
+[tests/uc-explorer-smoke.sh](tests/uc-explorer-smoke.sh),
+[tests/uc-explorer-native.py](tests/uc-explorer-native.py) and
+`make check-uc-explorer` consume a prebuilt output and a fresh evidence path.
+
+### Source build and reproducibility receipt
+
+The integrating agent ran:
+
+```sh
+/home/tay/.config/guix/current/bin/guix build -L guix \
+  --no-grafts --no-offload --cores=1 --max-jobs=1 --keep-failed \
+  -e '(@ (tay packages uc-explorer) uc-explorer)'
+```
+
+The final locked source build passed in **471.29 s**. The same invocation with
+`--check` added passed in **22.75 s**, identifying the same accepted output:
+`/gnu/store/4rs4mcxfwp0pqvqvg8qxcp961iw3f7px-uc-explorer-0.1.0`.
+Neither final build reported lock regeneration or pre-generated-file checker
+diagnostics. The upstream Cargo test run contains **0 tests**; it is not
+represented as parser coverage. Native coverage comes from the external
+installed-consumer proof below.
+
+The full lint attempt failed after **42.67 s** (exit **1**) on
+`connect*: 141.80.181.40: Connection timed out`; it is **not** a clean lint
+receipt. Before that timeout it reported no updater for UC Explorer, alongside
+known unrelated repository warnings. The integrating agent's explicitly scoped
+non-network lint passed in **7.21 s** with no UC Explorer findings and only
+known unrelated warnings, using:
+
+```sh
+/home/tay/.config/guix/current/bin/guix lint -L guix \
+  --checkers=name,tests-true,compiler-for-target,description,inputs-should-be-native,inputs-should-not-be-input,inputs-should-be-minimal,input-labels,wrapper-inputs,license,optional-tests,mirror-url,source-file-name,source-unstable-tarball,misplaced-flags,derivation,profile-collisions,patch-file-names,patch-headers,formatting,synopsis \
+  uc-explorer
+```
+
+That bounded checker result does not establish completion of the timed-out
+network-dependent lint checks.
+
+### Actual installed native evidence
+
+The initial native run passed in **3.06 s**, with retained evidence at the
+actual path `/tmp/uc-explorer-native-1`. The final integrated
+`make check-uc-explorer` passed in **8.23 s** at `/tmp/uc-explorer-check-1`.
+Both emitted:
+
+```text
+UC_EXPLORER_NATIVE_OK minimal=version:0x0001,lengths:0 populated=a3,b1,c1@00102,type3,pico255 malformed=18 deterministic=true
+```
+
+The `evidence.json`, `runtime.json`, `runs.json`, per-invocation stdout/stderr
+and NAR records—not the marker alone—establish these semantics:
+
+- The minimal format fixture decoded version **0x0001**, an empty comment and
+  zero A-memory, B-memory, C-memory, type-map and pico-store lengths.
+- The populated fixture decoded version **0x1234**, comment **UCXé**, A-memory
+  **3**, B-memory **1**, C-memory **1**, type-map **3** and pico-store **255**.
+  Its C-memory address was **00102** (octal). The 112-bit control word decoded
+  `A Mem Read Address` **801**, `U COND FUNC` **0**, `U ALU` **10**, `U NAF`
+  **828** and `U AU OP` **166** (decimal field values), covering both halves of
+  the little-endian word and its byte-8 split.
+- **18 malformed/truncated format fixtures** produced detected parse failures
+  on stdout, with section reasons or read errors. Upstream deliberately exits
+  **0** on these parse failures; the harness checks the failure text and absence
+  of successful decoded state rather than falsely requiring a nonzero status.
+  A missing file named its path on stderr and exited **1**; a missing required
+  argument produced stderr and a nonzero status.
+- Repeated valid invocations produced deterministic output. The installed ELF
+  ran as the caller's **UID 1000/GID 998** in separate user/mount/network/PID
+  namespaces, with only loopback and a read-only `/gnu/store`; it did not run
+  as namespace root. Output scope/mode checks remained successful.
+- Before and after both native runs, the output NAR hash was
+  `1jiwfvi7wmy7x20r4mpvvdh0rqhghmkni1acqjqjyr7s1kjl4k9c`.
+  The output was unchanged, and both the proof and its final output check
+  exited **0**.
+
+### Acceptance limits
+
+The fixtures are original synthetic inputs conforming to the pinned parser
+format, not authentic Symbolics microcode, copyrighted ROM redistribution,
+machine execution or emulation evidence. Only A/B/type-map/pico-store counts
+are observable in upstream's display; their contents are not printed. The
+parser does not check bytes following section 8. This receipt establishes the
+installed native parser's stated semantics and errors, not broader ROM
+compatibility. No host/service deployment or material OKF network-catalog
+correction occurred, so no OKF page or log update applies.
 
 ## Tassh — verified isolated native clipboard relay
 
