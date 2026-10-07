@@ -506,7 +506,7 @@
   (make-github-source-snapshot "mmontone-pbui-source" "mmontone" "mmontone" "pbui"
                                "19a606d95cc63ed388e8b1e3459f68eaf8c4659e" "0fzwy6crlhiq67am8x1lwawfi072m6jsyzh7afdbv69p6zqqwcv3"
                                "source snapshot of mmontone/pbui" "https://github.com/mmontone/pbui"
-                               #f))
+                               license:gpl3+))
 
 (define-public modus-lisp-modus-source
   (make-github-source-snapshot "modus-lisp-modus-source" "modus-lisp" "modus-lisp" "modus"

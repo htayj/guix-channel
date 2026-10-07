@@ -33,7 +33,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	computer-builder rust-computus rust-effects custom-nix-pkgs databases-team75 dorxng-mcp buzz \
 	hyprland-preview-share-picker hy3 dank-material-shell-shell-only sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape klh10 pdp10-suppty ks10-udis emacs-treesit-sexp \
-	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a emacs-aidermacs emacs-mentor-pinned emacs-vim-region org-mind-map \
+	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a emacs-aidermacs emacs-mentor-pinned emacs-vim-region emacs-pbui org-mind-map \
 	dipc nrl-text-to-phoneme you-can-datamosh-on-linux ffglitch praat@7.0.02 xq apout kitty-bitmap shader-slang opencode \
 	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin shadow-over-darkmoor \
 	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy notion-river mushkin mushtato ocaml-irc-client \
@@ -248,6 +248,11 @@ check-rot-js:
 check-ink:
 	@test -n "$(INK_OUTPUT)" -a -n "$(INK_EVIDENCE)" || { echo 'Set INK_OUTPUT and INK_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/ink-smoke.sh "$(INK_OUTPUT)" "$(INK_EVIDENCE)"
+
+.PHONY: check-pbui
+check-pbui:
+	@test -n "$(PBUI_OUTPUT)" -a -n "$(PBUI_EVIDENCE)" || { echo 'Set PBUI_OUTPUT and PBUI_EVIDENCE (canonical prebuilt store output and fresh, empty absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/pbui-smoke.sh "$(PBUI_OUTPUT)" "$(PBUI_EVIDENCE)"
 
 check-tui:
 	GUIX="$(GUIX)" sh tests/tui-smoke.sh

@@ -153,6 +153,16 @@ Dualmaster, and the candidate count is not evidence of Ink publication.
 Ink's npm/Cargo/compiler closures and source-built Yoga/SDK helpers are
 dependencies, not extra top-level programs. The canonical **629** preservation
 snapshots, including `vadimdemedes-ink-source`, remain unchanged.
+PBUI's separate 2026-10-07 delivery adds exactly **one** `PROJECT_PACKAGES`
+entry (`emacs-pbui`) and one README Emacs-tool row. The accepted baseline has
+**237** check names (229 project + 7 font + 1 optional proprietary); the
+PBUI-only candidate inventory is **238** (230 + 7 + 1). The integrated working
+tree has **239** (231 + 7 + 1), including unrelated unpublished Dualmaster.
+That count neither accepts nor publishes Dualmaster, and the candidate count
+is not evidence of PBUI publication. PBUI reuses the existing
+`mmontone-pbui-source` origin: its pin, hash and the canonical **629** source
+snapshots remain unchanged, with only its license metadata corrected to
+GPL-3.0-or-later. Propagated Emacs dependencies are not extra top-level programs.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -177,6 +187,99 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## PBUI — verified native Emacs presentations
+
+Local evidence on **2026-10-07** covers [`emacs-pbui`](guix/tay/packages/pbui.scm)
+**0.1-0.19a606d**, the original [`mmontone/pbui`](https://github.com/mmontone/pbui/tree/19a606d95cc63ed388e8b1e3459f68eaf8c4659e)
+at commit **`19a606d95cc63ed388e8b1e3459f68eaf8c4659e`**. The package reuses
+the existing [`mmontone-pbui-source`](guix/tay/packages/starred-i-m.scm) origin,
+base32 **`0fzwy6crlhiq67am8x1lwawfi072m6jsyzh7afdbv69p6zqqwcv3`**, rather than
+renaming its preservation snapshot into an application. The source pin,
+archive hash and **629-source ledger** are retained; the snapshot's license
+metadata is corrected from GPL-3.0-only to **GPL-3.0-or-later**. Five explicit
+notices occur in `pbui.el`, `pbui-standard-commands.el`, `pbui-dired.el`,
+`pbui-calendar.el` and `pbui-contacts-app.el`; the three short companions
+`pbui-email.el`, `pbui-org.el` and `pbui-util.el` have no individual notice.
+This does not claim that all eight headers contain license text. Upstream has
+no separate LICENSE file; the installed source notices remain intact.
+
+### Installed package and bounded repairs
+
+The realized output is
+**`/gnu/store/k14gxfcm8hf9ag8kxmikz7p5m209r0l9-emacs-pbui-0.1-0.19a606d`**.
+It installs source and bytecode for all **eight** libraries beneath
+`share/emacs/site-lisp/pbui-0.1-0.19a606d`: `pbui`, `pbui-util`,
+`pbui-standard-commands`, `pbui-dired`, `pbui-org`, `pbui-calendar`,
+`pbui-email` and `pbui-contacts-app`, plus generated autoloads/package metadata
+and upstream `README.org` under `share/doc/emacs-pbui`. Propagated dependencies
+are **Dash, s, request and inspector**; request's deferred dependency is part
+of their closure, not another application. Upstream ships **no test suite**;
+`#:tests? #f` records that absence, not a passing upstream suite.
+
+The recipe adds missing requires for Emacs's `eieio`, `subr-x`,
+`text-property-search` and `json`, and for `s`, `pbui` and `inspector` where
+used; it provides the missing `pbui-util` feature and fixes the selected-item
+navigation command's mismatched parameter name. It changes `/usr/bin/xdg-open`
+and `/usr/bin/thunderbird` into **user exec-path lookups**, not store-bound or
+automatically installed helpers. These remain optional desktop integrations
+supplied by the user. Byte compilation succeeds with upstream warnings for
+unused/free variables, docstrings, missing lexical-binding directives and
+functions not known to the compiler; these are **warnings, not build errors**.
+This is not a warning-free build claim or acceptance of those unexercised paths.
+
+### Main's actual gates and native evidence
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main362 passed in **10.96 s**, producing the output above; retained build log `artifact://14369` includes all eight library compilations and the skipped upstream check phase. |
+| Reproducibility | Main363 `--check` passed in **1.62 s**, reproducing the same output; retained log `artifact://14370`. |
+| Lint | Main364 exited **0** in **10.52 s**, with PBUI no-updater and Software Heritage/Disarchive diagnostics and unrelated deprecated `flex`, Fourk and excluded WinRM diagnostics. This is not a warning-free lint claim. |
+| Native terminal | Main367 passed in **26.12 s** at `/tmp/pbui-native-3`, exercising real Dired presentations, two-file copy, selection reset and open/edit/save/reopen; native Emacs quit exited **0**. |
+| Final integrated target | Main368 `make check-pbui` passed in **27.88 s** at `/tmp/pbui-make-final`, retaining the same full native flow and unchanged output NAR; command output `artifact://14395`. |
+
+The authoritative final receipt `/tmp/pbui-make-final/evidence.json` has status
+`passed`; Main367's earlier `/tmp/pbui-native-3` also retains the same flow.
+Ordinary **Emacs 30.2 `-nw`**, with the installed PBUI and propagated closure,
+presents two real files and one directory in Dired. Native selection and
+command completion copy both files into `archive/`; actual copied contents
+are retained separately as `archive-alpha.txt` and `archive-beta.txt`.
+Selections reset, then the PBUI open command opens `alpha.txt`; native editing
+and saving persist the exact line `Edited and saved through native Emacs.`,
+and reopening proves the saved contents. The final 76-byte `alpha.txt` has
+SHA-256 **`3352a3aa698d09bef0bf77c63e5b0a145cbe29d85ea4997550367f521558f968`**.
+`session.raw`, `input-events.json`, numbered terminal `.raw`/`.txt`/frame JSON
+captures, `driver.stdout`/`driver.stderr`, original/copied files and five pairs
+of source/installed license-header observations retain the actual proof.
+The observed `08-reopened-edit.txt` shows the exact edited line in native
+`(Text PBUI)` with no visible error. These are **PTY cell captures**, not a
+graphical screenshot claim. Earlier Main365/366 attempts failed on a missing
+`cmp` proof dependency and Emacs initialization ordering in the harness;
+those harness fixes did not weaken product acceptance, and Main367/368 are
+the successful corrected runs.
+
+The external consumer runs at caller **UID 1000/GID 998** in private user,
+mount, network and PID namespaces, with only `lo` and read-only `/gnu/store`.
+`isolation.json` and mount records retain the boundary. Before/after output
+NAR hashes both equal **`0d54nmn0c0kmg3m5rkhwy247pv9lns8dv41zp5vmb9cbrxf1vsx8`**.
+The external harness supplies isolation; PBUI itself is not a security sandbox.
+No replacement renderer, mocked UI or installed test entry provides this path.
+
+The standalone guarded target requires a prebuilt canonical output and a
+fresh, empty absolute evidence directory outside the store, honors `GUIX`,
+and invokes [`tests/pbui-smoke.sh`](tests/pbui-smoke.sh) with
+[`tests/pbui-native.py`](tests/pbui-native.py); it is not an aggregate consumer:
+
+```sh
+make check-pbui PBUI_OUTPUT=/gnu/store/k14gxfcm8hf9ag8kxmikz7p5m209r0l9-emacs-pbui-0.1-0.19a606d PBUI_EVIDENCE=/tmp/pbui-native-new
+```
+
+Limits: this proves the local Dired selection/copy and file edit/save/reopen
+path, not every PBUI command or companion. Calendar, Org, inspector, mail,
+`xdg-open`, Thunderbird and the **contacts network demo were not exercised**.
+No signed channel publication, issue closure, profile installation or desktop
+deployment is established. No OKF update applies to this repository-only
+acceptance. This documentation worker ran no commands or checks.
 
 ## Ink — source-built React terminal renderer and native PTY consumer
 

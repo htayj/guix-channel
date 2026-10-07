@@ -171,6 +171,7 @@ publication, source-required, and build gates appear in the final table.
 | [`emacs-forth-mode`](guix/tay/packages/forth-mode.scm) | `0-4450a3a` | Programming language mode for Forth | Verified |
 | [`emacs-mentor-pinned`](guix/tay/packages/mentor.scm) | `0.5-0.ed42ae8` | Distinct pinned Emacs rTorrent frontend with the post-0.5 tracker library | Verified |
 | [`emacs-org-popup-posframe`](guix/tay/packages/org-popup-posframe.scm) | `0.0.1-0.d39cb7c` | Show Org popup buffers in posframes | Verified |
+| [`emacs-pbui`](guix/tay/packages/pbui.scm) | `0.1-0.19a606d` | Presentation-based Emacs commands with Dired, Org, calendar, mail and inspector companions | Verified native Dired multi-file copy and edit/save/reopen; [limits](ACCOUNTING.md#pbui--verified-native-emacs-presentations) |
 | [`emacs-treesit-sexp`](guix/tay/packages/treesit-sexp.scm) | `0-c9aafc4` | Tree-sitter-aware structural editing for Emacs | Defined |
 | [`emacs-vim-region`](guix/tay/packages/vim-region.scm) | `0-7c4a99c` | GPL-3.0-or-later Vim-style region selection/editing with propagated expand-region | Verified |
 | [`gened`](guix/tay/packages/gened.scm) | `0-0.0d847a3` | Original Common Lisp/McCLIM text editor | Verified native edit/save path |
