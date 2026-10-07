@@ -58,7 +58,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	lambdahack kimchi keeperrl \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
-	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js
+	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -243,6 +243,11 @@ check-meta-typing:
 check-rot-js:
 	@test -n "$(ROT_JS_OUTPUT)" -a -n "$(ROT_JS_EVIDENCE)" || { echo 'Set ROT_JS_OUTPUT and ROT_JS_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/rot-js-smoke.sh "$(ROT_JS_OUTPUT)" "$(ROT_JS_EVIDENCE)"
+
+.PHONY: check-ink
+check-ink:
+	@test -n "$(INK_OUTPUT)" -a -n "$(INK_EVIDENCE)" || { echo 'Set INK_OUTPUT and INK_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/ink-smoke.sh "$(INK_OUTPUT)" "$(INK_EVIDENCE)"
 
 check-tui:
 	GUIX="$(GUIX)" sh tests/tui-smoke.sh

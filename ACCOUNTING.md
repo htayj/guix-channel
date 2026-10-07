@@ -57,6 +57,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Rust Effects offline library and external consumer](#rust-effects--verified-offline-library-and-external-consumer)
 - [Meta Typing offline type-level library and external consumer](#meta-typing--verified-offline-type-level-library-and-external-consumer)
 - [Rot.js source-built toolkit and offline consumer](#rotjs--verified-source-built-toolkit-and-offline-consumer)
+- [Ink source-built React terminal renderer and native PTY consumer](#ink--source-built-react-terminal-renderer-and-native-pty-consumer)
 
 ## Relocation map (2026-10-04)
 
@@ -142,6 +143,16 @@ private npm build-tool archives and the private source-built Closure Compiler
 closure are dependency closure, not top-level programs or additions to the
 canonical 629 preservation snapshots; the existing `ondras-rot-js-source`
 snapshot is unchanged.
+Ink's separate 2026-10-07 delivery adds exactly **one** `PROJECT_PACKAGES`
+entry (`node-ink`) and one README library row. The committed baseline
+**`8b2aee2`** has **236** check names (228 project + 7 font + 1 optional
+proprietary); the Ink-only candidate inventory is **237** (229 + 7 + 1).
+The integrated working tree has **238** (230 + 7 + 1), including the unrelated
+unpublished Dualmaster entry. The 238 count neither accepts nor publishes
+Dualmaster, and the candidate count is not evidence of Ink publication.
+Ink's npm/Cargo/compiler closures and source-built Yoga/SDK helpers are
+dependencies, not extra top-level programs. The canonical **629** preservation
+snapshots, including `vadimdemedes-ink-source`, remain unchanged.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -166,6 +177,222 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Ink — source-built React terminal renderer and native PTY consumer
+
+Local evidence on **2026-10-07** covers [`node-ink`](guix/tay/packages/ink.scm)
+**7.1.1**, the original [`vadimdemedes/ink`](https://github.com/vadimdemedes/ink/tree/ad9e3ea430acd3411be1c7578a2859f810a848ec)
+at canonical commit **`ad9e3ea430acd3411be1c7578a2859f810a848ec`**,
+not merely the earlier v7.1.1 tag. The manifest still declares 7.1.1.
+Its source is the existing `vadimdemedes-ink-source` archive origin, base32
+**`0wc7dn9z3gc9rwvksbf9cy6rnw10nxmw80jid5isqfqbsyrr2l5b`**.
+This delivers a usable ESM React terminal-rendering library, not a renamed
+preservation snapshot, CLI wrapper or copied npm Ink distribution. Support is
+bounded to **x86_64-linux**; local acceptance does not establish signed channel
+publication, issue closure, profile installation or deployment.
+
+### Fixed source closure and actual installed layout
+
+Upstream has no lockfile. The channel-owned
+[`ink-package-lock.json`](guix/tay/packages/ink-package-lock.json) was generated
+with **npm 11.16.0**, `--package-lock-only --ignore-scripts` and
+**`--before=2026-08-12T00:04:13Z`**, against that commit's manifest. This is a
+dated channel resolution, not an upstream-authored lock or a claim that every
+dependency existed when Ink's Git commit was authored.
+[`ink-npm-sources.scm`](guix/tay/packages/ink-npm-sources.scm) records **611
+Linux-independent installation paths from 580 distinct registry archives**,
+with locked SHA-512 SRI, version and SPDX metadata. Its provenance records
+archive-byte/SRI inspection on 2026-10-06. These pinned npm archives may carry
+upstream-generated JavaScript; **not every npm dependency is rebuilt from its
+authoring source**. The native/Wasm tools named below are source-built
+exceptions, while Ink itself is compiled from the canonical Git-commit archive.
+SRI pinning alone is not source-build evidence. Only the unused Electron
+`react-devtools` GUI is omitted from the lock root; `react-devtools-core` stays
+in the test closure. Original typecheck/lint scripts, AVA file globs and genuine
+PTY fixtures are unchanged. After the failed first reproduction, the package
+changes only the full-board snake fixture's process-start deadline from
+**1000 ms to 10000 ms**; its exit/won/score/length assertions remain unchanged.
+This is not a removed test, skip or new expected failure. The initial Main348
+suite ran before that change; Main352-358 provide the corrected-package
+source, native, reproducibility, integrated, identity and lint receipts.
+
+The compiler runs the original `npm run build`; the installed manifest exports
+`types: ./build/index.d.ts` and `default: ./build/index.js`, requires Node
+**>=22**, and has no development dependencies or scripts. Main352's corrected
+source-built output is
+**`/gnu/store/2ak416rk6hxc21ff9qcq0lgp819nw20s-node-ink-7.1.1`**.
+Read-only inspection and Main353's `/tmp/ink-native-final/evidence.json` confirm:
+
+- Built JavaScript, source maps and TypeScript declarations beneath
+  `lib/node_modules/ink/build`; entry SHA-256
+  **`f74b11e2a66d5c2873a29646dc180484b45d61a107fb09abfda101948571f664`**.
+- **React 19.2.4** at sibling `lib/node_modules/react`, satisfying Ink's
+  **>=19.2.0** peer range, alongside `@types/react 19.2.18` and `csstype 3.2.3`.
+  The consumer and Ink resolve the same React instance, not a second private copy.
+- **37 private runtime package paths** under `ink/node_modules`, including
+  source-built **Yoga 3.2.1**, `react-reconciler 0.33.0`, `scheduler 0.27.0`
+  and the explicitly nested `stack-utils/node_modules/escape-string-regexp`.
+  This is a path count, not 37 added channel programs. The installer dereferences
+  selected modules and excludes unselected nested development trees.
+- Ink's license/readme beside the library, plus
+  `share/doc/node-ink/{license,readme.md,channel-package-lock.json}`.
+  Runtime package license texts remain beside their modules; declared runtime
+  licensing is MIT/Expat and ISC (MIT chosen for MIT OR CC0-1.0).
+  Build-only tool closures are not installed as Ink runtime dependencies.
+
+No npm Yoga archive or optional platform binary supplies the native build.
+Source-built **esbuild 0.25.12** matches tsx 4.21.0's JS adapter; its npm
+distribution subtree is removed from the Go source. **node-pty
+1.2.0-beta.12** is genuinely rebuilt using packaged Node **24.18.0**'s
+node-gyp and headers with `--build-from-source --offline`; foreign prebuilds
+and Windows ConPTY assets are removed. No header downloader, lifecycle script,
+prebuilt fallback or fake PTY substitutes for it.
+
+The private [`node-unrs-resolver`](guix/tay/packages/unrs-resolver.scm)
+**1.12.2** is compiled from tag commit
+`ccb26d205e2938b16069c64a28996b48ee97ff94`, source base32
+`02g39s74cszha0lgizp7pmkd04wfklrcxixhlf72b94hzdapliw8`, with Rust **1.94**,
+the locked `unrs_resolver_napi` workspace member and `allocator` feature.
+Its [Cargo closure](guix/tay/packages/unrs-resolver-cargo-sources.scm)
+contains **181 locked registry entries** for offline workspace resolution;
+the x86_64-linux addon builds 101 of them. The delivered
+`resolver.linux-x64-gnu.node` replaces `@unrs/resolver-binding-*` binaries.
+Its bounded installed-loader check exercises `./a` -> `a.js` and builtin
+`node:fs`; **the full upstream Rust/Vitest fixture suites are not run**.
+The unsupported browser/Wasm binding is not supplied. Crate licenses and
+four source-pinned missing-license supplements are retained under its doc tree.
+The four missing-license supplements are **fast-glob 1.0.1, napi 3.9.0,
+napi-sys 3.2.1 and nodejs-built-in-modules 1.0.0**, fetched from upstream
+commits recorded in the crates' `.cargo_vcs_info.json`, not generic replacement
+license texts.
+
+### Genuine Yoga C++ and exact source-built SDK
+
+[`node-yoga-layout`](guix/tay/packages/yoga-ink.scm) **3.2.1** uses Yoga
+commit **`042f5013152eb81c1552dec945b88f7b95ca350f`**, not its tree object
+`119ccd5d49460bf6a0e94b5b5e27f7d379b082ff`; Git-origin recursive base32 is
+**`09g2kispng520mcaky87lkpj7k1lscsz2jyv05cjxzfrwwf4pfyb`**.
+Generated `javascript/binaries`, `dist` and `.emsdk` directories are removed
+before building. Upstream `javascript/CMakeLists.txt`, C++20/embind/emmalloc,
+growable-memory, modular ES-module and single-file web flags remain intact.
+The resulting **WebAssembly is embedded in
+`dist/binaries/yoga-wasm-base64-esm.js`**, not absent because no standalone
+`.wasm` is installed. Realized files include eager `dist/src/index.js`,
+asynchronous `load.js`, `wrapAssembly.js`, generated `YGEnums.js`, all matching
+declarations/maps, original `src` and MIT license. Wrapper compilation uses
+upstream Babel dist configuration and **TypeScript 5.0.4**; its separate
+[compiler closure](guix/tay/packages/yoga-ink-npm-sources.scm) has **142
+archives**, selected from upstream's pinned yarn.lock, not a second live
+package-manager resolution. Yoga's complete standalone output is
+**`/gnu/store/5snwz6scvbwz2qggjaihjp78dq4zylv4-node-yoga-layout-3.2.1`**;
+its source-provenance text explicitly records no prebuilt Yoga WebAssembly input.
+
+[`emscripten-yoga`](guix/tay/packages/emscripten-yoga.scm) **3.1.28** is a
+source-built driver/sysroot, not an SDK binary download. emsdk 3.1.28 selects
+emscripten-releases `30b9e46ddcea66e91530559379089002d8b692cf`, whose DEPS
+pins are honored exactly:
+
+| Component | Exact source pin and role |
+| --- | --- |
+| Emscripten | 3.1.28, revision `f11d6196dd4e8748a726f19895c859b40ff6a4f3`; source base32 `00crqf3wi2qda53vn97n1gwivpcaj4mzlnswlh3m19djqp52b2qg` |
+| LLVM/Clang/LLD | `ea4be70cea8509520db8638bb17bcd7b5d8d60ac`, **16.0.0git**, not Guix LLVM 16.0.6; source base32 `1smad7sdbwjfl9ndpf2xwv8b47idmkfz1865xvlkdpphca5j9b7y` |
+| Binaryen | `2cb5cefb6392619d908ce2ab683815d7e22ac9a5`, **111** snapshot; source base32 `0kisi81cybb72kgy8aw8gk2vvvadfrnsqznbz6kc3f5ajq7njhn6` |
+| Closure Compiler | [`emscripten-yoga-closure-compiler`](guix/tay/packages/emscripten-yoga-closure.scm), source-built **v20220502**, not a release jar; source base32 `1y4q4b871d7nvi5dlmk8hxpvvshj9g9d8w5id9mv1cz6gkgwkdpd`; reuses the source-only Rot.js Java builder/dependency pattern with source-built protobuf **3.19.3** |
+
+The SDK builds the full upstream **`embuilder build SYSTEM`** and
+**`embuilder --lto build SYSTEM`** caches from source. Normal libraries serve
+CMake probes; full-LTO libraries serve Yoga. Its installed configuration sets
+**`FROZEN_CACHE = True`**, points at the exact source-built LLVM/Binaryen/Closure
+outputs, and fails if an undeclared sysroot artifact is missing rather than
+mutating the store or fetching a port. Accepted SDK output:
+**`/gnu/store/pm1kcnxf6608szz3y5rccyjqnn872y6s-emscripten-yoga-3.1.28`**.
+Downloadable ports and unrelated HTML/wasm2c conversion tools are not provisioned.
+**SDK, LLVM, Binaryen and Closure exhaustive upstream test suites are not claimed**;
+source compilation/cache construction and the genuine Yoga/Ink path are the
+bounded evidence. Yoga's package check phase is omitted; the Ink suite and
+installed PTY consumer exercise its delivered engine, not the full Yoga suite.
+
+### Main source-build and native receipts
+
+| Gate | Main receipt |
+| --- | --- |
+| SDK source build | Main343 passed in **11637.37 s**; artifact **14181** is a sample, with full Guix derivation logs retained separately. It builds exact LLVM/Binaryen, the source Closure compiler and normal/full-LTO system caches, not their exhaustive test suites. |
+| Yoga source build | Main346 passed in **56.61 s**, artifact **14185**, producing the `5snw…` output above. |
+| Native lint resolver source build | Main347 passed in **151.25 s**, artifact **14187**, output `/gnu/store/q1f8mwpaqna6inbhdzgqhi7jbnzvmlbd-node-unrs-resolver-1.12.2`; bounded installed-loader checks only. |
+| Ink source build | Main348 passed in **487.44 s**, artifact **14189**, producing the `1ck5…` output above. Original `npm test` ran `tsc --noEmit`, XO and serial AVA 7: **1062 tests passed, 4 known failures, 1 test todo**. |
+| Installed-package native proof | Main349 passed in **8.88 s**, `/tmp/ink-native-1`: `INK_PTY_COUNTER_OK counts=0,1,2 exit=0 geometry=100x34` and `INK_CONSUMER_OK`. Its actual `evidence.json` records `status: passed`, `exit_status: 0`, the `1ck5…` output and unchanged output NAR. |
+| First reproducibility attempt | Main350 **failed** in **433.27 s**, artifact **14192**: the original `alternate-screen-example › snake ends with a win when it fills the board` fixture timed out at `test/alternate-screen-example.tsx:85`. Yoga and Unrs rebuilds passed; Ink's check failed with 1 new failure, alongside 4 original known failures and 1 original todo. This attempt does not establish a reproducible Ink output. Main348/Main349 remain evidence for their dated output, not final all-gates acceptance. |
+| Recompiled auxiliary-path attempt | Main351 **failed** in **6.29 s** before building: `canonicalize-path` could not find `ink-closure.mjs` because a module-relative bare `local-file` was resolved relative to the recompilation working directory. The definition now resolves the lock and closure helper through the existing `search-tay-package-file` auxiliary pattern; no source origin changed. |
+| Corrected Ink source build | Main352 passed in **202.79 s**, artifact **14211**, producing `/gnu/store/2ak416rk6hxc21ff9qcq0lgp819nw20s-node-ink-7.1.1`, drv `/gnu/store/l9z99yxg45m3klwwjr2i3ldzlhzy7ppc-node-ink-7.1.1.drv`. The original typecheck/XO/AVA suite, with only the disclosed process deadline amendment, again reports **1062 passed, 4 original known failures, 1 original todo**. |
+| Corrected installed-package native proof | Main353 passed in **9.97 s**, `/tmp/ink-native-final`, on the `2ak4…` output: count 0/1/2, exit 0, geometry 100×34, complete termios restoration and unchanged output NAR. It supersedes Main349 as the corrected-output consumer receipt. |
+| Corrected reproducibility | Main354 `--check` passed in **225.54 s**, artifact **14214**, rebuilding the same `/gnu/store/l9z99yxg45m3klwwjr2i3ldzlhzy7ppc-node-ink-7.1.1.drv` and identical `2ak4…` output. The complete original typecheck/XO/AVA path again reported **1062 passed, 4 original known failures, 1 original todo**. This is the corrected-output reproducibility receipt, not a rerun to conceal Main350. |
+| Integrated Makefile consumer | Main356 `make check-ink` passed in **10.00 s**, `/tmp/ink-make-final`, on the same `2ak4…` output. Actual JSON/PTY/text-cell receipts again record count **0,1,2**, exit **0**, **100×34** geometry, original termios restored and unchanged NAR **`13br5g72cxvhbwlnaa3chqmmaffpcjbn964q9gdd7i71m5cz4k6q`**. |
+| Final formatted-definition identity | Main357 passed in **2.77 s**, selecting the same accepted `2ak4…` output after behavior-preserving line wrapping; it reused the same derivation and is **not another rebuild**. |
+| Final lint | Main358 exited **0** in **8.31 s** (direct output, no artifact). Ink-owned findings remain, not suppressed: `guix/tay/packages/ink.scm:48:2` reports **no updater for `node-ink`**, and its source is **not archived on Software Heritage and missing from Disarchive**. The other diagnostics are unrelated: deprecated `flex` and `nhfourk` `171:86` unexpected `)`, plus `winrm-java-dependencies` `325:1` unexpected EOF while searching. Exit 0 is **not** a warning-free claim. |
+
+The four AVA failures are **original expected-failure cases**, not regressions
+hidden by the package: row and column space-around alignment of two text nodes,
+percentage min width and percentage max width. The original todo is
+`useStderr - write to stderr`. None was removed, rewritten or converted to a
+new skip. Artifact 14189 also retains upstream `act(...)` environment warnings;
+the successful suite is **not** a claim of warning-free output.
+The failed Main350 reproduction is retained as a distinct gate result; it is not
+folded into the four original known failures or concealed as a skip. Main352-358
+are the final acceptance receipts for the corrected `2ak4…` output: source suite,
+native consumer, reproducibility, integrated target, formatted identity and lint.
+This is local repository acceptance, not signed publication or deployment.
+
+Retained full source-build logs (distinct from the artifact sample) include
+`/var/log/guix/drvs/v2/3s51ch7ph4pd7cqas33r4cpcimbba5-llvm-for-emscripten-yoga-16.0.0-emscripten-3.1.28.drv.gz`,
+`/var/log/guix/drvs/fc/b8s83m1ks93j7i65098sgyfwhx3m14-emscripten-yoga-closure-compiler-20220502.drv.gz`
+and `/var/log/guix/drvs/af/3vv316k4lbhsnycdgrscvshsmhc8f9-emscripten-yoga-3.1.28.drv.gz`.
+
+[`tests/ink-smoke.sh`](tests/ink-smoke.sh) consumes an already-realized canonical
+direct store output and a fresh nonexistent absolute evidence directory outside
+the store; it never realizes or builds Ink. Generic proof tools are realized
+before isolation. The independently authored
+[`counter.mjs`](tests/ink-consumer/counter.mjs) uses ordinary public React/Ink
+APIs, `useState`, `useInput`, `useApp().exit()` and `waitUntilExit()`, not a test
+renderer or manually updated fake screen. Main353's final JSON records private same-UID
+user/mount/network/PID namespaces, only loopback `lo`, recursively read-only
+`/gnu/store`, a failed store-write probe **EROFS**, fresh HOME/TMP/XDG roots,
+and packaged Node **24.18.0**. Its resolution trace loads **545 installed
+module files**, one sibling React resolution and the actual embedded-Wasm Yoga
+module/wrapper/enums; neither checkout modules nor consumer-local replacements
+provide the runtime.
+
+The real **100×34 PTY** receives `a`, `a`, `q`: count **0 -> 1 -> 2**, then
+clean exit **0** and `INK_COUNTER_EXIT count=2`. Text and complete cell-grid
+receipts in `/tmp/ink-native-final` (`screen-01-initial.txt` through
+`screen-05-final.txt`, matching `cells-*.json`) record the exact round cyan border,
+green bold Japanese title
+`Ink カウンター ✓`, yellow bold count and magenta help line. Assertions compare
+all cells, including Unicode width/continuation cells and styles. The cursor is
+hidden at `[0,5]` while running and visible at `[0,6]` after exit; raw/no-echo
+mode is exercised and **the full original termios state is restored**.
+Synchronized-output brackets are balanced, with no alternate-screen switch.
+Before/after output NAR is identically
+**`13br5g72cxvhbwlnaa3chqmmaffpcjbn964q9gdd7i71m5cz4k6q`**.
+
+Native proof limits: pyte models the PTY byte stream; **no physical terminal
+emulator or GUI screenshot is rendered**. This external consumer exercises
+ordinary single-byte `a`/`q` keys only, not external resize, paste, Ctrl+C,
+React DevTools, every Ink API or other Node/React/platform versions. The build's
+original upstream tests have broader coverage but are separate evidence.
+`make check-ink` requires `INK_OUTPUT` and `INK_EVIDENCE`, propagates `GUIX`,
+and remains a standalone target outside aggregate checks. `node-ink` joins
+default build/dry-run/lint inventory; private Yoga/LLVM/Binaryen/SDK helpers do
+not add default top-level package entries.
+
+Unauthorized workers' full-npm fixture runs, prototype/native consumer probes
+and Guix store/GC cleanup are **disclosed and excluded from acceptance
+evidence**. Only Main's current source-built outputs and named receipts support
+this delivery; no npm-fixture/prototype success substitutes for them. This
+documentation worker ran **no commands, shell listings, builds, tests, linters,
+formatters, applications or probes**; it only read existing files/receipts and
+edited the Ink documentation. No described host/service changed and no material
+network-catalog correction was established, so **no OKF page/log update applies**
+to this repository-only delivery.
 
 ## Rot.js — verified source-built toolkit and offline consumer
 
