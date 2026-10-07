@@ -188,6 +188,129 @@ package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
 
+## AceHack — verified native tty gameplay and save continuity
+
+Local evidence on **2026-10-07** covers the existing
+[`acehack`](guix/tay/packages/acehack.scm) **3.6.0-0.9a4c767** definition,
+pinned to **`9a4c7671a8d8de6c0a7ab4718382b49cf5ec61f5`**, with source NAR
+base32 **`19avxbxhwl7wy3j6g1h41d0d37rhhq45j8z71zfdbynfrv1cbg78`**.
+[`deepy/acehack`](https://github.com/deepy/acehack/tree/9a4c7671a8d8de6c0a7ab4718382b49cf5ec61f5)
+is the historical source mirror; the original AceHack author is **Alex Smith
+(ais523)**, as retained in the upstream README. This is not a claim that the
+mirror is a maintained canonical upstream; the unavailable CopperWater URL
+does not establish current maintenance.
+
+This is native acceptance of an **existing inventory member**, not a new
+package: accepted inventory remains **238** (230 project + 7 font + 1 optional
+proprietary), while the integrated working tree is **239** (231 + 7 + 1)
+including unrelated unpublished Dualmaster. Dualmaster is excluded from this
+acceptance and is neither accepted nor published by that count. The canonical
+**629-source preservation ledger is retained unchanged**.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main384 passed in **19.76 s**; artifact 14483 records `/gnu/store/3hm6534az3ns9b2yfxkalswgw36j64pp-acehack-3.6.0-0.9a4c767`. |
+| Reproducibility | Main388 `--check` passed in **17.95 s**; artifact 14488 records the reproduced output. |
+| Lint — clean gate pending | Main389 ran in **10.48 s**; AceHack's own GitHub updater reports no valid tags/releases. That diagnostic is not waived or concealed, and the literal clean-own-lint gate remains unmet. |
+| Native tty consumer | Main387 passed in **7.23 s** at `/tmp/acehack-native-3`, using the normal launcher and real native PTY gameplay. |
+| Final integrated target | Main390 `make check-acehack` passed in **9.69 s** at `/tmp/acehack-make-final`, with exact native full-map/HUD save/restore continuity and continued action. |
+
+**Native gameplay/save continuity is verified; #266 remains OPEN with the
+clean-lint gate pending.** Successful builds and native proof are not an
+all-checks-complete or issue-closure claim. The older #650 score-only proof is
+historical, not the current gameplay acceptance; its obsolete score contract
+has been replaced by the external native consumer.
+
+The package builds the original Unix tty executable and complete `nhdat` from
+source, rather than installing a prebuilt game or synthetic smoke mode.
+Immutable game/data assets stay in the store; the ordinary launcher creates
+temporary playgrounds and keeps saves, scores, logs and locks in private XDG
+state. Downstream changes disable `CHDIR`, shell and mail operations, preserve
+mail-scroll indices, use ncurses' `tparm` declaration, fix the native internal
+compression extension and pin the build timestamp. They do not replace game
+rules or inject gameplay to satisfy the consumer.
+
+The executable and generated game/map/text data use the
+[NetHack General Public License](https://nethack.org/common/license.html)
+(NGPL), recorded with its actual grant rather than a guessed GPL substitution.
+The output accompanies them with the **complete selected patched executable
+and `nhdat` source** under `share/doc/acehack/source`, using NGPL paragraph
+**3(a)** and the source definition in `dat/license` lines 77–79. Original
+copyright, license and warranty notices remain intact. Changed C/header and
+build-helper files carry prominent **2026-10-07** downstream modification
+notices under paragraph **2(a)**. Installed
+`share/doc/acehack/{license,README,fixes36.0,Guidebook.txt,SOURCE,acehack.scm,install-sh-notice}`
+retain the license, attribution, changes and exact package/launcher recipe.
+
+The pre-build selected-source review covers **310 upstream text files**,
+including all **39 `dat` files**, with generated build inputs retained in
+addition: source, headers, utilities, tty/Unix support, configure/autoconf
+templates, documentation text and the mandatory `win32api.h` configure input.
+Original literary attributions in `dat/data.base`, the LibTomCrypt public-domain
+notice in `src/rnd.c`, Trolltech's unlimited grant in `include/qttableview.h`,
+and the configure/Autoconf/install-sh grants and exceptions are preserved.
+Separate Guix runtime/build inputs retain their own license boundaries.
+Optional unselected ports, graphical/encoded-sound payloads and unused graphics
+headers are not installed; neither are the grantless MAXON `bitmfile.h` or
+restricted legacy formatter. This is a bounded selected-source compliance
+receipt, not legal certification or an all-upstream-FOSS claim.
+
+**Documentation formatter limitation:** upstream build-only `doc/tmac.n`
+restricts sale and redistribution of modifications and is **not installed**.
+The full formatted `Guidebook.txt` and original `Guidebook.mn`/`Guidebook.tex`
+text are retained. Rebuilding the historical Guidebook formatting requires
+that macro from the pinned upstream build input: installed `source/` is
+complete for the selected executable and `nhdat`, **not a self-contained
+documentation formatter distribution**. `SOURCE` states this limitation
+explicitly; the full upstream origin is not claimed wholly free.
+
+The final `/tmp/acehack-make-final/continuity.json` records `success: true`,
+`full_map_and_hud_exact: true`, `native_save_consumed: true` and unchanged host
+game state. The normal launcher runs a real ELF child on a PTY with ordinary
+game arguments. Native splash/birth selections enter a lawful human female
+Valkyrie, then movement and two searches advance the naturally generated game.
+`S`/`y` saves and exits **0**; an independent launch's native `c` continuation
+restores and consumes that original save. Evidence-only copies of save files
+are never reinjected, and no save binary, random seed or game state is patched.
+
+The full **80 × 21** displayed map, both HUD rows, player coordinate, HP, Pw,
+AC, experience level, depth, gold, score and turn exactly match the pre-save
+state after restore. In the final run, movement takes the avatar from
+zero-based **(61, 8)** at turn **1** to **(62, 8)** at turn **4** after two
+searches; restore preserves that full state. Continued movement reaches
+**(63, 8)**, and two more searches reach turn **7** before another normal save
+and clean exit **0**. HP stays **16/16**, Pw **2/2**, AC **6**, experience
+level **1**, dungeon depth **1**, gold **0** and score **0** throughout these
+bounded actions. Native rendered screen/PTY, input and process records
+accompany the structured continuity evidence; a screenshot alone is not proof.
+
+The external consumer supplies fresh HOME/XDG paths, **UID 1000/GID 998**,
+private user/mount/network/PID namespaces, loopback-only networking and
+recursively read-only `/gnu/store`; these are testing isolation, not features
+claimed of the game. Before/after output NAR hashes both equal
+**`1r66niij3lynsq3i6yyj5w96xvv4yhhcxn37nkdrbdcrdrnws4my`**. Evidence includes
+`continuity.json`, `session-{1,2}.pty`, session input/process/screen records,
+native-save copies, namespace/mount records, `nar-before.txt`, `nar-after.txt`
+and `consumer-exit-status.txt` (**0**).
+
+```sh
+make check-acehack ACEHACK_OUTPUT=/gnu/store/3hm6534az3ns9b2yfxkalswgw36j64pp-acehack-3.6.0-0.9a4c767 ACEHACK_EVIDENCE=/tmp/acehack-native-new
+```
+
+This standalone guarded target requires a prebuilt ordinary store output and
+a **fresh nonexistent** evidence directory, honors `GUIX`, and invokes
+[tests/acehack-smoke.sh](tests/acehack-smoke.sh) with
+[tests/acehack-native.py](tests/acehack-native.py). It realizes the consumer's
+tool closure before offline isolation but neither builds nor modifies the
+supplied game output. It is not part of the aggregate `make check` target.
+Limits: ordinary birth, native movement/search, save/restore display/HUD
+continuity, continued action and clean save/quit only; no combat, winning,
+audio or independently decoded inventory/save-binary claim. Local evidence
+does not establish signed channel publication, profile installation, system
+deployment or issue closure. No described host/service changed and no material
+OKF correction was established, so no OKF page/log update applies. This
+documentation worker ran no commands, checks, builds, linters or formatters.
+
 ## Atlas Warriors — verified native SDL gameplay
 
 Local evidence on **2026-10-07** covers the existing

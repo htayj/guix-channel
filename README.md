@@ -274,7 +274,7 @@ publication, source-required, and build gates appear in the final table.
 
 | Package | Version | What it does | Status |
 | --- | --- | --- | --- |
-| [`acehack`](guix/tay/packages/acehack.scm) | `3.6.0-0.9a4c767` | Historical tty NetHack variant | Defined |
+| [`acehack`](guix/tay/packages/acehack.scm) | `3.6.0-0.9a4c767` | Historical native tty NetHack variant with NGPL executable/data source and private XDG state | Verified native gameplay/save continuity; clean-lint gate pending, #266 open ([receipt](ACCOUNTING.md#acehack--verified-native-tty-gameplay-and-save-continuity)) |
 | [`bell-labs-rogue7`](guix/tay/packages/bell-labs-rogue7.scm) | `7.7.1` | Historical terminal dungeon game with XDG-managed score and save state | Defined |
 | [`dhack`](guix/tay/packages/dhack.scm) | `0.2c` | Historical terminal symbolic roguelike | Defined |
 | [`dnethack`](guix/tay/packages/dnethack.scm) | `3.26.0` | Terminal dungeon exploration game based on NetHack | Defined |

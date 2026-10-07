@@ -350,8 +350,10 @@ check-bell-labs-rogue7:
 check-astx:
 	GUIX="$(GUIX)" tests/astx-smoke.sh
 
+# AceHack acceptance requires an explicit prebuilt output and fresh evidence path.
 check-acehack:
-	GUIX="$(GUIX)" tests/acehack-smoke.sh
+	@test -n "$(ACEHACK_OUTPUT)" -a -n "$(ACEHACK_EVIDENCE)" || { echo 'Set ACEHACK_OUTPUT and ACEHACK_EVIDENCE (prebuilt /gnu/store output and fresh evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/acehack-smoke.sh "$(ACEHACK_OUTPUT)" "$(ACEHACK_EVIDENCE)"
 
 check-avanor:
 	GUIX="$(GUIX)" tests/avanor-smoke.sh
@@ -716,7 +718,7 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-kitty-bitmap-oldguix check-lyntin check-mmapper check-mudlet check-ocaml-irc-client check-notty check-miou check-domainslib check-tui check-proiel \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
-	check-tinyfugue check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-klh10 check-suppty check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-bell-labs-rogue7 check-astx check-acehack check-avanor check-bootrogue check-hack check-emacs-org-popup-posframe \
+	check-tinyfugue check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-klh10 check-suppty check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-bell-labs-rogue7 check-astx check-avanor check-bootrogue check-hack check-emacs-org-popup-posframe \
 	check-emacs-forth-mode check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-aquarium-arena check-bcrawl check-chessrogue check-corerl check-cutlassrl check-dhack check-cryptrover check-dnethack check-dragonslayer check-grippy-socks check-hunger-games check-gruesome check-hydra-slayer check-martins-dungeon-bash check-nlarn check-robotfindskitten check-fontra \
 	check-aiwnios check-aiwnios-bytecode check-wrogue check-babel7drl \
 	check-smiths-hand check-tetraworld check-splicehack-rewrite \

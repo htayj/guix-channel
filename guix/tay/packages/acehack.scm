@@ -14,7 +14,8 @@
   #:use-module (gnu packages compiler-tools)
   #:use-module (gnu packages groff)
   #:use-module (gnu packages linux)
-  #:use-module (gnu packages ncurses))
+  #:use-module (gnu packages ncurses)
+  #:use-module (tay packages auxiliary))
 
 ;; AceHack has no release tags.  This is the final master tip of the public
 ;; git mirror, dated 2015-03-11.
@@ -60,6 +61,40 @@
       #~(modify-phases %standard-phases
           (add-before 'configure 'make-store-safe
             (lambda _
+              (use-modules (ice-9 textual-ports))
+              ;; NGPL 2(a): each changed file must carry its own prominent,
+              ;; dated notice, without replacing the upstream notices.
+              (for-each
+               (lambda (file)
+                 (let ((original (call-with-input-file file get-string-all)))
+                   (call-with-output-file file
+                     (lambda (port)
+                       (display
+                        (string-append
+                         "/* Modified by the tay Guix channel, 2026-10-07:\n"
+                         " * store-safe tty build, mail/shell disabled, "
+                         "ncurses compatibility,\n"
+                         " * and reproducible build date.  See "
+                         "share/doc/acehack/SOURCE.\n"
+                         " * Distributed under the NetHack General Public "
+                         "License. */\n")
+                        port)
+                       (display original port)))))
+               '("include/config.h" "include/unixconf.h" "src/objects.c"
+                 "win/tty/termcap.c" "util/makedefs.c"))
+              ;; Standard Guix phases also patch source script interpreters
+              ;; and refresh config.guess/sub; identify these downstream files.
+              (for-each
+               (lambda (file)
+                 (substitute* file
+                   (("^#!.*$")
+                    (string-append
+                     "#!" #$(file-append bash-minimal "/bin/sh") "\n"
+                     "# Modified by the tay Guix channel, 2026-10-07: "
+                     "Guix build interpreter and configuration helpers.\n"))))
+               '("configure" "sys/autoconf/config.guess"
+                 "sys/autoconf/config.sub" "sys/autoconf/install-sh"
+                 "sys/autoconf/bootstrap.sh"))
               ;; The original shell launcher hard-codes /usr/games and the
               ;; game changes into a compiled-in HACKDIR.  The Guix launcher
               ;; below instead owns the temporary playground.
@@ -111,9 +146,44 @@
               ;; omission.
               (substitute* "include/autoconf.h"
                 (("#undef COMPRESS_EXTENSION")
-                 "#define COMPRESS_EXTENSION \"\""))))
+                 "#define COMPRESS_EXTENSION \"\""))
+              (substitute* "include/autoconf.h"
+                (("^#ifndef AUTOCONF_H")
+                 (string-append
+                  "/* Modified by the tay Guix channel, 2026-10-07: "
+                  "empty extension for native internal compression. */\n"
+                  "#ifndef AUTOCONF_H")))))
           (replace 'build
             (lambda _
+              ;; NGPL 3(a): retain every source and build template used to
+              ;; create the executable and nhdat, before adding binaries.
+              (mkdir-p "source-for-distribution")
+              (for-each
+               (lambda (file)
+                 (copy-recursively
+                  file (string-append "source-for-distribution/" file)))
+               '("configure" "README" "Files" "Porting" "Makefile"
+                 "src" "include" "util" "dat" "doc" "sys/autoconf"
+                 "win/tty"))
+              (for-each
+               (lambda (file)
+                 (let ((target (string-append "source-for-distribution/" file)))
+                   (mkdir-p (dirname target))
+                   (copy-file file target)))
+               '("sys/share/ioctl.c" "sys/share/unixtty.c"
+                 "sys/unix/unixmain.c" "sys/unix/unixunix.c"
+                 "sys/unix/unixres.c" "sys/unix/Install.unx"
+                 "sys/unix/README.linux" "sys/winnt/win32api.h"))
+              ;; Graphics-only headers are not used by the tty build;
+              ;; bitmfile.h carries a MAXON copyright without a grant.
+              ;; tmac.n has noncommercial/no-modification-distribution terms,
+              ;; and is not executable/data source under NGPL lines 77-79.
+              ;; Retain full Guidebook text, not this restricted formatter.
+              (for-each
+               (lambda (file)
+                 (delete-file (string-append "source-for-distribution/" file)))
+               '("include/bitmfile.h" "include/gem_rsc.h"
+                 "include/load_img.h" "include/qt_xpms.h" "doc/tmac.n"))
               ;; The generated top-level Makefile's default target is the
               ;; executable; the documented `all' target also creates nhdat.
               ;; The installer additionally expects Guidebook.txt.
@@ -142,6 +212,64 @@
                 (install-file "doc/Guidebook.txt" doc)
                 (install-file "README" doc)
                 (install-file "doc/fixes36.0" doc)
+                (copy-recursively "source-for-distribution"
+                                  (string-append doc "/source"))
+                (copy-file
+                 #$(local-file (search-tay-package-file "acehack.scm"))
+                 (string-append doc "/acehack.scm"))
+                ;; install-sh also requires its notice in supporting docs.
+                (copy-file "sys/autoconf/install-sh"
+                           (string-append doc "/install-sh-notice"))
+                (call-with-output-file (string-append doc "/SOURCE")
+                  (lambda (port)
+                    (display
+                     (string-append
+                      "AceHack revision " #$%acehack-commit "\n"
+                      "Historical mirror: https://github.com/deepy/acehack\n"
+                      "Original AceHack author: Alex Smith (ais523); see README.\n"
+                      "NetHack General Public License: see license.\n"
+                      "Complete selected patched executable and nhdat source\n"
+                      "accompanies this distribution in source/ (NGPL 3(a),\n"
+                      "source definition at dat/license lines 77-79). Original\n"
+                      "copyright, license and warranty notices remain intact.\n"
+                      "Downstream modifications, 2026-10-07: disable CHDIR,\n"
+                      "SHELL and MAIL; preserve mail-scroll indices; use ncurses'\n"
+                      "tparm declaration; fix internal-compression extension;\n"
+                      "fix makedefs timestamp. Changed files carry dated notices\n"
+                      "(NGPL 2(a)). acehack.scm retains the exact build and\n"
+                      "per-user XDG launcher recipe. Rebuild from the channel:\n"
+                      "guix build -L guix acehack\n"
+                      "Source selection retains Unix/tty, complete game and dat\n"
+                      "inputs, configure/autoconf templates, documentation text\n"
+                      "and mandatory win32api.h configure input. Other ports,\n"
+                      "graphical payloads, encoded sounds and unused graphics\n"
+                      "headers are not installed. No opaque binaries are shipped.\n"
+                      "nhdat packs help/history/options, logo.vt100, modemenu,\n"
+                      "encyclopedia, oracles, rumors, quest text, dungeon and all\n"
+                      "compiled special/quest levels. These game/map/text inputs\n"
+                      "use NGPL; literary attributions remain in dat/data.base.\n"
+                      "src/rnd.c retains its LibTomCrypt public-domain AES/SHA256\n"
+                      "attribution. include/qttableview.h retains Trolltech's\n"
+                      "unlimited use/distribution/modification grant. The\n"
+                      "2026-10-07 pre-build rights audit covered all 310 selected\n"
+                      "upstream text files (src 107, include 91, util 10, dat 39,\n"
+                      "doc 32, sys 23, tty 4, root 4); generated build inputs\n"
+                      "and this recipe are retained in addition. Build\n"
+                      "auxiliaries retain their own notices: configure's\n"
+                      "unlimited copying grant; config.guess/sub's GNU GPL\n"
+                      "Autoconf distribution exception; install-sh's MIT\n"
+                      "permission (also in install-sh-notice). Runtime libraries\n"
+                      "and tools are separate Guix inputs with their own notices.\n"
+                      "Documentation limitation: original build-only doc/tmac.n\n"
+                      "prohibits sale and redistribution of modifications and is\n"
+                      "not installed. Full formatted Guidebook.txt and original\n"
+                      "Guidebook.mn/Guidebook.tex text are retained. Rebuilding\n"
+                      "historical Guidebook formatting requires that macro from\n"
+                      "the pinned upstream build input; source/ is complete for\n"
+                      "the executable/nhdat, not a self-contained documentation\n"
+                      "formatter distribution. The full upstream origin is not\n"
+                      "claimed to be wholly under free licenses.\n")
+                     port)))
                 (call-with-output-file launcher
                   (lambda (port)
                     (format port "#!~a~%set -eu~%~
@@ -200,7 +328,10 @@ exit $status~%"
                  (lambda (file)
                    (unless (file-exists? (string-append doc file))
                      (error "missing installed AceHack notice" file)))
-                 '("license" "README" "Guidebook.txt" "fixes36.0"))
+                 '("license" "README" "Guidebook.txt" "fixes36.0" "SOURCE"
+                   "acehack.scm" "install-sh-notice" "source/dat/license"
+                   "source/src/rnd.c" "source/win/tty/wintty.c"
+                   "source/util/makedefs.c" "source/include/autoconf.h"))
                 (invoke "grep" "-F" "NETHACK GENERAL PUBLIC LICENSE"
                         (string-append doc "license"))
                 (invoke "grep" "-F" "AceHack 3.6.0"
@@ -237,8 +368,11 @@ package builds its tty-only interface from a fixed public source commit, with
 no build-time or runtime downloads.  Its launcher creates a temporary
 playground for each invocation, exposing immutable game data from the store
 and keeping saves, scores, logs, locks, and other mutable state under XDG data
-directories.")
-    ;; dat/license is the NetHack General Public License, which the complete
-    ;; AceHack source and its generated game data identify as their license.
+directories.  Installed documentation includes the complete selected patched
+tty executable and game-data source, license and dated downstream notices;
+SOURCE records third-party terms and the uninstalled documentation formatter
+needed to reproduce the historical Guidebook formatting.")
+    ;; NGPL covers the game and its generated data; build auxiliaries retain
+    ;; their own grants in source/.  Restricted optional inputs are not shipped.
     (license (license:fsdg-compatible
               "https://nethack.org/common/license.html"))))

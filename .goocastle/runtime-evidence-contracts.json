@@ -75,23 +75,6 @@
       }
     },
     {
-      "issueNumber": 650,
-      "packageName": "acehack",
-      "artifactPath": ".goocastle/evidence/issue-650.png",
-      "runtime": {
-        "executable": "acehack",
-        "invocation": {
-          "file": "acehack",
-          "args": [
-            "-s",
-            "-v",
-            "all"
-          ]
-        },
-        "successMarker": "Cannot find any entries for all"
-      }
-    },
-    {
       "issueNumber": 651,
       "packageName": "bell-labs-rogue7",
       "artifactPath": ".goocastle/evidence/issue-651.png",
