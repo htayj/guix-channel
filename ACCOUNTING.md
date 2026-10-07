@@ -59,6 +59,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Rot.js source-built toolkit and offline consumer](#rotjs--verified-source-built-toolkit-and-offline-consumer)
 - [Ink source-built React terminal renderer and native PTY consumer](#ink--source-built-react-terminal-renderer-and-native-pty-consumer)
 - [Imago six-system image library and native consumer](#imago--six-system-image-library-and-native-consumer)
+- [Bell Labs Rogue 7 standalone native gameplay/save continuity](#bell-labs-rogue7--standalone-native-gameplay-and-save-continuity)
 
 ## Relocation map (2026-10-04)
 
@@ -5651,6 +5652,83 @@ second restores the game and must show the restored hero's named status
 line.  `.goocastle/evidence/issue-659.png` renders the exact raw byte prefix
 of that restore session, ending before the quit prompt and before curses
 leaves the alternate screen.
+
+## Bell Labs Rogue 7 — standalone native gameplay and save continuity
+
+Local evidence on **2026-10-07** covers the existing
+[`bell-labs-rogue7`](guix/tay/packages/bell-labs-rogue7.scm) **7.7.1** package,
+not a new inventory entry or replacement game. The original **629** source
+snapshots and preservation accounting are unchanged. The package builds the
+`arogue7/` tree from the pinned
+[`early-roguelike-rel2021.03-src.tgz`](https://rlgallery.org/files/early-roguelike-rel2021.03-src.tgz)
+collection, source base32 SHA256
+`09myhrn19s33bsdyavi15nq20811l0sxrz8nc2d8qcmx7aysl9jn`.
+The actual `arogue7/vers.c` identifies the Bell Labs 7.7 lineage and release
+`7.7.1`; the collection release is not the game's version.
+
+The actual source and installed `LICENSE.TXT` grant source and binary
+redistribution, with or without modification, subject to retention of notices,
+conditions and disclaimers and the non-endorsement conditions. They preserve
+the notices for Michael Morgan, Ken Dalka and AT&T; Robert D. Kindelberger;
+Michael Toy, Ken Arnold and Glenn Wichman; Nicholas J. Kisseberth's
+`state.c`/`mdport.c` portions; and David Burren's FreeSec `xcrypt.c` portion.
+The additional reserved-name conditions prohibit using **Advanced Rogue**,
+**ARogue** or **Super-Rogue** for endorsement or derived product names without
+prior written permission. The package's `bell-labs-rogue7` name avoids those
+reserved names; its custom non-copyleft license record is intentionally not
+unqualified BSD-3-Clause. The full 9,331-byte license and the source guides
+`aguide.mm` and `arogue77.html` are installed under
+`share/doc/bell-labs-rogue7/`; the native executable is under `libexec/` and the
+normal launcher is under `bin/`. Save and score state use
+`$XDG_DATA_HOME/bell-labs-rogue7`, falling back to
+`$HOME/.local/share/bell-labs-rogue7` when XDG_DATA_HOME is unset. The package
+disables host-wide log, score and save directories and supplies `ROGUEHOME` for
+both saves and scores; it does not replace the original game engine.
+
+Main's source build (run 469, **9.75 s**, log artifact `15219`) and
+reproducibility rebuild (run 470, **5.71 s**, log artifact `15220`) passed for
+the same output:
+`/gnu/store/pam82bkghvc5hlxs0iwwwzwvs2kxj142-bell-labs-rogue7-7.7.1`.
+The standalone native proof (run 473, **21.22 s**) passed with
+`BELL_LABS_ROGUE7_RUNTIME_OK`; its receipt is
+`/tmp/rogue7-native-2/continuity.json`, accompanied by real PTY transcripts,
+input records, decoded screens and an evidence-only copy of the native save.
+
+Two independent processes entered through the normal installed launcher in
+fresh private HOME/XDG directories, with empty PATH, `TERM=xterm-256color`,
+same-UID mapping (**1000**, not namespace root), network/PID/mount/user
+isolation, only loopback networking and a recursively read-only `/gnu/store`.
+The first real PTY selected fighter class `1`, accepted the native attribute
+allocation with Escape and `y`, navigated the starting equipment post without
+claiming a purchase, reached its `%` entrance and used `>` to enter dungeon
+level 1. A native `h` move changed the player from screen coordinate `(17,3)`
+to `(16,3)`. Native `S` then `y` wrote the 49,472-byte `arogue77.sav` and
+exited normally with status **0**. The copied evidence save was never
+re-injected. A new process launched with `-r`, consumed the actual native save
+and restored the **entire displayed map and both HUD lines exactly**, including
+player `(16,3)`, `Lvl:1`, `Hp:24(24)`, `Ac:11`, `Carry:0(200)`, `Exp:1/0`,
+attributes and `Veteran` rank. A further native `l` move reached `(17,3)`;
+`Q`, the exact `yes` confirmation and pack/score acknowledgements exited with
+status **0**. Main read the restored screen containing the player `@`, nearby
+`R` and those HUD values. This proves visible save/restore continuity and
+continued movement, not equality of every hidden game-state field, combat,
+equipment purchase, deeper-level progression or a win.
+
+The output NAR before and after the standalone proof was identical:
+`1za12qhpm0vyaza4fx5cchnynn7q83ximrlskj1xwdnmmy04848m`.
+The receipt also records unchanged host game state; after save consumption and
+normal quit, the only private game footprint was the personal score file.
+**Clean lint remains pending:** Main's run 471 (**7.59 s**) reported the
+`generic-html` updater failing to find upstream releases and a source not
+archived in Software Heritage with missing Disarchive data. An unrelated
+deprecated Flex warning is not a Rogue defect. No clean-lint claim is made.
+Main then completed the guarded Makefile integration and exercised
+`make check-bell-labs-rogue7` (run 474, **27.56 s**):
+`BELL_LABS_ROGUE7_RUNTIME_OK`, with retained evidence at
+`/tmp/rogue7-make-final`. The standalone target requires an explicit prebuilt
+output and fresh evidence directory; it is not an unguarded aggregate check.
+Publication remains pending, and **#267 remains OPEN** for the lint gate.
+This receipt does not claim signed publication, deployment or issue closure.
 
 ## Super-Rogue
 
