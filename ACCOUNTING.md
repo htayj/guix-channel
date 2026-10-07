@@ -5727,8 +5727,14 @@ Main then completed the guarded Makefile integration and exercised
 `BELL_LABS_ROGUE7_RUNTIME_OK`, with retained evidence at
 `/tmp/rogue7-make-final`. The standalone target requires an explicit prebuilt
 output and fresh evidence directory; it is not an unguarded aggregate check.
-Publication remains pending, and **#267 remains OPEN** for the lint gate.
-This receipt does not claim signed publication, deployment or issue closure.
+Published on **2026-10-07** in signed, Guix-authenticated commit
+`eb0a503e8a4c1e0ecc344887601e5e97dcb43208`
+(`fix: prove native Rogue seven save and restore`) through a normal
+`git push origin master` to `git@192.168.7.121:tay/guix-channel.git`;
+authenticated remote `HEAD` and `refs/heads/master` matched that exact commit.
+Publication does not close the clean-lint gate: **#267 remains OPEN** for the
+updater/archive findings above. This receipt does not claim deployment or issue
+closure.
 
 ## Super-Rogue
 
