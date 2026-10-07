@@ -411,6 +411,88 @@ system deployment. No described host/service changed and no applicable OKF
 correction was established, so no OKF page/log update applies. This
 documentation worker ran no commands or checks.
 
+## Aquarium Arena — verified native SDL gameplay
+
+Local evidence on **2026-10-07** covers the existing
+[`aquarium-arena`](guix/tay/packages/aquarium-arena.scm) **0.4-0.6d494c**
+definition, pinned to
+[`valrak/AquariumRL`](https://github.com/valrak/AquariumRL/tree/6d494cee8d45f734eaecd56237f33aaec37a0ed8)
+revision `6d494cee8d45f734eaecd56237f33aaec37a0ed8`. This is native
+acceptance of an **existing inventory member**, not a new package: the
+accepted inventory remains **238** (230 project + 7 font + 1 optional
+proprietary), while the integrated working tree is **239** (231 + 7 + 1)
+including the unrelated unpublished Dualmaster entry, which is neither
+accepted nor published by this receipt. The canonical **629-source
+preservation ledger is unchanged**.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main394 passed in **5.44 s**; output `/gnu/store/sf0bagkb7iwg7xvz46x0z3bdj3bn4gb2-aquarium-arena-0.4-0.6d494c`. |
+| Reproducibility | Main396 `--check` passed in **3.62 s**. |
+| Lint — clean gate unmet | Main397 exited **0** with its own `archive-missing` origin and no-valid-updater findings unresolved; exit 0 is not clean-lint acceptance. |
+| Native SDL consumer | Main409 passed in **49.62 s** at `/tmp/aquarium-native-9`, using the normal launcher and real SDL event loop. |
+| Final integrated target | Main414 `make check-aquarium-arena` passed in **33.57 s** at `/tmp/aquarium-make-final-4` (an earlier Main411 run failed gate 12 in 61.91 s; superseded after the speculative survival/help branches were removed). |
+
+**Native SDL gameplay is verified; all issue #275 gates are not.** The
+literal clean-own-lint gate remains open, and issue **#275 remains OPEN**.
+
+The native run exercises the installed
+`share/aquarium-arena/AquariumArena.py` under Guix Python 3.12.12 inside
+fresh HOME/XDG state, **UID 1000/GID 998**, separate user/mount/network/PID
+namespaces, loopback-only networking and a recursively read-only
+`/gnu/store` (`ro`, `noatime`); the external harness supplies this
+isolation, not the game. The SDL window is **1024 × 660** under Xvfb with
+`SDL_AUDIODRIVER=dummy` and software rendering. Every input is a real XTest
+key event; **no game module is imported, no PRNG is seeded, no pygame event
+is posted, and no game state is accessed or mutated** — every observation is
+an XGetImage capture of the native window. Pre/post output NAR hashes both
+equal **`1sdsy0mjl9rbqj58n0sj72jxc4mx4caqd5pfymvbyv1f75nvgmax`**: the store
+output stayed read-only, with no mutable files after quit and a clean
+**exit 0** (the only log line is pygame's AVX2 build warning).
+
+Observed gameplay, from the JSON records only. The earlier Main409 native
+run at `/tmp/aquarium-native-9` additionally exercised 40 bounded
+stand-in-place turns; its 11/12 help screenshots were exploratory and are
+**not** verification (see below). The **final integrated Main414 run** at
+`/tmp/aquarium-make-final-4` removed the speculative survival/help/
+death/hiscore branches that were never a user requirement and exercised
+meaningful gameplay only: the first-run board reconstructed exactly
+(welcome log `Welcome to Aquarium Arena!` / `Top gladiator score is 0
+points!`, exact-watch HUD `S 0`), the natural arena placed the diver at
+**(19, 13)**, a native **`l`** vi-key moved it to **(20, 13)** with exact
+tinted diver pixels, exact restoration of the old tile and an unchanged
+HUD, and a native **Left** arrow returned it to **(19, 13)**, confirming
+normal turn advancement. Examine mode showed `Looking` with the cursor
+over the player, moved the cursor to **(20, 13)** and restored the diver
+on exit. Fire mode showed `Firing` with **five range-pointer cells**;
+firing the harpoon right was observed as a fired state with score still
+`S 0` — the harpoon-item cells are **not individually resolvable** in the
+capture, so no hit, miss or trajectory claim is made. A normal
+`WM_DELETE_WINDOW` quit then exited **0**, traceback-free, with no mutable
+files; pre/post output NAR hashes both equal
+**`1sdsy0mjl9rbqj58n0sj72jxc4mx4caqd5pfymvbyv1f75nvgmax`** (immutable
+output), identical to the Main409 run. Tile and glyph checks are exact
+source-glyph pixel comparisons against the pinned upstream sources, not
+OCR. Screenshots `01`–`09` with SHA-256 hashes, namespace/mount records
+and game/Xvfb logs accompany `runtime.json`/`evidence.json`. The retained
+repository screenshot is
+`.goocastle/evidence/aquarium-arena-native.png`, copied by Main from the
+Main409 `04-arrow-movement.png` and visually inspected; a screenshot
+alone is not the acceptance proof.
+
+Bounded limits, recorded explicitly by the harness: **no death, help-screen,
+hiscore or persistence claim — those scenarios are not exercised**. The
+Main409 exploratory help-panel capture (`11-help-screen-failed.png`,
+`exact_pixels: false`) confirmed help is not verifiable this way and is no
+gate; no help verification is claimed. The consumer imports no game
+modules, seeds no PRNG, posts no pygame events and never accesses or
+mutates game state; the store output stays read-only throughout. Local
+acceptance does not establish signed channel publication, #275 closure, or
+user-profile or system deployment. No described host/service changed and no
+applicable OKF correction was established, so no OKF page/log update
+applies. This documentation worker ran no commands or checks beyond
+reading the evidence.
+
 ## PBUI — verified native Emacs presentations
 
 Local evidence on **2026-10-07** covers [`emacs-pbui`](guix/tay/packages/pbui.scm)

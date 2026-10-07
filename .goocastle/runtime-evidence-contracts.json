@@ -105,21 +105,6 @@
       }
     },
     {
-      "issueNumber": 656,
-      "packageName": "aquarium-arena",
-      "artifactPath": ".goocastle/evidence/issue-656.png",
-      "runtime": {
-        "executable": "aquarium-arena",
-        "invocation": {
-          "file": "aquarium-arena",
-          "args": [
-            "--guix-smoke"
-          ]
-        },
-        "successMarker": "aquarium-arena isolated smoke passed"
-      }
-    },
-    {
       "issueNumber": 659,
       "packageName": "avanor",
       "artifactPath": ".goocastle/evidence/issue-659.png",

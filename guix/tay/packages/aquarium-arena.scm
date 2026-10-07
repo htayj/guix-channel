@@ -157,80 +157,9 @@
                     "            score_file.write(str(score))\n"
                     "        return True\n"
                     "    return False\n")
-                   port)))
-              ;; The smoke entry point is intentionally inside the installed
-              ;; program: it uses the same imports, data and pygame backend.
-              (substitute* "AquariumArena.py"
-                (("from gameEngine import GameEngine")
-                 "from gameEngine import GameEngine\nimport sys")
-                (("    ge = GameEngine\\(\\)")
-                 (string-append
-                  "    if sys.argv[1:] == ['--guix-smoke']:\n"
-                  "        GameEngine(smoke=True)\n"
-                  "        print('aquarium-arena isolated smoke passed')\n"
-                  "    elif len(sys.argv) == 1:\n"
-                  "        GameEngine()\n"
-                  "    else:\n"
-                  "        raise SystemExit('usage: aquarium-arena [--guix-smoke]')")))
-              (substitute* "gameEngine.py"
-                (("def __init__\\(self\\):")
-                 (string-append
-                  "def __init__(self, smoke=False):\n"
-                  "        if smoke:\n"
-                  "            import random\n"
-                  "            random.seed(656)"))
-                (("        self.cursorcoord = \\(1, 1\\)")
-                 "        self.smoke = smoke\n        self.cursorcoord = (1, 1)")
-                (("        self.mapfield.generatelevel\\(self.MAPMAXX, self.MAPMAXY\\)")
-                 "        self.mapfield.generatelevel(self.MAPMAXX, self.MAPMAXY)")
-                (("        self.graphicshandler = GraphicsHandler\\(self\\)")
-                 "        self.graphicshandler = GraphicsHandler(self)")
-                (("        self.messagehandler = MessageHandler\\(\\)" )
-                 "        pygame.init()\n        self.messagehandler = MessageHandler()")
-                (("        self.loop\\(\\)")
-                 "        self._maybe_smoke_loop()")
-                (("    def initgame\\(self\\):")
-                 (string-append
-                  "    def _maybe_smoke_loop(self):\n"
-                  "        if self.smoke:\n"
-                  "            self.run_smoke()\n"
-                  "        else:\n"
-                  "            self.loop()\n\n"
-                  "    def run_smoke(self):\n"
-                  "        player = self.initgame()\n"
-                  "        self.deepblue = 0\n"
-                  "        self.draw()\n"
-                  "        pygame.image.load(os.path.join(DATA_ROOT, "
-                  "'resources/img/helpscreen.png'))\n"
-                  "        pygame.font.Font(os.path.join(DATA_ROOT, "
-                  "'resources/fonts/LiberationMono-Bold.ttf'), 16)\n"
-                  "        start = player.getposition()\n"
-                  "        for delta in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n"
-                  "            target = (start[0] + delta[0], start[1] + delta[1])\n"
-                  "            if self.mapfield.ispassable(target):\n"
-                  "                player.action(target)\n"
-                  "                break\n"
-                  "        else:\n"
-                  "            raise RuntimeError('smoke arena has no adjacent "
-                  "passable tile')\n"
-                  "        if player.getposition() == start:\n"
-                  "            raise RuntimeError('smoke player action did not "
-                  "move')\n"
-                  "        self.passturn()\n"
-                  "        if self.turns != 1:\n"
-                  "            raise RuntimeError('smoke action did not execute "
-                  "a turn')\n"
-                  "        if not savehiscore(17, loadhiscore()) or "
-                  "str(loadhiscore()).strip() != '17':\n"
-                  "            raise RuntimeError('smoke high score did not "
-                  "persist')\n"
-                  "        screenshot = os.environ.get("
-                  "'AQUARIUM_ARENA_SMOKE_SCREENSHOT')\n"
-                  "        if screenshot:\n"
-                  "            pygame.image.save(self.graphicshandler.finalscreen, "
-                  "screenshot)\n"
-                  "        pygame.quit()\n\n"
-                  "    def initgame(self):")))))
+                   port)))))
+              ;; Upstream entry point is the plain zero-argument
+              ;; GameEngine() constructor; install it unmodified.
           (add-after 'use-immutable-data-and-xdg-state 'check
             (lambda* (#:key tests? #:allow-other-keys)
               ;; Upstream has no test suite.  Compile every installed module
@@ -292,13 +221,7 @@
                     (display
                      (string-append
                       "set -eu\n"
-                      "case \"$#\" in\n"
-                      "  0) ;;\n"
-                      "  1) test \"$1\" = --guix-smoke || { echo 'usage: "
-                      "aquarium-arena [--guix-smoke]' >&2; exit 64; } ;;\n"
-                      "  *) echo 'usage: aquarium-arena [--guix-smoke]' >&2; "
-                      "exit 64 ;;\n"
-                      "esac\n"
+                      "test $# -eq 0 || { echo 'usage: aquarium-arena' >&2; exit 64; }\n"
                       "export PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 "
                       "PYGAME_HIDE_SUPPORT_PROMPT=1\n"
                       "export PYTHONPATH=" #$python-pygame

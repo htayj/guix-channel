@@ -1,95 +1,81 @@
 #!/bin/sh
-# Isolated installed-runtime proof for Aquarium Arena.
+# Consume a prebuilt ordinary Aquarium Arena SDL output, never rebuild it.
+# Strict external OUTPUT EVIDENCE GUIX consumer following the established
+# atlas-warriors native pattern: tool closures are realized first, then the
+# native pygame proof runs inside a same-UID user/mount/net/PID namespace
+# with the store recursively remounted read-only.  The package output NAR
+# hash must be unchanged afterwards.
 set -eu
-
-guix_bin=${GUIX:-guix}
-channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-
-if test "$#" -gt 1; then
-    echo "usage: $0 [aquarium-arena-output]" >&2
+if test "$#" -ne 2; then
+    echo "usage: $0 OUTPUT EVIDENCE_DIR (new or empty, outside /gnu/store)" >&2
     exit 64
 fi
-
-# The game has no networking feature.  Make outbound networking impossible,
-# rather than merely depending on a static inspection of its imports.
-if test "${AQUARIUM_ARENA_SMOKE_NAMESPACED:-}" != 1; then
-    command -v unshare >/dev/null || {
-        echo "aquarium-arena-smoke: unshare is required" >&2
-        exit 125
-    }
-    export AQUARIUM_ARENA_SMOKE_NAMESPACED=1
-    exec unshare --user --map-root-user --net "$0" "$@"
+guix_bin=${GUIX:-guix}
+channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+find_output ()
+{
+    for output in $("$guix_bin" build -L "$channel_dir/guix" --no-grafts "$2"); do
+        if test -e "$output/$1"; then
+            printf '%s\n' "$output"
+            return 0
+        fi
+    done
+    echo "could not find $1 in Guix package $2" >&2
+    return 1
+}
+aquarium_out=$(realpath -e -- "$1")
+if test "$aquarium_out" != "$1"; then
+    echo 'OUTPUT must be a canonical direct store item' >&2
+    exit 64
 fi
-
-if test "$#" -eq 1; then
-    aquarium_out=$1
-else
-    aquarium_out=$($guix_bin build -L "$channel_dir/guix" \
-        --no-grafts --no-substitutes aquarium-arena)
-fi
-
+case "$aquarium_out" in
+    /gnu/store/*) test "$(dirname -- "$aquarium_out")" = /gnu/store ;;
+    *) echo 'OUTPUT must be a canonical direct store item' >&2; exit 64 ;;
+esac
 test -x "$aquarium_out/bin/aquarium-arena"
 test -f "$aquarium_out/share/aquarium-arena/AquariumArena.py"
-test -f "$aquarium_out/share/doc/aquarium-arena/LICENSE.md"
-test -f "$aquarium_out/share/doc/aquarium-arena/FreeMono-COPYING"
-test -f "$aquarium_out/share/doc/aquarium-arena/LiberationMono-LICENSE"
-grep -F 'GNU GENERAL PUBLIC LICENSE' \
-    "$aquarium_out/share/doc/aquarium-arena/LICENSE.md" >/dev/null
-grep -F 'Version 3, 29 June 2007' \
-    "$aquarium_out/share/doc/aquarium-arena/FreeMono-COPYING" >/dev/null
-grep -F 'GNU General Public License v.2 with the exceptions set forth below' \
-    "$aquarium_out/share/doc/aquarium-arena/LiberationMono-LICENSE" >/dev/null
-grep -F 'issueNumber' "$channel_dir/.goocastle/runtime-evidence-contracts.json" >/dev/null
-grep -F '"issueNumber": 656' \
-    "$channel_dir/.goocastle/runtime-evidence-contracts.json" >/dev/null
-grep -F '"packageName": "aquarium-arena"' \
-    "$channel_dir/.goocastle/runtime-evidence-contracts.json" >/dev/null
-grep -F 'aquarium-arena isolated smoke passed' \
-    "$channel_dir/.goocastle/runtime-evidence-contracts.json" >/dev/null
-
-# Keep the static audit in addition to the empty network namespace below.
-if rg -n '(^|[[:space:]])(import|from)[[:space:]]+(socket|urllib|http|requests)' \
-        "$aquarium_out/share/aquarium-arena" --glob '*.py'; then
-    echo "unexpected networking import in installed Aquarium Arena" >&2
+evidence_dir=$(realpath -m -- "$2")
+case "$evidence_dir/" in
+    /gnu/store/*) echo 'evidence must be outside /gnu/store' >&2; exit 64 ;;
+esac
+if test -e "$evidence_dir"; then
+    test -d "$evidence_dir"
+    test -z "$(find "$evidence_dir" -mindepth 1 -maxdepth 1 -print -quit)"
+fi
+mkdir -p -- "$evidence_dir"
+# Realize tool closures before entering offline namespaces; honor GUIX throughout.
+coreutils_out=$(find_output bin/env coreutils)
+util_linux_out=$(find_output bin/unshare util-linux)
+python_out=$(find_output bin/python3 python)
+xorg_out=$(find_output bin/Xvfb xorg-server)
+xdotool_out=$(find_output bin/xdotool xdotool)
+x11_out=$(find_output lib/libX11.so.6 libx11)
+before=$("$guix_bin" hash -S nar "$aquarium_out")
+printf '%s\n' "$before" > "$evidence_dir/output-before.nar-hash"
+status=0
+"$coreutils_out/bin/env" -i LC_ALL=C PATH="" \
+    XVFB="$xorg_out/bin/Xvfb" MOUNT="$util_linux_out/bin/mount" \
+    XDOTOOL="$xdotool_out/bin/xdotool" LIBX11="$x11_out/lib/libX11.so.6" \
+    HOST_UID="$("$coreutils_out/bin/id" -u)" \
+    HOST_GID="$("$coreutils_out/bin/id" -g)" \
+    HOST_USER_NS="$("$coreutils_out/bin/readlink" /proc/self/ns/user)" \
+    HOST_MOUNT_NS="$("$coreutils_out/bin/readlink" /proc/self/ns/mnt)" \
+    HOST_PID_NS="$("$coreutils_out/bin/readlink" /proc/self/ns/pid)" \
+    HOST_NET_NS="$("$coreutils_out/bin/readlink" /proc/self/ns/net)" \
+    PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 PYGAME_HIDE_SUPPORT_PROMPT=1 \
+    "$coreutils_out/bin/timeout" --kill-after=15 300 \
+    "$util_linux_out/bin/unshare" --user --map-current-user --keep-caps --mount \
+    --propagation private --net --pid --mount-proc --kill-child --fork \
+    "$python_out/bin/python3" -s "$channel_dir/tests/aquarium-arena-native.py" \
+    "$aquarium_out" "$evidence_dir" || status=$?
+after=$("$guix_bin" hash -S nar "$aquarium_out")
+printf '%s\n' "$after" > "$evidence_dir/output-after.nar-hash"
+if test "$before" != "$after"; then
+    echo 'package output changed during native gameplay proof' >&2
     exit 1
 fi
-
-before_hash=$($guix_bin hash -r "$aquarium_out")
-temporary=$(mktemp -d "${TMPDIR:-/tmp}/aquarium-arena-smoke-XXXXXX")
-home=$temporary/home
-config=$temporary/config
-data=$temporary/data
-cache=$temporary/cache
-state=$temporary/state
-scratch=$temporary/scratch
-frame=$temporary/initialized-game-frame.png
-mkdir "$home" "$config" "$data" "$cache" "$state" "$scratch"
-
-output=$(env -i \
-    HOME="$home" \
-    XDG_CONFIG_HOME="$config" \
-    XDG_DATA_HOME="$data" \
-    XDG_CACHE_HOME="$cache" \
-    XDG_STATE_HOME="$state" \
-    TMPDIR="$scratch" \
-    SDL_VIDEODRIVER=dummy \
-    SDL_AUDIODRIVER=dummy \
-    AQUARIUM_ARENA_SMOKE_SCREENSHOT="$frame" \
-    LC_ALL=C.UTF-8 \
-    PATH="$aquarium_out/bin" \
-    "$aquarium_out/bin/aquarium-arena" --guix-smoke)
-test "$output" = 'aquarium-arena isolated smoke passed'
-test -s "$frame"
-
-test -f "$data/aquarium-arena/hiscore"
-test "$(cat "$data/aquarium-arena/hiscore")" = 17
-test -z "$(find "$home" "$config" "$cache" "$state" "$scratch" \
-    -mindepth 1 -print -quit)"
-test -z "$(find "$data" -type f ! -path "$data/aquarium-arena/hiscore" \
-    -print -quit)"
-test -z "$(find "$data" -type d ! -path "$data" \
-    ! -path "$data/aquarium-arena" -print -quit)"
-test "$before_hash" = "$($guix_bin hash -r "$aquarium_out")"
-test -z "$(find "$aquarium_out" -perm /022 -print -quit)"
-
-echo "aquarium-arena smoke passed: isolated pygame arena, turn, XDG high score, and immutable output"
+if test "$status" -ne 0; then
+    exit "$status"
+fi
+find "$evidence_dir" -type f -exec chmod a-w -- {} +
+printf '%s\n' "AQUARIUM_ARENA_NATIVE_GAMEPLAY_OK evidence=$evidence_dir"
