@@ -58,13 +58,18 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	lambdahack kimchi keeperrl \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
-	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink
+	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
 # an authorized user.  Override this variable to adjust the optional checks.
 OPTIONAL_PROPRIETARY_PACKAGES ?= sentinelone
-CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES)
+# Check Imago's five SBCL dependency recipes explicitly without adding them to
+# the top-level build inventory.  Its libtiff variant keeps the upstream name
+# and is realized through sbcl-cl-libtiff, not an ambiguous "libtiff" check.
+CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES) \
+	sbcl-zlib sbcl-cl-jpeg-imago sbcl-common-lisp-jupyter-imago \
+	sbcl-cl-libheif sbcl-cl-libtiff
 
 .PHONY: check check-source-count check-sentinelone check-datamosh-security check-ffglitch check-praat check-buzz \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
@@ -878,3 +883,8 @@ check-sporkhack:
 check-tassh:
 	@test -n "$(TASSH_OUTPUT)" -a -n "$(TASSH_EVIDENCE)" || { echo 'Set TASSH_OUTPUT and TASSH_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/tassh-smoke.sh "$(TASSH_OUTPUT)" "$(TASSH_EVIDENCE)"
+
+.PHONY: check-imago
+check-imago:
+	@test -n "$(IMAGO_OUTPUT)" -a -n "$(IMAGO_EVIDENCE)" || { echo 'Set IMAGO_OUTPUT and IMAGO_EVIDENCE (prebuilt /gnu/store output and fresh, new/empty evidence directory outside the installed output).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/imago-smoke.sh "$(IMAGO_OUTPUT)" "$(IMAGO_EVIDENCE)"

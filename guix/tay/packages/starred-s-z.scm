@@ -283,7 +283,11 @@
   (make-github-source-snapshot "tokenrove-imago-source" "tokenrove" "tokenrove" "imago"
                                "b1f50c1192f78dacbaaf60923d341f7c2ee38e92" "1jd796grp4aa8vyjp29pjk9im89yfahqnjhkv5jninqblrivzkh6"
                                "source snapshot of tokenrove/imago" "https://github.com/tokenrove/imago"
-                               #f))
+                               ;; LLGPL covers the code (every .asd and
+                               ;; source header); the snapshot preserves
+                               ;; the whole tree, whose docs/ and tests/
+                               ;; images carry no license grant.
+                               (list license:llgpl %no-permission-license)))
 
 (define-public tommybee456-opensplitdeck-source
   (make-github-source-snapshot "tommybee456-opensplitdeck-source" "tommybee456" "tommybee456" "OpenSplitDeck"

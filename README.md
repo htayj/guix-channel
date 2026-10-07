@@ -408,6 +408,7 @@ on 2026-10-05. The proof covers normal `boohu` in a real terminal, not
 | [`rust-computus`](guix/tay/packages/computus.scm) | `0.1.0` | Redistributable Rust simulation core | Defined |
 | [`rust-effects`](guix/tay/packages/rust-effects.scm) | `0.1.0-0.d7fe96d` | Rust functional typeclasses, free-effect interpretation and shared async futures; installed source and offline Cargo closure | Verified native external consumer ([receipt and limits](ACCOUNTING.md#rust-effects--verified-offline-library-and-external-consumer)) |
 | [`scala-ts`](guix/tay/packages/scala-ts.scm) | `0.1.8` | Scala-style collections, Option, Either and Try for TypeScript | Verified |
+| [`sbcl-imago`](guix/tay/packages/imago.scm) | `0.11.0` | Common Lisp image manipulation with six ASDF systems, native JPEG/TIFF/HEIF backends and Jupyter PNG payloads | Verified bounded native consumer and reproducible build; #220 OPEN, literal clean lint unmet ([receipt and limits](ACCOUNTING.md#imago--six-system-image-library-and-native-consumer)) |
 | [`shader-slang`](guix/tay/packages/shader-slang.scm) | `2026.14.1` | `slangc` Slang shader compiler and libraries | Defined |
 | [`tui`](guix/tay/packages/tui.scm) | `0.2.0-0.e435b1b` | Clojure styled text rendering and cooked line input | Verified |
 | [`wenyan`](guix/tay/packages/wenyan.scm) | `0.4.0` | Classical Chinese language compiler, CLI and JavaScript library | Verified compiler/CLI path |

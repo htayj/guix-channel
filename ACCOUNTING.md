@@ -58,6 +58,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Meta Typing offline type-level library and external consumer](#meta-typing--verified-offline-type-level-library-and-external-consumer)
 - [Rot.js source-built toolkit and offline consumer](#rotjs--verified-source-built-toolkit-and-offline-consumer)
 - [Ink source-built React terminal renderer and native PTY consumer](#ink--source-built-react-terminal-renderer-and-native-pty-consumer)
+- [Imago six-system image library and native consumer](#imago--six-system-image-library-and-native-consumer)
 
 ## Relocation map (2026-10-04)
 
@@ -163,6 +164,22 @@ is not evidence of PBUI publication. PBUI reuses the existing
 `mmontone-pbui-source` origin: its pin, hash and the canonical **629** source
 snapshots remain unchanged, with only its license metadata corrected to
 GPL-3.0-or-later. Propagated Emacs dependencies are not extra top-level programs.
+Imago's separate 2026-10-07 candidate adds **one** `PROJECT_PACKAGES` library
+entry (`sbcl-imago`) and one README library row, plus **five check-only SBCL
+dependency recipes**, not five additional programs. The accepted baseline stays
+**238** check names (230 project + 7 font + 1 optional proprietary) while #220
+is OPEN. The source/ledger-derived Imago-only candidate is **244** check names
+(231 project + 7 font + 1 optional + 5 dependencies); the integrated tree is
+**245** (232 + 7 + 1 + 5), including unrelated unpublished Dualmaster.
+Integrated installable names are **239** (232 project + 7 font), excluding
+check-only dependencies and optional proprietary checks. These are definition
+counts, not an executed inventory check or a new accepted/publication total.
+The `libtiff/cl-libtiff` C variant is an exported dependency binding named
+`libtiff`, deliberately excluded from explicit checks to avoid the stock-name
+collision; it is not a private binding or another README program. The five
+checked dependencies are `sbcl-zlib`, `sbcl-cl-jpeg-imago`,
+`sbcl-common-lisp-jupyter-imago`, `sbcl-cl-libheif` and `sbcl-cl-libtiff`.
+No dependency recipe changes the canonical **629** preservation snapshots.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -187,6 +204,139 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Imago — six-system image library and native consumer
+
+Local evidence on **2026-10-07** covers [`sbcl-imago`](guix/tay/packages/imago.scm)
+**0.11.0**, built from the original [`tokenrove/imago`](https://github.com/tokenrove/imago/tree/b1f50c1192f78dacbaaf60923d341f7c2ee38e92)
+commit **`b1f50c1192f78dacbaaf60923d341f7c2ee38e92`**, reusing the existing
+`tokenrove-imago-source` origin with base32
+**`1jd796grp4aa8vyjp29pjk9im89yfahqnjhkv5jninqblrivzkh6`**. The pristine
+snapshot's pin, hash and canonical **629-source ledger** remain unchanged.
+**Forgejo #220 remains OPEN: literal clean lint is unmet.** Successful build,
+reproducibility and native API evidence do not waive that gate, establish issue
+closure or prove signed publication, profile installation or deployment.
+
+### Licensing and delivered systems
+
+The code grant is the **Lisp Lesser GNU Public License (LLGPL)**, not a guessed
+blanket license for the repository. `imago.asd` explicitly grants distribution
+and use under LLGPL, as do source notices such as `src/image.lisp`; the notebook
+method file does not itself carry a license header. The source snapshot retains
+mixed assets: upstream documentation and test images have **no repository
+license grant**, so snapshot metadata remains `(llgpl no-permission)`, not an
+all-FOSS claim. The build runs the original suite with those fixtures available,
+then removes installed `docs/` and every non-Lisp test fixture. This does not
+delete or relicense the preservation snapshot. The external consumer uses only
+caller-created synthetic images, not upstream sample assets.
+
+The realized output is
+**`/gnu/store/xvznhm3jgz808mbbzwffmnzywzcna5yq-sbcl-imago-0.11.0`**.
+It delivers source, compiled SBCL FASLs and ASDF source/output configuration for
+all **six** systems: `imago`, `imago/bit-io`, `imago/jpeg-turbo`, `imago/libheif`,
+`imago/libtiff` and `imago/jupyter`. The test system is built for checking, not
+installed as another consumer system. The library supports PNG, classic and
+turbo JPEG, HEIF/HEIC, TIFF, PNM and TGA; this is not six separate applications.
+
+### Dependency and runtime root-cause repairs
+
+[`imago-dependencies.scm`](guix/tay/packages/imago-dependencies.scm) defines
+five public SBCL dependency recipes: `sbcl-zlib`, `sbcl-cl-jpeg-imago`,
+`sbcl-common-lisp-jupyter-imago`, `sbcl-cl-libheif` and `sbcl-cl-libtiff`.
+The separate `libtiff/cl-libtiff` **4.7.2** C-library variant remains a dependency
+implementation, not a new program-inventory entry. It supplies the >=4.5
+per-caller API required by cl-libtiff, absent from the selected stock 4.4.0,
+as well as soname 6. The HEIF and TIFF CFFI wrappers use absolute store library
+paths, independent of a host linker cache; the HEIF struct-return C shim is
+compiled at build time. The newer cl-jpeg pin exports the encoder required by
+Imago. These dependencies and existing propagated libraries are not additional
+end-user programs or preservation snapshots.
+
+The notebook patch replaces the removed `imago-pngio` API with
+`imago:write-png-to-stream`. The format-registry patch prevents a core reload
+from resetting optional backend/caller registrations: built-in defaults fill
+only missing handlers, while explicit registration still replaces a handler.
+The Jupyter dependency models its lab extension as ASDF static resources and
+installs them under `share/jupyter/labextensions/debugger-restarts-clj`, rather
+than creating newer user-HOME compilation outputs which invalidate installed
+FASLs. The upstream suite's runner is invoked directly and fails the build on
+NIL; it exercises the full suite rather than only an early ASDF suite chain.
+
+### Main's exercised gates and actual native limits
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main463 passed in **34.47 s**, producing the six-system output above; retained log `artifact://15191`. |
+| Full upstream suite | **96 checks**, all passed, **0 skipped / 0 failed**: I/O 48, conversions 21, processing 20, contrast 1 and binary images 6. |
+| Reproducibility | Main465 `--check` passed in **25.18 s**, reproducing the same output and full 96-check suite; retained log `artifact://15194`. |
+| Corrected native consumer | Main464 passed in **8.85 s** at `/tmp/imago-native-11`; `driver.stdout` and `proof.json` record **34,704 assertions** and all six systems loaded. |
+| Final lint | Main466 completed in **65.62 s** with remaining package-owned updater/tag/release and Software Heritage/Disarchive diagnostics; **not clean**. Earlier formatting/patch-prefix findings are gone. |
+| Integrated target | Main467 `make check-imago` passed in **18.15 s** at `/tmp/imago-make-final`, consuming the same prebuilt output; final `driver.stdout` / `proof.json` repeat all **34,704 assertions**, codec metrics and six systems, with unchanged NAR. |
+
+The corrected standalone and final integrated receipts verify exact synthetic RGB and grayscale
+PNG and RGB PPM roundtrips. Generic `.jpg` and `.jpeg` dispatch both remain
+**JPEG-TURBO** after loading all six systems, with no consumer re-registration.
+JPEG RGB uses quality **100**, **4:4:4** sampling; each channel must have
+**RMSE <=2 LSB** and **PSNR >=42 dB** (or zero-error infinity). Actual output:
+
+| Channel | Maximum error (LSB) | RMSE (LSB) | PSNR (dB) |
+| --- | --- | --- | --- |
+| Red | 3 | 0.652878 | 51.834160 |
+| Green | 2 | 0.485841 | 54.400917 |
+| Blue | 4 | 0.789778 | 50.180698 |
+| Grayscale | 0 | 0.000000 | infinity |
+
+Dimensions, image classes and generic-reader agreement are asserted; this is
+bounded JPEG quality evidence, **not lossless RGB JPEG**. TIFF's 40x30 RGB
+roundtrip allows **1 LSB per channel**. HEVC HEIF's 64x48 RGB roundtrip at
+quality 100 allows **12 LSB per channel**; it is likewise not a lossless claim.
+Transforms exercise exact selected inversion channels, crop dimensions/corner
+pixels, flip dimensions/corner pixels and grayscale conversion. Rotation tests
+dimensions and channel ranges, and resizing tests dimensions: the receipt's
+`transforms_exact` flag does **not** establish exact interpolated rotation or
+resize pixels. Unknown read/write formats signal `unknown-format`; `:errorp nil`
+returns NIL; corrupt PNG raises an `imago-error`; out-of-bounds crop raises
+`operation-error`.
+
+`imago/jupyter:show-image` produces a real MIME bundle without a kernel or mock:
+the RGB payload's base64 PNG is decoded, checked for signature/dimensions and
+exact pixels; binary-image display is checked as a grayscale PNG. Shared-data
+extension discovery and its files are checked in the store, with no copy into
+the private user extension directory. **No running notebook, browser, kernel
+message delivery or full JupyterLab interaction was exercised.**
+
+The final proof corrects the earlier harness HOME leak: a pure Guix shell alone
+retains HOME, so the harness now sets private HOME/config/cache/data directories
+under the fresh evidence directory before loading Lisp dependencies. It unsets
+host ASDF and dynamic-library overrides and uses delivered ASDF configuration,
+precompiled FASLs and `--no-userinit`, not Quicklisp. The launch configures
+same-user user/network/mount/IPC/PID namespaces. Namespace identity, UID mapping
+and mount flags are **not independently measured in the receipt**, so launch
+configuration is not presented as an asserted isolation audit.
+Before/after output NAR hashes both equal
+**`1xrbrjg3sd03rsazmd5q05la8rnrl03n28d62dzil0s9zwfpzg0g`**, and the shell checks
+installed files remain unwritable. Upstream parse-float/pzmq ASDF naming warnings
+remain in `driver.stderr`; this is not a warning-free native-load claim.
+The integrated dependency-shell launch also reports missing Nonguix module
+warnings from unrelated channel definitions; these were not Imago failures,
+and successful integration does not imply a warning-free or clean channel.
+
+The guarded standalone target honors `GUIX`, consumes a prebuilt canonical
+output and requires fresh empty evidence outside the store. Its external
+[`tests/imago-smoke.sh`](tests/imago-smoke.sh) and
+[`tests/imago-native.lisp`](tests/imago-native.lisp) are not installed proof hooks:
+
+```sh
+make check-imago IMAGO_OUTPUT=/gnu/store/xvznhm3jgz808mbbzwffmnzywzcna5yq-sbcl-imago-0.11.0 IMAGO_EVIDENCE=/tmp/imago-native-new
+```
+
+The final lint leaves Imago's no-updater/archive diagnostics, zlib's missing
+tag/release diagnostics, cl-jpeg-imago's no-valid-tag/release diagnostics and
+common-lisp-jupyter-imago's missing tag/release diagnostics; HEIF/TIFF archival
+requests are scheduled rather than verified archived. **#220 stays OPEN** until
+the literal clean-lint requirement is actually observed, not redefined or waived.
+No OKF update applies to this repository-only package work: no documented host
+or service changed. This documentation worker ran no commands or checks.
 
 ## AceHack — verified native tty gameplay and save continuity
 
