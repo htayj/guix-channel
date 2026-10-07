@@ -188,6 +188,92 @@ package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
 
+## Atlas Warriors — verified native SDL gameplay
+
+Local evidence on **2026-10-07** covers the existing
+[`atlas-warriors`](guix/tay/packages/atlas-warriors.scm) **0.0.9** definition,
+the final **alpha-009** snapshot of
+[`lkingsford/AtlasWarriors`](https://github.com/lkingsford/AtlasWarriors/tree/d5354adbe29884016aec2867c9ded52d15f9fcd1),
+pinned to **`d5354adbe29884016aec2867c9ded52d15f9fcd1`**, with source NAR base32
+**`1c2m4i74d0iz7f9xx678k0m0ns0wnbxh1y9m0rsyzd0vygnp5mbq`**. This is an
+existing package's native acceptance, not a new inventory member: the accepted
+inventory stays **238** (230 project + 7 font + 1 optional proprietary); the
+unrelated unpublished Dualmaster entry makes the integrated tree **239**
+(231 + 7 + 1), without accepting or publishing Dualmaster. The canonical
+**629-source preservation ledger is unchanged**.
+
+The copy build prepares and syntax-checks original Python sources and verifies
+the runtime assets; it does not fetch a prebuilt game executable. The normal
+launcher uses Guix Python/Pygame, immutable XML/background/font assets and
+private XDG tutorial/log state, independently of its working directory.
+Project code/data is **Expat**, bundled `pygcurse.py` is **BSD-2-Clause**, the
+four modified Dark Paper Pack backgrounds are **CC-BY-3.0**, and the installed
+DejaVu 2.37 fonts carry their **X11-style** notice. Upstream unnotified font
+copies are replaced by exact Guix DejaVu files; `LICENSE`, `README.md` attribution,
+`CHANGELOG.md` and `DejaVu-LICENSE` are installed under `share/doc/atlas-warriors`.
+The installed menu performs no browser, updater or runtime-download action.
+There is no installed synthetic smoke mode or compatibility shim.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main370 passed in **11.82 s**; artifact 14434 records `/gnu/store/vqxnf7ivdd0s4gzl2ahcjpxy9nqrrxhh-atlas-warriors-0.0.9`. |
+| Reproducibility | Main371 `--check` passed in **3.53 s**; artifact 14435 records the reproduced output. |
+| Lint | Main372 exited **0** in **33.02 s**, with the GitHub updater's no-valid-tags/releases diagnostic and unrelated deprecated `flex`, Fourk, excluded WinRM and duplicate `libcamera-minimal` warnings. This is not a warning-free lint claim. |
+| Native SDL consumer | Main381 passed in **13.69 s** at `/tmp/atlas-native-9`, using the normal launcher and real SDL event loop. |
+| Final integrated target | Main382 `make check-atlas-warriors` passed in **15.53 s** at `/tmp/atlas-make-final`, preserving the full native menu/tutorial/new-game/movement/quit contract. |
+
+The source build/check also emits the upstream `pygcurse.py` invalid-escape
+`SyntaxWarning`; the package explicitly installs its notices despite the
+generic license-discovery phase's `failed to find license files` message.
+Syntax/asset checks are not an upstream gameplay test suite. The final guarded
+Makefile-target receipt above exercises the same normal SDL path, not an
+installed synthetic acceptance mode.
+
+The passed `/tmp/atlas-make-final/evidence.json` and `runtime.json` record a
+fresh HOME/XDG environment, **UID 1000/GID 998**, separate user/mount/network/PID
+namespaces, loopback-only networking and recursively read-only `/gnu/store`.
+The external consumer supplies this isolation, not the game. Under Xvfb
+**520 × 648**, XTest Return/Space keys enter the real menu and dismiss all
+**six first-run tutorial dialogs** before a normal **Easiest** new game.
+No game module is imported or evaluated by the consumer, no state or random
+seed is injected, and no Python Pygame event is posted. Menu glyph alpha
+support, solid foreground and zero-background channels are exact source-backed
+checks, not OCR; tutorial text, HUD and game glyphs use full RGB raster checks
+with the source's two-stage shadow rendering.
+
+The naturally generated map places the player at **(21, 11)** in the final run.
+A native **Right** key moves the silver avatar to **(22, 11)** on an exactly
+matched adjacent gray floor (source grayscale **63**); the old avatar is
+absent and the HUD still exactly reads
+`HP 10 (10)  Level 1 XP  0 (10)  Hit 3  Def 3`.
+A `WM_DELETE_WINDOW` request reaches SDL and exits **0**, persisting real
+`tutorial.json` first-run state with an empty `error.log` and no exception.
+Pre/post output NAR hashes both equal
+**`18sjljhfxp85a46ldiqnsf1r508sg0699zpcb52ic1y0bmmrzfbv`**.
+Screenshots are `01-main-menu.png`, `02-tutorial-1.png` through
+`02-tutorial-6.png`, `03-initialized-game.png` and `04-native-movement.png` in
+that final evidence directory; namespace/mount records and game/Xvfb logs
+accompany them. The retained repository screenshot is
+`.goocastle/evidence/atlas-warriors-native.png`, copied by Main from the final
+`04-native-movement.png`. A screenshot alone is not the acceptance proof.
+
+```sh
+make check-atlas-warriors ATLAS_WARRIORS_OUTPUT=/gnu/store/vqxnf7ivdd0s4gzl2ahcjpxy9nqrrxhh-atlas-warriors-0.0.9 ATLAS_WARRIORS_EVIDENCE=/tmp/atlas-native-new
+```
+
+This standalone guarded target requires both variables, honors `GUIX` and
+calls [the external smoke consumer](tests/atlas-warriors-smoke.sh) with a
+pre-realized ordinary output and a new or empty evidence directory outside
+the store. It realizes its test-tool closures before entering offline
+namespaces but never builds or modifies the supplied game output.
+Limits: menu/tutorial/new-game initialization, **one natural-map movement**,
+HUD, clean SDL quit and tutorial persistence only. There is no upstream
+save/load API and no save/load, audio, combat or winning claim. Local acceptance
+does not establish signed channel publication, issue closure or user-profile/
+system deployment. No described host/service changed and no applicable OKF
+correction was established, so no OKF page/log update applies. This
+documentation worker ran no commands or checks.
+
 ## PBUI — verified native Emacs presentations
 
 Local evidence on **2026-10-07** covers [`emacs-pbui`](guix/tay/packages/pbui.scm)

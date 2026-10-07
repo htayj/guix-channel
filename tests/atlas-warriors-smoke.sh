@@ -1,96 +1,75 @@
 #!/bin/sh
-# Isolated installed-runtime proof for Atlas Warriors.
+# Consume a prebuilt ordinary Atlas Warriors SDL output, never rebuild it.
 set -eu
-
-guix_bin=${GUIX:-guix}
-channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-
-if test "$#" -gt 1; then
-    echo "usage: $0 [atlas-warriors-output]" >&2
+if test "$#" -ne 2; then
+    echo "usage: $0 OUTPUT EVIDENCE_DIR (new or empty, outside /gnu/store)" >&2
     exit 64
 fi
-
-if test "$#" -eq 1; then
-    atlas_out=$1
-else
-    atlas_out=$($guix_bin build -L "$channel_dir/guix" \
-        --no-grafts --no-substitutes atlas-warriors)
+guix_bin=${GUIX:-guix}
+channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+find_output ()
+{
+    for output in $("$guix_bin" build -L "$channel_dir/guix" --no-grafts "$2"); do
+        if test -e "$output/$1"; then
+            printf '%s\n' "$output"
+            return 0
+        fi
+    done
+    echo "could not find $1 in Guix package $2" >&2
+    return 1
+}
+atlas_out=$(realpath -e -- "$1")
+if test "$atlas_out" != "$1"; then
+    echo 'OUTPUT must be a canonical direct store item' >&2
+    exit 64
 fi
-
+case "$atlas_out" in
+    /gnu/store/*) test "$(dirname -- "$atlas_out")" = /gnu/store ;;
+    *) echo 'OUTPUT must be a canonical direct store item' >&2; exit 64 ;;
+esac
 test -x "$atlas_out/bin/atlas-warriors"
-test -f "$atlas_out/share/atlas-warriors/rl.py"
-test -f "$atlas_out/share/atlas-warriors/items.xml"
-test -f "$atlas_out/share/atlas-warriors/assets/back_level_0.png"
-test -f "$atlas_out/share/doc/atlas-warriors/LICENSE"
-test -f "$atlas_out/share/doc/atlas-warriors/README.md"
-test -f "$atlas_out/share/doc/atlas-warriors/DejaVu-LICENSE"
-grep -F 'The MIT License (MIT)' "$atlas_out/share/doc/atlas-warriors/LICENSE" >/dev/null
-grep -F 'Simplified BSD License' "$atlas_out/share/doc/atlas-warriors/LICENSE" >/dev/null
-grep -F 'Attribution 3.0 Unported' \
-    "$atlas_out/share/doc/atlas-warriors/LICENSE" >/dev/null
-grep -F 'Dark Paper Pack' "$atlas_out/share/doc/atlas-warriors/README.md" >/dev/null
-grep -F 'Bitstream Vera Fonts Copyright' \
-    "$atlas_out/share/doc/atlas-warriors/DejaVu-LICENSE" >/dev/null
-
-font_out=$($guix_bin build font-dejavu)
-for font in DejaVuSans.ttf DejaVuSansMono.ttf DejaVuSerif.ttf; do
-    test "$("$guix_bin" hash "$font_out/share/fonts/truetype/$font")" = \
-        "$("$guix_bin" hash "$atlas_out/share/atlas-warriors/$font")"
-done
-
-grep -F '"issueNumber": 657' \
-    "$channel_dir/.goocastle/runtime-evidence-contracts.json" >/dev/null
-grep -F '"packageName": "atlas-warriors"' \
-    "$channel_dir/.goocastle/runtime-evidence-contracts.json" >/dev/null
-grep -F '"artifactPath": ".goocastle/evidence/issue-657.png"' \
-    "$channel_dir/.goocastle/runtime-evidence-contracts.json" >/dev/null
-grep -F '"--guix-smoke"' \
-    "$channel_dir/.goocastle/runtime-evidence-contracts.json" >/dev/null
-grep -F 'atlas-warriors isolated smoke passed' \
-    "$channel_dir/.goocastle/runtime-evidence-contracts.json" >/dev/null
-
-if rg -n 'webbrowser|(^import|^from)[[:space:]]+(socket|urllib|http|requests)' \
-        "$atlas_out/share/atlas-warriors" --glob '*.py'; then
-    echo "unexpected network or browser reference in installed Atlas Warriors" >&2
+evidence_dir=$(realpath -m -- "$2")
+case "$evidence_dir/" in
+    /gnu/store/*) echo 'evidence must be outside /gnu/store' >&2; exit 64 ;;
+esac
+if test -e "$evidence_dir"; then
+    test -d "$evidence_dir"
+    test -z "$(find "$evidence_dir" -mindepth 1 -maxdepth 1 -print -quit)"
+fi
+mkdir -p -- "$evidence_dir"
+# Realize tool closures before entering offline namespaces; honor GUIX throughout.
+coreutils_out=$(find_output bin/env coreutils)
+util_linux_out=$(find_output bin/unshare util-linux)
+python_out=$(find_output bin/python3 python)
+xorg_out=$(find_output bin/Xvfb xorg-server)
+xdotool_out=$(find_output bin/xdotool xdotool)
+x11_out=$(find_output lib/libX11.so.6 libx11)
+before=$("$guix_bin" hash -S nar "$atlas_out")
+printf '%s\n' "$before" > "$evidence_dir/output-before.nar-hash"
+status=0
+"$coreutils_out/bin/env" -i LC_ALL=C PATH="" \
+    XVFB="$xorg_out/bin/Xvfb" MOUNT="$util_linux_out/bin/mount" \
+    XDOTOOL="$xdotool_out/bin/xdotool" LIBX11="$x11_out/lib/libX11.so.6" \
+    HOST_UID="$("$coreutils_out/bin/id" -u)" \
+    HOST_GID="$("$coreutils_out/bin/id" -g)" \
+    HOST_USER_NS="$("$coreutils_out/bin/readlink" /proc/self/ns/user)" \
+    HOST_MOUNT_NS="$("$coreutils_out/bin/readlink" /proc/self/ns/mnt)" \
+    HOST_PID_NS="$("$coreutils_out/bin/readlink" /proc/self/ns/pid)" \
+    HOST_NET_NS="$("$coreutils_out/bin/readlink" /proc/self/ns/net)" \
+    PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 PYGAME_HIDE_SUPPORT_PROMPT=1 \
+    "$coreutils_out/bin/timeout" --kill-after=10 180 \
+    "$util_linux_out/bin/unshare" --user --map-current-user --keep-caps --mount \
+    --propagation private --net --pid --mount-proc --kill-child --fork \
+    "$python_out/bin/python3" -s "$channel_dir/tests/atlas-warriors-native.py" \
+    "$atlas_out" "$evidence_dir" || status=$?
+after=$("$guix_bin" hash -S nar "$atlas_out")
+printf '%s\n' "$after" > "$evidence_dir/output-after.nar-hash"
+if test "$before" != "$after"; then
+    echo 'package output changed during native gameplay proof' >&2
     exit 1
 fi
-
-before_hash=$($guix_bin hash -r "$atlas_out")
-temporary=$(mktemp -d "${TMPDIR:-/tmp}/atlas-warriors-smoke-XXXXXX")
-home=$temporary/home
-config=$temporary/config
-data=$temporary/data
-cache=$temporary/cache
-state=$temporary/state
-scratch=$temporary/scratch
-frame=$temporary/initialized-game-frame.png
-mkdir "$home" "$config" "$data" "$cache" "$state" "$scratch"
-
-output=$(env -i \
-    HOME="$home" \
-    XDG_CONFIG_HOME="$config" \
-    XDG_DATA_HOME="$data" \
-    XDG_CACHE_HOME="$cache" \
-    XDG_STATE_HOME="$state" \
-    TMPDIR="$scratch" \
-    SDL_VIDEODRIVER=dummy \
-    SDL_AUDIODRIVER=dummy \
-    ATLAS_WARRIORS_SMOKE_SCREENSHOT="$frame" \
-    LC_ALL=C.UTF-8 \
-    PATH="$atlas_out/bin" \
-    "$atlas_out/bin/atlas-warriors" --guix-smoke)
-test "$output" = 'atlas-warriors isolated smoke passed'
-test -s "$frame"
-
-test -f "$state/atlas-warriors/tutorial.json"
-test -f "$state/atlas-warriors/error.log"
-test -z "$(find "$home" "$config" "$data" "$cache" "$scratch" \
-    -mindepth 1 -print -quit)"
-test -z "$(find "$state" -type f ! -path "$state/atlas-warriors/tutorial.json" \
-    ! -path "$state/atlas-warriors/error.log" -print -quit)"
-test -z "$(find "$state" -type d ! -path "$state" \
-    ! -path "$state/atlas-warriors" -print -quit)"
-test "$before_hash" = "$($guix_bin hash -r "$atlas_out")"
-test -z "$(find "$atlas_out" -perm /022 -print -quit)"
-
-echo "atlas-warriors smoke passed: isolated pygame map, turn, XDG state, and immutable output"
+if test "$status" -ne 0; then
+    exit "$status"
+fi
+find "$evidence_dir" -type f -exec chmod a-w -- {} +
+printf '%s\n' "ATLAS_WARRIORS_NATIVE_GAMEPLAY_OK evidence=$evidence_dir"

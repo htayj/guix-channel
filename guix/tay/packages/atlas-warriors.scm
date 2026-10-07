@@ -59,59 +59,10 @@
                   "logging.basicConfig("))
                 (("screen = pygame\\.display\\.set_mode")
                  "pygame.init()\nscreen = pygame.display.set_mode")
-                (("if len\\(sys\\.argv\\) > 1:")
-                 (string-append
-                  "guix_smoke = sys.argv[1:] == ['--guix-smoke']\n"
-                  "if guix_smoke:\n"
-                  "    random.seed(281)\n"
-                  "    action = 0\n"
-                  "elif len(sys.argv) > 1:"))
                 (("xml2object\\.parse\\('items\\.xml', item\\.Item\\)")
                  "xml2object.parse(os.path.join(DATA_ROOT, 'items.xml'), item.Item)")
                 (("os\\.path\\.join\\('assets','back_level_")
-                 "os.path.join(DATA_ROOT, 'assets', 'back_level_")
-                (("tutorial\\.TriggerMessage\\(TUTORIAL_FIRSTRUN\\)")
-                 (string-append
-                  "if guix_smoke:\n"
-                  "    tutorial.tutorial_settings = dict((i, True) for i in "
-                  "range(17))\n"
-                  "tutorial.TriggerMessage(TUTORIAL_FIRSTRUN)"))
-                (("running = True")
-                 (string-append
-                  "if guix_smoke:\n"
-                  "    pygame.font.Font(os.path.join(DATA_ROOT, 'DejaVuSans.ttf'), 12)\n"
-                  "    start = (PC.x, PC.y)\n"
-                  "    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n"
-                  "        target = (start[0] + dx, start[1] + dy)\n"
-                  "        if (PC.currentMap.Map[target[0]][target[1]].walkable and\n"
-                  "                not any(c is not PC and c.x == target[0] and\n"
-                  "                        c.y == target[1]\n"
-                  "                        for c in PC.currentMap.characters)):\n"
-                  "            PC.tryMove(target[0], target[1])\n"
-                  "            break\n"
-                  "    else:\n"
-                  "        raise RuntimeError('smoke map has no adjacent "
-                  "walkable tile')\n"
-                  "    if (PC.x, PC.y) == start:\n"
-                  "        raise RuntimeError('smoke player move did not "
-                  "change position')\n"
-                  "    PC.currentMap.Tick()\n"
-                  "    if PC.currentMap.Turn != 1:\n"
-                  "        raise RuntimeError('smoke map turn did not advance')\n"
-                  "    DrawMap()\n"
-                  "    surface.blit(hpFont.render('HP ' + str(PC.hp), True,\n"
-                  "                                 (255, 255, 255)), (3, 560))\n"
-                  "    win.update()\n"
-                  "    screen.blit(surface, (0, 0))\n"
-                  "    pygame.display.flip()\n"
-                  "    screenshot = os.environ.get('ATLAS_WARRIORS_SMOKE_SCREENSHOT')\n"
-                  "    if screenshot:\n"
-                  "        pygame.image.save(surface, screenshot)\n"
-                  "    tutorial.close()\n"
-                  "    pygame.quit()\n"
-                  "    print('atlas-warriors isolated smoke passed')\n"
-                  "    sys.exit(0)\n\n"
-                  "running = True")))
+                 "os.path.join(DATA_ROOT, 'assets', 'back_level_"))
               ;; Keep every font lookup independent of the invoking directory.
               (for-each
                (lambda (file)
@@ -212,14 +163,6 @@
                     (display
                      (string-append
                       "set -eu\n"
-                      "case \"$#\" in\n"
-                      "  0) ;;\n"
-                      "  1) test \"$1\" = --guix-smoke || {\n"
-                      "       echo 'usage: atlas-warriors [--guix-smoke]' >&2;\n"
-                      "       exit 64; } ;;\n"
-                      "  *) echo 'usage: atlas-warriors [--guix-smoke]' >&2;\n"
-                      "     exit 64 ;;\n"
-                      "esac\n"
                       "export PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1\n"
                       "export PYGAME_HIDE_SUPPORT_PROMPT=1\n"
                       "export PYTHONPATH=" #$python-pygame
