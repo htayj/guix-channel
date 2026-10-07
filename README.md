@@ -314,7 +314,7 @@ publication, source-required, and build gates appear in the final table.
 | [`agduria`](guix/tay/packages/agduria.scm) | `0.0.1-0.92c20b1` | Early C++/ncurses dungeon-exploration roguelike; no save/load | Verified native terminal path |
 | [`aquarium-arena`](guix/tay/packages/aquarium-arena.scm) | `0.4-0.6d494c` | Underwater pygame arena roguelike with XDG high scores | Defined |
 | [`aquesttoofar`](guix/tay/packages/aquesttoofar.scm) | `1.3` | Source-built C++/SDL dungeon adventure starring an aging hero | Verified |
-| [`atlas-warriors`](guix/tay/packages/atlas-warriors.scm) | `0.0.9` | Source-built Pygame fantasy roguelike with XDG tutorial state | Verified native SDL path ([receipt](ACCOUNTING.md#atlas-warriors--verified-native-sdl-gameplay)) |
+| [`atlas-warriors`](guix/tay/packages/atlas-warriors.scm) | `0.0.9` | Source-built Pygame fantasy roguelike with XDG tutorial state | Verified native SDL path; clean-lint gate pending ([receipt](ACCOUNTING.md#atlas-warriors--verified-native-sdl-gameplay)) |
 | [`atrogue`](guix/tay/packages/atrogue.scm) | `0.3.0` | Terminal roguelike with configurable dungeon exploration | Verified |
 | [`avanor`](guix/tay/packages/avanor.scm) | `0.5.8` | Historical terminal roguelike with XDG-managed saves and high scores | Verified |
 | [`babel7drl`](guix/tay/packages/babel7drl.scm) | `2019-03-09` | Tower of Babel exploration game | Verified |

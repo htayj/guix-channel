@@ -218,9 +218,23 @@ There is no installed synthetic smoke mode or compatibility shim.
 | --- | --- |
 | Source build | Main370 passed in **11.82 s**; artifact 14434 records `/gnu/store/vqxnf7ivdd0s4gzl2ahcjpxy9nqrrxhh-atlas-warriors-0.0.9`. |
 | Reproducibility | Main371 `--check` passed in **3.53 s**; artifact 14435 records the reproduced output. |
-| Lint | Main372 exited **0** in **33.02 s**, with the GitHub updater's no-valid-tags/releases diagnostic and unrelated deprecated `flex`, Fourk, excluded WinRM and duplicate `libcamera-minimal` warnings. This is not a warning-free lint claim. |
+| Lint — clean gate unmet | Main372 exited **0** in **33.02 s**, but Atlas's own GitHub updater reports no valid tags/releases. Unrelated deprecated `flex`, Fourk, excluded WinRM and duplicate `libcamera-minimal` warnings also remain. Exit 0 is not clean-lint acceptance. |
 | Native SDL consumer | Main381 passed in **13.69 s** at `/tmp/atlas-native-9`, using the normal launcher and real SDL event loop. |
 | Final integrated target | Main382 `make check-atlas-warriors` passed in **15.53 s** at `/tmp/atlas-make-final`, preserving the full native menu/tutorial/new-game/movement/quit contract. |
+
+**Native acceptance is verified; full issue #281 closure is not established.**
+The literal clean-own-lint gate remains unmet, so #281 is reopened rather than
+treated as fully complete. Installed Guix
+`share/guile/site/3.0/guix/import/github.scm:280-306` uses a fixed
+`release->version` parser: it strips a matching upstream package-name prefix,
+`version` or `v`, or accepts a digit-leading tag; otherwise it returns `#f`.
+The real **`alpha-009`** tag does not match those rules for Atlas Warriors,
+and that parser provides no honest package-metadata mapping from
+`alpha-009` to **`0.0.9`**. Setting a fake `upstream-name` of `alpha` is
+rejected: it misidentifies the project and would yield `009`, not the game's
+actual version. No updater suppression, fake metadata or unsupported mapping
+has been added to conceal this diagnostic. The successful native proof and
+final integrated gameplay receipt remain valid, with no inventory-count delta.
 
 The source build/check also emits the upstream `pygcurse.py` invalid-escape
 `SyntaxWarning`; the package explicitly installs its notices despite the
