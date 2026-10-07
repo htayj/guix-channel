@@ -11,7 +11,6 @@
   #:use-module (gnu packages base)
   #:use-module (gnu packages commencement)
   #:use-module (gnu packages compression)
-  #:use-module (gnu packages linux)
   #:use-module (gnu packages ncurses))
 
 (define-public martins-dungeon-bash
@@ -34,9 +33,9 @@
     (build-system gnu-build-system)
     (arguments
      (list
-      ;; Upstream has no automated test target.  The installed terminal game,
+      ;; Upstream has no automated test target.  The ordinary terminal game,
       ;; including save/load, is exercised by
-      ;; tests/martins-dungeon-bash-smoke.sh.
+      ;; tests/martins-dungeon-bash-native.py.
       #:tests? #f
       #:make-flags
       #~(list
@@ -71,14 +70,7 @@
                            out "/share/doc/martins-dungeon-bash"))
                      (real (string-append libexec "/dungeonbash"))
                      (launcher (string-append bin "/dungeonbash"))
-                     (cat #$(file-append coreutils-minimal "/bin/cat"))
-                     (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
-                     (script #$(file-append util-linux "/bin/script"))
-                     (stty #$(file-append coreutils-minimal "/bin/stty"))
-                     (smoke-first
-                      (string-append stty " rows 24 cols 80; exec " real))
-                     (smoke-second
-                      (string-append stty " rows 24 cols 80; exec " real)))
+                     (mkdir #$(file-append coreutils-minimal "/bin/mkdir")))
                 (mkdir-p bin)
                 (mkdir-p libexec)
                 (mkdir-p doc)
@@ -92,8 +84,7 @@
                   (lambda (port)
                     (format port "#!~a/bin/sh~%set -eu~%~%"
                             #$bash-minimal)
-                    (format port "real=~s~%cat=~s~%mkdir=~s~%script=~s~%"
-                            real cat mkdir script)
+                    (format port "real=~s~%mkdir=~s~%" real mkdir)
                     (format port "terminfo=~s~%~%"
                             #$(file-append ncurses "/share/terminfo"))
                     (display
@@ -102,80 +93,35 @@
                       "${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"\n")
                      port)
                     (display "export TERM=\"${TERM:-xterm-256color}\"\n" port)
-                    (display "if test \"${1-}\" = --smoke; then\n" port)
+                    ;; XDG paths must be absolute; ignore empty or relative
+                    ;; values.  Keep every upstream relative state file in a
+                    ;; writable per-user directory, never the caller's cwd.
+                    (display "case \"${XDG_STATE_HOME:-}\" in\n" port)
+                    (display "  /*) state=\"$XDG_STATE_HOME\" ;;\n" port)
                     (display
                      (string-append
-                      "  test \"$#\" -eq 1 || { echo "
-                      "'usage: dungeonbash [--smoke]' >&2; exit 64; }\n")
+                      "  *) state=\"${HOME:?HOME must be set when "
+                      "XDG_STATE_HOME is not absolute}/.local/state\" ;;\n")
                      port)
-                    (display "  export LC_ALL=C\n" port)
-                    (display
-                     (string-append
-                      "  state=\"${XDG_STATE_HOME:-${HOME:?HOME or "
-                      "XDG_STATE_HOME must be set}/.local/state}/"
-                      "martins-dungeon-bash\"\n")
-                     port)
-                    (display "  work=\"$state/smoke\"\n" port)
-                    (display "  \"$mkdir\" -p \"$work\"\n" port)
-                    (display "  cd \"$state\"\n" port)
-                    (format port
-                            (string-append
-                             "  printf 'Goocastle\\n5S ' | "
-                             "TERM=xterm-256color \"$script\" -qefc ~s "
-                             "/dev/null >\"$work/first.raw\"~%")
-                            smoke-first)
-                    (display "  test -s \"$state/dunbash.sav.gz\"\n" port)
-                    (format port
-                            (string-append
-                             "  printf 'XY ' | TERM=xterm-256color "
-                             "\"$script\" -qefc ~s /dev/null "
-                             ">\"$work/load.raw\"~%")
-                            smoke-second)
-                    (display "  test ! -e \"$state/dunbash.sav.gz\"\n" port)
-                    (display "  first=\"$(\"$cat\" \"$work/first.raw\")\"\n" port)
-                    (display "  case \"$first\" in\n" port)
-                    (display "    *\"Welcome to Martin's Infinite Dungeon.\"*) ;;\n" port)
-                    (display
-                     (string-append
-                      "    *) echo 'dungeonbash smoke: first transcript "
-                      "missing welcome' >&2; exit 1 ;;\n")
-                     port)
-                    (display "  esac\n" port)
-                    (display "  second=\"$(\"$cat\" \"$work/load.raw\")\"\n" port)
-                    (display "  case \"$second\" in\n" port)
-                    (display "    *\"Game loaded.\"*) ;;\n" port)
-                    (display
-                     (string-append
-                      "    *) echo 'dungeonbash smoke: load transcript missing "
-                      "Game loaded' >&2; exit 1 ;;\n")
-                     port)
-                    (display "  esac\n" port)
-                    (display
-                     "  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}\"; then\n"
-                     port)
-                    (display
-                     (string-append
-                      "    \"$cat\" \"$work/first.raw\" "
-                      "\"$work/load.raw\" >\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"\n")
-                     port)
-                    (display "  fi\n" port)
-                    (display "  printf '%s\\n' MARTINS_DUNGEON_BASH_SMOKE_OK\n" port)
-                    (display "  exit 0\n" port)
-                    (display "fi\n" port)
+                    (display "esac\n" port)
+                    (display "state=\"$state/martins-dungeon-bash\"\n" port)
+                    (display "\"$mkdir\" -p \"$state\"\n" port)
+                    (display "cd \"$state\"\n" port)
                     (display "exec \"$real\" \"$@\"\n" port)))
                 (chmod launcher #o555)))))))
     ;; The source's Makefile directly invokes GCC and links against panel and
-    ;; ncurses.  util-linux supplies the package-owned PTY smoke wrapper.
+    ;; ncurses.  The launcher only establishes terminal data and user state.
     (native-inputs (list gcc-toolchain))
-    (inputs (list bash-minimal coreutils-minimal gzip ncurses util-linux))
+    (inputs (list bash-minimal coreutils-minimal gzip ncurses))
     (home-page "https://www.chiark.greenend.org.uk/~mpread/dungeonbash/")
     (synopsis "Simple terminal roguelike game")
     (description
      "Martin's Dungeon Bash is a simple C roguelike game.  This package
 builds the fixed upstream v1.7 source release with GNU make, panel, and
-ncurses, and installs its complete BSD-2-Clause notice.  Normal invocation
-preserves the upstream working-directory save behavior.  The package-owned
-@option{--smoke} mode exercises a save and reload through an isolated PTY and
-keeps its state outside the store; it performs no build-time or runtime
-downloads.")
+ncurses, and installs its complete BSD-2-Clause notice.  The ordinary launcher
+stores saves, character dumps, and the death log in
+@file{$XDG_STATE_HOME/martins-dungeon-bash}, defaulting to
+@file{$HOME/.local/state/martins-dungeon-bash} when @code{XDG_STATE_HOME} is unset,
+empty, or not absolute.  Saving exits the game; the next launch restores and
+consumes that save, as upstream intended.  It performs no runtime downloads.")
     (license license:bsd-2)))

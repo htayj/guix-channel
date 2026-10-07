@@ -60,6 +60,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Ink source-built React terminal renderer and native PTY consumer](#ink--source-built-react-terminal-renderer-and-native-pty-consumer)
 - [Imago six-system image library and native consumer](#imago--six-system-image-library-and-native-consumer)
 - [Bell Labs Rogue 7 standalone native gameplay/save continuity](#bell-labs-rogue7--standalone-native-gameplay-and-save-continuity)
+- [Martin's Dungeon Bash native gameplay/save continuity](#martins-dungeon-bash--native-gameplay-and-save-continuity-2026-10-07)
 
 ## Relocation map (2026-10-04)
 
@@ -3250,6 +3251,92 @@ make check-ludviglundgren-qbittorrent-cli QBT_CLI_OUTPUT="$qbt_out" QBT_CLI_EVID
 Exact synthetic contracts are accounted for by the integration owner; native
 acceptance does not imply any Goocastle executor or live deployment. No OKF
 service page/log update applies to these repository-only additions.
+
+
+## Martin's Dungeon Bash — native gameplay and save continuity (2026-10-07)
+
+The existing `martins-dungeon-bash` **1.7** entry now delivers the original
+C/ncurses game through ordinary `bin/dungeonbash`, which execs
+`libexec/dungeonbash` without a test mode or gameplay replacement. The source
+is the upstream [1.7 archive](https://www.chiark.greenend.org.uk/~mpread/dungeonbash/archive-1.7/dungeonbash-1.7.tar.gz),
+SHA256 `790bde04ff869ba2817ad1f07d062d75f7f15af4a2c99669dd60a4b98fdf1380`
+(Guix base32 `100kvy7vk930vmlrdjd2yidg3xvm5l37vw6iga0s56w6zw2dw2vr`).
+This is an existing-package promotion, **not an inventory increase**; the
+629-source ledger and unrelated work remain unchanged.
+
+The code is **BSD-2-Clause**: `notes.txt` contains the full copyright, two
+redistribution conditions and disclaimer, and all **19 C/header members**
+repeat the full terms. The complete **19,827-byte** notes file is installed at
+`share/doc/martins-dungeon-bash/notes.txt`, SHA256
+`b20fe51930fbc81e44900ec5806e9286ba58edad9c975891b18f9c344e6e4d93`.
+There are no separately loaded game assets. Archive HTML spoilers are not
+installed because their separate documentation rights were not verified;
+they are not replaced with invented content. Upstream has no automated test
+target. The build retains warning checks but does not promote historical GCC
+warnings to errors; a successful build is not a warning-free-source claim.
+
+The launcher places upstream relative saves, character dumps and death log
+in `$XDG_STATE_HOME/martins-dungeon-bash`, falling back to
+`$HOME/.local/state/martins-dungeon-bash` when `XDG_STATE_HOME` is unset,
+empty or relative. Store-resolved gzip/gunzip and terminfo avoid dependence
+on caller `PATH`. Native `S` saves and exits; the next ordinary launch
+automatically restores **and consumes** `dunbash.sav.gz`. No runtime download,
+shared playground, setuid or setgid installation is introduced.
+
+Main's source build **bg481** (5.49 seconds, artifact 15285) and reproducibility
+rebuild **bg482** (2.25 seconds, artifact 15286) produced the same output:
+`/gnu/store/f2w2iggpxbi3i2issyz4blnq1vlmrd4m-martins-dungeon-bash-1.7`.
+Native acceptance **bg485** passed (5.62 seconds), with actual evidence at
+`/tmp/dungeonbash-native-2`: raw PTYs, input/process records, decoded screens,
+raw map cells and `continuity.json`, not an installed smoke helper.
+Independent integrated `make check-martins-dungeon-bash` **bg486** passed
+(10.40 seconds) against that same prebuilt output, using fresh evidence at
+`/tmp/dungeonbash-make-final`; its actual driver marker is
+`MARTINS_DUNGEON_BASH_NATIVE_OK`. Its continuity record separately establishes
+the full visible map/HUD restore with the same blank-color boundary, consumed
+save, independent process and unchanged caller state. Main also checked the
+JSON contracts with `jq` (exit 0, 0.02 seconds). Main inspected the native-2
+restored screen: **Native1**, HP **20/20**, food **1999**, depth **1**, body
+**10/10**, agility **10/10**, real `@`, newt/rat glyphs and room walls, not a
+blank or error surface. The integrated run generated a different real dungeon;
+its own restored map is compared to its own pre-save state, not to native-2.
+
+The first real 80×24 PTY entered the normal name prompt as **Native1**, moved
+with native input (food **2000 → 1999**), opened inventory and saved/exited
+**0**. A separately launched process, PID **5** rather than **2** in the private
+PID namespace, restored the original **2,517-byte** compressed save without
+reinjection of its evidence copy. The full **21×21 visible map** and complete
+two-line HUD restored exactly: **HP 20/20, XL 1, Body 10/10, Gold 0, Defence 2,
+Food 1999, Depth 1, Agility 10/10, XP 0**. Every nonblank map cell's decoded
+style and every HUD cell's style matched. Only foreground/background colors
+of attribute-free map spaces were canonicalized: upstream emits spaces for
+unexplored/outside-map cells, which curses may paint white-on-black or erase
+using terminal defaults. Raw cells remain available; this is **not** an
+unqualified byte-for-byte terminal-stream or raw-blank-color equality claim.
+
+The resumed game accepted native `h`: wall scrolling witnessed a westward
+world step while the player stayed at viewport `(10,10)`, and food advanced
+**1999 → 1998**. Native `i` displayed the dagger **100/100 (in hand)** and
+**1 iron ration** without taking a turn. Native `X`, capital `Y`, then RETURN
+quit normally with exit **0**, leaving no save. Viewport coordinates are not
+world coordinates, and this proof does not decode all hidden serialized state,
+establish RNG continuity, exercise combat/deeper levels or demonstrate wins
+(upstream describes an endless dungeon with no victory condition).
+
+Fresh HOME/XDG/work directories, same ordinary UID **1000**, private
+user/mount/net/PID namespaces, loopback-only networking and a recursively
+read-only store bounded the proof. Caller game state was unchanged; after save
+consumption/quit only the empty private `state/martins-dungeon-bash` directory
+remained. Before/after output NAR was identical:
+`10hp82409bnd5zb3k5klhj3xi2p8w6k3yirq9pk9x3cf3pwxwrwx`.
+This is local repository/runtime evidence, not profile installation or
+deployment. Implementation verification is complete; the signed publication
+receipt is tracked separately after commit authentication and normal-origin
+publication. No network OKF service page/log update applies.
+
+**Clean-lint acceptance remains pending and issue #438 remains open.** The
+offline lint attempt **bg483** failed in the generic HTML updater, so it is
+not a clean lint receipt and does not authorize issue closure.
 
 
 ---

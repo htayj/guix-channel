@@ -521,22 +521,6 @@
       }
     },
     {
-      "issueNumber": 705,
-      "packageName": "martins-dungeon-bash",
-      "packageModulePath": "guix/tay/packages/martins-dungeon-bash.scm",
-      "artifactPath": ".goocastle/evidence/issue-705.png",
-      "runtime": {
-        "executable": "dungeonbash",
-        "invocation": {
-          "file": "dungeonbash",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "MARTINS_DUNGEON_BASH_SMOKE_OK"
-      }
-    },
-    {
       "issueNumber": 706,
       "packageName": "umoria",
       "packageModulePath": "guix/tay/packages/umoria.scm",
