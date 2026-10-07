@@ -344,7 +344,7 @@ publication, source-required, and build gates appear in the final table.
 | [`linerogue`](guix/tay/packages/linerogue.scm) | `2` | Turn-based terminal bike roguelike | Verified |
 | [`lispy-rogue`](guix/tay/packages/lispy-rogue.scm) | `0.0.2` | Common Lisp/Allegro graphical dungeon crawler; no save implementation | Verified selected GUI paths |
 | [`liveonce`](guix/tay/packages/liveonce.scm) | `005` | Seven Day Roguelike about a village's successive heroes | Verified |
-| [`martins-dungeon-bash`](guix/tay/packages/martins-dungeon-bash.scm) | `1.7` | Original BSD-2 C/ncurses roguelike with private XDG state and consuming native saves | Verified native gameplay/save continuity; clean-lint gate pending, #438 open ([receipt](ACCOUNTING.md#martins-dungeon-bash--native-gameplay-and-save-continuity-2026-10-07)) |
+| [`martins-dungeon-bash`](guix/tay/packages/martins-dungeon-bash.scm) | `1.7` | Original BSD-2 C/ncurses roguelike with private XDG state and consuming native saves | Verified native gameplay/save continuity and clean-own-lint gate; #438 open pending publication ([receipt](ACCOUNTING.md#martins-dungeon-bash--native-gameplay-and-save-continuity-2026-10-07)) |
 | [`narwharl`](guix/tay/packages/narwharl.scm) | `0.0.1` | Full original source-built C++/ncurses roguelike with immutable definitions and XDG/HOME native saves | Verified |
 | [`nlarn`](guix/tay/packages/nlarn.scm) | `0.8.0` | Original C/ncurses Larn rewrite, immutable console data/locales and native `~/.nlarn` configuration/saves | Verified |
 | [`obumbrata`](guix/tay/packages/obumbrata.scm) | `1.0.0` | Obumbrata et Velata ncurses dungeon game | Verified |

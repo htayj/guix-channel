@@ -3334,9 +3334,21 @@ deployment. Implementation verification is complete; the signed publication
 receipt is tracked separately after commit authentication and normal-origin
 publication. No network OKF service page/log update applies.
 
-**Clean-lint acceptance remains pending and issue #438 remains open.** The
-offline lint attempt **bg483** failed in the generic HTML updater, so it is
-not a clean lint receipt and does not authorize issue closure.
+**Clean-own-lint acceptance is verified; issue #438 remains open pending
+publication.** After adding honest `upstream-name` and
+`release-monitoring-url` metadata, full lint **bg488** passed in **6.72
+seconds** with no package-specific findings; only the unrelated deprecated
+`flex` diagnostic remained. The generic HTML updater now uses the
+canonical homepage and upstream tarball name `dungeonbash`, rather than
+the fixed-version archive directory. The earlier offline lint attempt
+**bg483** failed in that updater and is superseded by this full-lint receipt.
+Final build-identity selection **bg489** passed in **0.90 seconds**, returning
+the same `/gnu/store/f2w2iggpxbi3i2issyz4blnq1vlmrd4m-martins-dungeon-bash-1.7`
+output. Source pin and runtime are unchanged, so the earlier **bg481**,
+**bg482**, **bg485** and **bg486** receipts still apply to that immutable
+output; this metadata correction did not rerun native gameplay.
+This is not a warning-free whole-channel lint claim or authorization to claim
+issue closure before signed publication.
 
 
 ---

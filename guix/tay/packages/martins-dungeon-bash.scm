@@ -114,6 +114,10 @@
     (native-inputs (list gcc-toolchain))
     (inputs (list bash-minimal coreutils-minimal gzip ncurses))
     (home-page "https://www.chiark.greenend.org.uk/~mpread/dungeonbash/")
+    (properties
+     '((upstream-name . "dungeonbash")
+       (release-monitoring-url
+        . "https://www.chiark.greenend.org.uk/~mpread/dungeonbash/")))
     (synopsis "Simple terminal roguelike game")
     (description
      "Martin's Dungeon Bash is a simple C roguelike game.  This package
