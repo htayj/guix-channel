@@ -3334,8 +3334,7 @@ deployment. Implementation verification is complete; the signed publication
 receipt is tracked separately after commit authentication and normal-origin
 publication. No network OKF service page/log update applies.
 
-**Clean-own-lint acceptance is verified; issue #438 remains open pending
-publication.** After adding honest `upstream-name` and
+**Clean-own-lint acceptance and signed publication are verified; issue #438 is verified closed on [Forgejo](https://forge.nogroup.group/tay/guix-channel/issues/438#issuecomment-3243) and [GitHub](https://github.com/htayj/guix-channel/issues/438#issuecomment-6045690326).** After adding honest `upstream-name` and
 `release-monitoring-url` metadata, full lint **bg488** passed in **6.72
 seconds** with no package-specific findings; only the unrelated deprecated
 `flex` diagnostic remained. The generic HTML updater now uses the
