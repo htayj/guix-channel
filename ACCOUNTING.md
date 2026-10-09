@@ -574,8 +574,8 @@ survey. Grippy Socks is the distinct original `gripsox.ds` script, not the
 Hunger Games or Dragonslayer sibling game. This accepts an existing
 `PROJECT_PACKAGES` member: **no inventory count increases**, and the canonical
 **629-source preservation ledger remains unchanged**.
-**[Forgejo #383](https://forge.nogroup.group/tay/guix-channel/issues/383) remains
-OPEN pending signed publication and closure.** Local acceptance is not evidence
+**#383 is verified CLOSED on [Forgejo](https://forge.nogroup.group/tay/guix-channel/issues/383#issuecomment-3256)
+and [GitHub](https://github.com/htayj/guix-channel/issues/383#issuecomment-6086865578), with matching complete acceptance comments and signed/authenticated implementation [`a770727680da9d7fc32ee376092c5214d8bdea59`](https://forge.nogroup.group/tay/guix-channel/commit/a770727680da9d7fc32ee376092c5214d8bdea59) published to origin/master.** Local acceptance is not evidence
 of publication, profile installation or system deployment. Historical #689's
 marker-style contract is not ordinary native gameplay evidence.
 
