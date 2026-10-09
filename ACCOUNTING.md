@@ -217,11 +217,15 @@ Local evidence covers the existing [`hunger-games`](guix/tay/packages/hunger-gam
 **`0fdzx2zzqbd3p99yljksmbh0s3mbzzmq2dq42a9yz5rfkn9gjy2r`**.
 This is acceptance work for an existing `PROJECT_PACKAGES` member, not a new
 inventory entry: no inventory count increases, and the canonical **629-source
-preservation ledger remains unchanged**. **Forgejo #397 remains OPEN**; issue
-closure requires a separate publication receipt. Historical #695 is not current
-native acceptance. This is the verified local implementation receipt; the
-publisher records signed/authenticated publication separately. It does not
-establish issue closure, profile installation or system deployment.
+preservation ledger remains unchanged**. **#397 is verified CLOSED on
+[Forgejo](https://forge.nogroup.group/tay/guix-channel/issues/397#issuecomment-3248)
+and [GitHub](https://github.com/htayj/guix-channel/issues/397#issuecomment-6085147907)**,
+with matching complete acceptance comments; GitHub records completion. Implementation
+[`68aa5d0e06ce8d22cba5577b658c671c309cb824`](https://forge.nogroup.group/tay/guix-channel/commit/68aa5d0e06ce8d22cba5577b658c671c309cb824)
+was signed, Guix-authenticated and normally pushed to origin/master; remote
+HEAD/master matched the exact OID, and Forgejo reported its signature verified.
+Historical #695 is not current native acceptance. This receipt does not establish
+profile installation or system deployment.
 
 The authoritative [issue #397](https://forge.nogroup.group/tay/guix-channel/issues/397)
 asks for meaningful native gameplay **or** save/load behavior in fresh HOME/XDG,
