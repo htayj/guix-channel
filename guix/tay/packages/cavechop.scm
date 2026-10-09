@@ -10,7 +10,6 @@
   #:use-module (gnu packages base)
   #:use-module (gnu packages commencement)
   #:use-module (gnu packages compression)
-  #:use-module (gnu packages linux)
   #:use-module (gnu packages ncurses))
 
 (define-public cavechop
@@ -35,8 +34,7 @@
     (build-system gnu-build-system)
     (arguments
      (list
-      ;; The upstream tree has no automated test target.  The installed
-      ;; terminal game is exercised by tests/cavechop-smoke.sh.
+      ;; The upstream tree has no automated test target.
       #:tests? #f
       #:phases
       #~(modify-phases %standard-phases
@@ -58,11 +56,24 @@
                 (("fwrite\\(permobjs, 100, sizeof \\(struct permobj\\), fp\\);")
                  "fwrite(permobjs, NUM_OF_PERMOBJS, sizeof (struct permobj), fp);")
                 (("fread\\(permobjs, 100, sizeof \\(struct permobj\\), fp\\);")
-                 ;; struct permobj contains process-local description
-                 ;; pointers.  Keep the historical bytes for file-layout
-                 ;; compatibility, but leave the new process's static table
-                 ;; intact instead of loading stale addresses.
-                 "fseek(fp, sizeof permobjs, SEEK_CUR);"))))
+                 ;; Keep the bounded raw-record layout written above, but
+                 ;; restore only scalar state.  The immutable names and
+                 ;; process-local description pointers stay in the static
+                 ;; table; skipping the records would lose flavour powers.
+                 "{
+        int i;
+        struct permobj saved;
+        for (i = 0; i < NUM_OF_PERMOBJS; ++i)
+        {
+            fread(&saved, sizeof saved, 1, fp);
+            permobjs[i].poclass = saved.poclass;
+            permobjs[i].rarity = saved.rarity;
+            permobjs[i].sym = saved.sym;
+            permobjs[i].power = saved.power;
+            permobjs[i].used = saved.used;
+            permobjs[i].depth = saved.depth;
+        }
+    }"))))
           (replace 'build
             (lambda _
               (invoke "make" "all" "CC=gcc")))
@@ -74,91 +85,35 @@
                      (bin (string-append out "/bin"))
                      (doc (string-append out "/share/doc/cavechop"))
                      (program (string-append libexec "/cavechop"))
-                     (launcher (string-append bin "/cavechop"))
-                     (smoke-first
-                      (string-append
-                       ;; The reviewed sequence ends in x; upstream's
-                       ;; shutdown prompt ignores x, so append its accepted
-                       ;; space key to let the PTY session terminate.
-                       "  printf 'Matilda\\n...Sx ' | TERM=xterm-256color "
-                       #$(file-append util-linux "/bin/script")
-                       " -qefc \""
-                       #$(file-append coreutils-minimal "/bin/stty")
-                       " rows 24 cols 80; exec $real\" /dev/null "
-                       ">\"$work/first.raw\"\n"))
-                     (smoke-second
-                      (string-append
-                       "  printf 'i.XYx ' | TERM=xterm-256color "
-                       #$(file-append util-linux "/bin/script")
-                       " -qefc \""
-                       #$(file-append coreutils-minimal "/bin/stty")
-                       " rows 24 cols 80; exec $real\" /dev/null "
-                       ">\"$work/load.raw\"\n")))
+                     (launcher (string-append bin "/cavechop")))
                 ;; Keep the real binary private to the state-isolating
-                ;; launcher.  notes.txt is the complete upstream notice and
-                ;; license for the executable produced from this source tree.
+                ;; launcher.  Install both the game's notes and its common
+                ;; header, which retains the inherited 2005-2012 notice.
                 (mkdir-p libexec)
                 (mkdir-p bin)
                 (mkdir-p doc)
                 (install-file "cavechop" libexec)
                 (install-file "notes.txt" doc)
+                (install-file "cavechop.h" doc)
                 (call-with-output-file launcher
                   (lambda (port)
                     (format port "#!~a/bin/sh~%set -eu~%~%
 real=~a~%
 state=\"${XDG_STATE_HOME:-${HOME:?}/.local/state}/cavechop\"~%
 ~a/bin/mkdir -p \"$state\"~%
-export PATH=\"~a/bin:~a/bin${PATH:+:$PATH}\"~%
 export TERM=\"${TERM:-xterm-256color}\"~%
 export TERMINFO_DIRS=\"~a/share/terminfo${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"~%
-if test \"${1-}\" = --smoke; then~%
-  test \"$#\" -eq 1~%
-  # The minimal runtime may not ship the host's UTF-8 locale.  Keep the
-  # package-owned PTY transcript free of shell locale diagnostics.
-  export LC_ALL=C~%
-  work=\"$state/smoke\"~%
-  ~a/bin/mkdir -p \"$work\"~%
-  cd \"$state\"~%
-~a
-  test -s \"$state/cavechop.sav.gz\"~%
-  first=\"$(~a/bin/cat \"$work/first.raw\")\"~%
-  case \"$first\" in~%
-    *\"Welcome to Cave Chop, Princess Matilda.\"*) ;;~%
-    *) echo \"cavechop smoke: first transcript missing welcome\" >&2; exit 1 ;;~%
-  esac~%
-~a
-  test ! -e \"$state/cavechop.sav.gz\"~%
-  second=\"$(~a/bin/cat \"$work/load.raw\")\"~%
-  case \"$second\" in~%
-    *\"Game loaded.\"*) ;;~%
-    *) echo \"cavechop smoke: load transcript missing Game loaded\" >&2; exit 1 ;;~%
-  esac~%
-  case \"$second\" in~%
-    *\"You are carrying:\"*) ;;~%
-    *) echo \"cavechop smoke: inventory transcript missing\" >&2; exit 1 ;;~%
-  esac~%
-  printf '%s\\n' CAVECHOP_RUNTIME_OK~%
-  exit 0~%
-fi~%
 cd \"$state\"~%
 exec \"$real\" \"$@\"~%"
                             #$(file-append bash-minimal)
                             program
                             #$(file-append coreutils-minimal)
-                            #$(file-append gzip)
-                            #$(file-append coreutils-minimal)
-                            #$(file-append ncurses)
-                            #$(file-append coreutils-minimal)
-                            smoke-first
-                            #$(file-append coreutils-minimal)
-                            smoke-second
-                            #$(file-append coreutils-minimal))))
+                            #$(file-append ncurses))))
                 (chmod launcher #o555)))))))
     ;; gcc-toolchain is explicit because the upstream Makefile compiles the
-    ;; complete C source tree directly.  util-linux supplies script for the
-    ;; package-owned --smoke PTY path.
+    ;; complete C source tree directly.
     (native-inputs (list gcc-toolchain))
-    (inputs (list bash-minimal coreutils-minimal gzip ncurses util-linux))
+    (inputs (list bash-minimal coreutils-minimal gzip ncurses))
     (home-page "http://git.blackswordsonics.com/?p=cavechop-7drl;a=summary")
     (synopsis "Seven-day roguelike dungeon game")
     (description
@@ -166,7 +121,6 @@ exec \"$real\" \"$@\"~%"
 package builds the fixed upstream source snapshot with GNU make and ncurses,
 and keeps saves, logs, and character dumps under
 @file{$XDG_STATE_HOME/cavechop}, falling back to
-@file{$HOME/.local/state/cavechop}.  The package provides a wrapper-owned
-@option{--smoke} mode that exercises an isolated terminal save and load.  It
-performs no build-time or runtime downloads.")
+@file{$HOME/.local/state/cavechop}.  It performs no build-time or runtime
+downloads.")
     (license license:bsd-2)))

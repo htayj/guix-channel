@@ -259,6 +259,11 @@ check-pbui:
 	@test -n "$(PBUI_OUTPUT)" -a -n "$(PBUI_EVIDENCE)" || { echo 'Set PBUI_OUTPUT and PBUI_EVIDENCE (canonical prebuilt store output and fresh, empty absolute evidence directory outside the store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/pbui-smoke.sh "$(PBUI_OUTPUT)" "$(PBUI_EVIDENCE)"
 
+.PHONY: check-cavechop
+check-cavechop:
+	@test -n "$(CAVECHOP_OUTPUT)" -a -n "$(CAVECHOP_EVIDENCE)" || { echo 'Set CAVECHOP_OUTPUT and CAVECHOP_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/cavechop-smoke.sh "$(CAVECHOP_OUTPUT)" "$(CAVECHOP_EVIDENCE)"
+
 check-tui:
 	GUIX="$(GUIX)" sh tests/tui-smoke.sh
 

@@ -69,6 +69,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [CoreRL ordinary native terminal gameplay](#corerl--ordinary-native-terminal-gameplay-2026-10-09)
 - [CutlassRL ordinary native terminal save/restore](#cutlassrl--ordinary-native-terminal-saverestore-2026-10-09)
 - [ChessRogue ordinary native Practice gameplay and retry](#chessrogue--ordinary-native-practice-gameplay-and-retry-2026-10-09)
+- [Cave Chop ordinary native terminal save/restore](#cave-chop--ordinary-native-terminal-saverestore-2026-10-09)
 
 ## Relocation map (2026-10-04)
 
@@ -214,6 +215,160 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Cave Chop — ordinary native terminal save/restore (2026-10-09)
+
+Local evidence covers the existing [`cavechop`](guix/tay/packages/cavechop.scm)
+**1.0** definition, not a new application or source snapshot. It remains in
+the README's research/outside-normal-build table and outside `PROJECT_PACKAGES`;
+the research inventory and canonical **629** preservation snapshots are
+unchanged. **[Forgejo #299](https://forge.nogroup.group/tay/guix-channel/issues/299)
+remains OPEN: literal clean own lint is unmet.** Successful build and native
+continuity do not waive that gate or establish signed publication, profile
+installation or deployment.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main bg70 passed in **3.98 s**; artifact 15824 records `/gnu/store/417kx53h49k576d4akxmmwv3x0lp6b6j-cavechop-1.0`. |
+| Reproducibility | Main bg71 `--check` passed in **1.37 s**; artifact 15826 records the same output. |
+| Ordinary native PTY consumer | Main bg73 passed in **8.71 s**; `/tmp/cavechop-native-1` retains three independent ordinary game processes, actual decoded screens, inputs and read-only native-save inspection. |
+| Full lint | Main bg72 completed in **6.64 s**: own `generic-html` updater failed to find upstream releases, and source archival reported missing Disarchive information / no Software Heritage archive. Literal clean own lint remains unmet; the unrelated deprecated `flex` warning is not attributed to Cave Chop. |
+| Final integrated target | Main bg74 `make check-cavechop` passed in **12.51 s**; `/tmp/cavechop-make-final` records a fresh three-process ordinary consumer on the same output, with `CAVECHOP_NATIVE_OK` in `driver.stdout`. |
+
+### Canonical source and complete redistribution notices
+
+The package compiles the complete canonical
+[upstream snapshot](http://git.blackswordsonics.com/?p=cavechop-7drl;a=snapshot;h=ecc8bcfd56b96b71a2521f9b2a005f9cc89f0692;sf=tgz)
+at **`ecc8bcfd56b96b71a2521f9b2a005f9cc89f0692`**, upstream master and
+`bugfix-release-1` dated **2012-03-19**. Its Makefile declares version **1.0**.
+The archive fetched in memory on 2026-10-09 is **40,568 bytes**, SHA256
+**`6c16c18125ebd6b3fd56402c0dd2094abfd716b7515700da2050be4a908aef97`**,
+Guix base32 **`15zgia84mgjh43d00msinwbdggsa1790sb20avyv7mpb4n0w25kc`**.
+The upstream endpoint is HTTP, not authenticated HTTPS; the exact content hash
+pins the bytes. Its **23 regular files** comprise **19 C/H files**, Makefile,
+MANIFEST, notes.txt and .gitignore: no bundled external assets, binaries or
+submodules. This is Martin Read's separate seven-day game, not a runtime
+assembled from its Dungeon Bash progenitor.
+
+All 19 C/H prologues carry Martin Read's **2005–2012** copyright and the
+two-clause BSD grant; notes.txt carries **2012** and the full same grant.
+Source and binary redistribution, with or without modification, are permitted
+provided the copyright, conditions and disclaimer are retained. The output
+installs the actual unmodified
+[notes.txt](http://git.blackswordsonics.com/?p=cavechop-7drl;a=blob_plain;f=notes.txt;hb=ecc8bcfd56b96b71a2521f9b2a005f9cc89f0692)
+and [cavechop.h](http://git.blackswordsonics.com/?p=cavechop-7drl;a=blob_plain;f=cavechop.h;hb=ecc8bcfd56b96b71a2521f9b2a005f9cc89f0692)
+under `share/doc/cavechop`, preserving both copyright periods, conditions and
+disclaimers rather than substituting a generated notice. Installed notes are
+**3,346 bytes**, SHA256
+**`25e1e232b0a01c0ea193e8eb37a7b672511472f71045f882215b10cc6a77ce3f`**;
+the header is **13,557 bytes**, SHA256
+**`c954101c8e373d0d85d60cb4a6011f6d0fbaa69cbcd49717b2bc820c159a44eb`**.
+
+### Ordinary launcher and scalar-preserving native restore
+
+Run `cavechop` in a terminal without special arguments. Its installed launcher
+execs the source-built `libexec/cavechop` with packaged terminfo, using
+`${XDG_STATE_HOME:-$HOME/.local/state}/cavechop` as writable CWD. Native save,
+log and character-dump paths therefore stay out of the caller's CWD and the
+store. Compressor paths are explicit Guix inputs; the native `gunzip` call
+uses the actual `cavechop.sav.gz` suffix. No build-time dependency download or
+runtime download is required; the source fetch is the ordinary pinned origin.
+
+The existing bounded save layout writes **39** raw `struct permobj` records
+(`NUM_OF_PERMOBJS`), not upstream's out-of-bounds **100**. Restore now reads
+each record into a local struct and copies all six scalar fields—`poclass`,
+`rarity`, `sym`, `power`, `used`, `depth`—while retaining the current process's
+static names/plurals and description pointers. Merely seeking past those
+records avoided stale pointers but lost saved scalar state, including the
+randomized potion/scroll/ring flavour powers; this fix restores that state.
+It preserves the existing **39-record raw layout**, not a new portable format.
+The receipt makes **no compatibility claim for original 100-record saves**,
+different host ABIs or arbitrary older binaries.
+
+### Three independent ordinary processes, not injected state
+
+[`tests/cavechop-smoke.sh`](tests/cavechop-smoke.sh) and
+[`tests/cavechop-native.py`](tests/cavechop-native.py) consume a supplied
+prebuilt store output and a fresh evidence directory. Native-1 used empty
+`PATH`, `LC_ALL=C`, `TERM=xterm-256color`, a **24×80** PTY and fresh private
+HOME/XDG directories. Consumer and game remained at the owner's non-root
+UID **1000** / GID **998** in separate user/mount/network/PID namespaces,
+with only loopback and recursively read-only `/gnu/store`. Process receipts
+identify the installed binary, private state CWD and TTY. Output NAR hashes
+before and after are identical:
+**`0gyw3sq9bkr6vpaf3nhiimsbm4pjbr77cg3nxb794z0dllkp7jgd`**.
+
+1. Process **2** entered the ordinary name **Native1**, moved with native `y`,
+   showed inventory with `i`, and inspected the dagger with `I` then `a`.
+   Native `S` plus the ordinary acknowledgement saved and exited **0**.
+2. Process **5**, launched without arguments in the same private state CWD,
+   automatically loaded and consumed that native save. Its full visible
+   **21×21 player-centred map** and HUD matched the pre-save screen. Native
+   `I`/`a` again displayed **“A long knife, designed for stabbing.”**, exercising
+   the new process's description pointer. Native `S` saved again and exited **0**.
+3. Process **9** automatically restored the second native save, reproduced
+   the same map/HUD and item description, then continued ordinary `y` movement.
+   Food decreased **1999→1998** and wall-scroll witnesses recorded world delta
+   **(-1,-1)**; the player-centred viewport stays at **(10,10)**, not a claimed
+   fixed world coordinate. Native `X`, confirmation `Y` and acknowledgement
+   quit cleanly with exit **0**.
+
+At the continuity boundary the HUD records Native1, **HP 20/20**, **XL 1**,
+**Body 10/10**, **Defence 5**, **Food 1999**, **Depth 1**, **Agility 10/10**
+and **XP 0**. `continuity.json` records exact visible map/HUD equality and
+exact decoded nonblank/HUD styles; only blank map-cell colours are normalized.
+Raw map cells, decoded screens, cursor records, PTY transcripts and recorded
+inputs are retained rather than replaced by markers.
+
+The consumer only reads/copies the game's native saves; evidence copies are
+**never reinjected**. `session-{1,2}-native-save.json` independently parse all
+**39 records × six scalars** and establish equality across the ordinary
+restore/re-save. On this host the raw record is **128 bytes**, starting at
+offset **7076**, in **21,076** uncompressed save bytes. All **12** randomized
+flavour powers match: potions **[4,10,5,9]**, scrolls **[5,2,16]**, rings
+**[2,6,1,18,5]**. Both uncompressed saves have SHA256
+**`d79b9a507d66d0b8bc389cad1107e92564b555163970944fba722dcd20c4225b`**;
+gzip metadata need not match. This is observed randomized gameplay, without
+seed control, fabricated saves, memory writes, wizard commands, custom runtime
+modes or markers emitted by the game. Host game state remained unchanged;
+the private save was consumed and no game files remained after clean quit.
+
+The final integrated target is a **separate fresh randomized run**, not a
+replay of native-1. Its observed processes **2, 5 and 9** again saved,
+automatically restored/re-saved, then independently restored/continued/quit,
+all with exit **0**, UID **1000** / GID **998**, private state, loopback-only
+network and read-only store. Actual restored screens again show native
+`I`/`a` and **“A long knife, designed for stabbing.”**; map/HUD and all
+**39 × six scalars** match across restore/re-save. This run's distinct
+flavour powers are potions **[6,19,4,15]**, scrolls **[8,9,5]**, rings
+**[3,5,7,16,11]**, equal in both parsed native saves. Both uncompressed
+save hashes are
+**`2422b29f6229165387eb9a2f7d9761197d6f5e7e918b7621fc1a67378a1cd8ac`**.
+The third process's ordinary `u` movement lowers Food **1999→1998** before
+normal confirmed quit; no save copy was injected, host game state remained
+unchanged and private game files were absent afterward. Both final NAR
+hashes equal the native-1 value above. The consumer's success marker is
+external proof-runner output, not a custom game runtime mode.
+
+The obsolete Goocastle issue-666 `--smoke`/marker contract was removed without
+a replacement runtime contract or Goocastle execution. `make check-cavechop`
+is a standalone guarded target requiring explicit `CAVECHOP_OUTPUT` and
+`CAVECHOP_EVIDENCE`; it does not join the aggregate build/check inventory or
+silently build a package. These repository-only changes establish no material
+host/service catalog correction, so no OKF page or log update applies. No
+temporary files were created by the documentation worker; actual native proof
+directories are retained as evidence.
+
+```sh
+make check-cavechop \
+  CAVECHOP_OUTPUT=/gnu/store/417kx53h49k576d4akxmmwv3x0lp6b6j-cavechop-1.0 \
+  CAVECHOP_EVIDENCE=/absolute/nonexistent/evidence-directory
+```
+
+The supplied output must be the canonical prebuilt store output, and the
+absolute evidence directory must not already exist (including as a symlink).
+The command is a developer invocation, not a profile installation or a
+default `make build` member.
 
 ## ChessRogue — ordinary native Practice gameplay and retry (2026-10-09)
 

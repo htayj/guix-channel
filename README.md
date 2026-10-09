@@ -489,7 +489,7 @@ verified program list.
 
 | Package | Version | What it does | Status |
 | --- | --- | --- | --- |
-| [`cavechop`](guix/tay/packages/cavechop.scm) | `1.0` | Small dungeon-game definition | Research / definition only |
+| [`cavechop`](guix/tay/packages/cavechop.scm) | `1.0` | Source-built terminal dungeon game | [Native save/restore verified; clean own lint pending, #299 OPEN](ACCOUNTING.md#cave-chop--ordinary-native-terminal-saverestore-2026-10-09); outside normal build inventory |
 | [`drl`](guix/tay/packages/drl.scm) | `0.10.11` | DoomRL graphical/terminal roguelike definition | Research / definition only |
 | [`flaghack`](guix/tay/packages/flaghack.scm) | `20260713-1.772c47e` | Flag-themed NetHack project definition | Research / definition only |
 | [`flaghack-charm`](guix/tay/packages/flaghack.scm) | `20260713-1.772c47e` | FlagHack Go terminal launcher output | Research / definition only |

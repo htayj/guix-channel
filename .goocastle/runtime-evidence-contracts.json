@@ -165,21 +165,6 @@
       }
     },
     {
-      "issueNumber": 666,
-      "packageName": "cavechop",
-      "artifactPath": ".goocastle/evidence/issue-666.png",
-      "runtime": {
-        "executable": "cavechop",
-        "invocation": {
-          "file": "cavechop",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "CAVECHOP_RUNTIME_OK"
-      }
-    },
-    {
       "issueNumber": 674,
       "packageName": "diabaig",
       "artifactPath": ".goocastle/evidence/issue-674.png",
