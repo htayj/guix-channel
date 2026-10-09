@@ -31,8 +31,8 @@
     (build-system gnu-build-system)
     (arguments
      (list
-      ;; Upstream provides no test target.  The installed command-line game
-      ;; and its package-owned --smoke mode are exercised by the channel test.
+      ;; Upstream provides no test target.  The channel exercises the installed
+      ;; interactive console launcher separately.
       #:tests? #f
       #:phases
       #~(modify-phases %standard-phases
@@ -42,53 +42,28 @@
               ;; Select the documented Unix build by disabling the Windows
               ;; and MSVC feature macros.
               (substitute* "util.h"
-                ( ("^#define WIN") "// #define WIN")
+                ( ("^#define WIN")
+                  (string-append
+                   "// Guix channel change 2026-10-09: "
+                   "select upstream Unix build.\n// #define WIN"))
                 ( ("^#define PC") "// #define PC")
                 ;; Bitmap storage consists of 32-bit words.  `unsigned long'
                 ;; is 64 bits on LP64 systems and makes pointer iteration
                 ;; overrun that storage.
                 ( ("typedef unsigned long dword;")
-                  "typedef unsigned int dword;"))
-              ;; Remove the proof-only flag before the ordinary command-line
-              ;; parser sees the arguments.  The remaining path is handled by
-              ;; the same script loader and movement code as normal use.
-              (substitute* "daedalus.cpp"
-                ( ("#include <memory.h>")
-                  "#include <memory.h>\n#include <string.h>\n")
-                ( ("  int iarg = 1;")
-                  "  int iarg = 1;\n  flag fSmoke = fFalse;\n")
-                ( ("  szLine\\[0\\] = chNull;")
                   (string-append
-                   "  szLine[0] = chNull;\n"
-                   "  for (iarg = 1; iarg < argc; iarg++)\n"
-                   "    if (strcmp(argv[iarg], \"--smoke\") == 0) {\n"
-                   "      fSmoke = fTrue;\n"
-                   "      argv[iarg][0] = chNull;\n"
-                   "    }\n"))
-                ( ("    //printf\\(\\\"%d: '%s'\\\\n\\\", iarg, argv\\[iarg\\]\\);")
-                  (string-append
-                   "    if (argv[iarg][0] == chNull)\n"
-                   "      continue;\n"
-                   "    //printf(\"%d: '%s'\\n\", iarg, argv[iarg]);"))
-                ( ("  RunCommandLine\\(szLine, NULL\\);")
-                  (string-append
-                   ;; Trim the separator left by the original argument loop.
-                   "  while (pch > szLine && pch[-1] == ' ') *--pch = chNull;\n"
-                   "  RunCommandLine(szLine, NULL);\n\n"
-                   "  if (fSmoke) {\n"
-                   "    DoCommand(cmdMoveForward);\n"
-                   ;; Exercise the script's own status and map commands after
-                   ;; the required movement so the smoke transcript is a
-                   ;; visible gameplay receipt, not just a wrapper marker.
-                   "    RunCommandLine(\"*FTable\", NULL);\n"
-                   "    RunCommandLine(\"*FMap\", NULL);\n"
-                   "    return 0;\n"
-                   "  }\n\n")))))
+                   "// Guix channel change 2026-10-09: "
+                   "use 32-bit bitmap words on LP64.\n"
+                   "typedef unsigned int dword;")))))
           (add-after 'patch-unix-command-line 'patch-linux-allocator
             (lambda _
               ;; GCC's sized-delete ABI can be selected for this source even
               ;; though the upstream code only declares the unsized overload.
               (substitute* "util.cpp"
+                ( ("#include <stdio.h>")
+                  (string-append
+                   "// Guix channel change 2026-10-09: "
+                   "provide sized-delete ABI.\n#include <stdio.h>"))
                 ( ("void \\*operator new\\(size_t cb, void \\*pv\\)")
                   (string-append
                    "void operator delete(void *pv, size_t cb)\n"
@@ -113,7 +88,6 @@
                      (launcher (string-append bin "/hunger-games"))
                      (shell #$(file-append bash-minimal "/bin/sh"))
                      (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
-                     (cat #$(file-append coreutils-minimal "/bin/cat"))
                      (ln #$(file-append coreutils-minimal "/bin/ln")))
                 (mkdir-p bin)
                 (mkdir-p libexec)
@@ -134,36 +108,9 @@
                     (format port
                             (string-append
                              "#!~a~%set -eu~%real=~s~%data=~s~%script=~s~%"
-                             "mkdir=~s~%cat=~s~%ln=~s~%")
+                             "mkdir=~s~%ln=~s~%")
                             shell program data (string-append data "/hunger.ds")
-                            mkdir cat ln)
-                    (display
-                     "if test \"${1-}\" = --smoke; then\n"
-                     port)
-                    (display
-                     (string-append
-                      "  test \"$#\" -eq 1 || { echo "
-                      "'usage: hunger-games [--smoke]' >&2; exit 64; }\n")
-                     port)
-                    ;; The smoke path is read-only in the package and runs
-                    ;; from its data directory so the bitmap is discoverable.
-                    (display "  cd \"$data\"\n" port)
-                    (display "  raw=${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\n" port)
-                    (display "  if test -n \"$raw\"; then\n" port)
-                    (display
-                     "    if ! \"$real\" hunger.ds --smoke >\"$raw\" 2>&1; then\n"
-                     port)
-                    (display
-                     "      \"$cat\" \"$raw\" >&2 || true\n      exit 1\n    fi\n"
-                     port)
-                    (display "    printf 'HUNGER_GAMES_SMOKE_OK\\n' >>\"$raw\"\n"
-                             port)
-                    (display "    \"$cat\" \"$raw\" >&2\n" port)
-                    (display "  else\n    \"$real\" hunger.ds --smoke >&2\n  fi\n"
-                             port)
-                    (display "  printf 'HUNGER_GAMES_SMOKE_OK\\n'\n  exit 0\n"
-                             port)
-                    (display "fi\n" port)
+                            mkdir ln)
                     (display
                      (string-append
                       "test \"$#\" -eq 0 || { echo "
@@ -179,7 +126,17 @@
                     (display "\"$mkdir\" -p \"$state\"\n" port)
                     (display "cd \"$state\"\n" port)
                     (display "\"$ln\" -sfn \"$script\" hunger.ds\n" port)
-                    (display "exec \"$real\" hunger.ds\n" port)))
+                    (display "\"$ln\" -sfn \"$data/hunger.bmp\" hunger.bmp\n" port)
+                    ;; Use the explicit script operation: a bare filename at
+                    ;; startup treats the whole command line as that filename.
+                    ;; fNoExit takes a separate parameter in the native grammar.
+                    ;; The GUI-oriented script suppresses messages; enable
+                    ;; their documented console presentation for human play.
+                    (display
+                     (string-append
+                      "exec \"$real\" \"OpenScript 'hunger.ds' "
+                      "fNoExit 1 fSkipMessageDisplay 0\"\n")
+                     port)))
                 (chmod launcher #o555)))))))
     (native-inputs (list gcc-toolchain))
     (inputs (list bash-minimal coreutils-minimal))
@@ -191,9 +148,16 @@ Daedalus 3.5 script.  This package builds the command-line Daedalus engine
 from the fixed upstream source with GNU make and GCC, and installs the Hunger
 Games script and its arena bitmap as runtime data.  The launcher keeps the
 rebuilt executable private under @file{libexec}, stores ordinary game state
-below @file{$XDG_STATE_HOME/hunger-games}, and provides an isolated
-@option{--smoke} proof path that opens the installed script and performs one
-movement without save commands.  No build-time or runtime downloads are
+below @file{$XDG_STATE_HOME/hunger-games}, makes the installed arena bitmap
+discoverable there, and enters the upstream interactive command-line prompt
+using the documented @code{fNoExit 1} lifecycle setting after explicitly loading
+the script with @code{OpenScript} and @file{hunger.ds}.  The display setting
+@code{fSkipMessageDisplay 0} makes game messages visible in the console.
+Enter @code{*FHelp} for help and @code{MoveForward}
+to move, @code{*FInv} for inventory, @code{*FTable} for standings, and
+@code{*FMap} for the arena map legend.  Enter @code{fNoExit 0 Exit} to leave the
+prompt normally.
+No game settings are forced and no build-time or runtime downloads are
 performed.  The complete GPL license, author notices, and upstream
 documentation are retained under @file{share/doc/hunger-games}.")
     (license license:gpl2+)))

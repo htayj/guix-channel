@@ -392,23 +392,6 @@
       }
     },
     {
-      "issueNumber": 695,
-      "packageName": "hunger-games",
-      "packageModulePath": "guix/tay/packages/hunger-games.scm",
-      "artifactPath": ".goocastle/evidence/issue-695.png",
-      "runtime": {
-        "executable": "hunger-games",
-        "invocation": {
-          "file": "hunger-games",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "HUNGER_GAMES_SMOKE_OK",
-        "minimumScreenshotBytes": 16384
-      }
-    },
-    {
       "issueNumber": 696,
       "packageName": "hydra-slayer",
       "packageModulePath": "guix/tay/packages/hydra-slayer.scm",

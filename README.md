@@ -334,7 +334,7 @@ publication, source-required, and build gates appear in the final table.
 | [`gearhead2`](guix/tay/packages/gearhead2.scm) | `0.701` | GearHead 2 mecha role-playing game, ASCII interface | Verified |
 | [`grippy-socks`](guix/tay/packages/grippy-socks.scm) | `3.5` | Terminal Grippy Socks mental health simulation | Defined |
 | [`gruesome`](guix/tay/packages/gruesome.scm) | `0.0.3` | Original Free Pascal/CRT cave roguelike, ordinary terminal movement and turns | Verified native gameplay and normal quit; #384 OPEN (archive lint gate; [receipt](ACCOUNTING.md#gruesome--ordinary-native-terminal-gameplay-2026-10-07)) |
-| [`hunger-games`](guix/tay/packages/hunger-games.scm) | `3.5` | Terminal Hunger Games simulation | Defined |
+| [`hunger-games`](guix/tay/packages/hunger-games.scm) | `3.5` | Original Daedalus Unix console simulation, native movement/status and arena BMP exports; no graphical UI | Verified ordinary console gameplay and normal exit; #397 OPEN (publication/closure pending; [receipt](ACCOUNTING.md#hunger-games--ordinary-native-console-gameplay-2026-10-09)) |
 | [`hydra-slayer`](guix/tay/packages/hydra-slayer.scm) | `18.3` | Console roguelike about cutting Hydra heads | Verified |
 | [`ighalsk`](guix/tay/packages/ighalsk.scm) | `0.1.16` | Original Python 2/Tk dungeon adventure with XDG saves and editors | Verified |
 | [`keeperrl`](guix/tay/packages/keeperrl.scm) | `1.3.0-1.95d2be4` | Dungeon-management roguelike with free ASCII assets, not paid media | Verified |

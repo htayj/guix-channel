@@ -62,6 +62,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Bell Labs Rogue 7 standalone native gameplay/save continuity](#bell-labs-rogue7--standalone-native-gameplay-and-save-continuity)
 - [Martin's Dungeon Bash native gameplay/save continuity](#martins-dungeon-bash--native-gameplay-and-save-continuity-2026-10-07)
 - [Gruesome ordinary native terminal gameplay](#gruesome--ordinary-native-terminal-gameplay-2026-10-07)
+- [Hunger Games ordinary native console gameplay](#hunger-games--ordinary-native-console-gameplay-2026-10-09)
 
 ## Relocation map (2026-10-04)
 
@@ -207,6 +208,139 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Hunger Games — ordinary native console gameplay (2026-10-09)
+
+Local evidence covers the existing [`hunger-games`](guix/tay/packages/hunger-games.scm)
+**3.5** package, source-built from CruiserOne/Daedalus commit
+**`32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8`**, recursive Guix source hash
+**`0fdzx2zzqbd3p99yljksmbh0s3mbzzmq2dq42a9yz5rfkn9gjy2r`**.
+This is acceptance work for an existing `PROJECT_PACKAGES` member, not a new
+inventory entry: no inventory count increases, and the canonical **629-source
+preservation ledger remains unchanged**. **Forgejo #397 remains OPEN**; issue
+closure requires a separate publication receipt. Historical #695 is not current
+native acceptance. This is the verified local implementation receipt; the
+publisher records signed/authenticated publication separately. It does not
+establish issue closure, profile installation or system deployment.
+
+The authoritative [issue #397](https://forge.nogroup.group/tay/guix-channel/issues/397)
+asks for meaningful native gameplay **or** save/load behavior in fresh HOME/XDG,
+with no store writes. The Food/status transition and immutable-output proof
+below satisfy the gameplay branch only. Its
+[2026-09-08 research comment](https://forge.nogroup.group/tay/guix-channel/issues/397#issuecomment-1690)
+identified canonical tag `v3.5` and this same commit/hash, with no submodules or
+registry closure. The installed upstream README identifies the official
+**2024-10-31** release copied from `dae35zip.zip`; this receipt does not assert a
+newer release survey. Dragonslayer and Grippy Socks are distinct sibling scripts
+at that revision, not separate Hunger Games code or dependencies. The old
+comment's proposed `--smoke` marker and Goocastle screenshot were research-era
+contracts, **not** evidence of this ordinary native session. The current public
+launcher takes no arguments; no `--smoke` adapter, marker-only proof or Goocastle
+execution is part of this acceptance.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main bg8 passed in **12.69 s**; artifact 15454 records `/gnu/store/nh3ydvi6r7634zllaa29w8ha61zfh2sp-hunger-games-3.5`. |
+| Reproducibility | Main bg10 `--check` passed in **10.44 s**; artifact 15459 records the same output. |
+| Full lint | Main bg12 passed in **5.64 s**, with **no Hunger Games finding**. The sole diagnostic is unrelated deprecated Flex usage. The final description-only map-legend correction does not change the derivation. |
+| Ordinary native PTY consumer | Main bg9 passed in **2.70 s**; actual evidence is retained at `/tmp/hunger-native-3`. Earlier failed command-grammar attempts are not accepted evidence. |
+| Final integrated target | Main bg13 `make check-hunger-games` passed in **7.36 s** at `/tmp/hunger-make-final`, emitting `HUNGER_GAMES_NATIVE_OK`; the actual proof records the same ordinary command/status/export/exit behavior against the same immutable output. |
+
+The package uses upstream's Unix `make daedalus` target and the GCC toolchain;
+it does not fetch a prebuilt game executable. The native executable is private
+at `libexec/hunger-games-real`. Installed runtime data consists of the original
+`hunger.ds` and `hunger.bmp`; opaque Windows executables and audio are excluded.
+The ordinary zero-argument launcher creates
+`${XDG_STATE_HOME:-$HOME/.local/state}/hunger-games`, links those immutable assets
+there and execs the native engine. Relative user exports go into that directory,
+not the installed output.
+The fixed upstream Makefile has only build/clean targets and **no test target**;
+no upstream test suite is silently skipped in favor of a marker. The recipe's
+GCC toolchain is a native input; Bash/coreutils are launcher dependencies from
+Guix, not new bundled asset grants or registry downloads.
+
+The exact engine command-line string is
+`OpenScript 'hunger.ds' fNoExit 1 fSkipMessageDisplay 0`.
+`OpenScript` explicitly loads the unmodified script; the native grammar takes
+each setting's value as a separate token, **not** an equals assignment.
+`fNoExit 1` is the documented console-prompt lifecycle setting, and
+`fSkipMessageDisplay 0` enables the documented presentation of messages that
+the GUI-oriented script otherwise suppresses. These are lifecycle/display
+settings only: no seed, tribute selection, arena, food, health or other gameplay
+parameters are forced. The observed session ended with `fNoExit 0 Exit`, status
+**0**, without EOF or signal termination.
+
+Run `hunger-games` and enter native commands at `Enter Command Line:`:
+
+```text
+*FHelp
+*FTable
+MoveForward
+*FTable
+*FMap
+SaveBitmap "arena.bmp"
+fNoExit 0 Exit
+```
+
+The retained `terminal.raw` and `pty-inputs.json` show real user commands through
+one genuine PTY, not an embedded engine, patched test interface or direct state
+inspection. `*FHelp` identified the player as **District 9 Female**; `*FTable`
+reported that same **D9 Female** row at health **10**, Food **500**, kills **0**.
+After ordinary `MoveForward`, Food became **499**, with health and kills
+unchanged, and other tribute rows also changed. A status observation between
+the first `*FMap`/export and movement still showed Food **500**; the second
+map/export left the post-movement Food **499** intact. This is native
+player-correlated gameplay/status evidence, not a player-coordinate claim.
+The source path is [engine movement](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/command.cpp#L4433-L4444)
+through [the script's movement event](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/hunger.ds#L1358-L1387)
+and [Food consumption](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/hunger.ds#L1880-L1885).
+
+**Display/export boundary:** `*FMap` prints the native arena-map legend
+(Gold: Cornucopia; Gray/maroon: mountains/walls; Dark cyan: water; Other:
+tributes). The Unix frontend does **not** display a graphical arena or a
+full-screen terminal map; its graphical callbacks are no-ops. Native
+`SaveBitmap` exports the active arena after `FMap` restores it, not the tinted
+map, a savegame or player-coordinate proof. The retained raw
+`arena-before.bmp` and `arena-after.bmp` are each **200 × 200**, uncompressed
+**24-bit** BMPs of **120,054 bytes**, with **2,777** distinct colors. Their SHA-256
+hashes are respectively
+`1f891a8307f935880e72a480a2a67c307a5731ce53a8862a474f9fe78fb8584d` and
+`a76b96799a43ef89377c7e76c02523b202f4529087c3f95e71fa57ab2b9bdb7d`.
+Changed exported pixels corroborate changing native arena state but do not
+locate the player. No graphical-UI, save/restore continuity, completed match or
+Windows/audio acceptance is claimed.
+
+The installed consumer and native game ran as the caller's UID **1000** and GID
+**998** in private user, mount, network and PID/proc namespaces. The network had
+only loopback and no external routes; `/gnu/store` was recursively read-only.
+`game-entry.json` records all three standard descriptors on `/dev/pts/49`, the
+exact ordinary launcher arguments and private HOME/XDG/TMPDIR paths with an
+empty `PATH`. Before/after output NAR hashes both equal
+**`1bl0vxpf03qa33p0padkcd577p6fay4y8ffvsifi8s4q4fw5pann`**.
+The state footprint contains only the private directories, two immutable asset
+symlinks and the requested arena exports; this establishes export isolation,
+not a savegame format.
+
+**Rights and modifications:** the package records **GPL-2.0-or-later**, matching
+Walter D. Pullen's explicit grant and warranty disclaimer in upstream
+`changes.htm` and `daedalus.htm`. Complete original `README.md`, `license.htm`
+(the GPLv2 text), `changes.htm`, `changes.doc`, `daedalus.htm`, `daedalus.doc`,
+`script.htm` and `script.doc` are installed under `share/doc/hunger-games`.
+`upstream-files.json` verifies their complete pinned bytes plus the original
+script/bitmap bytes, including the script's author attribution; no abbreviated
+license or rewritten upstream notices substitute for them. The build recipe
+adds dated **2026-10-09** modified-source notices to `util.h` for Unix selection
+and 32-bit bitmap words on LP64, and to `util.cpp` for the sized-delete ABI
+adaptation. These are engine portability changes, not gameplay rewrites; the
+installed script and bitmap remain byte-identical to the pinned originals.
+
+The external consumer is [tests/hunger-games-smoke.sh](tests/hunger-games-smoke.sh)
+with [tests/hunger-games-native.py](tests/hunger-games-native.py); the integrated
+entry point is `make check-hunger-games`, requiring a prebuilt store output,
+fresh absolute evidence directory and explicit `GUIX` executable. This
+documentation worker ran no checks and created no temporary files. No host or
+service changed and no network-catalog correction was established, so no OKF
+page/log update applies to this repository-only receipt.
 
 ## Gruesome — ordinary native terminal gameplay (2026-10-07)
 
