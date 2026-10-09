@@ -392,22 +392,6 @@
       }
     },
     {
-      "issueNumber": 690,
-      "packageName": "gruesome",
-      "packageModulePath": "guix/tay/packages/gruesome.scm",
-      "artifactPath": ".goocastle/evidence/issue-690.png",
-      "runtime": {
-        "executable": "gruesome",
-        "invocation": {
-          "file": "gruesome",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "GRUESOME-SMOKE: gameplay-turn-ok"
-      }
-    },
-    {
       "issueNumber": 695,
       "packageName": "hunger-games",
       "packageModulePath": "guix/tay/packages/hunger-games.scm",

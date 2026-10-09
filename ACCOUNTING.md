@@ -61,6 +61,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Imago six-system image library and native consumer](#imago--six-system-image-library-and-native-consumer)
 - [Bell Labs Rogue 7 standalone native gameplay/save continuity](#bell-labs-rogue7--standalone-native-gameplay-and-save-continuity)
 - [Martin's Dungeon Bash native gameplay/save continuity](#martins-dungeon-bash--native-gameplay-and-save-continuity-2026-10-07)
+- [Gruesome ordinary native terminal gameplay](#gruesome--ordinary-native-terminal-gameplay-2026-10-07)
 
 ## Relocation map (2026-10-04)
 
@@ -206,6 +207,108 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Gruesome — ordinary native terminal gameplay (2026-10-07)
+
+Local evidence covers the existing [`gruesome`](guix/tay/packages/gruesome.scm)
+**0.0.3** package, built from the official
+[`gruesome0.0.3.zip`](http://www.gamesofgrey.com/games/gruesome/gruesome0.0.3.zip),
+base32 **`1w482gxkvh8ln3d9hyyq7b9akhzr3s3mi6d37a4s79jlb7afxm1g`**.
+This is native acceptance of an existing inventory member, not a new package;
+no inventory count increases and the canonical **629-source preservation
+ledger remains unchanged**. **Forgejo #384 remains OPEN:** the literal
+clean-own-lint archive gate is unmet. These receipts do not establish signed
+publication, issue closure, profile installation or system deployment.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main491 passed in **7.88 s**; artifact 15355 records `/gnu/store/wsbvbgwl89276ndi3mzn98wdg847x4ci-gruesome-0.0.3`. |
+| Reproducibility | Main493 `--check` passed in **1.32 s**; artifact 15357 records the same output. |
+| Lint — archive gate pending | Main494 ran in **8.42 s**; the package's own source is not archived in Software Heritage and lacks a Disarchive entry. These findings remain unresolved; no archive diagnostic is suppressed. The canonical release regexp now finds upstream and there is no own updater finding. An unrelated Flex diagnostic is not a Gruesome finding. |
+| Ordinary native PTY consumer | Main497 passed in **6.42 s**, with actual evidence at `/tmp/gruesome-native-4`. |
+| Final integrated target | Main498 `make check-gruesome` passed in **11.42 s** at `/tmp/gruesome-make-final`, emitting `GRUESOME_NATIVE_OK`. |
+
+### Original source and installed notices
+
+Free Pascal **3.2.2** compiles the complete, unpatched **1,902-line** upstream
+`source.pas` using `-O2 -g- -FUbuild/units -FEbuild
+-obuild/gruesome-real source.pas`. The only imported Pascal unit is standard
+**CRT**. No prebuilt Windows executable is installed. The normal
+`bin/gruesome` launcher is a Bash `set -eu` / `exec` of
+`libexec/gruesome-real`, forwarding arguments directly; the synthetic installed
+`--smoke` branch and its Expect dependency have been removed. The proof starts
+this launcher with **no arguments**, not a special test entry point.
+
+Installed `share/doc/gruesome/{source.pas,license.txt,readme.txt,history.txt}`
+preserves the **complete byte-identical upstream files**, including Darren
+Grey's 2009 attribution, source notice and full GNU GPL version 3 text through
+`END OF TERMS AND CONDITIONS`, with warranty/liability disclaimers intact.
+The source header refers to `license.txt` without specifying a version; the
+package retains **GPL-3.0-or-later** metadata. Native evidence
+`upstream-files.json` records byte lengths **65,695 / 33,077 / 1,096 / 4,199**
+and SHA-256 identities for those four files. The complete upstream program is
+installed as source, while the exact build/install/launcher-control recipe is
+the tracked [`gruesome.scm`](guix/tay/packages/gruesome.scm); that recipe is
+**not installed** in the output. Both source and recipe are needed when
+providing corresponding source for this channel build; the license text alone
+is not corresponding source. No game source changes require downstream
+modification notices.
+
+Both build receipts retain Free Pascal's actual warnings that **`lurkcount`,
+`retreatcount` and `shadowturns` do not seem to be initialized**, plus unused
+local-variable notes for `q`, `r` and `j`. They are uncorrected upstream
+compiler diagnostics, not observed runtime errors in the bounded native run;
+successful compilation and one turn do not prove the affected paths safe.
+
+### Observed ordinary gameplay and limits
+
+The external consumer supplies an **80 × 25 PTY**, fresh private HOME/XDG,
+temporary and working directories, **UID 1000/GID 998**, separate user/mount/
+network/PID namespaces, loopback-only networking and recursively read-only
+`/gnu/store`. It uses `TERM=xterm`, `LC_ALL=C` and an empty game `PATH`.
+This isolation belongs to the harness, not the game. Inputs are real terminal
+bytes: `NativeGrue` plus Return, Space to start, **`l`** for east movement,
+**`Q`** to quit and Space for the upstream final `ReadKey` acknowledgement.
+No RNG seed/control, game-memory access or expected-state injection is used.
+
+In Main497, natural birth produced a **nonblank cave map**, the message
+`It is pitch black.  You are likely to eat someone.`, and the named HUD
+**LP 2/2, SP 2/2, Meals 0, Turns 0, D 20**. One ordinary `l` moved the
+source-defined player cursor from **(12, 7) to (13, 7)** in one-based terminal
+coordinates, redrew the map and advanced **Turns 0 → 1**, with LP, SP, Meals
+and depth unchanged. The final integrated Main498 run independently observed
+the same HUD change and east movement from **(16, 19) to (17, 19)**. Decoded
+screen JSON stores these cursors zero-based. This is **not an `@`-glyph
+claim**: upstream `DrawTile` draws the grue as a black-on-black space and
+`GoToXY(gruex,gruey)` / `cursoron` identifies its position. The text/JSON
+terminal captures and raw terminal bytes are actual observations, not graphical
+screenshots or reconstructed game state.
+
+Normal `Q` revealed the map and displayed **`Till next lurking....`**; Space
+acknowledged the final prompt and the game exited **0**. Both runs recorded
+**no private filesystem-state entries** and identical pre/post output NAR
+hash **`1xci6bnklyqmpy6vyrxs6pzd5mriixfx5pjjdq067bpvdcsjniz7`**. The upstream
+CRT-only program has **no save/load API or persistent-state implementation**;
+history lists high-score/configuration files only as future targets. This is
+one movement/turn and clean-quit proof, **not** save continuity, combat, spell,
+stairs, death or victory acceptance.
+
+The standalone guarded developer target requires a prebuilt store item and a
+fresh, nonexistent absolute evidence directory, and honors `GUIX`:
+
+```sh
+make check-gruesome GUIX=/path/to/guix \
+  GRUESOME_OUTPUT=/gnu/store/wsbvbgwl89276ndi3mzn98wdg847x4ci-gruesome-0.0.3 \
+  GRUESOME_EVIDENCE=/tmp/gruesome-new-evidence
+```
+
+The consumer realizes its Guix tooling serially before offline gameplay; it
+does **not build Gruesome**. The guarded target is outside the unguarded
+aggregate `check`, and the obsolete Goocastle installed-`--smoke` contract is
+removed rather than treated as proof. No described host/service changed and
+no material OKF correction was established, so no OKF page/log update applies.
+This documentation worker ran no commands, applications or checks; verification
+above is Main's exercised evidence.
 
 ## Imago — six-system image library and native consumer
 

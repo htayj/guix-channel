@@ -333,7 +333,7 @@ publication, source-required, and build gates appear in the final table.
 | [`gearhead`](guix/tay/packages/gearhead.scm) | `1.310` | GearHead: Arena mecha role-playing game, ASCII interface | Verified |
 | [`gearhead2`](guix/tay/packages/gearhead2.scm) | `0.701` | GearHead 2 mecha role-playing game, ASCII interface | Verified |
 | [`grippy-socks`](guix/tay/packages/grippy-socks.scm) | `3.5` | Terminal Grippy Socks mental health simulation | Defined |
-| [`gruesome`](guix/tay/packages/gruesome.scm) | `0.0.3` | Console roguelike about a grue in procedurally generated caves | Defined |
+| [`gruesome`](guix/tay/packages/gruesome.scm) | `0.0.3` | Original Free Pascal/CRT cave roguelike, ordinary terminal movement and turns | Verified native gameplay and normal quit; #384 OPEN (archive lint gate; [receipt](ACCOUNTING.md#gruesome--ordinary-native-terminal-gameplay-2026-10-07)) |
 | [`hunger-games`](guix/tay/packages/hunger-games.scm) | `3.5` | Terminal Hunger Games simulation | Defined |
 | [`hydra-slayer`](guix/tay/packages/hydra-slayer.scm) | `18.3` | Console roguelike about cutting Hydra heads | Verified |
 | [`ighalsk`](guix/tay/packages/ighalsk.scm) | `0.1.16` | Original Python 2/Tk dungeon adventure with XDG saves and editors | Verified |
