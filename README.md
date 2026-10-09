@@ -276,7 +276,7 @@ publication, source-required, and build gates appear in the final table.
 | --- | --- | --- | --- |
 | [`acehack`](guix/tay/packages/acehack.scm) | `3.6.0-0.9a4c767` | Historical native tty NetHack variant with NGPL executable/data source and private XDG state | Verified native gameplay/save continuity; clean-lint gate pending, #266 open ([receipt](ACCOUNTING.md#acehack--verified-native-tty-gameplay-and-save-continuity)) |
 | [`bell-labs-rogue7`](guix/tay/packages/bell-labs-rogue7.scm) | `7.7.1` | Historical terminal dungeon game with XDG-managed score and save state | Verified native gameplay/save continuity; clean-lint gate pending, #267 open ([receipt](ACCOUNTING.md#bell-labs-rogue7--standalone-native-gameplay-and-save-continuity)) |
-| [`dhack`](guix/tay/packages/dhack.scm) | `0.2c` | Historical terminal symbolic roguelike | Defined |
+| [`dhack`](guix/tay/packages/dhack.scm) | `0.2c` | Source-built DreamHack C++/ncurses roguelike; native inventory and player-centered movement, no save/load | Verified ordinary native gameplay and zero-status quit; #328 OPEN (archive lint gates; [receipt](ACCOUNTING.md#dhack--ordinary-native-terminal-gameplay-2026-10-09)) |
 | [`dnethack`](guix/tay/packages/dnethack.scm) | `3.26.0` | Terminal dungeon exploration game based on NetHack | Defined |
 | [`dynahack`](guix/tay/packages/dynahack.scm) | `0.6.0` | DynaHack curses NetHack variant | Verified |
 | [`evilhack`](guix/tay/packages/evilhack.scm) | `0.9.3` | EvilHack terminal NetHack variant | Verified |

@@ -64,6 +64,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Gruesome ordinary native terminal gameplay](#gruesome--ordinary-native-terminal-gameplay-2026-10-07)
 - [Hunger Games ordinary native console gameplay](#hunger-games--ordinary-native-console-gameplay-2026-10-09)
 - [CryptRover ordinary native terminal gameplay](#cryptrover--ordinary-native-terminal-gameplay-2026-10-09)
+- [Dhack ordinary native terminal gameplay](#dhack--ordinary-native-terminal-gameplay-2026-10-09)
 
 ## Relocation map (2026-10-04)
 
@@ -209,6 +210,123 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Dhack — ordinary native terminal gameplay (2026-10-09)
+
+Local evidence covers the existing [`dhack`](guix/tay/packages/dhack.scm)
+**0.2c** package, built from the complete canonical Google Code
+[`dreamhack/source-archive.zip`](https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/dreamhack/source-archive.zip).
+The archive is at SVN revision **47**; the selected trunk's final code revision
+is **45** (the later revisions change wiki files only). The pinned SHA-256 is
+**`42c44d93343bb4b204ae08b3938c6718cfc3d5de48d7698d1705d8d9934ba9cc`**,
+Guix Nix-base32 **`1k599f9xkn052y6nkms8vvaw7kqqcy697cq8mq2b5d1v6j9lvi22`**.
+This is native acceptance for an existing package, not a new inventory entry:
+package counts and the canonical **629-source preservation ledger remain
+unchanged**. **[Forgejo #328](https://forge.nogroup.group/tay/guix-channel/issues/328)
+remains OPEN: literal clean own lint is unmet.** Local build and gameplay
+receipts do not establish issue closure, signed channel publication, profile
+installation or deployment.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main bg25 passed in **6.17 s**; artifact 15547 records `/gnu/store/a4j6vbjywcpfsxkqidwglf134hm2w12b-dhack-0.2c`. |
+| Reproducibility | Main bg26 `--check` passed in **2.82 s**; artifact 15549 records the same output. |
+| Full lint | Main bg27 completed in **6.13 s**: Google Storage **HTTP 403** during generic release discovery, `updater 'generic-html' failed to find upstream releases`, and source not archived in Software Heritage with a missing Disarchive entry. These own findings leave the clean-own-lint gate unmet. |
+| Ordinary native PTY consumer | Main bg30 passed in **5.63 s**; actual native proof and terminal-decoded screens are retained at `/tmp/dhack-native-3`. |
+| Final integrated target | Main bg31 `make check-dhack` passed in **9.45 s**, emitting `DHACK_NATIVE_OK`; `/tmp/dhack-make-final` retains the final ordinary native consumer evidence. Contract JSON parsing with `jq` passed in **0.01 s**. |
+
+The failed release-discovery fetch is
+`https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/dreamhack/`
+with **403 (Forbidden)**, followed by
+`dhack@0.2c: updater 'generic-html' failed to find upstream releases`.
+The pinned archive itself was fetched and built successfully. Release discovery
+and Software Heritage archival diagnostics do not invalidate those observed
+builds, but successful build, reproducibility, native gameplay and the final
+integrated target do not waive the literal clean-own-lint requirement.
+
+The package compiles upstream's four C++ translation units (`main.cpp`,
+`global.cpp`, `CGame.cpp`, `CEngine.cpp`) using C++14 and Guix ncurses. It does
+not build the archive's old trunk, wiki material or prebuilt Windows executable.
+There is no upstream test target. The rebuilt executable is private at
+`libexec/dhack-real`; ordinary `bin/dhack` configures packaged terminfo and
+directly executes it in the player's terminal, without changing the working
+directory. No runtime assets, network download, updater or telemetry path is
+introduced. The game offers **no save/load or resume interface**.
+
+For ordinary play, install `dhack` and run `dhack` in a terminal. Space or Enter
+dismisses the title and sleep prompt; enter a name at the native prompt and
+acknowledge the dream introduction. Arrow keys or numeric directions move the
+player, `i` opens native inventory and waits for an acknowledgement key, and
+`q` quits without a confirmation prompt. The guarded acceptance target requires
+explicit `DHACK_OUTPUT` (a prebuilt `/gnu/store` package output),
+`DHACK_EVIDENCE` (a fresh nonexistent absolute evidence directory) and `GUIX`
+(the Guix executable):
+`make check-dhack DHACK_OUTPUT=/gnu/store/a4j6vbjywcpfsxkqidwglf134hm2w12b-dhack-0.2c DHACK_EVIDENCE=/tmp/dhack-fresh-proof GUIX=guix`.
+Do not reuse a retained evidence directory. This external consumer is outside
+the unguarded aggregate `make check` dependencies. The obsolete issue-673
+`--smoke`/`DHACK_RUNTIME_OK` marker contract is retired, without a replacement
+acceptance contract or any Goocastle execution claim.
+
+### Observed native inventory, centered movement and exit
+
+The zero-argument ordinary launcher ran with fresh private HOME, XDG and work
+directories in user/mount/PID/network namespaces. Evidence records the real
+`libexec/dhack-real` process with all three terminal descriptors attached to
+the PTY, read-only `/gnu/store` mounts, and a network namespace with only
+loopback and no IPv4 routes. Retained files include raw PTY bytes, input
+records, decoded `.screen.txt`/`.screen.json` observations, namespace/mount
+records, native proof and before/after private-state inventories—not PNG
+screenshots.
+
+The native name entered was **`NativeDream`**, shown in
+**“You are feeling very sleepy, NativeDream... [press space]”**. The selected
+upstream code uses this input only in that sleep message; it offers no class
+selection and does not establish a persistent named character. After the
+native introduction, the new-game screen shows **HP 100/100, XP 0/20**, a
+visible room, and the player `@` at zero-based terminal **(20, 7)**. Pressing
+`i` displayed the native **Inventory** heading; Space acknowledged it and
+returned to the game. No pickup or inventory increase is asserted.
+
+Movement evidence is the **player-centered viewport**, not a changed screen
+coordinate for `@`. The consumer selected `6` from the actual visible floor
+tile `.` immediately right of the player. `@` remained at **(20, 7)** while
+static room landmarks shifted one column left: the top wall's leftmost `-`
+moved **(17, 5) → (16, 5)**, the left door `+` moved
+**(17, 8) → (16, 8)**, and the room boundary and visible object tiles shifted
+consistently. Pressing `4` returned the room landmarks and decoded map to the
+initial arrangement. Both movement screens retain **HP 100/100, XP 0/20**.
+This correlates native directional input, a visible traversable target,
+translated static landmarks and the return move; it makes no claim about
+hidden state, RNG determinism, combat, victory or completion of the game.
+
+Pressing ordinary `q` follows upstream's `m_On = false` path, with the final
+native run/draw and `Exit()`/`endwin()`, without a quit acknowledgement prompt.
+The process exited normally with status **0**. The fresh HOME/XDG/work tree
+remained empty except for the same initial private directories: before/after
+inventories are identical, with no save, score, configuration or other native
+file created. Before/after package output NAR hashes also match
+**`1agg3cmcipl91mjdhizpf0wnl93fccv0bcgq1nhy2nib8xagk4qi`**. These are
+observations of no filesystem mutation in this run, not a persistence or
+save/resume claim.
+
+### Selected trunk licensing and retained notice
+
+The selected trunk's `main.cpp` retains Bryan Strait's **2008** copyright and
+explicit **GPL-2.0-or-later** grant (version 2 or any later version), compatible
+with the trunk's supplied GPLv3 `COPYING` and the package's GPL-3.0-or-later
+license selection. The installed `share/doc/dhack/COPYING` is the complete
+upstream **GNU GPL version 3, 29 June 2007**, not a summary or reconstructed
+notice: **35,147 bytes**, SHA-256
+**`8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903`**,
+recorded in `/tmp/dhack-native-3/upstream-notices.json`. The immutable source
+archive retains the source header and historical material; the installed
+program and notice come only from the selected trunk.
+
+This repository-only receipt changes no documented host or service and
+establishes no material network-catalog correction, so no OKF page/log update
+applies. The documentation worker ran no commands or checks, created no
+temporary files, and left retained native evidence and the immutable source
+archive untouched.
 
 ## CryptRover — ordinary native terminal gameplay (2026-10-09)
 
