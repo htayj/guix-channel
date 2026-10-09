@@ -71,6 +71,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [ChessRogue ordinary native Practice gameplay and retry](#chessrogue--ordinary-native-practice-gameplay-and-retry-2026-10-09)
 - [Cave Chop ordinary native terminal save/restore](#cave-chop--ordinary-native-terminal-saverestore-2026-10-09)
 - [Browsh ordinary native terminal browsing](#browsh--ordinary-native-terminal-browsing-2026-10-09)
+- [Clojure-Roguelike native one-shot prototype render](#clojure-roguelike--native-one-shot-prototype-render-2026-10-09)
 
 ## Relocation map (2026-10-04)
 
@@ -227,6 +228,92 @@ package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
 
+## Clojure-Roguelike — native one-shot prototype render (2026-10-09)
+
+Local evidence covers the existing
+[`clojure-roguelike`](guix/tay/packages/clojure-roguelike.scm)
+**0.1.0-0.16102d6** package and its actual upstream prototype, **not gameplay**.
+The package definition, source pin/hash and existing `PROJECT_PACKAGES` entry
+are unchanged; no program is added and all inventory counts, including the
+canonical **629** preservation snapshots, remain unchanged.
+**[Forgejo #101](https://forge.nogroup.group/tay/guix-channel/issues/101)
+remains OPEN: literal clean own lint is unmet.** Build, reproducibility and
+native rendering do not waive the updater/archive gates or establish signed
+publication, profile installation or deployment of this change.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main bg106 passed in **34.36 s**; artifact **16032** records `/gnu/store/9ar87r9kngkm7kxmfnqrwgzdv3ri6k2k-clojure-roguelike-0.1.0-0.16102d6`. |
+| Reproducibility | Main bg108 `--check` passed in **8.02 s**; artifact **16037** records the same output. |
+| Full lint | Main bg107 completed in **13.05 s**: own **no updater** and **missing Disarchive/Software Heritage archival** findings at `tay/packages/clojure-roguelike.scm:76:5` leave literal clean own lint **unmet**. This is the full lint result, not a selected-checker pass or suppressed warning. |
+| Initial integrated consumer | Main bg109 failed in **4.64 s**, before the application launched; `/tmp/clojure-roguelike-native-1/runtime.json` and `driver.stderr` retain the route-parser assertion failure. It is not native application acceptance. |
+| Corrected integrated target | Main bg110 `make check-clojure-roguelike` passed in **4.95 s**; `/tmp/clojure-roguelike-native-2` records the actual installed launcher, PTY room output, zero input bytes, natural application exit **0**, immutable output and cleanup. |
+| Independent standalone consumer | Main bg111 passed in **0.86 s**; `/tmp/clojure-roguelike-native-3` independently records that same one-shot native behavior and unchanged output. |
+| Missing-variable guard | Main's invocation of `make check-clojure-roguelike` without the two required variables rejected with make exit **2** in **1.70 s**, requesting a prebuilt output and fresh evidence directory rather than building or launching implicitly. |
+
+### Faithful upstream scope, not an invented game loop
+
+At the existing pin **`16102d6123a19dbac03f457a13e8b9f1e181f577`**, upstream
+[`src/roguelike/core.clj`](https://github.com/charlesrosenbauer/Clojure-Roguelike/blob/16102d6123a19dbac03f457a13e8b9f1e181f577/src/roguelike/core.clj)
+has `-main` call `(println (showblock (roomBlock 8 8 3 8 0 0)))` once and
+return. The installed JAR retains this source. Run `clojure-roguelike` without
+special arguments: it prints the following room and naturally exits **0**.
+
+```text
+########
+#......#
+#......#
+.......#
+#......#
+#......#
+#......#
+########
+```
+
+There is no input loop, player movement, turn processing or persistent
+save/restore state in this upstream entry point. Those are absent **by design
+at this pin**, not skipped acceptance scenarios. The native consumer sends
+**zero input bytes**, requires the exact eight decoded rows and normal exit,
+and explicitly records `gameplay: false`; it does not add a game engine,
+inject state, wrap an imitation renderer or claim interactive gameplay.
+
+### Same-UID, read-only native consumer and retained evidence
+
+[`tests/clojure-roguelike-smoke.sh`](tests/clojure-roguelike-smoke.sh) and
+[`tests/clojure-roguelike-native.py`](tests/clojure-roguelike-native.py)
+consume only a supplied already-realized direct `/gnu/store` output and a
+fresh absolute evidence directory outside the store. They resolve existing
+tools without building the application or generic tools. The Makefile requires
+both `CLOJURE_ROGUELIKE_OUTPUT` and `CLOJURE_ROGUELIKE_EVIDENCE`.
+The ordinary installed launcher was observed executing packaged Java with
+`-jar` and the installed `share/java/clojure-roguelike.jar`, with
+`roguelike.core` as its main class, on a **24×80** PTY. It used private empty
+HOME/XDG/TMP/caller directories, `TERM=xterm-256color`, `LC_ALL=C.UTF-8` and
+`PATH=/nonexistent`.
+
+Both successful receipts retain owner UID **1000** / GID **998**, including
+the actual Java process, in separate user/mount/network/PID namespaces.
+Only down loopback exists, with no IPv4 routes; `/gnu/store` is recursively
+private and **read-only**, and installed output modes are checked before and
+after. Runtime closure and before/after NAR checks all return **0**. The exact
+unchanged output NAR (`guix hash -S nar`) is
+**`17fdzqhz8pnbkbwas3dpkrgl3vc6zwv6k66xzn9rjy22b7m64jn1`**.
+The mutable-directory inspection is empty. Both `cleanup.json` receipts
+record `clean: true` for their task-created scratch directories; terminal,
+launcher/process, namespace/mount, closure and NAR evidence remains outside
+the removed scratch.
+
+The initial bg109 checker wrongly required exactly one IPv4 route-table
+header line; an empty route table triggered `namespace has IPv4 routes`
+before application launch. The correction captures the table once, accepts
+an empty table or the optional `Iface Destination` header, and still rejects
+every actual nonblank route row. The failed native-1 evidence is retained
+honestly; only native-2 and native-3 establish the corrected native render.
+Same-UID, namespace, interface/loopback and recursive read-only store gates
+remain intact. No runtime execution or verification was performed by this
+documentation worker. This is repository-only work; no described deployed
+host/service changed, so no OKF page or log update applies.
+
 ## Browsh — ordinary native terminal browsing (2026-10-09)
 
 Local evidence covers the new [`browsh`](guix/tay/packages/browsh.scm)
@@ -234,13 +321,43 @@ Local evidence covers the new [`browsh`](guix/tay/packages/browsh.scm)
 ordinary installed program rendered documents, followed a real HTML link,
 edited an HTML input, submitted the native GET form and quit cleanly using
 packaged **Firefox ESR 140.13.0esr**. This is repository-local acceptance of
-the exercised path, not signed publication, profile installation, deployment
-or proof of arbitrary external websites.
+the exercised path; signed code publication is recorded below, but this is not
+profile installation, deployment or proof of arbitrary external websites.
 **[Forgejo #96](https://forge.nogroup.group/tay/guix-channel/issues/96)
 remains OPEN:** literal clean own lint is unmet because no updater recognizes
 the canonical codeload SHA archive and the required external source archival
 is absent. Successful native behavior and reproducible builds do not waive
 that gate.
+
+### Signed publication and authoritative tracker readback
+
+The implementation is published as signed commit
+[`34fa8ccc0feb392cf6238708b13a71afb94c6b1f`](https://forge.nogroup.group/tay/guix-channel/commit/34fa8ccc0feb392cf6238708b13a71afb94c6b1f).
+Authenticated Forgejo master/exact-commit API readback matched that commit and
+reported signature `verified: true`. This establishes code publication, not
+profile installation or deployment, and does not close the unmet lint gate.
+Identical bounded publication/acceptance comments were posted and read back
+on [Forgejo #96, comment 3266](https://forge.nogroup.group/tay/guix-channel/issues/96#issuecomment-3266)
+and [GitHub #96, comment 6089813948](https://github.com/htayj/guix-channel/issues/96#issuecomment-6089813948).
+Both issues remain **OPEN**, with `state:blocked` and `state:research`.
+
+The same dated full paginated tracker audit found **755 Forgejo issues
+(387 open / 368 closed)** and **725 GitHub issues (385 open / 340 closed)**.
+All **725 shared issue pairs** had zero title or open/closed-state drift;
+the 30 Forgejo-only issues **#728–757** were untouched. **89** mirror workflow
+label differences were reconciled to authoritative Forgejo labels; final
+full readback found **zero title, open/closed-state or workflow-label drift**.
+Authoritative records, non-state labels and mirror open/closed states were
+preserved; this metadata alignment did not relax research or paused gates.
+
+Related bounded rights corrections also remain research, not asset clearance:
+[Darkmoor #99, Forgejo comment 3268](https://forge.nogroup.group/tay/guix-channel/issues/99#issuecomment-3268)
+and [its mirror comment 6089831451](https://github.com/htayj/guix-channel/issues/99#issuecomment-6089831451),
+and [FastFlix #100, Forgejo comment 3267](https://forge.nogroup.group/tay/guix-channel/issues/100#issuecomment-3267)
+and [its mirror comment 6089814160](https://github.com/htayj/guix-channel/issues/100#issuecomment-6089814160).
+Those authenticated, identical comment readbacks keep both pairs **OPEN** and
+`state:blocked` / `state:research`; they are not redistribution permission,
+all-art clearance, package substitutions or source-pin/hash changes.
 
 | Gate | Main receipt |
 | --- | --- |
