@@ -73,7 +73,7 @@ font users, plus PSF fonts for the Linux console.")
       (license license:expat))))
 
 (define (genera-fonts-package group hash synopsis description)
-  (let* ((version "0.1.1")
+  (let* ((version "0.1.3")
          (tag (string-append "v" version))
          (archive (string-append "Genera-fonts-" group "-" tag ".tar.gz")))
     (package
@@ -118,12 +118,12 @@ font users, plus PSF fonts for the Linux console.")
       (home-page "https://github.com/htayj/genera-fonts")
       (license (list license:bsd-3
                      (license:non-copyleft
-                      "https://github.com/htayj/genera-fonts/blob/v0.1.1/NOTICE.md"
+                      "https://github.com/htayj/genera-fonts/blob/v0.1.3/NOTICE.md"
                       "Typeface redistribution basis; not a license grant."))))))
 
 (define-public genera-fonts-latin
   (genera-fonts-package "latin"
-   "1kxk2p4x15zj8k0wsjnlxpkb7c8mywy2v8yla6kqnhbcxnlzlb57"
+   "0rxfq8a6hr68axbcv008s3zx3imqigj0f6s8q4fdchrry0mzh0bh"
    "Genera bitmap fonts containing visible Basic Latin glyphs"
    "This package contains complete Genera 8.5 resident fonts selected by
 visible Basic Latin glyph content.  It installs ISO 10646-1 BDF typefaces and
@@ -131,7 +131,7 @@ display-equivalent OTB conversions, with required provenance and notices."))
 
 (define-public genera-fonts-symbols
   (genera-fonts-package "symbols"
-   "1s46s7pmw1v3cdbzwvp6v1nhkrzv987gryp7vvlvvjif5959i45l"
+   "0xpjhsmd7pw2flwaj7bwy178maq99l9z9b7xwy4xbgkhp8w1jzp7"
    "Genera specialty bitmap fonts without visible Basic Latin glyphs"
    "This package contains the complementary Genera 8.5 resident specialty
 fonts without visible Basic Latin letters.  It installs ISO 10646-1 BDF

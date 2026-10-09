@@ -9419,6 +9419,77 @@ GUIX=guix sh tests/alone-rl-smoke.sh "$alone_out" /tmp/alone-rl-native-FRESH
 GUIX=guix sh tests/allure-smoke.sh "$allure_out" /tmp/allure-native-FRESH
 ```
 
+## Genera Fonts 0.1.3 — public source pins, 2026-10-09
+
+The two installable packages `genera-fonts-latin` and `genera-fonts-symbols`
+consume the immutable published generic archives of
+https://github.com/htayj/genera-fonts/releases/tag/v0.1.3. Fresh `guix
+download` hashes were compared with `sha256sum` against the adjacent
+`.tar.gz.sha256` sidecars and the expected release hex values.
+
+| Group | Public archive | SHA-256 hex | Guix nix-base32 |
+| --- | --- | --- | --- |
+| latin | `Genera-fonts-latin-v0.1.3.tar.gz` | `7001f82bf03943d61cc1481b07e48bb8c6d1ffd00880cd5657c8646814c2ae67` | `0rxfq8a6hr68axbcv008s3zx3imqigj0f6s8q4fdchrry0mzh0bh` |
+| symbols | `Genera-fonts-symbols-v0.1.3.tar.gz` | `e77e1938ba70bed589e7fdacf4134d09ab8a4ef07c1da9387582dfd3aa86f276` | `0xpjhsmd7pw2flwaj7bwy178maq99l9z9b7xwy4xbgkhp8w1jzp7` |
+
+The typeface notice remains a required provenance notice, not a BSD license
+grant for the historical Genera designs; the package license references the
+tag-specific `blob/v0.1.3/NOTICE.md` URL. The independent
+`htayj-genera-fonts-source` package remains intentionally pinned.
+
+Exercised verification, 2026-10-09: both channel builds and lint passed.
+Exact store outputs:
+`/gnu/store/qq6kq2g4c971i4jllvypw4hd9m18fbi4-genera-fonts-latin-0.1.3` and
+`/gnu/store/sgwm5135q0gcx1sk2fvnmgqhp5wsi2qk-genera-fonts-symbols-0.1.3`.
+Lint exited 0 with no genera-font diagnostics (unrelated missing-module
+warnings only):
+
+```sh
+guix lint -L guix --no-network --exclude=cve,refresh,archival genera-fonts-latin genera-fonts-symbols
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 genera-fonts-latin genera-fonts-symbols
+```
+
+Both actual prefix-verifier invocations exited 0:
+`--layout <prefix> --prefix <store-output> --group <group> --skip-fontconfig`.
+Installed smoke receipts are recorded under
+`~/.local/share/genera-fonts-tools/evidence/2026-10-09/`:
+`guix-v013-latin-package-files.json`,
+`guix-v013-symbols-package-files.json`,
+`guix-v013-installed-consumers.json`,
+`guix-v013-installed-consumers-command.json`,
+`guix-v013-relocated-checksums.json`,
+`guix-v013-tool-versions.json` (fc-query profile tool Fontconfig 2.16.0,
+Python 3.12.12; native receipt FreeType 2.13.3).
+
+The native consumer receipt covers all 89 fonts (10,836 glyphs total: latin
+78 fonts/9,985 glyphs, symbols 11 fonts/851 glyphs) via FreeType 2.13.3
+rendering all pixels and advances exactly, through the existing
+`scripts/check_otb.py` `check_pair(installed_bdf, installed_otb,
+artifact.logical_identity, freetype_check=True)` API, with a TINY128 pass.
+Every `fc-query` family/style/weight/slant/width/nativepixelsize/spacing
+field equals the installed release manifest and BDF expectations (absent
+spacing interpreted as 0). Direct file queries used a throwaway empty
+`--privateconfig` only to isolate the user's Fontconfig; configured
+`fc-match` and desktop/compositor scaling were not claimed. Distribution:
+62 proportional, 26 monospace, 1 MOUSE-dual. All 89 faces are fixed-strike,
+scalable false, outline false. The four HL8 faces are the canonical Symbolics
+Genera Swiss Regular/Bold/Italic/Bold Italic at native 11 px, weights
+80/200, slants 0/100, width 100, spacing 0, 128 glyphs each.
+
+Checksum diagnosis: the verifier run with
+`--layout prefix --prefix <store> --group <group> --skip-fontconfig` succeeds;
+`SHA256SUMS` retains release-root paths, so running `sha256sum -c` directly
+from the relocated data root reports 161 latin and 27 symbols paths as
+missing there — a path-mapping artifact, not payload damage. Additional
+read-only path-mapping verification covered all 166 latin and 32 symbols
+checksums: `fonts/*` →
+`<store>/share/fonts/genera-fonts/<group>/*`; `LICENSE`, `NOTICE.md`,
+`README.release.md` → `<store>/share/doc/genera-fonts-<group>/*`; remaining
+manifest/metadata files → `<store>/share/genera-fonts/<group>/*`. No files
+were rewritten. The smoke used only the installed store outputs; no global
+profile font installation, no channel publication or push, and no source
+tests are claimed.
+
 ## Installable packages
 
 | Package | Upstream | Installed contents |
@@ -9427,8 +9498,8 @@ GUIX=guix sh tests/allure-smoke.sh "$allure_out" /tmp/allure-native-FRESH
 | `cadr-fonts-latin` | CADR-fonts 0.1.2 | Unicode BDF and OTB Latin fonts |
 | `cadr-fonts-symbols` | CADR-fonts 0.1.2 | Unicode BDF and OTB specialty fonts |
 | `dec-fonts` | DEC-Fonts 0.1.0-alpha.2 | BDF, OTB, and Linux-console PSF fonts |
-| `genera-fonts-latin` | genera-fonts 0.1.1 | Unicode BDF and OTB Latin fonts |
-| `genera-fonts-symbols` | genera-fonts 0.1.1 | Unicode BDF and OTB specialty fonts |
+| `genera-fonts-latin` | genera-fonts 0.1.3 | Unicode BDF and OTB Latin fonts |
+| `genera-fonts-symbols` | genera-fonts 0.1.3 | Unicode BDF and OTB specialty fonts |
 | `aptitude-custom-aliases` | aptitude-custom-aliases | Zsh plugin and documentation |
 | `bell-museum` | bell-museum | Museum documentation and Inferno specimen renderer |
 | `computer-builder` | computer-builder | Offline-built PC component catalog web application |

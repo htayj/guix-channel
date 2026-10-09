@@ -211,8 +211,8 @@ publication, source-required, and build gates appear in the final table.
 | [`font-material-symbols-rounded`](guix/tay/packages/caelestia-shell.scm) | `2.972` | Material Symbols Rounded variable icon font | Defined |
 | [`font-nerd-caskaydia-cove`](guix/tay/packages/caelestia-shell.scm) | `3.5.1` | CaskaydiaCove Nerd Font | Defined |
 | [`font-rubik`](guix/tay/packages/caelestia-shell.scm) | `2.300` | Rubik variable font | Defined |
-| [`genera-fonts-latin`](guix/tay/packages/fonts.scm) | `0.1.1` | Unicode BDF and OTB Latin fonts | Defined |
-| [`genera-fonts-symbols`](guix/tay/packages/fonts.scm) | `0.1.1` | Unicode BDF and OTB specialty fonts | Defined |
+| [`genera-fonts-latin`](guix/tay/packages/fonts.scm) | `0.1.3` | Unicode BDF and OTB Latin fonts | Build verified |
+| [`genera-fonts-symbols`](guix/tay/packages/fonts.scm) | `0.1.3` | Unicode BDF and OTB specialty fonts | Build verified |
 | [`manna-cadet`](guix/tay/packages/manna-cadet.scm) | `20260809-1.e5f7e81` | Space Cadet keyboard layouts and helper tools | Defined |
 | [`sbcl-ivory-key`](guix/tay/packages/ivory-key.scm) | `0.1.0` | Declarative keyboard-layout compiler | Defined |
 
