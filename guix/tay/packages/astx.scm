@@ -127,6 +127,17 @@
                     (doc (string-append #$output "/share/doc/astx"))
                     (program (string-append #$output "/bin/astx")))
                 (invoke #$(file-append node-lts "/bin/node") pnpm "prune" "--prod")
+                ;; pnpm records its wall clock in this scalar.  Use Guix's
+                ;; build epoch in the same UTC format, leaving the dependency
+                ;; graph metadata intact in both installed copies.
+                (let ((pruned-at
+                       (strftime "%a, %d %b %Y %H:%M:%S GMT"
+                                 (gmtime
+                                  (string->number
+                                   (getenv "SOURCE_DATE_EPOCH"))))))
+                  (substitute* "node_modules/.modules.yaml"
+                    (("^prunedAt: [^\n]*")
+                     (string-append "prunedAt: " pruned-at))))
                 (mkdir-p module)
                 (copy-recursively "dist" (string-append module "/dist"))
                 (copy-recursively "node_modules" (string-append module "/node_modules"))

@@ -84,7 +84,6 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES) \
 	check-bcrawl \
 	check-bootrogue \
 	check-bell-labs-rogue7 \
-	check-astx \
 	check-acehack \
 	check-avanor \
 	check-wanderers \
@@ -361,8 +360,10 @@ check-bell-labs-rogue7:
 	@test -n "$(BELL_LABS_ROGUE7_EVIDENCE)" || { echo 'set BELL_LABS_ROGUE7_EVIDENCE to a fresh evidence directory' >&2; exit 64; }
 	GUIX="$(GUIX)" sh tests/bell-labs-rogue7-smoke.sh "$(BELL_LABS_ROGUE7_OUTPUT)" "$(BELL_LABS_ROGUE7_EVIDENCE)"
 
+.PHONY: check-astx
 check-astx:
-	GUIX="$(GUIX)" tests/astx-smoke.sh
+	@test -n "$(ASTX_OUTPUT)" -a -n "$(ASTX_EVIDENCE)" || { echo 'Set ASTX_OUTPUT and ASTX_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/astx-smoke.sh "$(ASTX_OUTPUT)" "$(ASTX_EVIDENCE)"
 
 # AceHack acceptance requires an explicit prebuilt output and fresh evidence path.
 check-acehack:
@@ -751,7 +752,7 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-kbredir check-kildclient check-kmuddy check-kitty-bitmap check-kitty-bitmap-oldguix check-lyntin check-mmapper check-mudlet check-ocaml-irc-client check-notty check-miou check-domainslib check-tui check-proiel \
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
-	check-tinyfugue check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-klh10 check-suppty check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-astx check-avanor check-bootrogue check-hack check-emacs-org-popup-posframe \
+	check-tinyfugue check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-klh10 check-suppty check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-avanor check-bootrogue check-hack check-emacs-org-popup-posframe \
 	check-emacs-forth-mode check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-bcrawl check-dnethack check-dragonslayer check-hydra-slayer check-nlarn check-robotfindskitten check-fontra \
 	check-aiwnios check-aiwnios-bytecode check-wrogue check-babel7drl \
 	check-smiths-hand check-tetraworld check-splicehack-rewrite \

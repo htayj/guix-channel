@@ -386,7 +386,7 @@ on 2026-10-05. The proof covers normal `boohu` in a real terminal, not
 | Package | Version | What it does | Status |
 | --- | --- | --- | --- |
 | [`affect`](guix/tay/packages/affect.scm) | `0.0.0-0.780faa2` | OCaml structured async, cooperative Unix I/O, temporary networking and Cmdliner CLI libraries | Verified native API ([receipt and limits](ACCOUNTING.md#affect--native-libraries-and-isolated-ocaml-55-toolchain)) |
-| [`astx`](guix/tay/packages/astx.scm) | `0.0.0-development-0.9f0ee21` | Structural JavaScript/TypeScript search-and-replace CLI | Defined |
+| [`astx`](guix/tay/packages/astx.scm) | `0.0.0-development-0.9f0ee21` | Structural JavaScript/TypeScript search-and-replace CLI | Verified native `.cts` loader, JS/TS rewrite and PTY decline/accept; #104 OPEN (own updater/archive lint gates; [receipt](ACCOUNTING.md#astx--native-cts-loader-and-confirmed-structural-rewrite-2026-10-09)) |
 | [`bodge-nuklear`](guix/tay/packages/bodge-nuklear.scm) | `1.0.0-1.40adae4` | Common Lisp bindings and wrapper for source-built Nuklear immediate-mode GUI | Verified native API and X11 demo |
 | [`dart-sass`](guix/tay/packages/caelestia-cli.scm) | `1.105.0` | Reference Sass compiler with the module system, run on Node.js | Defined |
 | [`domainslib`](guix/tay/packages/domainslib.scm) | `0.5.2-1.2a88486` | OCaml multicore task pools, parallel algorithms and channels | Verified |

@@ -72,6 +72,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Cave Chop ordinary native terminal save/restore](#cave-chop--ordinary-native-terminal-saverestore-2026-10-09)
 - [Browsh ordinary native terminal browsing](#browsh--ordinary-native-terminal-browsing-2026-10-09)
 - [Clojure-Roguelike native one-shot prototype render](#clojure-roguelike--native-one-shot-prototype-render-2026-10-09)
+- [Astx native CTS loader and confirmed structural rewrite](#astx--native-cts-loader-and-confirmed-structural-rewrite-2026-10-09)
 
 ## Relocation map (2026-10-04)
 
@@ -228,6 +229,104 @@ package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
 
+## Astx — native CTS loader and confirmed structural rewrite (2026-10-09)
+
+Local evidence covers the existing [`astx`](guix/tay/packages/astx.scm)
+**0.0.0-development-0.9f0ee21** structural JavaScript/TypeScript CLI, not a
+help-only launch. It reuses `codemodsquad-astx-source` at
+**`9f0ee21ce3b1e34a0122a50a5e604a109fa9a09a`**, source hash
+**`0bhwhf118z6w7li7g732ndlhw4qg7wmxmmsczfqbyx1xxbzyjzs7`**.
+The existing source pin/hash and `PROJECT_PACKAGES` entry are unchanged;
+no application is added, all package counts stay unchanged, and the canonical
+**629** preservation snapshots are untouched. Private npm inputs and the
+source-built esbuild helper are dependency closure, not extra applications.
+**[Forgejo #104](https://forge.nogroup.group/tay/guix-channel/issues/104)
+remains OPEN: literal clean own lint is unmet.** Native acceptance does not
+waive lint or establish signed publication, profile installation or deployment.
+
+| Gate | Main receipt |
+| --- | --- |
+| Original source build | Main bg112 passed in **435.75 s**; artifact **16058** records `/gnu/store/0vv48k3qb93pafgl0dr9khg5jfsrcsd9-astx-0.0.0-development-0.9f0ee21`. No upstream test count is asserted from the unsaved middle of the large build output. |
+| Original reproducibility | Main bg114 `--check` **failed** in **268.35 s**; artifact **16070** records an output mismatch. Main's comparison found only pnpm `.modules.yaml` `prunedAt` wall-clock differences in the installed runtime and copied notices; all other bytes were identical. This is not a reproducibility pass. |
+| Final source build, normalized recipe | Main bg119 passed in **272.40 s**; artifact **16094** records `/gnu/store/jdisc1z7kwwmmgn6afqxwzv8hdl9rglz-astx-0.0.0-development-0.9f0ee21`, derivation `/gnu/store/sybqfglpvvfhfrywp04smqb24hi7v7xx-astx-0.0.0-development-0.9f0ee21.drv`. |
+| Final reproducibility, normalized recipe | Main bg121 `--check` passed in **276.04 s**; artifact **16103** records the exact same final `jdisc1z7kwwmmgn6afqxwzv8hdl9rglz` output and `sybqfglpvvfhfrywp04smqb24hi7v7xx` derivation. This supersedes the original bg114 mismatch, not its retained failure record. |
+| Full lint | Main bg113's inline result completed in **22.43 s**: own **no updater for astx** and **source not archived in Software Heritage / missing Disarchive** findings at `tay/packages/astx.scm:45:12` leave literal clean own lint **unmet**. The separate global flex deprecation and flexible-SQLite `database is locked` warnings are not astx native-runtime failures. No selected-checker pass or warning suppression substitutes for this full result. |
+| Final full lint, normalized recipe | Main bg120's inline result completed in **10.32 s**: own **no updater** and **Software Heritage / missing Disarchive** findings at `tay/packages/astx.scm:42:2` still leave literal clean own lint **unmet**. The global flex deprecation warning is separate; #104 stays OPEN without a waiver. |
+| Initial integrated consumer | Main bg115 failed in **12.00 s**; `/tmp/astx-native-1` retains the JS parser error `Cannot combine flow and typescript plugins` and failed match/change counts. It is not native acceptance. |
+| Corrected integrated target, original output | Main bg116 `make check-astx` passed in **13.09 s**; `/tmp/astx-native-2` records the actual installed CLI, real `.cts` loader, PTY decline/accept, JS/TS rewrite, equal JS semantics and natural exits **0, 0**. |
+| Independent standalone consumer, original output | Main bg117 passed in **9.49 s**; `/tmp/astx-native-3` independently records the same behavior and unchanged original output. These two receipts are historical evidence for the original build, not acceptance of a later package correction. |
+| Final integrated target, normalized output | Main bg122 `make check-astx` passed in **13.12 s**; `/tmp/astx-native-4` records the final `jdisc1z7…` output, actual `.cts` loader, unchanged decline, exact JS/TS rewrite on accept, equal JS semantics and natural exits **0, 0**. |
+| Final independent standalone consumer, normalized output | Main bg123 passed in **10.13 s**; `/tmp/astx-native-5` independently records the same final output, loader/consent/rewrite/JS-semantics behavior, natural exits **0, 0**, unchanged NAR and cleanup. |
+| Missing-variable guard | Main's invocation of `make check-astx` without its required variables rejected with make exit **2** in **1.89 s**, requesting a prebuilt output and fresh evidence directory instead of implicitly launching or building astx. |
+
+The package correction normalizes only the top-level `prunedAt` scalar in
+`node_modules/.modules.yaml` immediately after `pnpm prune --prod` and before
+both the runtime and dependency-notices copies. Guile formats
+`SOURCE_DATE_EPOCH` using `gmtime` and `%a, %d %b %Y %H:%M:%S GMT`, retaining
+the dependency graph metadata and all licenses instead of deleting metadata
+or reserializing YAML. Source/dependency pins and the native wrapper are
+unchanged. Final bg119/bg121 now establish successful rebuild and
+reproducibility of that correction; the failed bg114 remains historical evidence.
+
+### Actual public CLI, loader and consent path
+
+[`tests/astx-smoke.sh`](tests/astx-smoke.sh) and
+[`tests/astx-native.py`](tests/astx-native.py) consume a supplied realized
+direct store output and a fresh absolute evidence directory outside the store.
+The Makefile requires both `ASTX_OUTPUT` and `ASTX_EVIDENCE`. The shell may
+realize generic harness tools before isolation, but never builds astx itself.
+The ordinary installed `bin/astx` wrapper executes its store-bound Node
+**24.18.0**, defaults `ASTX_WORKERS` to **1**, and supplies its source-built
+**astx-esbuild 0.25.0** via `ESBUILD_BINARY_PATH`.
+
+The consumer supplies `--transform has-own.cts` with actual typed exports:
+`export const find: string = \`$a.hasOwnProperty($b)\`` and
+`export const replace: string = \`Object.hasOwn($a, $b)\``. This exercises
+the installed TypeScript/esbuild loader, not plain JavaScript `require`, a
+mock executor or a replacement implementation. Public local configuration
+uses `parser: "babel/auto"`, `prettier: false` and
+`preferSimpleReplacement: true`; the auto parser chooses syntax per file.
+The initial consumer incorrectly forced the TypeScript plugin onto JS that
+already selected Flow. Its retained failure is corrected in the consumer
+configuration, not hidden or bypassed in the application.
+
+On a **40×140** PTY, the actual CLI previews **2 files changed / 1 file
+unchanged** and displays its ordinary `Apply changes (y/N)` prompt. Answer
+`n` leaves every fixture, transform and config byte unchanged. A fresh actual
+CLI invocation receives `y` only after that prompt; it rewrites two JS calls
+and the annotated TS call to `Object.hasOwn`, exactly matching expected bytes.
+Comments, string literals, TS annotations, the unrelated file, transform and
+config are preserved. Installed Node evaluates the JS fixture before and after
+with zero-status exits and identical JSON:
+`{"found":true,"absent":false,"unrelated":"data.hasOwnProperty(key)","value":7}`.
+This semantic assertion is for the JS fixture; TS preservation is byte-exact,
+not a separately executed TypeScript semantic test.
+
+### Same-UID, read-only isolation and retained cleanup
+
+The successful original-output receipts and both final normalized-output
+receipts (`native-4` / `native-5`) retain owner UID **1000** / GID **998**
+in distinct user/mount/network/PID namespaces, with only loopback
+present. `/gnu/store` is recursively private and **read-only**, and installed
+output modes and license/notices are checked before and after. The CLI uses
+private HOME/XDG/TMP/work directories, `TERM=xterm-256color`, `LC_ALL=C` and
+the harness's store-bound coreutils-only PATH, not a host Node on PATH.
+The runtime closure is retained. The original-output before/after
+`guix hash -S nar` values are
+**`108lysxrkl80wc3qyc6nqp5fmmbrfhjy355rjas8bhqq9bpv9bm6`**; the final
+normalized-output native-4 and native-5 before/after values are
+**`1dxgaahjsqzmzr70vn712zmm47123gg8xq0mkpkwpjs40a8vma1y`**.
+Consumer and after-output-check statuses are **0**, and each supplied output
+is unchanged. Both CLI runs in each receipt exit naturally **0**, are reaped
+and close their PTYs without
+forced cleanup. The esbuild descendant is naturally reaped at status **0**;
+no child PIDs remain. Scratch is removed and the namespace process exits;
+raw/decoded PTY, input, before/declined/accepted byte snapshots, semantics,
+isolation/mount, launcher/tool/closure, NAR and cleanup evidence is retained
+outside that scratch. No runtime execution or verification was performed by
+this documentation worker. This is repository-only work; no described deployed
+host/service changed, so no OKF page or log update applies.
+
 ## Clojure-Roguelike — native one-shot prototype render (2026-10-09)
 
 Local evidence covers the existing
@@ -238,8 +337,8 @@ are unchanged; no program is added and all inventory counts, including the
 canonical **629** preservation snapshots, remain unchanged.
 **[Forgejo #101](https://forge.nogroup.group/tay/guix-channel/issues/101)
 remains OPEN: literal clean own lint is unmet.** Build, reproducibility and
-native rendering do not waive the updater/archive gates or establish signed
-publication, profile installation or deployment of this change.
+native rendering do not waive the updater/archive gates. Signed publication
+is separately recorded below; no profile installation or deployment is claimed.
 
 | Gate | Main receipt |
 | --- | --- |
@@ -313,6 +412,33 @@ Same-UID, namespace, interface/loopback and recursive read-only store gates
 remain intact. No runtime execution or verification was performed by this
 documentation worker. This is repository-only work; no described deployed
 host/service changed, so no OKF page or log update applies.
+
+### Published cutover and tracker readback
+
+The earlier local-only receipt above is supplemented by signed channel commit
+**`fa2f7123b273bad80302e3676f320d97e3430ea0`**, parent
+**`34fa8ccc0feb392cf6238708b13a71afb94c6b1f`**, normally pushed to authoritative
+Forgejo `master`. Retained publisher evidence records exact-OID channel
+authentication, matching SSH/master/API readbacks and Forgejo signature
+**`verified=true`**. The publication contains only the five owned acceptance
+files: `tests/clojure-roguelike-native.py`, `tests/clojure-roguelike-smoke.sh`,
+`Makefile`, `README.md` and `ACCOUNTING.md`; no recipe/source replacement or
+629-ledger change. No GitHub code push or deployed host/profile state is claimed.
+
+The retained paired tracker receipts are Forgejo comment **3270** and
+[GitHub comment **6089922035**](https://github.com/htayj/guix-channel/issues/101#issuecomment-6089922035);
+**#101 remains OPEN in both trackers** because the own updater/archive lint
+gates remain unmet. The bounded accompanying **#97** update is Forgejo comment
+**3271** and [GitHub comment **6089922221**](https://github.com/htayj/guix-channel/issues/97#issuecomment-6089922221):
+it retains OPEN / blocked status and identifies the actual pinned Linux
+LispWorks/CAPI build/delivery requirement, not an accepted free-source runtime.
+Main's full post-wave tracker readback records **755** Forgejo issues
+(**387 open / 368 closed**) and **725** GitHub issues (**385 open / 340 closed**),
+with **725** shared pairs and zero workflow/state/title drift. Those are tracker
+counts, not package counts or additions to the canonical **629** snapshots.
+The publication and tracker facts are retained Main/publisher evidence;
+this documentation addition ran no build/test/lint/app/Goocastle checks and
+did not alter rbw session state or tracker dispositions.
 
 ## Browsh — ordinary native terminal browsing (2026-10-09)
 
