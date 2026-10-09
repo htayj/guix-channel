@@ -319,7 +319,7 @@ publication, source-required, and build gates appear in the final table.
 | [`avanor`](guix/tay/packages/avanor.scm) | `0.5.8` | Historical terminal roguelike with XDG-managed saves and high scores | Verified |
 | [`babel7drl`](guix/tay/packages/babel7drl.scm) | `2019-03-09` | Tower of Babel exploration game | Verified |
 | [`bootrogue`](guix/tay/packages/bootrogue.scm) | `0-118e1cb` | Roguelike game that fits in a boot sector | Verified |
-| [`chessrogue`](guix/tay/packages/chessrogue.scm) | `0.3.1` | Historical terminal chess roguelike built from the canonical SourceForge release | Defined |
+| [`chessrogue`](guix/tay/packages/chessrogue.scm) | `0.3.1` | Source-built Kaya/ncurses chess roguelike with XDG keymap, retry state and score reports | Verified ordinary native Practice gameplay, same-process retry and zero-status quit; #303 OPEN (own lint gate; [receipt](ACCOUNTING.md#chessrogue--ordinary-native-practice-gameplay-and-retry-2026-10-09)) |
 | [`clojure-roguelike`](guix/tay/packages/clojure-roguelike.scm) | `0.1.0-0.16102d6` | Minimal terminal roguelike written in Clojure | Defined |
 | [`corerl`](guix/tay/packages/corerl.scm) | `1kib-20131024` | Source-built 1023-byte public-domain terminal roguelike | Verified ordinary native movement, enemy response and zero-status quit; #311 OPEN (own lint gates; [receipt](ACCOUNTING.md#corerl--ordinary-native-terminal-gameplay-2026-10-09)) |
 | [`cotd`](guix/tay/packages/cotd.scm) | `2.0.2-0.b771e2e` | City of the Damned strategy roguelike | Verified campaign path |

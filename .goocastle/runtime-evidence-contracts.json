@@ -180,21 +180,6 @@
       }
     },
     {
-      "issueNumber": 667,
-      "packageName": "chessrogue",
-      "artifactPath": ".goocastle/evidence/issue-667.png",
-      "runtime": {
-        "executable": "chessrogue",
-        "invocation": {
-          "file": "chessrogue",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "chessrogue isolated smoke passed"
-      }
-    },
-    {
       "issueNumber": 674,
       "packageName": "diabaig",
       "artifactPath": ".goocastle/evidence/issue-674.png",

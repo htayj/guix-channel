@@ -68,6 +68,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Dhack ordinary native terminal gameplay](#dhack--ordinary-native-terminal-gameplay-2026-10-09)
 - [CoreRL ordinary native terminal gameplay](#corerl--ordinary-native-terminal-gameplay-2026-10-09)
 - [CutlassRL ordinary native terminal save/restore](#cutlassrl--ordinary-native-terminal-saverestore-2026-10-09)
+- [ChessRogue ordinary native Practice gameplay and retry](#chessrogue--ordinary-native-practice-gameplay-and-retry-2026-10-09)
 
 ## Relocation map (2026-10-04)
 
@@ -213,6 +214,151 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## ChessRogue — ordinary native Practice gameplay and retry (2026-10-09)
+
+Local evidence covers the existing [`chessrogue`](guix/tay/packages/chessrogue.scm)
+**0.3.1** package, built from the complete canonical
+[SourceForge source release](https://sourceforge.net/projects/chessrogue/files/chessrogue/0.3.1/chessrogue0.3.1-src.tgz/download).
+Its source SHA256 in Guix base32 is
+**`15qbvlyamnqjq5lkmbwba68l0n4yl2fxhawxb27xf5djvzfkfyf9`**. This is native
+acceptance for an existing package, not an additional inventory entry: package
+counts and the canonical **629-source preservation ledger remain unchanged**.
+**[Forgejo #303](https://forge.nogroup.group/tay/guix-channel/issues/303) remains
+OPEN: literal clean own lint is unmet.** These local receipts do not establish
+issue closure, signed publication, profile installation or deployment.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main bg58 passed in **119.26 s**; artifact 15732 records `/gnu/store/wkaaw09lcsqvind2hi4ll4vas868i2xc-chessrogue-0.3.1`. |
+| Reproducibility | Main bg59 `--check` passed in **19.71 s**; artifact 15735 records the same output. |
+| Ordinary native PTY consumer | Main bg68 passed in **22.24 s** on that output; `/tmp/chessrogue-native-7` retains actual native screens, inputs, runtime, report and read-only save inspection. |
+| Full lint | Main bg60 completed in **10.00 s**: own release discovery failed with a generic HTML response. Literal clean own lint remains unmet; the unrelated `flex` warning is not attributed to ChessRogue. |
+| Final integrated target | Main bg69 `make check-chessrogue` passed in **34.01 s**, emitting `CHESSROGUE_NATIVE_OK`; `/tmp/chessrogue-make-final` records a fresh ordinary consumer on the same output. Main's JSON-validity check passed in **0.01 s**. |
+
+Successful build, reproducibility and native gameplay do not suppress or waive
+the own release-discovery lint failure. No honest metadata-only fix was
+established for that SourceForge HTML response: the `/download` URL basename
+does not establish a supported release updater. The fixed, hashed source
+release remains explicit, with no metadata warning-suppression workaround.
+
+### Ordinary launcher, fresh menus and same-process retry
+
+Run `chessrogue` in a terminal. The launcher directly execs the source-built
+`libexec/chessrogue`, supplying packaged terminfo and using
+`${XDG_DATA_HOME:-$HOME/.local/share}/chessrogue` for its writable CWD and the
+game's `HOME`. It copies the original `crkeymap.txt` there only if absent, so
+players may edit their own keymap without modifying the immutable default.
+It performs no runtime download and does not require the player's `PATH` to
+resolve its shell or file utilities.
+
+Native-7 launched the ordinary installed command **without arguments**, with
+an empty `PATH`, `TERM=xterm`, `LC_ALL=C`, a **30×100** PTY and fresh private
+HOME/XDG directories. Recorded process evidence identifies the installed game
+executable, private writable CWD, controlling-terminal file descriptors and
+foreground process group. The consumer and game ran at non-root UID **1000**
+in separate user/mount/network/PID namespaces, with only loopback and no
+external route; `/gnu/store` was read-only. The before/after output NAR hashes
+are identical:
+**`192f8z5nsivizvfdb14ny45ik84cwvmxsvyvzm1r1p80ssznfivk`**.
+
+The actual `new-game/intro.screen.txt` describes the white survivor and opposing
+pieces. `difficulty-menu.screen.txt` offers **1) Practice, 2) Normal,
+3) Expert, 4) Master**; `challenge-menu.screen.txt` offers **0) No special
+challenges** and **1) Classic pieces**. The recorded inputs dismiss the intro,
+select **`1` then `0`**, and inspect the ordinary F6 capture and F5 movement
+panels. This is a fresh native menu path, **not a fabricated save used to skip
+startup**.
+
+The first `l` input moves `@` from row/column **(0,0) to (0,1)** on level 1;
+the recorded board also shows opposing pawns moving. Subsequent ordinary
+movement leads to **“The pawn captures you. Checkmate!”**, followed by
+**“Press any key for the score (or 's' to try this level again)”**. The consumer
+presses native **`s`** at that prompt. In Practice this writes `.crsave` and
+continues in the **same process**, regenerating level 1 at its starting square.
+The regenerated board differs from the original; a second `l` again moves
+from **(0,0) to (0,1)** with opposing-piece response, followed by further
+ordinary movement and another native pawn capture of the player.
+
+This **is not save-and-exit or an independent restored process**, and it does
+not demonstrate persistent map or mid-level position continuity. Upstream
+`main.k:playGame/nextLevel` explains the behavior: a Practice loss followed by
+`s` resets the result, decrements the level, writes native state and loops into
+a new `makeMap` call. `State.k:saveState/loadState` stores captures, bonus,
+difficulty, level, longrun, challenges and equipment, not the generated map
+or player coordinates. The consumer reads those bytes without writing them.
+The recorded native retry save is **42 bytes**, SHA256
+**`fc5279d63e4f3b8fb879fb85a7b0e95b3b59ebfa2ff5316d7cb57401ad6087d8`**:
+
+```text
+0|0|0|0|0|0|0|0|0|0|0|0
+0|0|0|0
+0
+-1|-1|-1
+```
+
+After the second capture, the consumer requests the native score report,
+answers **`y`** to **“Save score report to 'score.TIME.txt'? [y/N]”**, then
+**`n`** to **“Again? [Y/c/n] (c=change difficulty)”**. The game exits **0**.
+The completed-run path clears `.crsave`; retained writable files are the
+ordinary keymap, `.crscore` and `score.20261009152118.txt`. The report records
+Practice, level 1, capture at **2026-10-09 15:21:18**, no enemy pieces captured
+by the player and **0 points**. Practice games are not high-score eligible;
+the `.crscore` initialization is not evidence of a scored high-score entry.
+
+The final integrated run is a **separate fresh random gameplay receipt**, not
+a replay of native-7's board. Its actual decoded screens and `runtime.json`
+again show native Practice/no-special-challenges menus, two observed `l`
+moves from **(0,0) to (0,1)** before and after same-process retry, regenerated
+level-1 terrain, ordinary opposing-piece turns and two **“The pawn captures
+you. Checkmate!”** prompts. Its read-only native-save inspection records the
+same 42-byte save hash above; the final report is instead
+`score.20261009152330.txt`, recording **2026-10-09 15:23:30**, Practice,
+level 1, no player captures and **0 points**. It exits **0**, retains only
+keymap/score/report files and explicitly records no independent restore,
+RNG control or state injection. The output NAR hash remains the same above.
+
+**Upstream version discrepancy:** the canonical archive and package are
+**0.3.1**, but the unmodified report header says **“ChessRogue 0.3.0 game
+score”**. The receipt preserves that embedded upstream string rather than
+rewriting the report or claiming a different release was tested.
+
+### Complete curses source, compiler grants and proof boundaries
+
+The package compiles upstream `buildCurses.sh` with the private source-built
+**Kaya 0.4.4** compiler. Kaya's fixed build-time `-seedkey chessrogue-0.3.1`
+avoids nondeterministic embedded compiler secrets; it is **not gameplay RNG
+control**. The native game still seeds its own RNG from time. Native-7 records
+`rng_control: null`, `state_injection: null` and
+`independent_restore_exercised: false`; no private map/state/seed is injected.
+The old compiler's private GHC/random/splitmix dependencies are build closure,
+not additional public games or preservation snapshots. Acceptance concerns
+the already authorized **curses frontend only**, not SDL execution or assets.
+
+`share/doc/chessrogue` retains the complete original `COPYING.txt`,
+`COPYING.pcre.txt`, `COPYING.sdl.txt`, `README.txt`, `INSTALL.txt`,
+`CHANGELOG.txt`, `HINTS.txt` and keymap. `license-closure.json` records exact
+canonical archive-member byte counts and SHA256 values, not just keyword
+matches. The game grant is **GPL-2.0-or-later**, with the full GPL text and
+Chris Morris's **2005–2007** source notices retained. PCRE's complete
+**BSD-3-Clause** copyright, conditions and disclaimer are retained; the
+upstream SDL LGPL notice is preserved as documentation even though SDL is
+not built or installed for this runtime. The copied whole Kaya license
+umbrella covers runtime/standard libraries and their documentation under
+**LGPL-2.1-or-later**, and compiler/other files under **GPL-2.0-or-later**;
+both LGPL versions, both GPL versions and `compiler/COPYING` are retained.
+
+Decoded terminal text/cells/JSON are native terminal evidence, **not graphical
+screenshots**. This proof establishes menus, ordinary movement/opponent turns,
+the player's capture, native same-process Practice retry, report writing and
+normal quit. It does not establish independent restore, level completion,
+victory, endgame, all difficulties/challenges or a deterministic solver.
+Task-owned redundant downloaded game/compiler archives were removed by Main;
+immutable Guix source/store material and installed documentation were retained.
+This documentation worker ran no commands or checks and created no temporary
+files. No described host/service configuration changed or material OKF catalog
+correction was established; no OKF page/log update applies to this
+repository-only receipt.
 
 ## CutlassRL — ordinary native terminal save/restore (2026-10-09)
 
