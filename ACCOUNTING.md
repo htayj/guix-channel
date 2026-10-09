@@ -74,6 +74,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Clojure-Roguelike native one-shot prototype render](#clojure-roguelike--native-one-shot-prototype-render-2026-10-09)
 - [Astx native CTS loader and confirmed structural rewrite](#astx--native-cts-loader-and-confirmed-structural-rewrite-2026-10-09)
 - [Persephil legacy PhiloLogic HTML to XLSX](#persephil--legacy-philologic-html-to-xlsx-2026-10-09)
+- [CalcRogue native i686 gameplay and save continuity](#calcrogue--native-i686-gameplay-and-save-continuity-2026-10-09)
 
 ## Relocation map (2026-10-04)
 
@@ -216,6 +217,17 @@ Its 214 npm installation paths and 204 distinct archives are private dependency
 closure, not additional applications. The existing
 `cookinrelaxin-persephil-source` pin/hash and canonical **629** preservation
 snapshots remain unchanged.
+CalcRogue's separate 2026-10-09 candidate adds exactly **one**
+`PROJECT_PACKAGES` entry (`calcrogue`) and one README game row. The scoped
+textual inventory rises from **234 project + 7 font = 241** installable names
+to **235 project + 7 font = 242**; including one optional proprietary and five
+check-only dependencies gives **248** check names. These counts describe the
+lists, including preexisting unpublished user changes, not complete-inventory
+verification, accepted-package totals or publication. CalcRogue does not add or
+alter any of the canonical **629** preservation snapshots.
+Architecture filtering does not remove CalcRogue from those textual inventories:
+`I686_ONLY_PACKAGES` excludes it from default native `make build` and the
+`make check` build dry-run, while preserving enumeration/lint coverage.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -240,6 +252,153 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## CalcRogue — native i686 gameplay and save continuity (2026-10-09)
+
+The new [`calcrogue`](guix/tay/packages/calcrogue.scm) **6a-sp1** package
+builds the complete recovered Linux/curses game and generated game data from
+the pinned [ticalc.org archive](https://www.ticalc.org/pub/89/asm/games/rpg/crogue.zip).
+`CHANGELOG` identifies Beta 6a SP1; the title still says Beta 6a. This is the
+recoverable source release, **not** a claim to have recovered historical 6c or
+established the latest upstream release. The URL is mutable; the recipe pins
+the actual archive bytes with SHA-256
+**`6338d8d5460d7b7d270601aed9f76289a759b6d8602e5f48bd6e133fa3962c90`**,
+Guix base32 **`141cjsiky4vfpm45ybk0v2v5k9w9cbvxkbh10qkpsyqd8vaxhf33`**.
+
+### Source, notices and architecture boundary
+
+The game/data grant in the original `crogue.c` header is **GPL-2.0-or-later**,
+not merely GPL-2.0 inferred from `COPYING`. The `sgt` helper retains its original
+GPL terms. The `mibic` source banner grants the LGPL **without specifying a
+version**: this package selects **LGPL-2.1** under its version-selection terms
+(sections 0 and 13), rather than claiming the author explicitly chose 2.1.
+The original banner remains installed as `mibic/main.c`; unmodified canonical
+GNU LGPL 2.1 terms are supplied from the
+[GCC mirror's immutable `COPYING.LIB` revision](https://raw.githubusercontent.com/gcc-mirror/gcc/d0ca130aa5d50cdaeea8e5c343d65250cdf51955/COPYING.LIB)
+**`d0ca130aa5d50cdaeea8e5c343d65250cdf51955`**, SHA-256
+**`a9bdde5616ecdd1e980b44f360600ee8783b1f99b8cc83a2beb163a0a390e861`**.
+Original `COPYING`, `README`, `CHANGELOG`, distribution `readme.txt`,
+`crogue.c`, `sgt/COPYING` and the selected LGPL text are retained under
+`share/doc/calcrogue`, with a dated `SOURCE` provenance/modification notice.
+Both native receipts hash-check these notices; `license-closure.json` records
+the exact retained hashes.
+
+All upstream `bin*` distribution directories are excluded, including Linux and
+Windows executables/data, calculator and Palm binaries, and Kevin Kofler's
+nonfree HW3Patch ZIP. `src/sys/palm` is also excluded, including its third-party
+fonts: no blanket GPL claim is made for these excluded materials. The legacy
+committed scanner/parser skeletons are removed; Flex/Bison regenerate them from
+`compile.l` and `compile.y`. `sgt`, `mibic`, `fixedmap`, automatic headers,
+tiles and `crogdat.dat` are built/generated from source before the original
+game objects and curses frontend. No distributed executable or precompiled
+game-data file is used as the installed game. Guix dependencies may be
+substituted; these receipts do not claim a source rebuild of the entire closure.
+
+The VM, C structure overlays and variadic bridges assume the native **32-bit
+i386 ABI**. The recipe supports **`i686-linux` only**, preserving that ABI
+instead of introducing a partial LP64 port. Select `-s i686-linux` explicitly
+for build/install on x86_64. The observed native executable is ELF32,
+little-endian i386, with four-byte pointers in the decoded saves. Its three
+ordinary processes ran directly on the acceptance host, establishing that
+host's Linux IA32 execution support, not portability to every x86_64 kernel.
+
+`make build-calcrogue` explicitly uses `--system=i686-linux`. The default native
+`make build` and `make check` build dry-run filter out `I686_ONLY_PACKAGES`;
+CalcRogue remains in `PROJECT_PACKAGES`, `INSTALLABLE_PACKAGES` and lint lists.
+This is a build-system selection boundary, not a reduction in the installable
+or source-snapshot inventories.
+
+### Native state and ordinary save/restore proof
+
+The launcher sets `umask 077`, enters
+`$XDG_STATE_HOME/calcrogue` (fallback `$HOME/.local/state/calcrogue`) and execs
+`libexec/calcrogue/calcrogue`. Native saves, saved levels, options and scores
+use that private cwd; the game reads immutable
+`share/calcrogue/crogdat.dat` via its installed store path. The source patch
+uses direct fork/exec of store gzip, checks for an absent compressed save and
+cleans up compressed private state without `/bin/sh` or PATH lookup. The
+modern-C patch replaces the obsolete RLE cast-lvalue pointer increment with
+an explicit byte read and cursor assignment; it does not change the format.
+
+The integrated run retained `/tmp/calcrogue-native-1`; the independent
+standalone run retained `/tmp/calcrogue-native-2`. Each exercises **three
+independent ordinary native processes** through the real launcher and PTY:
+
+1. Start a new **Fighter**, take a visible movement and ordinary `5` wait,
+   then use native `S` save-and-quit, producing `rgsave.gz`.
+2. Restart normally, restore automatically, then save-and-quit without any
+   gameplay action. Compare the complete decoded non-pointer semantic state
+   and block hashes against the first save.
+3. Restart again, continue with another visible movement and wait, then
+   save-and-quit. Check turn progression, level/descriptor/player continuity,
+   carried equipment identity and item shuffle/identification state, allowing
+   only ordinary equipped torch-fuel consumption.
+
+Both result files report `CALCROGUE_NATIVE_OK`, distinct PIDs **5, 8, 13**,
+turn counters **2 → 2 → 4**, exact semantic restore/checkpoint equality and
+natural exit statuses **0, 0, 0**. The integrated movement was
+**(57,18) → (56,18) → (55,18)**; the standalone movement was
+**(43,16) → (42,16) → (41,16)**. The independent save decoder reads the native
+gzip/checksum/Huffman/RLE/byte-transpose format; it discards only relocated
+raw pointers, C padding and UI `messagevis`/`interrupt`, not gameplay state.
+Raw saves, decoded blocks, semantic JSON, process/namespace proofs and PTY
+screens/inputs are retained in those evidence directories. There is no RNG
+control, injected save or engine hook.
+
+The driver and games run in isolated user/mount/network/PID namespaces while
+preserving the caller's UID/GID, with an empty PATH and no external network.
+`/gnu/store` is read-only in the game namespace. Before/after output NAR hashes
+are identical, including standalone hash
+**`0xiwdg0dvpjwz7jcqcjkr01rpa5j0c9dxa90sc21pjslcj2a2laa`**.
+This proves the exercised native movement/wait/save/restore path, not every
+class, level transition, option or scoring outcome. Upstream has no check
+target; the package does not invent an upstream test suite.
+
+### Main-owned verification and remaining gate
+
+Main's source-build invocation was:
+
+```sh
+/home/tay/.config/guix/current/bin/guix build -L guix -s i686-linux \
+  --no-grafts --no-offload --cores=1 --max-jobs=1 --keep-failed \
+  -e '(@ (tay packages calcrogue) calcrogue)'
+```
+
+The same command with `--check` added rebuilt the target to the identical output
+**`/gnu/store/yc6d7w5s34k7jvm950gxx37shqai19ch-calcrogue-6a-sp1`**,
+derivation **`yh49qwfxpm2f681b8g5n033gdm0wdn0v-calcrogue-6a-sp1.drv`**.
+
+| Gate | Main receipt |
+| --- | --- |
+| Final i686 source build | PASS, 9.95 s; attempt 139, artifact 16328 |
+| `--check` rebuild, same output | PASS, 7.48 s; attempt 142, artifact 16331 |
+| `make build-calcrogue` architecture target | PASS, 15.86 s; attempt 144, artifact 16335; `guix build -L guix --system=i686-linux calcrogue` realized the same existing output (not a fresh target rebuild); dependency documentation substitutes observed |
+| Integrated `make check-calcrogue` native consumer | PASS, 11.49 s; attempt 141, `/tmp/calcrogue-native-1` |
+| Standalone native consumer | PASS, 6.89 s; attempt 143, `/tmp/calcrogue-native-2` |
+| Missing-variable Makefile guard | Expected rejection, `make` exit 2, 1.63 s; requires canonical prebuilt output and fresh nonexistent absolute evidence directory outside the store |
+| Full own lint | OPEN, 5.60 s; attempt 140, Main's retained inline result: `generic-html` failed to find upstream releases; source absent from Software Heritage and missing Disarchive data |
+
+To rerun the native consumer, use the canonical prebuilt output and a **new,
+nonexistent absolute evidence directory outside the store**:
+
+```sh
+CALCROGUE_OUTPUT=/gnu/store/yc6d7w5s34k7jvm950gxx37shqai19ch-calcrogue-6a-sp1 \
+CALCROGUE_EVIDENCE=/tmp/calcrogue-new-evidence make check-calcrogue
+# Or call the same native consumer directly:
+sh tests/calcrogue-smoke.sh \
+  /gnu/store/yc6d7w5s34k7jvm950gxx37shqai19ch-calcrogue-6a-sp1 \
+  /tmp/calcrogue-another-new-evidence
+```
+
+The consumer never builds the target game; it may realize its own tools before
+offline gameplay. `GUIX`, if supplied, must be an absolute executable path.
+Full lint additionally reported the dependency's deprecated Flex package;
+that is distinct from CalcRogue's own release-discovery/archive failures.
+**#295 remains OPEN**: those literal external own-lint gates are not waived by
+the source build, reproducibility or native receipts. This local repository
+delivery does not establish commit/publication, profile installation or
+deployment. No described host/service changed and no material OKF correction
+was established, so no OKF page/log update applies.
 
 ## Persephil — legacy PhiloLogic HTML to XLSX (2026-10-09)
 
@@ -11566,7 +11725,8 @@ make check-hermes-desktop # actual installed backend plus Electron/Xvfb surface,
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass
-make build          # build free installable packages (not sentinelone)
+make build          # default native free packages (not sentinelone or i686-only CalcRogue)
+make build-calcrogue # explicit --system=i686-linux source build
 make build-sources  # fetch and build all 629 source snapshots
 ```
 

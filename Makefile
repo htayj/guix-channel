@@ -58,8 +58,12 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	lambdahack kimchi keeperrl \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
-	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil
+	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
+# Keep i686-only packages listed for inventory and lint, but realize them
+# through explicit architecture targets rather than the default native build.
+I686_ONLY_PACKAGES := calcrogue
+DEFAULT_BUILD_PACKAGES := $(filter-out $(I686_ONLY_PACKAGES),$(INSTALLABLE_PACKAGES))
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
 # an authorized user.  Override this variable to adjust the optional checks.
@@ -266,6 +270,15 @@ check-cavechop:
 check-persephil:
 	@test -n "$(PERSEPHIL_OUTPUT)" -a -n "$(PERSEPHIL_EVIDENCE)" || { echo 'Set PERSEPHIL_OUTPUT and PERSEPHIL_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/persephil-smoke.sh "$(PERSEPHIL_OUTPUT)" "$(PERSEPHIL_EVIDENCE)"
+
+.PHONY: build-calcrogue
+build-calcrogue:
+	$(GUIX) build -L guix --system=i686-linux calcrogue
+
+.PHONY: check-calcrogue
+check-calcrogue:
+	@test -n "$(CALCROGUE_OUTPUT)" -a -n "$(CALCROGUE_EVIDENCE)" || { echo 'Set CALCROGUE_OUTPUT and CALCROGUE_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/calcrogue-smoke.sh "$(CALCROGUE_OUTPUT)" "$(CALCROGUE_EVIDENCE)"
 
 check-tui:
 	GUIX="$(GUIX)" sh tests/tui-smoke.sh
@@ -768,7 +781,7 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-evilhack check-dynahack check-alone-rl check-allure \
 	check-agduria check-wenyan check-ludviglundgren-qbittorrent-cli \
 	check-lispy-rogue check-bodge-nuklear check-litegraph
-	$(GUIX) build -L guix --no-substitutes --dry-run $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
+	$(GUIX) build -L guix --no-substitutes --dry-run $(filter-out $(I686_ONLY_PACKAGES),$(CHECK_PACKAGES)) $(SOURCE_PACKAGES)
 	$(GUIX) lint -L guix --no-network --exclude=cve,refresh,archival \
 		$(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 
@@ -780,7 +793,7 @@ lint-cve: check-source-count
 	$(GUIX) lint -L guix --checkers=cve $(CHECK_PACKAGES) $(SOURCE_PACKAGES)
 
 build:
-	$(GUIX) build -L guix $(INSTALLABLE_PACKAGES)
+	$(GUIX) build -L guix $(DEFAULT_BUILD_PACKAGES)
 
 build-sources: check-source-count
 	$(GUIX) build -L guix $(SOURCE_PACKAGES)

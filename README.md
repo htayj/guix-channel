@@ -95,6 +95,23 @@ guix install -L guix -e '(@ (tay packages praat) praat)'
 guix build -L guix praat@7.0.02
 ```
 
+CalcRogue preserves the upstream 32-bit VM/C ABI and is defined only for
+`i686-linux`, even on an x86_64 workstation. Select that system explicitly:
+
+```sh
+guix build -L guix -s i686-linux calcrogue
+guix install -L guix -s i686-linux calcrogue
+```
+
+`make build-calcrogue` supplies the same explicit system selection. The default
+native `make build` and `make check` build dry-run exclude this i686-only
+package; it remains in the installable inventory and lint lists.
+
+Running it requires a Linux kernel with IA32 execution support; native execution
+was observed on the acceptance host, not established for every x86_64 system.
+See the [CalcRogue receipt](ACCOUNTING.md#calcrogue--native-i686-gameplay-and-save-continuity-2026-10-09)
+for the source-build invocation, state layout and remaining lint gates.
+
 Builds can be memory-intensive. Package-specific instructions document tested
 flags and runtime setup; for example, [Fontra](ACCOUNTING.md#installable-packages)
 uses a locally verified `--no-grafts --no-offload` path, while Hyprland plugins
@@ -327,6 +344,7 @@ publication, source-required, and build gates appear in the final table.
 | [`avanor`](guix/tay/packages/avanor.scm) | `0.5.8` | Historical terminal roguelike with XDG-managed saves and high scores | Verified |
 | [`babel7drl`](guix/tay/packages/babel7drl.scm) | `2019-03-09` | Tower of Babel exploration game | Verified |
 | [`bootrogue`](guix/tay/packages/bootrogue.scm) | `0-118e1cb` | Roguelike game that fits in a boot sector | Verified |
+| [`calcrogue`](guix/tay/packages/calcrogue.scm) | `6a-sp1` | Full source-built i686 Linux/curses calculator roguelike with regenerated game data and private XDG native state | Verified ordinary native gameplay and gzip save/restore continuity; explicit `-s i686-linux`; #295 OPEN (own updater/archive lint gates; [receipt](ACCOUNTING.md#calcrogue--native-i686-gameplay-and-save-continuity-2026-10-09)) |
 | [`chessrogue`](guix/tay/packages/chessrogue.scm) | `0.3.1` | Source-built Kaya/ncurses chess roguelike with XDG keymap, retry state and score reports | Verified ordinary native Practice gameplay, same-process retry and zero-status quit; #303 OPEN (own lint gate; [receipt](ACCOUNTING.md#chessrogue--ordinary-native-practice-gameplay-and-retry-2026-10-09)) |
 | [`clojure-roguelike`](guix/tay/packages/clojure-roguelike.scm) | `0.1.0-0.16102d6` | Original Clojure one-shot 8×8 room-rendering prototype; no input, movement or persistent state | Verified native room render and natural zero-status exit, not gameplay; #101 OPEN (own updater/archive lint gates; [receipt](ACCOUNTING.md#clojure-roguelike--native-one-shot-prototype-render-2026-10-09)) |
 | [`corerl`](guix/tay/packages/corerl.scm) | `1kib-20131024` | Source-built 1023-byte public-domain terminal roguelike | Verified ordinary native movement, enemy response and zero-status quit; #311 OPEN (own lint gates; [receipt](ACCOUNTING.md#corerl--ordinary-native-terminal-gameplay-2026-10-09)) |
