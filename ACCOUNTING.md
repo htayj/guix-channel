@@ -65,6 +65,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Hunger Games ordinary native console gameplay](#hunger-games--ordinary-native-console-gameplay-2026-10-09)
 - [CryptRover ordinary native terminal gameplay](#cryptrover--ordinary-native-terminal-gameplay-2026-10-09)
 - [Dhack ordinary native terminal gameplay](#dhack--ordinary-native-terminal-gameplay-2026-10-09)
+- [CoreRL ordinary native terminal gameplay](#corerl--ordinary-native-terminal-gameplay-2026-10-09)
 
 ## Relocation map (2026-10-04)
 
@@ -210,6 +211,119 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## CoreRL — ordinary native terminal gameplay (2026-10-09)
+
+Local evidence covers the existing [`corerl`](guix/tay/packages/corerl.scm)
+**1kib-20131024** package, compiled from Studio Tectorum's complete canonical
+[`1kcore.c`](https://www.roguelikeeducation.org/vault/core/1kcore.c), not an
+upstream binary or the earlier 4 KiB version. The source is **1023 bytes**,
+SHA-256 **`05d55844b30fbfae72bd87ab9e26539cfb8232e540bc0d0ce50b04d6d1369e24`**,
+Guix Nix-base32 **`094y6v8xc10bwl60vg20wlr85ywwack9xaw7pmraxgqgnd25im85`**.
+This is native acceptance for an existing package, not a new inventory entry:
+package counts and the canonical **629-source preservation ledger remain
+unchanged**. **[Forgejo #311](https://forge.nogroup.group/tay/guix-channel/issues/311)
+remains OPEN: literal clean own lint is unmet.** These local receipts do not
+establish issue closure, signed channel publication, profile installation or
+deployment.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main bg32 passed in **3.48 s**; artifact 15586 records `/gnu/store/zkvv04c1z2p1l4hr3p92s4vwg5dhnaki-corerl-1kib-20131024`. |
+| Reproducibility | Main bg33 `--check` passed in **0.99 s**; artifact 15587 records the same output. |
+| Full lint | Main bg34 completed in **6.75 s**: generic directory discovery returned **HTTP 403**, `updater 'generic-html' failed to find upstream releases`, and the source is not archived in Software Heritage with a missing Disarchive entry. These own findings leave the clean-own-lint gate unmet. |
+| Ordinary native PTY consumer | Main bg36 passed in **4.47 s**; actual native proof and terminal-decoded screens are retained at `/tmp/corerl-native-2`. |
+| Final integrated target | Main bg37 `make check-corerl` passed in **8.48 s**, emitting `CORERL_NATIVE_OK`; `/tmp/corerl-make-final` retains the final ordinary native consumer evidence. Runtime JSON parsing with `jq` passed in **0.01 s**. |
+
+The failed release-discovery fetch is
+`https://www.roguelikeeducation.org/vault/core/`, with **403 (Forbidden)**,
+followed by
+`corerl@1kib-20131024: updater 'generic-html' failed to find upstream releases`.
+The pinned `1kcore.c` itself was fetched and built successfully. Generic
+directory discovery and Software Heritage/Disarchive findings are separate
+from those observed builds; build, reproducibility and gameplay do not waive
+the literal clean-own-lint requirement. The unrelated `flex` deprecated-input
+finding is not attributed to CoreRL.
+
+The package compiles the unmodified source using GNU89 and Guix ncurses. There
+is no upstream configure script or test target. Ordinary `bin/corerl` supplies
+packaged terminfo and directly executes `libexec/corerl` in the player's
+terminal, without changing the working directory. No downloaded binary,
+runtime asset, updater or telemetry path is introduced. Install `corerl` and
+run `corerl` in a terminal; use arrow keys to move and `q` to quit.
+
+The guarded external consumer requires explicit `CORERL_OUTPUT` (a canonical
+prebuilt `/gnu/store` package output), `CORERL_EVIDENCE` (a fresh nonexistent
+absolute evidence directory outside the store) and `GUIX` (the Guix executable):
+`make check-corerl CORERL_OUTPUT=/gnu/store/zkvv04c1z2p1l4hr3p92s4vwg5dhnaki-corerl-1kib-20131024 CORERL_EVIDENCE=/tmp/corerl-fresh-proof GUIX=guix`.
+Do not reuse a retained evidence directory. This target is outside the
+unguarded aggregate `make check` dependencies. Obsolete issue-668 and
+issue-669 marker contracts are retired without a replacement acceptance
+contract or any Goocastle execution claim.
+
+### Observed native movement, enemy response and exit
+
+The zero-argument ordinary launcher ran in an **80-column, 25-row PTY** with
+`PATH` empty, `TERM=xterm`, `LC_ALL=C`, and fresh private HOME, XDG, temporary
+and work directories. The native executable retained the same UID **1000** in
+the consumer's user/mount/PID/network namespaces, with all three terminal
+descriptors attached to the PTY. `/gnu/store` was read-only; only loopback and
+no IPv4 routes were recorded. Retained evidence includes raw PTY bytes,
+`pty-inputs.json`, decoded `.screen.txt`/`.screen.json` observations,
+`runtime.json`, namespace/mount proof and before/after private-state
+inventories—not PNG screenshots.
+
+On the actual initial level-1 screen, zero-based **(x, y)** positions are
+player `@` **(11, 7)**, enemy `e` **(7, 13)** and stairs `<` **(2, 13)**.
+The tile immediately above the player is visible floor `.`. One ordinary
+Up-arrow input (`1b4f41`) moved `@` to **(11, 6)**, vacating the original tile,
+while `e` responded by moving to **(7, 12)**. The static walls and stairs
+remain unchanged; both screens contain one player, one enemy and one stairs
+glyph. This establishes one traversable player displacement and one native
+enemy response, consistent with the source's row-first movement toward the
+player. No enemy bump, combat, level advancement, victory or death was observed
+or claimed. No RNG seed, retry, restart, synthetic argument or state injection
+was used.
+
+The final integrated run has its own random map, not the same coordinates:
+`/tmp/corerl-make-final/initial.screen.txt` shows `@` **(10, 4)**, `e`
+**(13, 5)** and `<` **(2, 13)**. Its one ordinary Up-arrow input moved the
+player to **(10, 3)** and the enemy responded to **(13, 4)**, as captured in
+`moved.screen.txt` and `runtime.json`; walls and stairs again remained
+unchanged. It likewise recorded no enemy bump, RNG control or injected state.
+The normal `q` input produced **“Quit on level 1.”**, exit status **0**, empty
+private directories and the same unchanged output NAR hash below.
+
+Pressing ordinary `q` follows the source's `endwin()`, message and `exit(0)`
+path. The captured final screen displays **“Quit on level 1.”** and the process
+exited normally with status **0**. Every fresh HOME/XDG/temp/work directory
+remained empty, with matching before/after inventories. The package output's
+before/after NAR hash also matches
+**`0ysrg4zd378yh9q1235kni58q86hh2d5lcfhz83zin6hi5p7scpg`**. The complete source
+has no save/restore or configuration interface; observed absence of writes is
+not a save, resume or persistence claim.
+
+### Public-domain grant and retained complete source
+
+Studio Tectorum's [“coreRL in 1kib” article](https://www.roguelikeeducation.org/2.html),
+dated **2013-10-24**, directly links the selected `1kcore.c` with the grant
+**“This version of the source is also released into the public domain”**.
+The article's footer identifies Studio Tectorum. That author's explicit grant,
+not merely an absent copyright header, supports `license:public-domain`.
+The complete unmodified **1023-byte** source is installed as
+`share/doc/corerl/1kcore.c` with the SHA-256 above. Its companion
+`share/doc/corerl/NOTICE` retains the source URL, author, article date and URL,
+the exact grant and source hash: **572 bytes**, SHA-256
+**`61d0bff934fbb5993b432fe3ad7a31e7cc6ad949d3ca7b29970e394408921f15`**,
+recorded in `/tmp/corerl-native-2/upstream-files.json`. No upstream binary or
+other asset is included. The article and installed source/notice were read
+for this dated receipt; retained store source and native evidence were left
+untouched.
+
+This repository-only receipt changes no documented host or service and
+establishes no material network-catalog correction, so no OKF page/log update
+applies. The documentation worker ran no commands or checks and created no
+temporary files.
 
 ## Dhack — ordinary native terminal gameplay (2026-10-09)
 

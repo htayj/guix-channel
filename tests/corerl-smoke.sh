@@ -1,108 +1,74 @@
 #!/bin/sh
-# Exercise CoreRL's installed curses game in an isolated PTY.
+# Drive the ordinary source-built CoreRL launcher; never build the target.
 set -eu
-
-guix_bin=${GUIX:-guix}
-channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-cd "$channel_dir"
-
-if test "$#" -gt 1; then
-    echo "usage: $0 [corerl-output]" >&2
+umask 077
+if test "$#" -ne 2; then
+    echo "usage: $0 OUTPUT EVIDENCE (prebuilt store output; fresh absolute directory)" >&2
     exit 64
 fi
-
-if test "$#" -eq 1; then
-    corerl_out=$1
-else
-    corerl_out=$($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes corerl)
+case "$1" in /gnu/store/*) ;; *) echo 'OUTPUT must be an absolute store path' >&2; exit 64 ;; esac
+case "$2" in /*) ;; *) echo 'EVIDENCE must be absolute' >&2; exit 64 ;; esac
+guix_bin=$(command -v "${GUIX:-guix}")
+channel_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+out=$(realpath -e -- "$1")
+case "$out" in /gnu/store/*/*) echo 'OUTPUT must be a store item, not a subdirectory' >&2; exit 64 ;; /gnu/store/*) ;; *) exit 64 ;; esac
+test -d "$out"
+test -x "$out/bin/corerl"
+test -x "$out/libexec/corerl"
+test -s "$out/share/doc/corerl/NOTICE"
+test -s "$out/share/doc/corerl/1kcore.c"
+evidence=$(realpath -m -- "$2")
+case "$evidence/" in /gnu/store/*|"$out/"*) echo 'EVIDENCE must be outside the store' >&2; exit 64 ;; esac
+if test -e "$evidence" || test -L "$evidence"; then
+    echo 'EVIDENCE must not already exist' >&2
+    exit 64
 fi
-
-test -x "$corerl_out/bin/corerl"
-test -x "$corerl_out/libexec/corerl"
-notice=$corerl_out/share/doc/corerl/NOTICE
-test -s "$notice"
-grep -F 'https://www.roguelikeeducation.org/vault/core/1kcore.c' \
-    "$notice" >/dev/null
-grep -F 'released into the public domain' "$notice" >/dev/null
-grep -F '1kib-20131024' "$notice" >/dev/null
-
-# The issue-specific executable, invocation, marker, and screenshot artifact
-# are a required part of this proof, not an advisory record.
-contract=$channel_dir/.goocastle/runtime-evidence-contracts.json
-test -s "$contract"
-grep -F '"issueNumber": 668' "$contract" >/dev/null
-grep -F '"packageName": "corerl"' "$contract" >/dev/null
-grep -F '"artifactPath": ".goocastle/evidence/issue-668.png"' \
-    "$contract" >/dev/null
-grep -F '"executable": "corerl"' "$contract" >/dev/null
-grep -F '"--smoke"' "$contract" >/dev/null
-marker=CORERL_RUNTIME_OK
-grep -F '"successMarker": "CORERL_RUNTIME_OK"' "$contract" >/dev/null
-
-util_linux_out=
-for candidate in $($guix_bin build -L "$channel_dir/guix" --no-grafts --no-substitutes util-linux); do
-    if test -x "$candidate/bin/script"; then
-        util_linux_out=$candidate
-        break
-    fi
+mkdir -p -- "$(dirname -- "$evidence")"
+mkdir -- "$evidence"
+find_output ()
+{
+    for output in $("$guix_bin" build --no-grafts --no-offload --cores=1 --max-jobs=1 "$2"); do
+        if test -e "$output/$1"; then
+            printf '%s\n' "$output"
+            return 0
+        fi
+    done
+    echo "missing $1 in Guix prerequisite $2" >&2
+    return 1
+}
+# Realize only consumer tools, serially, before offline ordinary gameplay.
+core=$(find_output bin/env coreutils)
+util=$(find_output bin/unshare util-linux)
+python=$(find_output bin/python3 python)
+pyte=$(find_output lib python-pyte)
+wcwidth=$(find_output lib python-wcwidth)
+pythonpath=
+for package in "$pyte" "$wcwidth"; do
+    for directory in "$package"/lib/python*/site-packages; do
+        test -d "$directory"
+        pythonpath=${pythonpath:+$pythonpath:}$directory
+    done
 done
-test -n "$util_linux_out"
-test -x "$util_linux_out/bin/script"
-test -x "$util_linux_out/bin/unshare"
-bounded_validation=${GOOCASTLE_BOUNDED_VALIDATION:-/opt/goocastle/bin/bounded-validation.mjs}
-test -r "$bounded_validation"
-if ! node "$bounded_validation" --timeout-ms 5000 -- \
-    "$util_linux_out/bin/unshare" --user --map-root-user --net --fork true \
-    >/dev/null 2>&1; then
-    echo 'corerl smoke requires an unprivileged network namespace' >&2
-    exit 77
+before=$("$guix_bin" hash -S nar "$out")
+printf '%s\n' "$before" > "$evidence/output-before.nar-hash"
+status=0
+"$core/bin/env" -i PATH='' LC_ALL=C PYTHONPATH="$pythonpath" \
+    PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 MOUNT="$util/bin/mount" \
+    HOST_UID="$("$core/bin/id" -u)" HOST_GID="$("$core/bin/id" -g)" \
+    HOST_USER_NS="$("$core/bin/readlink" /proc/self/ns/user)" \
+    HOST_MOUNT_NS="$("$core/bin/readlink" /proc/self/ns/mnt)" \
+    HOST_PID_NS="$("$core/bin/readlink" /proc/self/ns/pid)" \
+    HOST_NET_NS="$("$core/bin/readlink" /proc/self/ns/net)" \
+    "$core/bin/timeout" --kill-after=5 90 \
+    "$util/bin/unshare" --user --map-current-user --keep-caps --mount \
+    --propagation private --net --pid --mount-proc --kill-child --fork \
+    "$python/bin/python3" -B -s "$channel_dir/tests/corerl-native.py" \
+    "$out" "$evidence" || status=$?
+after=$("$guix_bin" hash -S nar "$out")
+printf '%s\n' "$after" > "$evidence/output-after.nar-hash"
+if test "$before" != "$after"; then
+    echo 'CoreRL output NAR changed during ordinary gameplay' >&2
+    exit 1
 fi
-
-# A NAR hash covers every installed file, mode, and symlink.  It must remain
-# identical after the real game runs; the output must also contain no writable
-# regular files.
-before=$($guix_bin hash -S nar "$corerl_out")
-test -z "$(find "$corerl_out" -xdev -type f -perm /222 -print -quit)"
-
-scratch=$(mktemp -d /tmp/goocastle-agent-corerl-XXXXXXXX)
-case "$scratch" in
-    /tmp/goocastle-agent-*) ;;
-    *) echo 'refusing an unvalidated disposable workspace' >&2; exit 1 ;;
-esac
-test -d "$scratch"
-mkdir "$scratch/home" "$scratch/config" "$scratch/data" \
-      "$scratch/cache" "$scratch/state" "$scratch/runtime" \
-      "$scratch/tmp" "$scratch/work" "$scratch/caller"
-
-raw=$scratch/terminal.raw
-proof=$(cd "$scratch/caller" && env -i \
-    HOME="$scratch/home" \
-    XDG_CONFIG_HOME="$scratch/config" \
-    XDG_DATA_HOME="$scratch/data" \
-    XDG_CACHE_HOME="$scratch/cache" \
-    XDG_STATE_HOME="$scratch/state" \
-    XDG_RUNTIME_DIR="$scratch/runtime" \
-    TMPDIR="$scratch/tmp" \
-    GOOCASTLE_RUNTIME_RAW_CAPTURE="$raw" \
-    LC_ALL=C \
-    node "$bounded_validation" --timeout-ms 20000 -- \
-    "$util_linux_out/bin/unshare" --user --map-root-user --net --fork \
-    "$corerl_out/bin/corerl" --smoke)
-test "$proof" = "$marker"
-test -s "$raw"
-transcript=$(cat "$raw")
-map_text=${transcript%%'Quit on level 1.'*}
-case "$map_text" in *'@'*) ;; *) exit 1 ;; esac
-case "$map_text" in *'e'*) ;; *) exit 1 ;; esac
-case "$map_text" in *'<'*) ;; *) exit 1 ;; esac
-case "$transcript" in *'Quit on level 1.'*) ;; *) exit 1 ;; esac
-
-# CoreRL has no stateful features; its package-owned smoke scratch and all
-# caller HOME/XDG trees must be empty after the transcript is captured.
-test -z "$(find "$scratch/home" "$scratch/config" "$scratch/data" \
-    "$scratch/cache" "$scratch/state" "$scratch/runtime" "$scratch/tmp" \
-    "$scratch/work" -mindepth 1 -print -quit)"
-after=$($guix_bin hash -S nar "$corerl_out")
-test "$before" = "$after"
-test ! -w "$corerl_out"
-printf '%s\n' "$proof"
+test "$status" -eq 0 || exit "$status"
+printf '%s\n' "CORERL_NATIVE_OK evidence=$evidence"

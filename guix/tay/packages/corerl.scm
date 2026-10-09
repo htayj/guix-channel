@@ -9,9 +9,7 @@
   #:use-module (guix packages)
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (gnu packages bash)
-  #:use-module (gnu packages base)
   #:use-module (gnu packages commencement)
-  #:use-module (gnu packages linux)
   #:use-module (gnu packages ncurses))
 
 (define-public corerl
@@ -75,18 +73,12 @@
                      (launcher (string-append bin "/corerl"))
                      (notice (string-append doc "/NOTICE"))
                      (shell #$(file-append bash-minimal "/bin/sh"))
-                     (cat #$(file-append coreutils-minimal "/bin/cat"))
-                     (cp #$(file-append coreutils-minimal "/bin/cp"))
-                     (dirname #$(file-append coreutils-minimal "/bin/dirname"))
-                     (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
-                     (mktemp #$(file-append coreutils-minimal "/bin/mktemp"))
-                     (rm #$(file-append coreutils-minimal "/bin/rm"))
-                     (script #$(file-append util-linux "/bin/script"))
                      (terminfo (string-append #$ncurses "/share/terminfo")))
                 (mkdir-p bin)
                 (mkdir-p libexec)
                 (mkdir-p doc)
                 (install-file "corerl" libexec)
+                (install-file "1kcore.c" doc)
                 (call-with-output-file notice
                   (lambda (port)
                     (display "CoreRL 1 KiB (1kib-20131024)\n" port)
@@ -98,159 +90,44 @@
                      port)
                     (display
                      (string-append
-                      "Article: https://www.roguelikeeducation.org/"
-                      "2.html\n")
-                     port)
-                    (display
-                     (string-append
-                      "The 1023-byte C source is released into the public "
-                      "domain.\n")
-                     port)
-                    (display
-                     (string-append
-                      "This notice records the upstream grant for the "
-                      "source-derived executable.\n")
+                      "Grant: Studio Tectorum, 'coreRL in 1kib', "
+                      "2013-10-24\n"
+                      "https://www.roguelikeeducation.org/2.html\n"
+                      "\"This version of the source is also released "
+                      "into the public domain\"\n"
+                      "The article links that grant directly to 1kcore.c.\n"
+                      "The complete, unmodified 1023-byte source is "
+                      "installed alongside this notice.\n"
+                      "Source SHA-256: "
+                      "05d55844b30fbfae72bd87ab9e26539c"
+                      "fb8232e540bc0d0ce50b04d6d1369e24\n"
+                      "The executable is compiled from that source; "
+                      "no upstream binaries or other assets are included.\n")
                      port)))
                 (call-with-output-file launcher
                   (lambda (port)
                     (format port "#!~a~%" shell)
                     (display "set -eu\n" port)
                     (format port "program=~s~%" program)
-                    (format port "output=~s~%" #$output)
-                    (format port "cat=~s~%cp=~s~%dirname=~s~%" cat cp dirname)
-                    (format port "mkdir=~s~%mktemp=~s~%rm=~s~%script=~s~%"
-                            mkdir mktemp rm script)
                     (format port "terminfo=~s~%" terminfo)
                     (display
                      (string-append
                       "export TERMINFO_DIRS=\"$terminfo"
                       "${TERMINFO_DIRS:+:$TERMINFO_DIRS}\"\n")
                      port)
-                    (display "if test \"${1-}\" = --smoke; then\n" port)
-                    (display
-                     (string-append
-                      "  test \"$#\" -eq 1 || { echo "
-                      "'usage: corerl [--smoke]' >&2; exit 64; }\n")
-                     port)
-                    (display
-                     (string-append
-                      "  export HOME=\"${HOME:?HOME must be set}\"\n")
-                     port)
-                    (display
-                     (string-append
-                      "  export XDG_CONFIG_HOME=\"${XDG_CONFIG_HOME:?"
-                      "XDG_CONFIG_HOME must be set}\"\n")
-                     port)
-                    (display
-                     (string-append
-                      "  export XDG_DATA_HOME=\"${XDG_DATA_HOME:?"
-                      "XDG_DATA_HOME must be set}\"\n")
-                     port)
-                    (display
-                     (string-append
-                      "  export XDG_CACHE_HOME=\"${XDG_CACHE_HOME:?"
-                      "XDG_CACHE_HOME must be set}\"\n")
-                     port)
-                    (display
-                     (string-append
-                      "  export XDG_STATE_HOME=\"${XDG_STATE_HOME:?"
-                      "XDG_STATE_HOME must be set}\"\n")
-                     port)
-                    (display "  export TERM=xterm-256color\n" port)
-                    (display "  export LC_ALL=C\n" port)
-                    (format port
-                            (string-append
-                             "  scratch=$(~a -d \"${TMPDIR:-/tmp}/"
-                             "corerl-smoke.XXXXXXXX\")~%")
-                            mktemp)
-                    (format port
-                            (string-append
-                             "  trap '~a -rf \"$scratch\"' EXIT HUP "
-                             "INT TERM~%")
-                            rm)
-                    (format port "  ~a -p \"$scratch/work\"~%" mkdir)
-                    (display "  transcript=\"$scratch/work/transcript\"\n" port)
-                    ;; Down, Up, and q are deterministic input to the real
-                    ;; curses game running inside util-linux's PTY.
-                    (format port
-                            (string-append
-                             "  printf '\\033[B\\033[Aq' | ~a -qefc "
-                             "~s /dev/null >\"$transcript\"~%")
-                            script program)
-                    (display "  test -s \"$transcript\"\n" port)
-                    (format port
-                            "  transcript_text=$(~a \"$transcript\")~%"
-                            cat)
-                    ;; Check map glyphs before the normal quit message so the
-                    ;; enemy assertion cannot match the word "level".
-                    (display
-                     "  map_text=${transcript_text%%'Quit on level 1.'*}\n"
-                     port)
-                    (display "  case \"$map_text\" in\n" port)
-                    (display "    *'@'*) ;;\n" port)
-                    (display
-                     (string-append
-                      "    *) echo 'CoreRL smoke: missing player' >&2; "
-                      "exit 1 ;;\n")
-                     port)
-                    (display "  esac\n" port)
-                    (display "  case \"$map_text\" in\n" port)
-                    (display "    *'e'*) ;;\n" port)
-                    (display
-                     (string-append
-                      "    *) echo 'CoreRL smoke: missing enemy' >&2; "
-                      "exit 1 ;;\n")
-                     port)
-                    (display "  esac\n" port)
-                    (display "  case \"$map_text\" in\n" port)
-                    (display "    *'<'*) ;;\n" port)
-                    (display
-                     (string-append
-                      "    *) echo 'CoreRL smoke: missing stairs' >&2; "
-                      "exit 1 ;;\n")
-                     port)
-                    (display "  esac\n" port)
-                    (display "  case \"$transcript_text\" in\n" port)
-                    (display "    *'Quit on level 1.'*) ;;\n" port)
-                    (display
-                     (string-append
-                      "    *) echo 'CoreRL smoke: missing normal quit' >&2; "
-                      "exit 1 ;;\n")
-                     port)
-                    (display "  esac\n" port)
-                    (display
-                     "  if test -n \"${GOOCASTLE_RUNTIME_RAW_CAPTURE:-}\";\n"
-                     port)
-                    (display "  then\n" port)
-                    (format port
-                            (string-append
-                             "    capture_dir=$(~a "
-                             "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\")~%")
-                            dirname)
-                    (display "    " port)
-                    (format port "~a -p \"$capture_dir\"~%" mkdir)
-                    (format port
-                            (string-append
-                             "    ~a \"$transcript\" "
-                             "\"$GOOCASTLE_RUNTIME_RAW_CAPTURE\"~%")
-                            cp)
-                    (display "  fi\n" port)
-                    (display "  printf '%s\\n' CORERL_RUNTIME_OK\n" port)
-                    (display "  exit 0\n" port)
-                    (display "fi\n" port)
                     (display "exec \"$program\" \"$@\"\n" port)))
                 (chmod launcher #o555)))))))
     (native-inputs (list gcc-toolchain))
-    (inputs (list bash-minimal coreutils-minimal ncurses util-linux))
+    (inputs (list bash-minimal ncurses))
     (home-page "https://www.roguelikeeducation.org/2.html")
     (synopsis "One-kilobyte terminal roguelike")
     (description
      "CoreRL is a tiny curses roguelike from Studio Tectorum's Roguelike
-Education article.  This package builds the fixed 1 KiB public-domain C
-source with GNU89 and ncurses, installing the real executable privately behind
-a wrapper.  The wrapper provides a deterministic @code{--smoke} mode that
-drives the game through a PTY, checks the generated level and normal quit
-result, and leaves its transcript in temporary storage.  No assets,
-prebuilt binaries, submodules, build-time downloads, runtime downloads, or
-persistent state are included.")
+Education article.  This package builds the complete 1023-byte public-domain
+C source with GNU89 and ncurses.  Use the arrow keys to move and @kbd{q} to
+quit.  Bumping into enemies removes them, while moving onto the stairs
+advances to the next level.  A launcher supplies the ncurses terminfo path
+and executes the game; the original source and its public-domain grant are
+installed with the documentation.  The game has no save or configuration
+files.")
     (license license:public-domain)))

@@ -406,8 +406,10 @@ check-rapidbrogue:
 check-chessrogue:
 	GUIX="$(GUIX)" tests/chessrogue-smoke.sh
 
+# This external native consumer requires a prebuilt output and fresh evidence.
 check-corerl:
-	GUIX="$(GUIX)" tests/corerl-smoke.sh
+	@test -n "$(CORERL_OUTPUT)" -a -n "$(CORERL_EVIDENCE)" -a -n "$(GUIX)" || { echo 'Set CORERL_OUTPUT, CORERL_EVIDENCE and GUIX (prebuilt /gnu/store output, fresh nonexistent absolute evidence directory, and Guix executable).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/corerl-smoke.sh "$(CORERL_OUTPUT)" "$(CORERL_EVIDENCE)"
 
 check-cutlassrl:
 	GUIX="$(GUIX)" tests/cutlassrl-smoke.sh
@@ -738,7 +740,7 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
 	check-tinyfugue check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-klh10 check-suppty check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-clojure-roguelike check-astx check-avanor check-bootrogue check-hack check-emacs-org-popup-posframe \
-	check-emacs-forth-mode check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-bcrawl check-chessrogue check-corerl check-cutlassrl check-dnethack check-dragonslayer check-grippy-socks check-hydra-slayer check-nlarn check-robotfindskitten check-fontra \
+	check-emacs-forth-mode check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-bcrawl check-chessrogue check-cutlassrl check-dnethack check-dragonslayer check-grippy-socks check-hydra-slayer check-nlarn check-robotfindskitten check-fontra \
 	check-aiwnios check-aiwnios-bytecode check-wrogue check-babel7drl \
 	check-smiths-hand check-tetraworld check-splicehack-rewrite \
 	check-space-privateers check-slashem check-shamogu \

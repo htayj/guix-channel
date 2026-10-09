@@ -195,36 +195,6 @@
       }
     },
     {
-      "issueNumber": 668,
-      "packageName": "corerl",
-      "artifactPath": ".goocastle/evidence/issue-668.png",
-      "runtime": {
-        "executable": "corerl",
-        "invocation": {
-          "file": "corerl",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "CORERL_RUNTIME_OK"
-      }
-    },
-    {
-      "issueNumber": 669,
-      "packageName": "corerl",
-      "artifactPath": ".goocastle/evidence/issue-669.png",
-      "runtime": {
-        "executable": "corerl",
-        "invocation": {
-          "file": "corerl",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "CORERL_RUNTIME_OK"
-      }
-    },
-    {
       "issueNumber": 672,
       "packageName": "cutlassrl",
       "artifactPath": ".goocastle/evidence/issue-672.png",
