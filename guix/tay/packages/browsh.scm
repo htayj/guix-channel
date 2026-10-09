@@ -1,0 +1,221 @@
+;;; Source-built Browsh, including its fonts and embedded Firefox extension.
+;;; SPDX-License-Identifier: AGPL-3.0-or-later
+
+(define-module (tay packages browsh)
+  #:use-module (guix build-system go)
+  #:use-module (guix gexp)
+  #:use-module (guix packages)
+  #:use-module ((guix licenses) #:prefix license:)
+  #:use-module (gnu packages bash)
+  #:use-module (gnu packages fontutils)
+  #:use-module (gnu packages golang)
+  #:use-module (gnu packages linux)
+  #:use-module (gnu packages node)
+  #:use-module (gnu packages python)
+  #:use-module (nongnu packages mozilla)
+  #:use-module (srfi srfi-1)
+  #:use-module (tay packages auxiliary)
+  #:use-module (tay packages starred-a-c)
+  #:use-module (tay packages browsh-go-sources)
+  #:use-module (tay packages browsh-npm-sources))
+
+(define %browsh-npm-helper
+  (local-file (search-tay-package-file "files/browsh-npm.py")))
+
+(define %browsh-xpi-helper
+  (local-file (search-tay-package-file "files/browsh-xpi.py")))
+
+(define-public browsh
+  (package
+    (name "browsh")
+    (version "1.8.2")
+    ;; Preserve the ledger's canonical source and its verified archive hash.
+    (source
+     (origin
+       (inherit (package-source browsh-org-browsh-source))
+       (patches
+        (map search-tay-package-file
+             '("patches/browsh-firefox-esr.patch"
+               "patches/browsh-node-unit-tests.patch"
+               "patches/browsh-marionette-tests.patch")))))
+    (build-system go-build-system)
+    (arguments
+     (list
+      #:go go-1.25
+      #:import-path "github.com/browsh-org/browsh/interfacer/cmd/browsh"
+      #:unpack-path "github.com/browsh-org/browsh"
+      #:install-source? #f
+      #:embed-files #~'("children" "nodes" "text")
+      #:build-flags #~(list "-ldflags=-s -w -buildid=")
+      #:phases
+      #~(modify-phases %standard-phases
+          (add-after 'setup-go-environment 'offline-build-environment
+            (lambda _
+              (setenv "GOPROXY" "off")
+              (setenv "GOSUMDB" "off")
+              (setenv "GOTOOLCHAIN" "local")
+              (setenv "GOTELEMETRY" "off")
+              (setenv "CGO_ENABLED" "0")
+              (setenv "HOME" (getcwd))
+              (setenv "BROWSERSLIST_IGNORE_OLD_DATA" "true")))
+          (add-after 'unpack 'prepare-locked-web-extension
+            (lambda _
+              (with-directory-excursion "src/github.com/browsh-org/browsh"
+                ;; Both the pflag default and the generated sample config must
+                ;; use the packaged Firefox; an explicit user path still wins.
+                (substitute* "interfacer/src/browsh/config.go"
+                  (("pflag.String\\(\"firefox.path\", \"firefox\"")
+                   (string-append "pflag.String(\"firefox.path\", \""
+                                  #$(file-append firefox-esr "/bin/firefox")
+                                  "\"")))
+                (substitute* "interfacer/src/browsh/config_sample.go"
+                  (("path = \"firefox\"")
+                   (string-append "path = \""
+                                  #$(file-append firefox-esr "/bin/firefox")
+                                  "\"")))
+                ;; Never use a committed XPI, bundle, or generated font.
+                (when (file-exists? "interfacer/src/browsh/browsh.xpi")
+                  (delete-file "interfacer/src/browsh/browsh.xpi"))
+                (with-directory-excursion "webext"
+                  (for-each delete-file-recursively
+                            (filter file-exists? '("node_modules" "dist")))
+                  (for-each delete-file (find-files "assets" "\\.ttf$"))
+                  (call-with-output-file ".browsh-npm-inputs"
+                    (lambda (port)
+                      (for-each
+                       (lambda (entry)
+                         (format port "~a\t~a\t~a\t~a\t~a\t~a~%"
+                                 (list-ref entry 0) (list-ref entry 1)
+                                 (list-ref entry 2) (list-ref entry 3)
+                                 (list-ref entry 4) (list-ref entry 5)))
+                       (list #$@(map
+                                 (lambda (entry)
+                                   #~(list #$(list-ref entry 0)
+                                           #$(list-ref entry 1)
+                                           #$(list-ref entry 2)
+                                           #$(list-ref entry 3)
+                                           #$(list-ref entry 4)
+                                           #$(list-ref entry 5)))
+                                 %browsh-npm-sources)))))
+                  (invoke "python3" #$%browsh-npm-helper
+                          ".browsh-npm-inputs" ".browsh-npm-notices")))))
+          (add-before 'build 'build-fonts-and-embedded-extension
+            (lambda _
+              (with-directory-excursion "src/github.com/browsh-org/browsh/webext"
+                ;; The project's own outlines, generated by FontForge's
+                ;; Python interpreter, not substituted third-party fonts.
+                (with-directory-excursion "assets"
+                  (invoke "fontforge" "-lang=py" "-script"
+                          "../contrib/font_maker.py"))
+                (setenv "BROWSH_ENV" "RELEASE")
+                (invoke "node" "node_modules/webpack/bin/webpack.js")
+                (for-each delete-file (find-files "dist" "\\.map$"))
+                (invoke "node" "node_modules/web-ext/bin/web-ext.js"
+                        "build" "--source-dir=dist"
+                        "--artifacts-dir=web-ext-artifacts" "--overwrite-dest")
+                ;; web-ext's ZIP payloads are source-built; normalize only
+                ;; archive ordering and metadata before embedding the XPI.
+                (let ((archives (find-files "web-ext-artifacts" "\\.zip$")))
+                  (unless (= (length archives) 1)
+                    (error "Expected exactly one source-built web-ext archive" archives))
+                  (invoke "python3" #$%browsh-xpi-helper (car archives)
+                          "../interfacer/src/browsh/browsh.xpi")))))
+          (replace 'check
+            (lambda* (#:key tests? #:allow-other-keys)
+              (when tests?
+                ;; Upstream src/browsh is the unit suite.  The separate test/
+                ;; tree launches web-ext and needs an external integration
+                ;; environment; ordinary packaged TUI is checked separately.
+                (invoke "go" "test"
+                        "github.com/browsh-org/browsh/interfacer/src/browsh")
+                (with-directory-excursion "src/github.com/browsh-org/browsh/webext"
+                  (invoke "node" "--loader" "./test/node-loader.mjs"
+                          "node_modules/mocha/bin/mocha.js"
+                          "--no-config" "--recursive" "--timeout" "60000")))))
+          (add-after 'install 'install-runtime-and-notices
+            (lambda* (#:key inputs #:allow-other-keys)
+              (let* ((root "src/github.com/browsh-org/browsh")
+                     (doc (string-append #$output "/share/doc/browsh"))
+                     (data (string-append #$output "/share/browsh"))
+                     (retained-source-names
+                      '#$(map package-name
+                              (filter
+                               (lambda (package)
+                                 (assq-ref (package-properties package)
+                                           'retain-source?))
+                               %browsh-go-inputs))))
+                (mkdir-p data)
+                (call-with-output-file (string-append data "/firefox-path")
+                  (lambda (port)
+                    (format port "~a~%"
+                            #$(file-append firefox-esr "/bin/firefox"))))
+                (install-file (string-append root "/interfacer/src/browsh/browsh.xpi")
+                              data)
+                (for-each
+                 (lambda (file) (install-file (string-append root "/" file) doc))
+                 '("LICENSE" "README.md"))
+                (for-each
+                 (lambda (file)
+                   (install-file (string-append root "/interfacer/" file) doc))
+                 '("go.mod" "go.sum"))
+                (copy-recursively (string-append root "/webext/.browsh-npm-notices")
+                                  (string-append doc "/licenses/npm"))
+                (for-each
+                 (lambda (input)
+                   (let ((label (car input)) (directory (cdr input)))
+                     (when (string-prefix? "go-browsh-" label)
+                       (copy-recursively (string-append directory "/share/doc/" label)
+                                         (string-append doc "/licenses/" label)))
+                     (when (member label retained-source-names)
+                       (copy-recursively (string-append directory "/src")
+                                         (string-append doc "/sources/" label)))))
+                 inputs)
+                ;; Redistribution notices for the linked Go standard library.
+                (let* ((go (assoc-ref inputs "go"))
+                       (go-doc (string-append go "/share/doc"))
+                       (go-source (string-append go "/share/go/src")))
+                  (for-each
+                   (lambda (file)
+                     (let ((target (string-append doc "/licenses/go-toolchain"
+                                                  (substring file
+                                                             (string-length go-doc)))))
+                       (mkdir-p (dirname target))
+                       (copy-file file target)))
+                   (find-files go-doc
+                               (string-append
+                                "(COPYING|LICENSE|NOTICE|PATENTS|AUTHORS)"
+                                "([-.][[:alnum:]_-]+)?$")))
+                  (for-each
+                   (lambda (file)
+                     (let ((target (string-append doc "/licenses/go-standard-library"
+                                                  (substring file
+                                                             (string-length go-source)))))
+                       (mkdir-p (dirname target))
+                       (copy-file file target)))
+                   (find-files go-source
+                               "(COPYING|LICENSE|NOTICE|PATENTS)([-.][[:alnum:]_-]+)?$")))
+                ;; Browsh uses ps to reject another headless Firefox process.
+                (wrap-program (string-append #$output "/bin/browsh")
+                  `("PATH" ":" prefix
+                    (,(string-append #$procps "/bin"))))))))))
+    (native-inputs
+     (append (list fontforge node-lts python)
+             %browsh-go-inputs
+             (delete-duplicates (map (lambda (entry) (list-ref entry 3))
+                                     %browsh-npm-sources) eq?)))
+    (inputs (list bash-minimal firefox-esr procps))
+    (home-page "https://www.brow.sh")
+    (synopsis "Modern text browser powered by Firefox")
+    (description
+     "Browsh renders web pages in an interactive terminal using headless
+Firefox.  It supports modern HTML, CSS, JavaScript, images and video through
+its locally built Firefox extension.  This package builds the project fonts,
+release JavaScript bundle and unsigned extension from source with offline
+locked dependencies, then embeds the extension in the Go executable.  The
+packaged Firefox installs the extension temporarily for each Browsh session;
+no add-on download, Mozilla account or signing credentials are required.")
+    ;; Browsh and its fonts are LGPL; the executable and retained dependency
+    ;; sources also carry these upstream licenses.  npm tool notices are kept
+    ;; separately, including the bundled lodash license.
+    (license (list license:lgpl2.1 license:expat license:asl2.0
+                   license:bsd-2 license:bsd-3 license:mpl2.0))))

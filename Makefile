@@ -34,7 +34,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	hyprland-preview-share-picker hy3 dank-material-shell-shell-only sbcl-ivory-key manna-cadet sbcl-qbcl \
 	sbcl-rplaca terminaldrome image-tape klh10 pdp10-suppty ks10-udis emacs-treesit-sexp \
 	emacs-org-popup-posframe emacs-forth-mode@0-4450a3a emacs-aidermacs emacs-mentor-pinned emacs-vim-region emacs-pbui org-mind-map \
-	dipc nrl-text-to-phoneme you-can-datamosh-on-linux ffglitch praat@7.0.02 xq apout kitty-bitmap shader-slang opencode \
+	dipc nrl-text-to-phoneme you-can-datamosh-on-linux ffglitch praat@7.0.02 xq apout kitty-bitmap browsh shader-slang opencode \
 	opencode-desktop claude-code claude-desktop axmud blightmud durthang frostbite go-mud godisc kbtin shadow-over-darkmoor \
 	kildclient kmuddy flex-launcher lyntin mmapper mudlet mudpuppy notion-river mushkin mushtato ocaml-irc-client \
 	ocaml-irc-client-lwt ocaml-irc-client-lwt-ssl ocaml-irc-client-unix ocaml-lwt-ssl notty miou domainslib affect minttea tui proiel ruby-memoist ruby-sax-machine halloy \
@@ -914,3 +914,8 @@ check-tassh:
 check-imago:
 	@test -n "$(IMAGO_OUTPUT)" -a -n "$(IMAGO_EVIDENCE)" || { echo 'Set IMAGO_OUTPUT and IMAGO_EVIDENCE (prebuilt /gnu/store output and fresh, new/empty evidence directory outside the installed output).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/imago-smoke.sh "$(IMAGO_OUTPUT)" "$(IMAGO_EVIDENCE)"
+
+.PHONY: check-browsh
+check-browsh:
+	@test -n "$(BROWSH_OUTPUT)" -a -n "$(BROWSH_EVIDENCE)" || { echo 'Set BROWSH_OUTPUT and BROWSH_EVIDENCE (prebuilt /gnu/store output and fresh nonexistent evidence directory outside /gnu/store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/browsh-smoke.sh "$(BROWSH_OUTPUT)" "$(BROWSH_EVIDENCE)"

@@ -70,6 +70,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [CutlassRL ordinary native terminal save/restore](#cutlassrl--ordinary-native-terminal-saverestore-2026-10-09)
 - [ChessRogue ordinary native Practice gameplay and retry](#chessrogue--ordinary-native-practice-gameplay-and-retry-2026-10-09)
 - [Cave Chop ordinary native terminal save/restore](#cave-chop--ordinary-native-terminal-saverestore-2026-10-09)
+- [Browsh ordinary native terminal browsing](#browsh--ordinary-native-terminal-browsing-2026-10-09)
 
 ## Relocation map (2026-10-04)
 
@@ -191,6 +192,16 @@ collision; it is not a private binding or another README program. The five
 checked dependencies are `sbcl-zlib`, `sbcl-cl-jpeg-imago`,
 `sbcl-common-lisp-jupyter-imago`, `sbcl-cl-libheif` and `sbcl-cl-libtiff`.
 No dependency recipe changes the canonical **629** preservation snapshots.
+Browsh's separate 2026-10-09 delivery adds exactly **one** `PROJECT_PACKAGES`
+entry (`browsh`) and one README browser row. The scoped listed working-tree
+inventory rises from **232 project + 7 font = 239 installable names** to
+**233 project + 7 font = 240**. These text-list counts include preexisting
+unpublished user entries such as Dualmaster: they are neither a new accepted
+package total nor a claim that the complete inventory was built or checked.
+Browsh's 36 private Go modules and 737 distinct npm source archives are
+dependency closure, not extra applications. Its existing
+`browsh-org-browsh-source` pin/hash and the canonical **629** preservation
+snapshots remain unchanged.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -215,6 +226,205 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Browsh — ordinary native terminal browsing (2026-10-09)
+
+Local evidence covers the new [`browsh`](guix/tay/packages/browsh.scm)
+**1.8.2** terminal browser, not just its preserved source snapshot. The
+ordinary installed program rendered documents, followed a real HTML link,
+edited an HTML input, submitted the native GET form and quit cleanly using
+packaged **Firefox ESR 140.13.0esr**. This is repository-local acceptance of
+the exercised path, not signed publication, profile installation, deployment
+or proof of arbitrary external websites.
+**[Forgejo #96](https://forge.nogroup.group/tay/guix-channel/issues/96)
+remains OPEN:** literal clean own lint is unmet because no updater recognizes
+the canonical codeload SHA archive and the required external source archival
+is absent. Successful native behavior and reproducible builds do not waive
+that gate.
+
+| Gate | Main receipt |
+| --- | --- |
+| Full source build | Latest Main bg99 passed in **75.17 s**; artifact **15998** records `/gnu/store/2rbl4hawgig4nrkhj9amy48cahmg6z0i-browsh-1.8.2` after the lint/input fixes. Earlier canonical-XPI bg93 passed in **71.05 s** (artifact **15984**, output `6jvf3hiwfvzxy8igwqq80cxqvpc5wn4m`); bg90 passed in **68.58 s** (artifact **15976**, output `jdwbzib5wq3m61yshmk705as393i9n50`) before archive encoding was canonicalized. All builds include generated fonts, release JavaScript, unsigned embedded XPI and Go executable. |
+| Build-time tests | Artifacts **15976**, **15984** and latest **15998** record `TestFrameBuilder`, `TestMultiLineTextBuilder`, `TestRawTextServer` and `TestBrowshUnits` passing; the latter ran **33 of 33 Ginkgo specs**, 0 failed/pending/skipped. The JavaScript graphics/text suites passed **7 tests**. Full check builds rerun these suites. |
+| Ordinary native PTY | Latest Main bg102 integrated `make check-browsh` passed in **14.41 s**, with evidence **`/tmp/browsh-make-final-2`** on final output `2rbl4hawgig4nrkhj9amy48cahmg6z0i`; separate bg103 passed in **10.20 s**, evidence **`/tmp/browsh-native-9`**, on that same output. Earlier bg91 (**9.60 s**, native7) and bg96 (**14.06 s**, make-final) remain historical real-consumer evidence on their dated outputs. |
+| Output integrity | Both latest native consumers record before/after file-mode/output checks and closure status **0**, with unchanged `guix hash -S nar` **`09xrkj7nqli7ka6bihs7z8aqjvsldi3wd8gphr76sk242i3hwyaf`**. Earlier `6jvf…` NAR is `0xyp8i9c2yn95f6v0z5172kikjq6sl8vdiy7qf9ry1z8j88pmy4w`; native7's is `05qpc2dlk3308h5yriiggqkkaxqzmh3c8jjv82jp7j32xac07nsg`. These integrity checks remain separate from reproducibility. |
+| Reproducibility | Final Main bg101 `--check` passed in **70.87 s**; artifact **16001** records exact final output `/gnu/store/2rbl4hawgig4nrkhj9amy48cahmg6z0i-browsh-1.8.2`. Earlier bg94 passed in **69.05 s** (artifact **15986**) on `6jvf…`; bg92 failed in **66.49 s** (artifact **15979**) on `jdwb…`: XPI member payloads were identical but ZIP order/wall-clock timestamps and the embedded executable differed. Canonical archive encoding resolves that observed cause; the earlier failure is not represented as a pass. |
+| Full lint | Final Main bg100 completed in **52.98 s**: only own **no updater** and **missing Disarchive/Software Heritage archival** findings remain at `browsh.scm:29:2`; literal clean own lint is **unmet**. Earlier bg97 (**82.28 s**) also reported missing `bash-minimal`, patch representation and a 97-character line; the input/searched-path/line fixes remove those first three in the actual final run. The global deprecated `flex` warning and `libcamera-minimal` import ambiguity are separate, not Browsh findings. No suppression is used. |
+
+### Canonical source, complete build and redistribution notices
+
+The package inherits the existing `browsh-org-browsh-source` origin at
+**`499ef386d45cd1e2b5457dd04887c017f77b7e27`**, Guix archive hash
+**`1322fy3b7b6yqlcw86hfj75k80kxzgqmd5qykdfy81mqmph06ahh`**.
+The [pinned source](https://github.com/browsh-org/browsh/tree/499ef386d45cd1e2b5457dd04887c017f77b7e27)
+provides the Go interfacer, web extension and font-generation script. Existing
+XPI, generated TTF files, `node_modules` and `dist` are discarded before
+building. FontForge executes upstream `font_maker.py` to generate
+**BlockCharMono** and **BlankMono** from the project's own outlines;
+Webpack builds both release JavaScript entry points. `web-ext build` produces
+the unsigned ZIP. The final package then uses the
+[canonical XPI helper](guix/tay/packages/files/browsh-xpi.py) to sort entry
+names, fix ZIP timestamps from `SOURCE_DATE_EPOCH` within the DOS timestamp
+range, and normalize archive metadata/permissions before embedding
+`browsh.xpi` in the Go executable. It asserts that every source-built member,
+including directories and empty icons, retains identical bytes; only archive
+encoding changes. The earlier bg90 output copied web-ext's archive directly:
+bg92 exposed its nondeterministic member order/timestamps, not differing font
+or JavaScript payloads. No upstream release binary, committed bundle/font,
+AMO download, Mozilla account or signing credential supplies this build.
+
+[`browsh-go-sources.scm`](guix/tay/packages/browsh-go-sources.scm) pins
+**36 Go modules**, covering the imports of the interfacer's source, upstream
+tests and platform-tagged files. The private recipes install their source
+without building separate programs; Browsh compiles the selected libraries
+in its Go build. `GOPROXY=off`, `GOSUMDB=off`, `GOTOOLCHAIN=local` and
+`GOTELEMETRY=off` keep that build offline. The pinned npm v2 lock is replayed
+for **871 Linux locations from 737 distinct tarballs**, including development
+tools and runtime dependencies. Only the explicitly optional Darwin-only
+`fsevents@2.3.2` location is omitted. The
+[helper](guix/tay/packages/files/browsh-npm.py) verifies the lock hash, exact
+location coverage, tarball SHA512 integrity, package identity and license
+declaration; it runs no npm lifecycle scripts and fetches nothing at build time.
+The acquisition receipts distinguish the broader **114-module** selected Go
+graph/archive audit from the **36-module** package-import closure: the import
+receipt reports **no unresolved external imports**. Only the 36 reachable
+modules are delivered as private package inputs; unused downloaded graph
+archives are scratch, not extra installed dependencies. The npm receipt
+records **872** lock locations before the one Darwin exclusion, **871** emitted
+locations, **737** unique archives and **26,783,569 archive bytes**. Its exact
+lock SHA256 is `427063e0e6d60355d57a552821fba42e660a34a02a3c765ac49e49435dca02b9`,
+git blob `a78f20d06021c885eb8c1e1b643b17fb7f3e0e67`. These acquisition/hash/
+metadata audits are not additional executed build/test acceptance; the
+source manifests and helper retain the package inputs and integrity checks.
+
+
+Browsh and its generated project fonts retain upstream **LGPL-2.1** licensing;
+the package also records MIT/Expat, Apache-2.0, BSD-2-Clause, BSD-3-Clause and
+MPL-2.0 for the linked/retained dependency sources. The output's
+`share/doc/browsh` retains upstream `LICENSE`, `README.md`, `go.mod` and
+`go.sum`, npm archive inventory and original root/nested notices under
+`licenses/npm`, the private Go module notices, and Go compiler/standard-library
+notices. `sources/` retains the MPL-covered Hashicorp HCL and x/net sources;
+x/net additionally preserves the exact MPL public-suffix-list source and
+license identified by its generated table. The copied BSD Go-tools code in
+Ginkgo has its separate upstream license retained rather than being treated
+as covered solely by Ginkgo's MIT root grant. The bundled lodash notice and
+Webpack-emitted license sidecars are retained. Firefox remains the separate
+packaged browser dependency, not a redistributed signed Browsh add-on.
+
+### Actual runtime fixes and native evidence
+
+The [Firefox ESR patch](guix/tay/packages/patches/browsh-firefox-esr.patch)
+addresses the actual startup failures: the extracted embedded archive now
+has an **`.xpi` suffix**, so Firefox classifies it as an archive rather than
+an unpacked directory; `Addon:Install` uses **`temporary: true`** to load that
+unsigned extension for the session. Firefox receives
+**`--remote-allow-system-access`**, and preference setup imports
+**`Preferences.sys.mjs`** through `ChromeUtils.importESModule`, with a declared
+`prefs` binding. Marionette consumes the greeting and complete length-framed,
+matching replies synchronously before dependent commands proceed, instead
+of racing fire-and-forget reads against session/add-on/preference operations.
+The runtime uses the packaged Firefox path in both its CLI default and sample
+configuration; `procps` is supplied for upstream process detection and
+`bash-minimal` supplies the actual wrapper interpreter. Guix patch paths use
+the existing searched-path string convention, not `local-file` values that
+the patch linter rejects. No temporary startup diagnostics remain in the
+package patch.
+
+The protocol regression patch registers in the existing Ginkgo suite. Its
+scripted `net.Pipe` peer tests fragmented headers/UTF-8 payloads, coalesced
+frames, malformed/oversized/truncated frames, the 16 MiB boundary, full-reply
+ordering before `Addon:Install`, and invalid/mismatched/error responses.
+Those unit peers are not browser-runtime proof. The JavaScript suite uses the
+Node loader for upstream graphics/text tests. The separate upstream Go
+`test/` integration tree was **not** run: it needs its external web-ext test
+environment. Native acceptance below exercises the ordinary installed TUI
+with real Firefox, not that integration harness or a fake browser.
+
+Native7 used a private HOME/XDG/profile/work directory, private network/PID/
+mount/user namespaces, UID 1000/GID 998, loopback as the sole network
+interface, and read-only `/gnu/store`. The process snapshots identify Browsh's
+actual `bin/.browsh-real` on a PTY and child
+`/gnu/store/k83frhx0f31q12s2gqga6l371wdrmvlp-firefox-esr-140.13.0esr/lib/firefox/.firefox-real`
+with `--marionette --remote-allow-system-access --headless --profile …`.
+The same identities persist after navigation; fixture requests carry Firefox
+140's user agent. The ordinary debug log records successful `NewSession`
+with `browserVersion: 140.13.0`, `Addon:Install` on the extracted `.xpi` with
+`temporary: true`, the returned `@temporary-addon` identity, and the real
+extension's websocket connection. Ordinary `Marionette:Quit` returns
+`forced: false` / `in_app: true`. The consumer serves original static HTML,
+with **no scripts**, and drives normal terminal key/mouse input:
+
+1. **Ctrl-L**, typed `/doc` loopback URL and **Enter** rendered
+   `NATIVE DOCUMENT ONE` and `Follow offline link`.
+2. Clicking that rendered link reached `/next` and `NATIVE DOCUMENT TWO`.
+3. Clicking the native field and typing **`OFFLINE_INPUT`** displayed that value
+   beneath `Offline entry` in `typed-input.document.txt`.
+4. Clicking **Submit entry** made Firefox request
+   `/submitted?word=OFFLINE_INPUT`; the rendered result contains
+   `NATIVE FORM RECEIVED` and `Submitted text: OFFLINE_INPUT`.
+5. **Ctrl-Q** returned status **0**, with no remaining browser descendants and
+   no forced-cleanup PIDs. The owned private scratch directory's cleanup
+   receipt returned 0 and `clean: true`.
+
+`terminal.raw`, `terminal-inputs.json`, `terminal-frames.jsonl`, each
+`*.screen.txt`/`*.document.txt`/`*.frame.json`, `http-requests.json`, process
+snapshots, isolation records and NAR checks are retained under
+**`/tmp/browsh-native-7`**. Text decoding normalizes only Browsh's U+2584
+transparent-space rendering; raw terminal bytes and cell attributes remain
+available. Ordinary `--debug` produced the retained private debug/profile
+diagnostics, not a synthetic render path or instrumentation added to the
+application.
+The final integrated consumer independently repeats these same key/mouse,
+HTTP and real-process assertions under **`/tmp/browsh-make-final`** on output
+**`6jvf3hiwfvzxy8igwqq80cxqvpc5wn4m-browsh-1.8.2`**. Its final form screen
+contains `NATIVE FORM RECEIVED` / `Submitted text: OFFLINE_INPUT`; its debug
+log again records actual Firefox **140.13.0**, successful temporary installation
+and unforced in-application quit. Exit status is **0**, browser descendants
+are gone, forced cleanup is empty, and the private scratch
+`/tmp/browsh-native.xs6s9tjO` cleanup records `clean: true` / status **0**.
+The acceptance evidence directories are retained. Main bg95 removed the two
+owned acquisition scratch trees after their material facts were recorded,
+and removed the obsolete comparison script; no temporary runtime
+instrumentation remains.
+Main bg98's separate ordinary consumer also passed in **9.71 s** on output
+`6jvf3hiwfvzxy8igwqq80cxqvpc5wn4m`; **`/tmp/browsh-native-8`** records status
+0 and the same unchanged NAR hash `0xyp8i9c2yn95f6v0z5172kikjq6sl8vdiy7qf9ry1z8j88pmy4w`.
+After the wrapper-input/patch corrections, Main bg102/bg103 repeated the
+integrated and standalone consumers on **`2rbl4hawgig4nrkhj9amy48cahmg6z0i`**.
+**`/tmp/browsh-make-final-2`** and **`/tmp/browsh-native-9`** retain actual
+real-Browsh/Firefox identities, screens, HTTP/form results and status-zero
+ordinary quits. The final form screen again shows `OFFLINE_INPUT`; Firefox is
+the same packaged ESR **140.13.0esr** child, not a substitute process.
+Both record unchanged NAR `09xrkj7nqli7ka6bihs7z8aqjvsldi3wd8gphr76sk242i3hwyaf`.
+The respective owned scratch paths `/tmp/browsh-native.1je214z5` and
+`/tmp/browsh-native.kfGwi2Sp` both have cleanup `clean: true` / status **0**.
+
+
+
+### Usage and limits
+
+```sh
+guix shell -L guix browsh -- browsh --startup-url https://example.org
+out=$(guix build -L guix --no-grafts browsh)
+make check-browsh BROWSH_OUTPUT="$out" BROWSH_EVIDENCE=/tmp/browsh-proof-new
+```
+
+The standalone Makefile target requires an explicit prebuilt output and a
+**new, nonexistent** evidence path outside `/gnu/store`; it is not appended
+to the aggregate `make check`. Main actually invoked `make check-browsh`
+without the required variables: it rejected with status **2** in **1.75 s**,
+diagnosing the required prebuilt store output and fresh evidence path. That
+guard rejection is not a browser-consumer run. The first command is a user usage example,
+not an external-site verification receipt. The exercised consumer is limited
+to offline loopback HTML navigation/input and a native GET form using headless
+Firefox. It does not establish external TLS/sites, video/audio, downloads,
+graphical-browser-window behavior, every web feature, saved-session continuity
+or live profile deployment. Source rebuild reproducibility and both integrated
+and standalone ordinary consumers passed on final output **`2rbl4hawgig4nrkhj9amy48cahmg6z0i`**.
+Literal clean own lint is **unmet**, and #96 stays OPEN for the remaining
+no-updater and source-archive findings; no implemented build/runtime gate is
+left pending or waived by those findings.
 
 ## Cave Chop — ordinary native terminal save/restore (2026-10-09)
 

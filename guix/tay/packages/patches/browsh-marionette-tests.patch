@@ -1,0 +1,257 @@
+Exercise Marionette framing and synchronous command exchanges in Browsh's
+existing Ginkgo unit suite, without starting Firefox. The scripted net.Pipe
+peer decodes requests independently and withholds a complete NewSession
+response to expose premature Addon:Install writes. Tests target upstream
+499ef386d45cd1e2b5457dd04887c017f77b7e27 with the protocol implementation in
+browsh-firefox-esr.patch applied first.
+
+--- /dev/null
++++ b/interfacer/src/browsh/firefox_marionette_test.go
+@@ -0,0 +1,247 @@
++package browsh
++
++import (
++	"bufio"
++	"encoding/json"
++	"fmt"
++	"io"
++	"net"
++	"strconv"
++	"strings"
++	"sync"
++	"time"
++
++	. "github.com/onsi/ginkgo"
++	. "github.com/onsi/gomega"
++)
++
++// Decode the scripted peer's requests independently of the production parser.
++func readTestMarionetteCommand(reader *bufio.Reader) (int, string, error) {
++	header, err := reader.ReadString(':')
++	if err != nil {
++		return 0, "", err
++	}
++	length, err := strconv.Atoi(strings.TrimSuffix(header, ":"))
++	if err != nil || length < 1 || length > 16*1024*1024 {
++		return 0, "", fmt.Errorf("invalid request length %q", header)
++	}
++	payload := make([]byte, length)
++	if _, err := io.ReadFull(reader, payload); err != nil {
++		return 0, "", err
++	}
++	var request []json.RawMessage
++	if err := json.Unmarshal(payload, &request); err != nil {
++		return 0, "", err
++	}
++	if len(request) != 4 || string(request[0]) != "0" {
++		return 0, "", fmt.Errorf("invalid command envelope: %s", payload)
++	}
++	var id int
++	var command string
++	if err := json.Unmarshal(request[1], &id); err != nil {
++		return 0, "", err
++	}
++	if err := json.Unmarshal(request[2], &command); err != nil {
++		return 0, "", err
++	}
++	return id, command, nil
++}
++
++func writeTestMarionetteReply(peer net.Conn, reply string) error {
++	_, err := fmt.Fprintf(peer, "%d:%s", len(reply), reply)
++	return err
++}
++
++var _ = Describe("Marionette frame reader", func() {
++	It("reads a split decimal header and fragmented UTF-8 payload by byte count", func() {
++		payload := `{"value":"🦊:Firefox"}`
++		wire := fmt.Sprintf("%d:%s", len(payload), payload)
++		reader := bufio.NewReader(io.MultiReader(
++			strings.NewReader(wire[:1]),
++			strings.NewReader(wire[1:3]),
++			strings.NewReader(wire[3:15]),
++			strings.NewReader(wire[15:]),
++		))
++		frame, err := readMarionetteFrame(reader)
++		Expect(err).NotTo(HaveOccurred())
++		Expect(string(frame)).To(Equal(payload))
++	})
++
++	It("preserves a coalesced second frame rather than consuming both replies", func() {
++		first := `[1,0,null,{"sessionId":"ready"}]`
++		second := `[1,1,null,{"value":"addon:installed"}]`
++		reader := bufio.NewReader(strings.NewReader(fmt.Sprintf(
++			"%d:%s%d:%s", len(first), first, len(second), second,
++		)))
++		frame, err := readMarionetteFrame(reader)
++		Expect(err).NotTo(HaveOccurred())
++		Expect(string(frame)).To(Equal(first))
++		frame, err = readMarionetteFrame(reader)
++		Expect(err).NotTo(HaveOccurred())
++		Expect(string(frame)).To(Equal(second))
++		_, err = readMarionetteFrame(reader)
++		Expect(err).To(Equal(io.EOF))
++	})
++
++	It("rejects empty, zero, signed and non-ASCII length prefixes", func() {
++		for _, wire := range []string{"+2:{}", "-2:{}", " 2:{}", "２:{}", "x:{}", ":{}", "0:"} {
++			_, err := readMarionetteFrame(bufio.NewReader(strings.NewReader(wire)))
++			Expect(err).To(HaveOccurred(), "wire: %q", wire)
++		}
++	})
++
++	It("rejects an unterminated header", func() {
++		_, err := readMarionetteFrame(bufio.NewReader(strings.NewReader("12")))
++		Expect(err).To(HaveOccurred())
++	})
++
++	It("reports a truncated payload instead of treating a short read as a frame", func() {
++		_, err := readMarionetteFrame(bufio.NewReader(strings.NewReader("5:{}")))
++		Expect(err).To(Equal(io.ErrUnexpectedEOF))
++	})
++
++	It("rejects lengths beyond 16 MiB and decimal overflow before reading payload", func() {
++		for _, header := range []string{"16777217:", "999999999999999999999999999999999999:"} {
++			_, err := readMarionetteFrame(bufio.NewReader(strings.NewReader(header)))
++			Expect(err).To(HaveOccurred(), "header: %q", header)
++			Expect(err).NotTo(Equal(io.EOF))
++			Expect(err).NotTo(Equal(io.ErrUnexpectedEOF))
++		}
++	})
++
++	It("accepts a payload at the 16 MiB limit", func() {
++		payload := `"` + strings.Repeat("a", 16*1024*1024-2) + `"`
++		reader := bufio.NewReader(io.MultiReader(
++			strings.NewReader("16777216:"), strings.NewReader(payload),
++		))
++		frame, err := readMarionetteFrame(reader)
++		Expect(err).NotTo(HaveOccurred())
++		Expect(string(frame)).To(Equal(payload))
++	})
++})
++
++var _ = Describe("Marionette command exchange", func() {
++	var client, peer net.Conn
++	var peerReader *bufio.Reader
++	var savedConnection net.Conn
++	var savedReader *bufio.Reader
++	var savedCount int
++	var calls sync.WaitGroup
++	var startExchange func(string) <-chan error
++
++	BeforeEach(func() {
++		savedConnection, savedReader, savedCount = marionette, marionetteReader, ffCommandCount
++		client, peer = net.Pipe()
++		Expect(client.SetDeadline(time.Now().Add(5 * time.Second))).To(Succeed())
++		Expect(peer.SetDeadline(time.Now().Add(5 * time.Second))).To(Succeed())
++		marionette, marionetteReader, ffCommandCount = client, bufio.NewReader(client), 0
++		peerReader = bufio.NewReader(peer)
++		startExchange = func(command string) <-chan error {
++			done := make(chan error, 1)
++			started := make(chan struct{})
++			calls.Add(1)
++			go func() {
++				defer calls.Done()
++				close(started)
++				done <- exchangeFirefoxCommand(command, map[string]interface{}{})
++			}()
++			<-started
++			return done
++		}
++	})
++
++	AfterEach(func() {
++		// Release blocked I/O and join callers before restoring shared globals.
++		client.Close()
++		peer.Close()
++		calls.Wait()
++		marionette, marionetteReader, ffCommandCount = savedConnection, savedReader, savedCount
++	})
++
++	It("withholds Addon:Install until NewSession's entire matching reply arrives", func() {
++		firstDone := startExchange("WebDriver:NewSession")
++		firstID, command, err := readTestMarionetteCommand(peerReader)
++		Expect(err).NotTo(HaveOccurred())
++		Expect(command).To(Equal("WebDriver:NewSession"))
++		secondDone := startExchange("Addon:Install")
++
++		// Supply all but the last byte. A single Read must not complete this call.
++		reply := fmt.Sprintf(`[1,%d,null,{"sessionId":"ready"}]`, firstID)
++		_, err = fmt.Fprintf(peer, "%d:%s", len(reply), reply[:len(reply)-1])
++		Expect(err).NotTo(HaveOccurred())
++		Expect(peer.SetReadDeadline(time.Now().Add(100 * time.Millisecond))).To(Succeed())
++		_, err = peerReader.ReadByte()
++		Expect(err).To(HaveOccurred())
++		timeout, ok := err.(net.Error)
++		Expect(ok).To(BeTrue(), "unexpected read error: %v", err)
++		Expect(timeout.Timeout()).To(BeTrue())
++		select {
++		case err := <-firstDone:
++			Fail(fmt.Sprintf("NewSession returned before its complete reply: %v", err))
++		default:
++		}
++		Expect(peer.SetReadDeadline(time.Now().Add(5 * time.Second))).To(Succeed())
++		_, err = io.WriteString(peer, reply[len(reply)-1:])
++		Expect(err).NotTo(HaveOccurred())
++		Expect(<-firstDone).To(Succeed())
++
++		secondID, command, err := readTestMarionetteCommand(peerReader)
++		Expect(err).NotTo(HaveOccurred())
++		Expect(command).To(Equal("Addon:Install"))
++		Expect(secondID).To(Equal(firstID + 1))
++		Expect(writeTestMarionetteReply(peer, fmt.Sprintf(`[1,%d,null,{"value":"addon"}]`, secondID))).To(Succeed())
++		Expect(<-secondDone).To(Succeed())
++	})
++
++	It("rejects a response for a different command ID", func() {
++		done := startExchange("WebDriver:NewSession")
++		id, _, err := readTestMarionetteCommand(peerReader)
++		Expect(err).NotTo(HaveOccurred())
++		Expect(writeTestMarionetteReply(peer, fmt.Sprintf(`[1,%d,null,{}]`, id+1))).To(Succeed())
++		Expect(<-done).To(HaveOccurred())
++	})
++
++	It("returns the actual Marionette error code and message", func() {
++		done := startExchange("WebDriver:ExecuteScript")
++		id, _, err := readTestMarionetteCommand(peerReader)
++		Expect(err).NotTo(HaveOccurred())
++		reply := fmt.Sprintf(`[1,%d,{"error":"javascript error","message":"ReferenceError: prefs is not defined","stacktrace":"at preference setup"},null]`, id)
++		Expect(writeTestMarionetteReply(peer, reply)).To(Succeed())
++		err = <-done
++		Expect(err).To(HaveOccurred())
++		Expect(err.Error()).To(ContainSubstring("javascript error"))
++		Expect(err.Error()).To(ContainSubstring("ReferenceError: prefs is not defined"))
++	})
++
++	It("rejects invalid JSON instead of accepting it as a successful reply", func() {
++		done := startExchange("WebDriver:NewSession")
++		_, _, err := readTestMarionetteCommand(peerReader)
++		Expect(err).NotTo(HaveOccurred())
++		Expect(writeTestMarionetteReply(peer, `not-json`)).To(Succeed())
++		Expect(<-done).To(HaveOccurred())
++	})
++
++	It("rejects a command envelope in place of a response", func() {
++		done := startExchange("WebDriver:NewSession")
++		id, _, err := readTestMarionetteCommand(peerReader)
++		Expect(err).NotTo(HaveOccurred())
++		Expect(writeTestMarionetteReply(peer, fmt.Sprintf(`[0,%d,null,{}]`, id))).To(Succeed())
++		Expect(<-done).To(HaveOccurred())
++	})
++
++	It("rejects a response without its result field", func() {
++		done := startExchange("WebDriver:NewSession")
++		id, _, err := readTestMarionetteCommand(peerReader)
++		Expect(err).NotTo(HaveOccurred())
++		Expect(writeTestMarionetteReply(peer, fmt.Sprintf(`[1,%d,null]`, id))).To(Succeed())
++		Expect(<-done).To(HaveOccurred())
++	})
++
++	It("propagates connection closure while waiting for a reply", func() {
++		done := startExchange("WebDriver:NewSession")
++		_, _, err := readTestMarionetteCommand(peerReader)
++		Expect(err).NotTo(HaveOccurred())
++		Expect(peer.Close()).To(Succeed())
++		Expect(<-done).To(HaveOccurred())
++	})
++})

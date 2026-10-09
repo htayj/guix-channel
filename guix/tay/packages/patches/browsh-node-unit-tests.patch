@@ -1,0 +1,33 @@
+Run the existing JavaScript unit tests as native ES modules.  The pinned
+package declares type=module, while its old Mocha config uses Babel's
+CommonJS require hook and NODE_PATH for extensionless first-party imports.
+Node's ESM resolver ignores both.  Keep all test assertions and fixtures
+unchanged, using a test-only resolver for the same src/test search roots.
+Third-party packages still use Node's ordinary package resolution.
+
+--- /dev/null
++++ b/webext/test/node-loader.mjs
+@@ -0,0 +1,23 @@
++import { existsSync } from 'node:fs';
++import { resolve as resolvePath } from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++const root = fileURLToPath(new URL('../', import.meta.url));
++
++export function resolve(specifier, context, nextResolve) {
++  let candidates = [];
++  if (specifier.startsWith('./') || specifier.startsWith('../')) {
++    const target = new URL(specifier, context.parentURL);
++    if (target.protocol === 'file:') {
++      candidates = [fileURLToPath(target) + '.js'];
++    }
++  } else if (!specifier.startsWith('/') && !specifier.includes(':')) {
++    candidates = ['src', 'test'].map(directory =>
++      resolvePath(root, directory, specifier + '.js'));
++  }
++  const candidate = candidates.find(filename => existsSync(filename));
++  if (candidate) {
++    return nextResolve(pathToFileURL(candidate).href, context);
++  }
++  return nextResolve(specifier, context);
++}

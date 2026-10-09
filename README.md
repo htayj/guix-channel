@@ -15,6 +15,7 @@ pinned; adding the channel does not start services or change your desktop.
   - [Editors and Emacs tools](#editors-and-emacs-tools)
   - [Audio, video, fonts and documents](#audio-video-fonts-and-documents)
   - [Fonts and keyboard layouts](#fonts-and-keyboard-layouts)
+  - [Browsers](#browsers)
   - [MUD clients](#mud-clients)
   - [Historical computing and languages](#historical-computing-and-languages)
   - [Roguelikes and other games](#roguelikes-and-other-games)
@@ -215,6 +216,12 @@ publication, source-required, and build gates appear in the final table.
 | [`genera-fonts-symbols`](guix/tay/packages/fonts.scm) | `0.1.3` | Unicode BDF and OTB specialty fonts | Build verified |
 | [`manna-cadet`](guix/tay/packages/manna-cadet.scm) | `20260809-1.e5f7e81` | Space Cadet keyboard layouts and helper tools | Defined |
 | [`sbcl-ivory-key`](guix/tay/packages/ivory-key.scm) | `0.1.0` | Declarative keyboard-layout compiler | Defined |
+
+### Browsers
+
+| Package | Version | What it does | Status |
+| --- | --- | --- | --- |
+| [`browsh`](guix/tay/packages/browsh.scm) | `1.8.2` | Source-built terminal web browser with locally generated fonts, embedded unsigned extension and packaged Firefox ESR | Verified ordinary offline URL/link navigation, text input, HTML form submission and zero-status quit; #96 OPEN (no-updater/source-archive lint gates; [receipt and limits](ACCOUNTING.md#browsh--ordinary-native-terminal-browsing-2026-10-09)) |
 
 ### MUD clients
 

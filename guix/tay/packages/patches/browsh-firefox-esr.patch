@@ -1,0 +1,206 @@
+Browsh's embedded unsigned extension is installed for the current browser
+session, using Marionette's supported temporary add-on installation API.
+Firefox ESR 140's Addon:Install handler accepts `temporary` and delegates to
+AddonManager.installTemporaryAddon; this path does not require signing.
+
+Firefox ESR 140 also requires explicit system access for chrome-context
+Marionette scripts and exports Preferences as an ES module rather than JSM.
+
+The temporary archive must retain an .xpi extension.  Firefox's XPIProvider
+isXPI classifier treats a filename without .xpi/.zip as an unpacked add-on,
+causing bootstrap to search the parent directory for manifest.json.
+
+Marionette commands are length-framed request/response exchanges.  Consume
+the greeting and each matching response before issuing dependent commands,
+so session startup finishes before add-on and preference operations.
+
+Source API references (Firefox 140 ESR release):
+https://github.com/mozilla-firefox/firefox/blob/FIREFOX_140_0esr_RELEASE/remote/marionette/driver.sys.mjs
+https://github.com/mozilla-firefox/firefox/blob/FIREFOX_140_0esr_RELEASE/remote/shared/Addon.sys.mjs
+https://github.com/mozilla-firefox/firefox/blob/FIREFOX_140_0esr_RELEASE/toolkit/modules/Preferences.sys.mjs
+https://github.com/mozilla-firefox/firefox/blob/FIREFOX_140_0esr_RELEASE/toolkit/mozapps/extensions/internal/XPIProvider.sys.mjs
+
+--- a/interfacer/src/browsh/firefox.go
++++ b/interfacer/src/browsh/firefox.go
+@@ -5,6 +5,7 @@
+ 	"embed"
+ 	"encoding/json"
+ 	"fmt"
++	"io"
+ 	"io/fs"
+ 	"log/slog"
+ 	"net"
+@@ -15,6 +16,8 @@
+ 	"regexp"
+ 	"runtime"
++	"strconv"
+ 	"strings"
++	"sync"
+ 	"syscall"
+ 	"time"
+ 
+@@ -29,6 +32,8 @@
+ var (
+ 	marionette     net.Conn
+ 	ffCommandCount = 0
++	marionetteReader *bufio.Reader
++	marionetteMutex sync.Mutex
+ 	defaultFFPrefs = map[string]string{
+ 		"startup.homepage_welcome_url.additional": "''",
+ 		"devtools.errorconsole.enabled":           "true",
+@@ -70,6 +70,6 @@
+ 	firefoxPath := ensureFirefoxBinary()
+ 	ensureFirefoxVersion(firefoxPath)
+-	args := []string{"--marionette"}
++	args := []string{"--marionette", "--remote-allow-system-access"}
+ 	if !viper.GetBool("firefox.with-gui") {
+ 		args = append(args, "--headless")
+ 	}
+@@ -248,7 +253,26 @@
+ 		Shutdown(errors.New("Failed to connect to Firefox's Marionette within 30 seconds"))
+ 	}
+ 	marionette = conn
+-	go readMarionette()
++	marionetteReader = bufio.NewReader(conn)
++	if err := conn.SetReadDeadline(time.Now().Add(30 * time.Second)); err != nil {
++		Shutdown(err)
++	}
++	greeting, err := readMarionetteFrame(marionetteReader)
++	if err != nil {
++		Shutdown(fmt.Errorf("Reading Marionette greeting: %w", err))
++	}
++	var handshake struct {
++		Protocol int `json:"marionetteProtocol"`
++	}
++	if err := json.Unmarshal(greeting, &handshake); err != nil {
++		Shutdown(fmt.Errorf("Decoding Marionette greeting: %w", err))
++	}
++	if handshake.Protocol != 3 {
++		Shutdown(fmt.Errorf("Unsupported Marionette protocol: %d", handshake.Protocol))
++	}
++	if err := conn.SetReadDeadline(time.Time{}); err != nil {
++		Shutdown(err)
++	}
+ 	sendFirefoxCommand("WebDriver:NewSession", map[string]interface{}{})
+ }
+ 
+@@ -257,10 +257,10 @@
+ 	if err != nil {
+ 		Shutdown(err)
+ 	}
+-	path := path.Join(os.TempDir(), "browsh-webext-addon")
++	path := path.Join(os.TempDir(), "browsh-webext-addon.xpi")
+ 	if err := os.WriteFile(path, []byte(data), 0644); err != nil {
+ 		Shutdown(err)
+ 	}
+-	args := map[string]interface{}{"path": path}
++	args := map[string]interface{}{"path": path, "temporary": true}
+ 	sendFirefoxCommand("Addon:Install", args)
+ }
+@@ -273,8 +273,8 @@
+ 	var script string
+ 	sendFirefoxCommand("Marionette:SetContext", map[string]interface{}{"value": "chrome"})
+ 	script = fmt.Sprintf(`
+-		Components.utils.import("resource://gre/modules/Preferences.jsm");
+-		prefs = new Preferences({defaultBranch: "root"});
++		const { Preferences } = ChromeUtils.importESModule("resource://gre/modules/Preferences.sys.mjs");
++		const prefs = new Preferences({defaultBranch: "root"});
+     prefs.set("%s", %s);`, key, value)
+ 	args = map[string]interface{}{"script": script}
+ 	sendFirefoxCommand("WebDriver:ExecuteScript", args)
+@@ -286,23 +310,79 @@
+-// Consume output from Marionette, we don't do anything with it. It"s just
+-// useful to have it in the logs.
+-func readMarionette() {
+-	buffer := make([]byte, 4096)
+-	count, err := marionette.Read(buffer)
+-	if err != nil {
+-		slog.Error("Error reading from Marionette connection", "error", err)
+-		return
+-	}
+-	slog.Info("FF-MRNT", "buffer", string(buffer[:count]))
++func readMarionetteFrame(reader *bufio.Reader) ([]byte, error) {
++	length := 0
++	digits := 0
++	for {
++		character, err := reader.ReadByte()
++		if err != nil {
++			return nil, err
++		}
++		if character == ':' {
++			break
++		}
++		if character < '0' || character > '9' || digits == 8 {
++			return nil, fmt.Errorf("Invalid Marionette frame length")
++		}
++		length = length*10 + int(character-'0')
++		digits++
++	}
++	if digits == 0 || length == 0 || length > 16*1024*1024 {
++		return nil, fmt.Errorf("Marionette frame length out of bounds: %d", length)
++	}
++	payload := make([]byte, length)
++	_, err := io.ReadFull(reader, payload)
++	return payload, err
+ }
+ 
+-func sendFirefoxCommand(command string, args map[string]interface{}) {
++func exchangeFirefoxCommand(command string, args map[string]interface{}) error {
++	marionetteMutex.Lock()
++	defer marionetteMutex.Unlock()
++	if err := marionette.SetDeadline(time.Now().Add(30 * time.Second)); err != nil {
++		return err
++	}
++	defer marionette.SetDeadline(time.Time{})
+ 	slog.Info("Sending command to Firefox Marionette", "command", command, "args", args)
+-	fullCommand := []interface{}{0, ffCommandCount, command, args}
+-	marshalled, _ := json.Marshal(fullCommand)
+-	message := fmt.Sprintf("%d:%s", len(marshalled), marshalled)
+-	fmt.Fprintf(marionette, "%s", message)
++	commandID := ffCommandCount
++	marshalled, err := json.Marshal([]interface{}{0, commandID, command, args})
++	if err != nil {
++		return err
++	}
++	var header [32]byte
++	prefix := strconv.AppendInt(header[:0], int64(len(marshalled)), 10)
++	prefix = append(prefix, ':')
++	message := net.Buffers{prefix, marshalled}
++	written, err := message.WriteTo(marionette)
++	if err != nil {
++		return err
++	}
++	if written != int64(len(prefix)+len(marshalled)) {
++		return io.ErrShortWrite
++	}
+ 	ffCommandCount++
+-	go readMarionette()
++	payload, err := readMarionetteFrame(marionetteReader)
++	if err != nil {
++		return fmt.Errorf("Reading Marionette response to %s: %w", command, err)
++	}
++	slog.Info("FF-MRNT", "buffer", string(payload))
++	var response []json.RawMessage
++	if err := json.Unmarshal(payload, &response); err != nil {
++		return fmt.Errorf("Decoding Marionette response: %w", err)
++	}
++	if len(response) != 4 {
++		return fmt.Errorf("Invalid Marionette response: %s", payload)
++	}
++	var kind, responseID int
++	if string(response[1]) == "null" || json.Unmarshal(response[0], &kind) != nil || json.Unmarshal(response[1], &responseID) != nil || kind != 1 || responseID != commandID {
++		return fmt.Errorf("Unexpected Marionette response to command %d: %s", commandID, payload)
++	}
++	if string(response[2]) != "null" {
++		return fmt.Errorf("Marionette %s failed: %s", command, response[2])
++	}
++	return nil
++}
++
++func sendFirefoxCommand(command string, args map[string]interface{}) {
++	if err := exchangeFirefoxCommand(command, args); err != nil {
++		Shutdown(err)
++	}
+ }
+ 
+ func setDefaultFirefoxPreferences() {
