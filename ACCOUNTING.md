@@ -63,6 +63,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Martin's Dungeon Bash native gameplay/save continuity](#martins-dungeon-bash--native-gameplay-and-save-continuity-2026-10-07)
 - [Gruesome ordinary native terminal gameplay](#gruesome--ordinary-native-terminal-gameplay-2026-10-07)
 - [Hunger Games ordinary native console gameplay](#hunger-games--ordinary-native-console-gameplay-2026-10-09)
+- [CryptRover ordinary native terminal gameplay](#cryptrover--ordinary-native-terminal-gameplay-2026-10-09)
 
 ## Relocation map (2026-10-04)
 
@@ -208,6 +209,125 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## CryptRover — ordinary native terminal gameplay (2026-10-09)
+
+Local evidence covers the existing [`cryptrover`](guix/tay/packages/cryptrover.scm)
+**1.1** package, built from the canonical Google Code release
+[`cryptrover_1.1_nosound.tar.gz`](https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/cryptrover/cryptrover_1.1_nosound.tar.gz).
+The fixed archive SHA-256 is
+**`4c8fdb89c21e3302b81afcb7fb974e02533685c461a1e395e869c58e1ea51494`**,
+Guix Nix-base32 **`150lllg8xib9x2ay78b1qj2kclq29sbzpdzw3aw04cqyqa4xp3sc`**.
+Upstream's archived release listing describes this exact file as “Cryptrover
+1.1 source without sound.” This is native acceptance work for an existing
+`PROJECT_PACKAGES` member, not a new inventory entry: package counts and the
+canonical **629-source preservation ledger remain unchanged**.
+**[Forgejo #318](https://forge.nogroup.group/tay/guix-channel/issues/318) remains
+OPEN: literal clean own lint is unmet.** These local receipts do not establish
+issue closure, signed channel publication, profile installation or deployment.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main bg16 passed in **3.84 s**; artifact 15506 records `/gnu/store/8clz772fxmrmyz06yg4czz4yhcv4ms9m-cryptrover-1.1`. |
+| Reproducibility | Main bg17 `--check` passed in **1.27 s**; artifact 15507 records the same output. |
+| Full lint | Final Main bg21 completed in **4.25 s**. CryptRover's generic HTML release updater cannot fetch the Google Storage directory listing (**HTTP 403**), so its own failed-release finding remains. The canonical archive homepage correction removed the earlier homepage finding; the only other diagnostic is unrelated deprecated Flex usage. This does **not** pass the clean-own-lint gate. |
+| Ordinary native PTY consumer | Main bg20 passed in **6.43 s**; actual proof and terminal-decoded screens are retained at `/tmp/cryptrover-native-2`. |
+| Final integrated target | Main bg22 `make check-cryptrover` passed in **10.81 s**, emitting `CRYPTROVER_NATIVE_OK`; `/tmp/cryptrover-make-final` records the same ordinary launcher/resource/score/exit behavior against the same immutable output. Contract JSON parsing also passed. |
+
+The remaining own diagnostic is exactly
+`cryptrover@1.1: updater 'generic-html' failed to find upstream releases`,
+preceded by the failed fetch of
+`https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/cryptrover/`
+with **403 (Forbidden)**. This is a release-discovery failure, not a failure to
+fetch the pinned no-sound source archive used by the successful build.
+
+The final homepage-only metadata correction does not change the built
+derivation. Successful build, reproducibility and real native gameplay do not
+waive the archive updater lint failure. The package builds the seven original
+C files using GCC and `make CC=gcc SDL=0`, linked to Guix ncurses/panel and libm.
+It removes the archive's opaque prebuilt `cr`; it never executes upstream's
+network-fetching `configure` bootstrap. The ncurses panel cleanup fix destroys
+each panel before its window, enabling ordinary dismissal of native help and
+highscore panels. There is no upstream test target.
+
+The rebuilt executable is private at `libexec/cryptrover`. The ordinary
+`bin/cryptrover` launcher supplies ncurses terminfo, creates and enters
+`${XDG_STATE_HOME:-$HOME/.local/state}/cryptrover`, and directly runs the native
+game in the player's terminal. Only native `scores.dat` user state is written
+there; it is **not a saved game or a resume format**. No `--smoke` adapter,
+Goocastle execution or replacement acceptance contract is claimed. The obsolete
+marker contract is retired, and the guarded external consumer is intentionally
+outside the unguarded aggregate `make check` dependencies.
+
+For ordinary play, install `cryptrover` and run `cryptrover` in a terminal:
+Space dismisses help, `?` reopens it, movement uses wasd/vi/numpad keys, `f`
+toggles the flashlight, and Escape follows the native loss/highscore exit path.
+The external acceptance target requires explicit `CRYPTROVER_OUTPUT` (a
+prebuilt `/gnu/store` package output), `CRYPTROVER_EVIDENCE` (a fresh nonexistent
+absolute evidence directory) and `GUIX` (the Guix executable):
+`make check-cryptrover CRYPTROVER_OUTPUT=/gnu/store/8clz772fxmrmyz06yg4czz4yhcv4ms9m-cryptrover-1.1 CRYPTROVER_EVIDENCE=/tmp/cryptrover-fresh-proof GUIX=guix`.
+Do not reuse a retained evidence directory for another run.
+
+### Observed native turns and highscore correlation
+
+The zero-argument launcher was exercised in fresh private HOME and XDG
+directories inside user/mount/PID/network namespaces. The game executable and
+all three terminal descriptors were observed directly; `/gnu/store` was
+read-only, and the network namespace had only loopback and no IPv4 routes.
+Evidence consists of raw PTY bytes, the exact input sequence, terminal-decoded
+`.screen.txt`/`.screen.json` observations, parsed native proof, namespace/mount
+records and before/after private-state inventories—not PNG screenshots.
+
+In `/tmp/cryptrover-native-2`, the native startup help was dismissed with Space,
+reopened with `?`, then dismissed normally. On the **48×24** dungeon map, the
+player `@` began at zero-based **(21, 7)** with HP/Air/Battery **100/100/100**,
+zero gold and level **1/12**. The consumer selected `w` from the actual visible
+floor tile `.` above the player; the next native screen moved `@` to **(21, 6)**,
+with HP unchanged and Air/Battery **99/99**. Pressing `f` turned the flashlight
+off: Air became **98**, while Battery stayed **99**. Pressing `f` again restored
+it: Air became **97**, Battery **98**, and the player position remained fixed.
+Thus observed turns show air consumption, battery conservation while the light
+is off, and battery drain while it is on. HP **100**, zero gold and level **1**
+remained unchanged; these observations do not claim combat, pickups or victory.
+
+Ordinary Escape invoked upstream's **“YOU HAVE LOST! :(”** quit path. Space
+acknowledged the loss, the native highscore panel displayed
+`Gold: 0    Level: 1  HP:100%  Air: 97%  Battery: 98%`, and another Space closed
+the panel with process exit status **0**. The real 53-byte
+`state/cryptrover/scores.dat` contains precisely that same record, with SHA-256
+**`2834b5587643203d9e14b731e8c9aed2bee283c5f9df4ef0ab60d3b69c3a0efa`**;
+it was created by the game, not seeded by the consumer. It correlates the final
+HUD, native highscore screen and XDG file. Before/after output NAR hashes match
+**`0zh18zcb47y8m97mwas5i30z578nvaz9vfsrqpv2i37f3psylq56`**, with read-only
+store mounts and no output mutation. The integrated run's randomized dungeon
+instead moved **(33, 8) → (33, 7)**, independently recording the same resource
+transitions, genuine score record and normal exit. No save/resume or completed
+twelve-level run is asserted.
+
+### Selected release licensing and retained notices
+
+The reviewed archive contains **GPL-3.0-or-later** grants in
+`src/main.c`, `src/entities.c`, `src/io.c`, `src/items.c`, `src/map.c` and
+`src/utils.c`: each explicitly permits version 3 or any later version.
+`src/mdport.c` separately carries Nicholas J. Kisseberth's complete **2005
+BSD-3-Clause** notice, including all three conditions and the full disclaimer.
+The package's license list is therefore GPL-3.0-or-later plus BSD-3-Clause.
+The bundled unused `lib/curses.h` and `lib/panel.h` identify PDCurses as public
+domain; the normal Linux build uses Guix ncurses instead and does not install
+those headers. The complete upstream GPLv3 `COPYING`, original `README`, and
+the complete `mdport.c` BSD notice copied to `BSD-3-Clause.txt` are installed in
+`share/doc/cryptrover`. Native evidence records their bytes and hashes in
+`upstream-notices.json`.
+
+The selected **upstream no-sound release itself contains no media, audio or
+asset/data directory**: its root consists of `config`, `configure`, `COPYING`,
+`cr`, `Makefile`, `README`, `lib/` and `src/`. Guix did not strip media from
+this release; it deleted only the prebuilt executable. No missing-media grant,
+sound capability, externally downloaded runtime assets or proprietary content
+is implied. This repository-only package receipt changes no documented host
+or service and establishes no material network-catalog correction, so no OKF
+page/log update applies. The documentation worker ran no commands or checks
+and created no temporary files.
 
 ## Hunger Games — ordinary native console gameplay (2026-10-09)
 

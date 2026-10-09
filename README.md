@@ -324,7 +324,7 @@ publication, source-required, and build gates appear in the final table.
 | [`corerl`](guix/tay/packages/corerl.scm) | `1kib-20131024` | One-kilobyte terminal roguelike | Defined |
 | [`cotd`](guix/tay/packages/cotd.scm) | `2.0.2-0.b771e2e` | City of the Damned strategy roguelike | Verified campaign path |
 | [`crashrun`](guix/tay/packages/crashrun.scm) | `0.5.0` | Original Python/SDL2 science-fiction roguelike | Verified |
-| [`cryptrover`](guix/tay/packages/cryptrover.scm) | `1.1` | Terminal dungeon survival game | Defined |
+| [`cryptrover`](guix/tay/packages/cryptrover.scm) | `1.1` | Source-built no-sound terminal dungeon survival game with XDG high scores | Verified ordinary native movement, flashlight/resource turns and normal exit; #318 OPEN (archive updater lint gate; [receipt](ACCOUNTING.md#cryptrover--ordinary-native-terminal-gameplay-2026-10-09)) |
 | [`cutlassrl`](guix/tay/packages/cutlassrl.scm) | `0.05-0.304bb87` | Python terminal roguelike | Defined |
 | [`diabaig`](guix/tay/packages/diabaig.scm) | `1.0.1` | Terminal roguelike game | Verified |
 | [`dragonslayer`](guix/tay/packages/dragonslayer.scm) | `3.5` | Terminal Dragonslayer game | Defined |
