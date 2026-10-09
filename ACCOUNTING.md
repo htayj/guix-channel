@@ -327,6 +327,54 @@ outside that scratch. No runtime execution or verification was performed by
 this documentation worker. This is repository-only work; no described deployed
 host/service changed, so no OKF page or log update applies.
 
+### Published cutover and bounded tracker readback
+
+Signed channel commit **`b392179753c7a284a3fabefe367858c7e33dcd5a`**, parent
+**`fa2f7123b273bad80302e3676f320d97e3430ea0`**, was published by a normal
+push to authoritative Forgejo `master`. Retained publisher/tracker receipts
+record exact-commit channel authentication, matching authoritative master/API
+readbacks and Forgejo signature **`verified=true`**. This records repository
+publication, not a GitHub code push, profile installation or host deployment.
+The paired evidence comments are
+[Forgejo **3273**](https://forge.nogroup.group/tay/guix-channel/issues/104#issuecomment-3273)
+and [GitHub **6090343301**](https://github.com/htayj/guix-channel/issues/104#issuecomment-6090343301).
+Both retain **#104 OPEN**, with `state:blocked` / `state:research`; final
+build/reproducibility/native receipts do not waive the own updater/archive
+lint gate. The old #638 execution contract is retired; its existing PNG is
+preserved, not replaced by a new screenshot or a Goocastle execution claim.
+
+The same bounded tracker wave records two rights-evidence corrections without
+inventing grants or changing packages/assets. **#228** remains OPEN with
+`state:blocked` / `state:deferred`: its explicit Cabal BSD3 and genuine author
+metadata are not automatically invalid merely because a full license file is
+absent. The complete nine-file pinned tree nevertheless lacks the full notice,
+and the actual holder notice remains unresolved; derivative `pandoc-minted`
+provenance requires separate rights/notices. Current ncaq HEAD
+**`a46d2aae`** has a GPLv2 license and GPL-2.0-or-later / Copyright 2015 ncaq
+notice, **not** an asserted grant covering the historical derivative revision.
+The paired correction receipts are
+[Forgejo **3275**](https://forge.nogroup.group/tay/guix-channel/issues/228#issuecomment-3275)
+and [GitHub **6090343527**](https://github.com/htayj/guix-channel/issues/228#issuecomment-6090343527).
+**#219** also remains OPEN with `state:blocked` / `state:deferred`: its pinned
+README MIT use/modify/distribute grant is affirmed, while the five fonts,
+two photos and Preview/PDF asset paths/blobs remain uncleared. No prohibition
+is inferred from filenames, and no asset removal/replacement, scope change or
+license-field edit is claimed. Its paired receipts are
+[Forgejo **3276**](https://forge.nogroup.group/tay/guix-channel/issues/219#issuecomment-3276)
+and [GitHub **6090343766**](https://github.com/htayj/guix-channel/issues/219#issuecomment-6090343766).
+
+`BrowserTrackerSync` retains all six comment POST statuses **201**, individual
+GET readbacks **200** with exact intended bodies, identical paired comments
+and preserved issue labels. Its full post-wave audit records **755** Forgejo
+issues (**387 open / 368 closed**) and **725** GitHub issues
+(**385 open / 340 closed**), **725** shared pairs, **30** Forgejo-only and
+**0** GitHub-only issues, with zero title/open-closed/workflow drift and no
+reconciliation mutations. These tracker counts do not alter package inventory
+or the canonical **629** preservation snapshots. This addition records
+retained Main/publisher/tracker evidence only; no build/test/lint/app/Goocastle
+execution, gate waiver or rbw session change occurred in this documentation
+update. No described deployed system changed, so no OKF page/log update applies.
+
 ## Clojure-Roguelike — native one-shot prototype render (2026-10-09)
 
 Local evidence covers the existing
