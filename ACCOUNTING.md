@@ -73,6 +73,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Browsh ordinary native terminal browsing](#browsh--ordinary-native-terminal-browsing-2026-10-09)
 - [Clojure-Roguelike native one-shot prototype render](#clojure-roguelike--native-one-shot-prototype-render-2026-10-09)
 - [Astx native CTS loader and confirmed structural rewrite](#astx--native-cts-loader-and-confirmed-structural-rewrite-2026-10-09)
+- [Persephil legacy PhiloLogic HTML to XLSX](#persephil--legacy-philologic-html-to-xlsx-2026-10-09)
 
 ## Relocation map (2026-10-04)
 
@@ -204,6 +205,17 @@ Browsh's 36 private Go modules and 737 distinct npm source archives are
 dependency closure, not extra applications. Its existing
 `browsh-org-browsh-source` pin/hash and the canonical **629** preservation
 snapshots remain unchanged.
+Persephil's separate 2026-10-09 candidate adds exactly **one**
+`PROJECT_PACKAGES` entry (`persephil`) and one README document-tool row.
+The scoped textual inventory rises from **233 project + 7 font = 240**
+installable names to **234 project + 7 font = 241**; including one optional
+proprietary and five check-only dependencies gives **247** check names.
+These are listed definition counts, not complete-inventory verification or
+accepted/publication totals, and include preexisting unpublished user changes.
+Its 214 npm installation paths and 204 distinct archives are private dependency
+closure, not additional applications. The existing
+`cookinrelaxin-persephil-source` pin/hash and canonical **629** preservation
+snapshots remain unchanged.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -228,6 +240,145 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Persephil — legacy PhiloLogic HTML to XLSX (2026-10-09)
+
+The new [`persephil`](guix/tay/packages/persephil.scm)
+**1.0.0-0.1e10afb** package reuses the complete
+`cookinrelaxin-persephil-source` origin at
+**`1e10afbbcb8c6f56d2cc22db0c915a9d64ecd8d6`**, source hash
+**`10jpc44cnlfph1h9zzy01xlvird0ay0a5x84la5fjk7s2wd7xf6h`**.
+It installs the original Node.js converter and all locked dependency sources,
+not a rewritten JSON API client. The wrapper passes URL arguments unchanged
+and does not change directories: upstream parses legacy PhiloLogic Latin HTML
+and writes its naturally dated XLSX workbook in the caller's directory.
+The only program edit corrects `require('excelJS')` to `require('exceljs')`
+for case-sensitive hosts. The authored upstream license is **GPL-3.0**;
+`package.json`'s ISC value is an untouched npm-init template, not the project's
+license grant. This repository-only delivery does not establish publication,
+profile installation or deployment, and no OKF page/log update applies.
+
+### Retained source-download and license audit
+
+The pinned lockfileVersion 1 `package-lock.json` has SHA-256
+**`cf7ce56f055fa00f038e4f4aca16e138ea42c387dc0fbe9a965ef647d7c4f677`**.
+The source worker fetched **204 distinct archives, 10,913,095 bytes**, covering
+**214 exact installation paths: 196 top-level and 18 nested**. No locked
+dependency, including the optional source-map entry, was omitted or substituted.
+Every installation-path lock SRI and every distinct archive's registry SRI
+and SHA-1 were verified; SHA-256 was computed from downloaded bytes with
+`guix hash` and independently converted to Nix base32. Archive manifest names,
+versions and required dependency declarations matched the lock. Inspection
+found no native-addon/platform-binary artifacts or install lifecycle hooks.
+These are fetching and source-audit receipts, not runtime/build/lint passes.
+The compact receipt retains the source worker's `download-receipts.json`
+SHA-256 **`13207a7bd9b24533cab60b177dd28a715414bf6d8eca4620d8a5b17a8b162897`**;
+the large JSON/download scratch is not part of the package or documentation.
+
+[`persephil-npm-sources.scm`](guix/tay/packages/persephil-npm-sources.scm)
+retains actual grant coverage rather than relying only on manifest metadata:
+196 archives had named notice files; assert-plus and isarray carry complete
+MIT notices in READMEs; six other archives required **eight supplemental
+notice origins**. Full archives and embedded/source-header notices remain
+installed. Notable license distinctions are:
+
+- **buffers 0.1.1:** every published file byte-matches parent commit
+  `51ac8d0324008b0d0ed5759b1466402a77ff8dc8`. The
+  [primary upstream README grant](https://raw.githubusercontent.com/bitpay/node-buffers/1b745ee35d33eb166e15ef1866073a07c6d7de87/README.markdown)
+  at `1b745ee35d33eb166e15ef1866073a07c6d7de87` changes license statements,
+  not code, and explicitly designates MIT/X11 without supplying the full text.
+  It is installed as `LICENSE-GRANT-MIT-X11`, hash
+  `140c1hnp3k7j8lap5mif97bpnphfmlrabibmzv77iraf8hd9fhrx`.
+  The separate [Debian 0.1.1-2 full notice](https://sources.debian.org/data/main/n/node-buffers/0.1.1-2/debian/copyright)
+  is installed as `LICENSE-MIT`, hash
+  `0mm0a9pxrd27yz5v79vnv8wg7csmzzpsfgxzwa6sjxj4ph1klhlp`.
+  Its **2015** copyright metadata is Debian-authored, not an invented upstream
+  2012 notice or a newly substituted dependency version.
+- **binary 0.3.0:** the original README explicitly declares MIT and its
+  manifest identifies James Halliday; both remain unchanged. No full
+  upstream-authored copyright notice was recoverable. The immutable
+  [SPDX MIT terms](https://raw.githubusercontent.com/spdx/license-list-data/d46e94e2c78ceede1cfc63cfa0396472d2798d4c/text/MIT.txt)
+  are retained verbatim as `LICENSE-MIT-TERMS`, hash
+  `1dcjqlpj028h85q5nn92l91rjfsiahab291lnsx1crwfy7wqamxh`, solely as a
+  terms reference, **not an authored grant**. Template markers are not filled
+  with a fabricated holder/year; this notice limitation remains explicit.
+- **json-schema 0.2.3:** BSD-3-Clause is selected from the README's AFL/BSD
+  dual grant. The [full notice](https://raw.githubusercontent.com/kriszyp/json-schema/4f3db68fb98d9444850fec0ef5ed981c8beacfb6/LICENSE)
+  is recovered at immutable `4f3db68fb98d9444850fec0ef5ed981c8beacfb6`, hash
+  `13lnjn2irjw16p9d29nlq492n37qxg54hpvl57g9fqqfyx3cjdwh`.
+  Source equivalence holds after CRLF/LF normalization, not raw-byte identity;
+  stale MIT headers are not treated as overriding the documented dual grant.
+- **chainsaw:** its full X11-variant notice is retained, rather than relabeled
+  as exactly Expat. **saxes** retains its pinned full LICENSE and AUTHORS;
+  **set-immediate-shim** retains its pinned upstream full MIT notice.
+- **bcrypt-pbkdf** combines BSD-3-Clause and ISC; **fs.realpath** combines ISC
+  and bundled Node.js MIT. **pako**, plus retained ExcelJS/JSZip browser
+  distributions, combines MIT and Zlib headers. JSZip selects MIT from its
+  MIT/GPL dual grant while retaining both. **jsbn** uses Tom Wu's custom
+  permissive intact-notice condition, also bundled alongside MIT in ecc-jsbn.
+
+### Local gates and boundaries
+
+**[Forgejo #107](https://forge.nogroup.group/tay/guix-channel/issues/107)
+remains OPEN: literal clean own lint is unmet.** Main exercised the original
+converter end to end; this does not waive the independent full-lint gate.
+
+| Gate | Main receipt |
+| --- | --- |
+| Initial source build | bg126 passed in **28.44 s**, artifact **16213**, output `/gnu/store/np0bhv0594mp167kgr1lhnsx05v436cf-persephil-1.0.0-0.1e10afb`. Superseded by the formatting-corrected output below. |
+| Initial full lint | bg127 completed in **10.43 s**: own 99-character line-length finding at line 67, no-updater and source-archive findings. This was not clean lint; the long line was subsequently corrected. |
+| Initial native consumer | bg128 failed in **7.30 s before application launch** because the harness looked under `bin/ip` instead of actual `sbin/ip`. Not converter failure or native acceptance; the corrected harness is exercised below. |
+| Final source build | bg129 passed in **6.35 s**, artifact **16216**, output `/gnu/store/cx8b74sd96chjdxyg36sl2412j1xzlx9-persephil-1.0.0-0.1e10afb`, derivation `/gnu/store/r9jkrj3whvy9i06myy08mhkjhswpdssk-persephil-1.0.0-0.1e10afb.drv`. Its syntax and offline module-load/exact installed-manifest check phases passed. |
+| Final reproducibility | bg130 `--check` passed in **4.80 s**, artifact **16217**, for that same final output and derivation. |
+| Final integrated consumer | bg131 passed in **8.94 s**; `/tmp/persephil-native-2` retains actual HTTP, decoded XLSX XML/rich-text cells, natural CLI exit **0**, caller-file preservation, read-only store and unchanged NAR proof. |
+| Final full lint | bg132 completed in **7.29 s**: own **no updater** and **source-archive** findings at `tay/packages/persephil.scm:17:2` remain. The global flex deprecation warning is separate. Formatting is corrected, but literal clean own lint remains **unmet**, with no waiver or selected-checker substitution. |
+| Final independent standalone consumer | bg133 passed in **4.34 s**; `/tmp/persephil-native-3` independently retains the same final output's real HTTP-to-XLSX behavior, natural exit **0**, unchanged NAR and cleanup. |
+| Missing-variable guard | bg134 rejected with make exit **2** in **1.53 s**, requesting a canonical prebuilt output and fresh absolute evidence directory instead of implicitly building or launching Persephil. |
+
+### Actual native workbook evidence
+
+The integrated and independent consumers invoked the installed
+`bin/persephil` with ordinary URL argv, serving original-shaped legacy KWIC
+HTML over loopback HTTP in isolated user/mount/network/PID namespaces.
+The process kept UID **1000**, GID **998**, with only `lo` and a read-only
+`/gnu/store`; no clock hook or injected runtime module replaced the converter.
+The integrated HTTP receipt records a real **GET** of
+`/legacy/Latin/kwic?kwic=omnis&fixture=persephil`, not synthetic JSON input.
+The fixture HTML SHA-256 is
+**`a9310e74f8a0a25a5392f82f34a1bd46ae0b684131a66221f1a95638be7a7e82`**.
+Decoded workbook XML verifies the **Data** sheet and exact headers
+**Text / Extract / Work / Passage**, with three nonempty result rows:
+
+| Text | Extract | Work | Passage |
+| --- | --- | --- | --- |
+| Gallia est omnis divisa in partes tres. | omnis | Caesar, De bello Gallico | 1.1 |
+| Arma virumque cano, Troiae qui primus ab oris. | virumque cano | Vergil, Aeneid | 1.1 |
+| Nihil & virtūs sine labore. | virtūs | Seneca, Epistulae morales | 67.4 |
+
+The `omnis`, `virumque`, `cano` and `virtūs` runs are bold in the Text and
+Extract cells; intervening spaces and surrounding context remain nonbold,
+in **Times New Roman**. The entity-decoded ampersand and Unicode macron
+survive the original HTML parser and actual XLSX serialization.
+Integrated output is **`Latin corpus search 10-09-26 23 01 46.xlsx`**,
+SHA-256 **`8519b6aadb61fbfc46899b87d326170624875b7f01c4dbc8663a37f8a79e741f`**;
+independent output is **`Latin corpus search 10-09-26 23 01 58.xlsx`**,
+SHA-256 **`d4979163ef1526fb03d4523d15d9679d090a657f2127b095f34d13808bd7fb08`**.
+Both filenames fall within the separately recorded real start/end clock
+intervals. Each caller directory gained only the expected dated workbook;
+its preexisting files were preserved. Both CLI processes exited naturally
+with **0**, without forced cleanup. Servers/threads closed, namespace processes
+exited and transient consumer scratch was removed while evidence was retained.
+The final output NAR before and after each run is
+**`1v2j2bvs7xyn01f9vfx5cvwyc62zg3cfjpc6r4ka69fj8snp377r`**.
+
+Acceptance is bounded to this **legacy HTML URL-to-workbook path**. Current
+PhiloLogic JSON API compatibility and a live remote corpus were not exercised.
+No upstream test-suite pass is asserted: upstream's npm test is a placeholder
+that exits 1; the real offline closure checks and native consumer are separately
+identified above. The full source-download scratch
+`/tmp/persephil-sources-_s0xjr57` was removed by Main after this compact source
+audit was saved; native evidence directories are retained, not cleanup targets.
+This documentation worker ran no builds, linters, tests or executable checks.
 
 ## Astx — native CTS loader and confirmed structural rewrite (2026-10-09)
 

@@ -192,6 +192,7 @@ publication, source-required, and build gates appear in the final table.
 | [`ludviglundgren-qbittorrent-cli`](guix/tay/packages/ludviglundgren-qbittorrent-cli.scm) | `2.3.0` | Go qBittorrent Web API client; commands `qbt` and `qbittorrent-cli` | Verified isolated daemon path |
 | [`natron`](guix/tay/packages/natron.scm) | `2.6.0-0.20260724` | Core node-graph compositor and NatronRenderer; normal plugin collections/OCIO configs not bundled | Verified empty GUI and external OFX render; [limits](ACCOUNTING.md#natron--verified-core-host-path) |
 | [`nrl-text-to-phoneme`](guix/tay/packages/nrl-text-to-phoneme.scm) | `0-f99c64a` | NRL text-to-phoneme command and rule tables | Defined |
+| [`persephil`](guix/tay/packages/persephil.scm) | `1.0.0-0.1e10afb` | Export legacy PhiloLogic Latin HTML search results to dated XLSX workbooks | Verified native workbook; [receipt and open lint gate](ACCOUNTING.md#persephil--legacy-philologic-html-to-xlsx-2026-10-09) |
 | [`praat`](guix/tay/packages/praat.scm) | `7.0.02` | GTK speech analysis/editor and batch scripting | Verified analysis and GTK path |
 | [`pyrosimple`](guix/tay/packages/pyrosimple.scm) | `2.14.2-16.d24655a` | Command-line tools for rTorrent and BitTorrent metainfo files | Verified |
 | [`sbcl-qbcl`](guix/tay/packages/qbcl.scm) | `0.1.0` | qBittorrent command-line controller | Defined |

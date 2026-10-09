@@ -58,7 +58,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	lambdahack kimchi keeperrl \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
-	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago
+	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # These packages are enumerated and linted, but are not part of the default
 # build because their source artifacts are proprietary and must be supplied by
@@ -261,6 +261,11 @@ check-pbui:
 check-cavechop:
 	@test -n "$(CAVECHOP_OUTPUT)" -a -n "$(CAVECHOP_EVIDENCE)" || { echo 'Set CAVECHOP_OUTPUT and CAVECHOP_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/cavechop-smoke.sh "$(CAVECHOP_OUTPUT)" "$(CAVECHOP_EVIDENCE)"
+
+.PHONY: check-persephil
+check-persephil:
+	@test -n "$(PERSEPHIL_OUTPUT)" -a -n "$(PERSEPHIL_EVIDENCE)" || { echo 'Set PERSEPHIL_OUTPUT and PERSEPHIL_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/persephil-smoke.sh "$(PERSEPHIL_OUTPUT)" "$(PERSEPHIL_EVIDENCE)"
 
 check-tui:
 	GUIX="$(GUIX)" sh tests/tui-smoke.sh
