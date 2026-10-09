@@ -325,7 +325,7 @@ publication, source-required, and build gates appear in the final table.
 | [`cotd`](guix/tay/packages/cotd.scm) | `2.0.2-0.b771e2e` | City of the Damned strategy roguelike | Verified campaign path |
 | [`crashrun`](guix/tay/packages/crashrun.scm) | `0.5.0` | Original Python/SDL2 science-fiction roguelike | Verified |
 | [`cryptrover`](guix/tay/packages/cryptrover.scm) | `1.1` | Source-built no-sound terminal dungeon survival game with XDG high scores | Verified ordinary native movement, flashlight/resource turns and normal exit; #318 OPEN (archive updater lint gate; [receipt](ACCOUNTING.md#cryptrover--ordinary-native-terminal-gameplay-2026-10-09)) |
-| [`cutlassrl`](guix/tay/packages/cutlassrl.scm) | `0.05-0.304bb87` | Python terminal roguelike | Defined |
+| [`cutlassrl`](guix/tay/packages/cutlassrl.scm) | `0.05-0.304bb87` | Original Python 2 terminal roguelike with XDG native saves and logs | Verified ordinary native movement, automatic save/restore continuity and zero-status quit; #320 OPEN (own release-discovery lint gate; [receipt](ACCOUNTING.md#cutlassrl--ordinary-native-terminal-saverestore-2026-10-09)) |
 | [`diabaig`](guix/tay/packages/diabaig.scm) | `1.0.1` | Terminal roguelike game | Verified |
 | [`dragonslayer`](guix/tay/packages/dragonslayer.scm) | `3.5` | Terminal Dragonslayer game | Defined |
 | [`dungeon-monkey-unlimited`](guix/tay/packages/dungeon-monkey-unlimited.scm) | `1.001` | Pascal/SDL fantasy dungeon adventure | Verified |
