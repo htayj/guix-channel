@@ -63,6 +63,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Martin's Dungeon Bash native gameplay/save continuity](#martins-dungeon-bash--native-gameplay-and-save-continuity-2026-10-07)
 - [Gruesome ordinary native terminal gameplay](#gruesome--ordinary-native-terminal-gameplay-2026-10-07)
 - [Hunger Games ordinary native console gameplay](#hunger-games--ordinary-native-console-gameplay-2026-10-09)
+- [Grippy Socks ordinary native console gameplay](#grippy-socks--ordinary-native-console-gameplay-2026-10-09)
 - [CryptRover ordinary native terminal gameplay](#cryptrover--ordinary-native-terminal-gameplay-2026-10-09)
 - [Dhack ordinary native terminal gameplay](#dhack--ordinary-native-terminal-gameplay-2026-10-09)
 - [CoreRL ordinary native terminal gameplay](#corerl--ordinary-native-terminal-gameplay-2026-10-09)
@@ -560,6 +561,143 @@ is implied. This repository-only package receipt changes no documented host
 or service and establishes no material network-catalog correction, so no OKF
 page/log update applies. The documentation worker ran no commands or checks
 and created no temporary files.
+
+## Grippy Socks — ordinary native console gameplay (2026-10-09)
+
+Local evidence covers the existing [`grippy-socks`](guix/tay/packages/grippy-socks.scm)
+**3.5** package, built from CruiserOne/Daedalus commit
+**`32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8`**, recursive Guix source hash
+**`0fdzx2zzqbd3p99yljksmbh0s3mbzzmq2dq42a9yz5rfkn9gjy2r`**.
+The pinned upstream README identifies the official **2024-10-31** Daedalus 3.5
+release copied from `dae35zip.zip`; this receipt does not claim a newer release
+survey. Grippy Socks is the distinct original `gripsox.ds` script, not the
+Hunger Games or Dragonslayer sibling game. This accepts an existing
+`PROJECT_PACKAGES` member: **no inventory count increases**, and the canonical
+**629-source preservation ledger remains unchanged**.
+**[Forgejo #383](https://forge.nogroup.group/tay/guix-channel/issues/383) remains
+OPEN pending signed publication and closure.** Local acceptance is not evidence
+of publication, profile installation or system deployment. Historical #689's
+marker-style contract is not ordinary native gameplay evidence.
+
+| Gate | Main receipt |
+| --- | --- |
+| Source build | Main bg38 passed in **13.81 s**; artifact 15624 records `/gnu/store/laly01jn760vn5w7ld9553am5s9msspg-grippy-socks-3.5`. |
+| Reproducibility | Main bg39 `--check` passed in **11.08 s**; artifact 15625 records the same output. |
+| Full lint | Main bg40 passed in **6.00 s**, with **no Grippy Socks finding**. The sole diagnostic is unrelated deprecated Flex usage. |
+| Ordinary native PTY consumer | Main bg41 passed in **2.27 s**; actual evidence is retained at `/tmp/grippy-native-1`. |
+| Final integrated target | Main bg42 `make check-grippy-socks` passed in **6.06 s** at `/tmp/grippy-make-final`, emitting `GRIPPY_SOCKS_NATIVE_OK`. Its actual raw transcript and result record the same six ordinary rest actions, native wellness **3 → 1**, crisis consequence and normal zero-status exit against the same output. Main's JSON validation passed in **0.01 s**. |
+
+The recipe builds upstream's Unix `make daedalus` target with GCC, installs the
+source-built engine privately at `libexec/grippy-socks-real`, and installs only
+the unchanged `gripsox.ds` as game data. Upstream has **no test target**; native
+acceptance is a separate external consumer, not a skipped upstream suite
+replaced by a marker. GCC/patchelf are native build inputs, Bash/coreutils are
+launcher dependencies, and no registry dependency closure or opaque Windows
+executable is used. The source origin fetches the pinned checkout; the build
+and ordinary runtime require no additional downloads.
+
+The ordinary zero-argument `grippy-socks` launcher creates
+`${XDG_STATE_HOME:-$HOME/.local/state}/grippy-socks` with a private umask, links
+the immutable script there, and execs the engine with this exact native string:
+
+```text
+OpenScript 'gripsox.ds' fNoExit 1 fSkipMessageDisplay 0
+```
+
+`OpenScript` loads the original script; the grammar requires separate value
+tokens, not equals assignments. `fNoExit 1` keeps the ordinary command prompt
+alive, and `fSkipMessageDisplay 0` permits native `Message` dialogs. These are
+documented lifecycle/display settings only. No seed, wellness, clock,
+coordinates, medication, patient state or other gameplay variable is forced.
+There is no public `--smoke` interface or embedded/patched engine in this proof.
+
+At `Enter Command Line:`, the retained `pty-inputs.json` records exactly **six**
+ordinary `Macro7` commands followed by `fNoExit 0 Exit`. Upstream's
+[F1–F7 command table](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/command.cpp#L286-L292)
+and [native macro dispatch](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/command.cpp#L5982-L5996)
+map `Macro7` to the script's user-facing F7 rest action, described in
+[the original help](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/gripsox.ds#L52-L56)
+as “Rest for an hour.” The
+[rest implementation](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/gripsox.ds#L121-L129)
+runs up to 60 native `Wait` steps, bounded at the next day evaluation. The first
+five rest commands emitted no ordinary dialog; the sixth emitted this actual
+game consequence in `terminal.raw` and `rest-6.console.txt`:
+
+```text
+Daedalus: You made it through another day on the psych ward! Here's a summary of your actions the previous day:
+
+Negative: Didn't eat anything all day. [-1]
+Negative: Never showered. [-1]
+Negative: Skipped all daily therapy groups.
+Negative: Didn't check in with your psychiatrist.
+
+As a result of your actions yesterday, your wellness level has decreased from 3 to 1. :-(
+
+Your wellness has fallen enough that you are in crisis! For your safety you have been placed on a one-on-one continual observation. :-(
+```
+
+This is the native game's reported wellness transition **3 → 1** and
+**one-on-one continual observation** consequence, not an injected expected
+message, hidden-state query, visible HUD reading or victory. The source path is
+[initial wellness](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/gripsox.ds#L58-L81),
+[Wait/day evaluation](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/gripsox.ds#L184-L246)
+and [wellness adjustment](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/gripsox.ds#L249-L264).
+`daily-consequence.json` records all six observed responses. The session ended
+normally with `fNoExit 0 Exit`, **status 0**, without EOF or signals. The exit
+command changes only console lifecycle, not a game outcome.
+
+**Unix console boundary:** this is a native command-line simulation, not the
+graphical inside view or a full-screen terminal map. Upstream's
+[console graphics callback](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/daedalus.cpp#L3224-L3229)
+and [operation callback](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/daedalus.cpp#L3341-L3343)
+are no-ops. The script's
+[inside-view event](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/gripsox.ds#L142-L164)
+computes clock presentation and sends the status line and interaction text to
+`MessageInside`; those are **not displayed** by this Unix frontend. The nominal
+F7 help label does not establish a displayed six-hour clock transition. Ordinary
+`Message` output, including the evaluated day summary, is available. No
+graphical UI, player coordinates, displayed status line, save/restore
+continuity, hospital discharge, victory or complete game acceptance is claimed.
+
+The external consumer and actual game ran as caller UID **1000**, GID **998**
+in private user, mount, network and PID/proc namespaces. The network contained
+only loopback with no external routes; `/gnu/store` was recursively read-only.
+`game-entry.json` records all standard descriptors on **`/dev/pts/50`**, the
+exact ordinary engine arguments, fresh private HOME/XDG/TMPDIR and empty `PATH`.
+Before/after output NAR hashes both equal
+**`0vvywyncwjv9d493d9g0ip5j3wf85v9nj62fmgh8fxygihkxa7ss`**.
+The final footprint contains only private directories and the immutable
+`state/grippy-socks/gripsox.ds` symlink. This establishes state isolation and
+unchanged output, **not a savegame**; no save file was created or tested.
+
+**Rights, embedded assets and notices:** Walter D. Pullen's complete original
+author grant and warranty disclaimer state **GPL-2.0-or-later**. Full original
+`README.md`, `license.htm` (GPLv2), `changes.htm`, `changes.doc`, `daedalus.htm`,
+`daedalus.doc`, `script.htm` and `script.doc` are installed under
+`share/doc/grippy-socks`; `NOTICE` preserves the complete author grant and
+disclaimer from `util.h` and adds the dated **2026-10-09** packaging notice.
+`util.h` carries dated Unix-selection and LP64 32-bit bitmap-word changes;
+`util.cpp` carries the sized-delete ABI adaptation. Runpath shrinking avoids
+retaining the build toolchain. None rewrites gameplay or the script.
+The script itself carries Pullen's attribution and contains its original
+[procedural textures](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/gripsox.ds#L1090-L1368)
+and [embedded bitmap data](https://github.com/CruiserOne/Daedalus/blob/32af46ddf22e53c9bfd7bd7eacca1e249c60a5e8/gripsox.ds#L1370-L1419).
+No separate external bitmap or asset download is required. `upstream-files.json`
+records the complete pinned documentation and **82,848-byte** unchanged script,
+SHA-256 **`37b06691d67261c16e8de1504fe70506a57d9e8a2fc6eef2dbc13c31fc6928b7`**.
+These retain the original rights and asset source, not abbreviated licenses or
+replacement content.
+
+The external consumer is [tests/grippy-socks-smoke.sh](tests/grippy-socks-smoke.sh)
+with [tests/grippy-socks-native.py](tests/grippy-socks-native.py). The explicit
+`make check-grippy-socks` target requires `GRIPPY_SOCKS_OUTPUT` (prebuilt store
+output), `GRIPPY_SOCKS_EVIDENCE` (fresh nonexistent absolute evidence directory)
+and `GUIX` (Guix executable); it does not build implicitly or belong to the
+aggregate check. This documentation worker ran no commands or checks and
+created no temporary files. No host/service changed or material network-catalog
+correction was established, so no OKF page/log update applies to this
+repository-only receipt.
+
 
 ## Hunger Games — ordinary native console gameplay (2026-10-09)
 

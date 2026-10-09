@@ -316,22 +316,6 @@
       }
     },
     {
-      "issueNumber": 689,
-      "packageName": "grippy-socks",
-      "packageModulePath": "guix/tay/packages/grippy-socks.scm",
-      "artifactPath": ".goocastle/evidence/issue-689.png",
-      "runtime": {
-        "executable": "grippy-socks",
-        "invocation": {
-          "file": "grippy-socks",
-          "args": [
-            "--smoke"
-          ]
-        },
-        "successMarker": "GRIPPY_SOCKS_SMOKE_OK"
-      }
-    },
-    {
       "issueNumber": 696,
       "packageName": "hydra-slayer",
       "packageModulePath": "guix/tay/packages/hydra-slayer.scm",
