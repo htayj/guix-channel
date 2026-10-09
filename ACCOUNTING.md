@@ -380,6 +380,47 @@ identified above. The full source-download scratch
 audit was saved; native evidence directories are retained, not cleanup targets.
 This documentation worker ran no builds, linters, tests or executable checks.
 
+### Publication and mirrored tracker readback (2026-10-09)
+
+Signed channel commit
+**`e9eae477eb73b4fc9bb07473f6b5749f283eae79`**, parent
+**`fd99d9e62a9a9d14c8493280ec7493a1570d28f8`**, was published by a normal
+authoritative Forgejo `master` push. Publisher receipts record successful
+exact-OID channel authentication and matching SSH/master/API readbacks;
+Forgejo reports **signature verified=true**. This establishes that bounded
+publication, not a GitHub code push, profile installation or deployment.
+
+The tracker worker posted matching #107 evidence comments
+[Forgejo 3278](https://forge.nogroup.group/tay/guix-channel/issues/107#issuecomment-3278)
+and [GitHub 6090785863](https://github.com/htayj/guix-channel/issues/107#issuecomment-6090785863).
+Each POST returned **201** and authenticated GET **200**, with exact intended
+bodies read back; **#107 remains OPEN in both trackers**, with the literal
+clean-own-lint gate unmet. The workbook exports' naturally differing bytes
+are not a claim of byte-identical export reproducibility; the native assertions
+compare decoded cell/style semantics, while `--check` covers package output.
+
+The complete paginated fourth-wave audit covered **755 Forgejo issues
+(387 open / 368 closed)** and **725 GitHub issues (385 open / 340 closed)**,
+with **725 shared pairs / 722 unique titles** and **zero title, open/closed or
+`state:*` workflow drift**. Thirty Forgejo-only issues (#728–757), no GitHub-only
+issues, and no required reconciliation were recorded; no states/labels changed.
+
+The same bounded wave updated still-OPEN #221 via
+[Forgejo 3279](https://forge.nogroup.group/tay/guix-channel/issues/221#issuecomment-3279)
+and [GitHub 6090786123](https://github.com/htayj/guix-channel/issues/221#issuecomment-6090786123),
+also POST **201** / exact authenticated GET **200**. Its primary
+[MIT CADR source LICENSE](http://www.unlambda.com/mit/LICENSE) actually states
+**Copyright (c) 1980, Massachusetts Institute of Technology**, with
+three-clause BSD-style retention/nonendorsement terms, **not standard
+MIT/Expat**. This recovered system-source release's grant does not establish
+coverage of Parker's separate emulator C sources, unya modifications or
+arbitrary PROM/microcode/load-band/disk images; explicit emulator and exact-image
+rights remain unverified, and #221 remains blocked. No emulator/image delivery
+or legal waiver is inferred from this tracker correction. The tracker wave
+reran no builds/tests/lint/apps/Goocastle and changed no repository files;
+the canonical **629** snapshots remain unchanged. No described deployed system
+changed, so no OKF page/log update applies to this publication/tracker receipt.
+
 ## Astx — native CTS loader and confirmed structural rewrite (2026-10-09)
 
 Local evidence covers the existing [`astx`](guix/tay/packages/astx.scm)
