@@ -477,6 +477,59 @@ the receipts above are Main's observed gates. No documented host/service or
 network-catalog fact changed, so **no OKF page or log update applies** to this
 repository-only package receipt.
 
+### Publication and tracker synchronization (2026-10-09)
+
+The pre-publication statement above is superseded **for channel publication
+only** by signed commit
+**[`90ad2a2dd57118a26b53bd0fbb2e3f3660d9cab5`](https://forge.nogroup.group/tay/guix-channel/commit/90ad2a2dd57118a26b53bd0fbb2e3f3660d9cab5)**,
+parent **`8c8b8ab148f827599119ea51f106a996a95e1f8e`**. The publisher performed
+exact-OID channel authentication and a normal push to authoritative `origin`
+master. Its SSH/master/API identity matched; the tracker independently read
+the exact matching commit/master API values and **`signature_verified: true`**.
+This establishes that publication, not a GitHub code push, profile installation
+or deployment, occurred. It does not waive the unresolved clean-own-lint gate.
+
+Cracks and Crevices **#313 remains OPEN** on
+[Forgejo, comment 3297](https://forge.nogroup.group/tay/guix-channel/issues/313#issuecomment-3297)
+and [GitHub, comment 6093107334](https://github.com/htayj/guix-channel/issues/313#issuecomment-6093107334).
+The synchronized evidence records recovered original source, positive grants,
+retained fonts/FOV, final Main-owned build/repro/native receipts and publication,
+while retaining the own release-discovery/source-archive lint findings as
+**UNMET**, without suppression or waiver. Original labels, including
+`state:blocked`, `state:research` and the workflow label, remain unchanged.
+
+The same tracker wave corrected the distinct **#316 CryptoRl** target on
+[Forgejo, comment 3298](https://forge.nogroup.group/tay/guix-channel/issues/316#issuecomment-3298)
+and [GitHub, comment 6093107537](https://github.com/htayj/guix-channel/issues/316#issuecomment-6093107537),
+both still **OPEN** with all original labels preserved. This is Gornova's
+original **CryptoRl 1.0**, not CoreRL/corerl #311 and not CryptoRl2. Its authentic
+[author release post](https://randomtower.blogspot.com/2015/08/cryptorl-release-10_28.html)
+was read through the [original Blogger post feed](https://randomtower.blogspot.com/feeds/posts/default/2017182703995718619?alt=json):
+publication **2015-08-28T23:10:00.005+02:00**, Java 1.8 and the original
+`cryptoRl-1.0.zip` download link. That identifies the release; it is not
+recovered buildable source or an actual immutable source/asset grant.
+The tracker observed **HTTP 404** for each exact
+[GitHub repository API lookup](https://api.github.com/repos/Gornova/CryptoRl),
+[original Orangedox ZIP](https://dl.orangedox.com/TRfo3gOrLyslL8ZfA2/cryptoRl-1.0.zip)
+and [Software Heritage origin lookup](https://archive.softwareheritage.org/api/1/origin/https://github.com/Gornova/CryptoRl/get/).
+These bounded route results do not establish exhaustive absence, “never
+archived,” no possible mirror or author republication as the only recovery
+route. Authentic original-1.0 immutable source and its actual notices remain
+missing; neither the unrelated CoreRL package nor a sequel satisfies that gate.
+
+All four evidence-comment POSTs returned **201**; individual authenticated
+GETs returned **200** with exact paired identical bodies, both issues OPEN
+and every original label retained. The complete wave-11 inventory covered
+**755 Forgejo issues** (387 open/368 closed) and **725 GitHub issues**
+(385 open/340 closed): **725 shared pairs**, **722 unique shared titles**,
+**zero title, open/closed or `state:*` workflow drift**. The **30 Forgejo-only
+issues 728–757** remain accounted for; there are no GitHub-only issues.
+This is a tracker comparison, not an all-issues acceptance claim. Durable
+task evidence is `local://browser-tracker-wave11-receipt.json`; no issue-state
+or label edits, repository checks, applications or Goocastle reruns accompanied
+the synchronization. This repository/tracker-only publication establishes no
+changed deployed-system fact, so no OKF page or log update applies.
+
 ## City of the Condemned — original source and ordinary native gameplay (2026-10-09)
 
 The new [`city-of-the-condemned`](guix/tay/packages/city-of-the-condemned.scm)
