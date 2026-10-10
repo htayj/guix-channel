@@ -58,7 +58,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	lambdahack kimchi keeperrl \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
-	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned cracks-and-crevices
+	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned cracks-and-crevices dungeonminder
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # Keep i686-only packages listed for inventory and lint, but realize them
 # through explicit architecture targets rather than the default native build.
@@ -119,7 +119,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES) \
 	check-gearhead2 check-gearhead check-fiqhack \
 	check-evilhack check-dynahack check-alone-rl check-allure \
 	check-agduria check-wenyan check-ludviglundgren-qbittorrent-cli \
-	check-lispy-rogue check-bodge-nuklear check-litegraph check-interlisp-medley check-natron check-sporkhack
+	check-lispy-rogue check-bodge-nuklear check-litegraph check-interlisp-medley check-natron check-sporkhack check-dungeonminder
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
 		{ echo "expected $(EXPECTED_SOURCE_PACKAGE_COUNT) exported source packages, found $(SOURCE_PACKAGE_COUNT)"; exit 1; }
@@ -157,6 +157,10 @@ check-image-tape:
 check-apout:
 	@test -n "$(APOUT_OUTPUT)" -a -n "$(APOUT_EVIDENCE)" || { echo 'Set APOUT_OUTPUT and APOUT_EVIDENCE (prebuilt output and new/empty evidence directory).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/apout-smoke.sh "$(APOUT_OUTPUT)" "$(APOUT_EVIDENCE)"
+
+check-dungeonminder:
+	@test -n "$(DUNGEONMINDER_OUTPUT)" -a -n "$(DUNGEONMINDER_EVIDENCE)" || { echo 'Set DUNGEONMINDER_OUTPUT and DUNGEONMINDER_EVIDENCE (prebuilt output and fresh nonexistent evidence directory).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/dungeonminder-smoke.sh "$(DUNGEONMINDER_OUTPUT)" "$(DUNGEONMINDER_EVIDENCE)"
 
 check-durthang:
 	GUIX="$(GUIX)" tests/durthang-smoke.sh

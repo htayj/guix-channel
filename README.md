@@ -357,6 +357,7 @@ publication, source-required, and build gates appear in the final table.
 | [`diabaig`](guix/tay/packages/diabaig.scm) | `1.0.1` | Terminal roguelike game | Verified |
 | [`dragonslayer`](guix/tay/packages/dragonslayer.scm) | `3.5` | Terminal Dragonslayer game | Defined |
 | [`dungeon-monkey-unlimited`](guix/tay/packages/dungeon-monkey-unlimited.scm) | `1.001` | Pascal/SDL fantasy dungeon adventure | Verified |
+| [`dungeonminder`](guix/tay/packages/dungeonminder.scm) | `0.8` | Original source-built C++/SDL reverse roguelike: guide an autonomous hero with spells; historical libtcod 1.4.0 and original font, no save/load | Verified ordinary native movement, menu/history, PACIFISM/CLOUD and autonomous turns with zero-status quit; #338 OPEN (own release-discovery lint gate; [receipt](ACCOUNTING.md#dungeonminder--original-source-and-ordinary-native-gameplay-2026-10-10)) |
 | [`freelarn`](guix/tay/packages/freelarn.scm) | `0-8cd18cb` | Original C++11 descendant of the Larn dungeon game | Verified |
 | [`gearhead`](guix/tay/packages/gearhead.scm) | `1.310` | GearHead: Arena mecha role-playing game, ASCII interface | Verified |
 | [`gearhead2`](guix/tay/packages/gearhead2.scm) | `0.701` | GearHead 2 mecha role-playing game, ASCII interface | Verified |

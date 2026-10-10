@@ -78,6 +78,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [City of the Condemned original source and ordinary native gameplay](#city-of-the-condemned--original-source-and-ordinary-native-gameplay-2026-10-09)
 - [Cracks and Crevices recovered source and native save/restore](#cracks-and-crevices--recovered-source-and-native-saverestore-2026-10-09)
 - [dNetHack ordinary native gameplay and save continuity](#dnethack--ordinary-native-gameplay-and-save-continuity-2026-10-10)
+- [DungeonMinder original source and ordinary native gameplay](#dungeonminder--original-source-and-ordinary-native-gameplay-2026-10-10)
 
 ## Relocation map (2026-10-04)
 
@@ -252,6 +253,17 @@ publication. Recovery of the original 0.5 release does not add or alter any of
 the canonical **629** preservation snapshots. CalcRogue's `I686_ONLY_PACKAGES`
 filtering remains unchanged; neither the dependency closure nor the existing
 source ledger becomes another end-user application or an all-250 pass claim.
+DungeonMinder's separate 2026-10-10 candidate adds exactly **one**
+`PROJECT_PACKAGES` entry (`dungeonminder`) and one README game row. File
+inspection of the current Makefile lists gives **238 project + 7 font = 245**
+installable names, up from **237 + 7 = 244** before this addition. Including
+one optional proprietary package and five check-only Imago dependencies gives
+**251** check names, up from 250. These are textual definition counts, not an
+executed inventory check, accepted-package total or publication claim; unrelated
+unpublished user entries remain included without being accepted by this task.
+The private source-built libtcod dependency is not another application. The
+canonical **629** preservation snapshots and CalcRogue's `I686_ONLY_PACKAGES`
+default-native-build filtering remain unchanged.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -276,6 +288,154 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## DungeonMinder — original source and ordinary native gameplay (2026-10-10)
+
+The new [`dungeonminder`](guix/tay/packages/dungeonminder.scm) **0.8** recipe
+builds Adam Gatt's original reverse roguelike and its historical renderer from
+source. The player follows an autonomous hero and influences the dungeon with
+spells; this is not a reconstructed engine, a copied release executable or an
+installed proof hook. **#338 remains OPEN** because the package's literal own
+release-discovery lint gate is unresolved. Local native evidence below does not
+establish publication, deployment or a clean all-checker lint result.
+
+### Exact source pins, positive grants and original font
+
+The complete original single translation unit is
+[`DungeonMinder.cpp`](https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/dungeonminder/DungeonMinder.cpp),
+SHA-256 **`70674a831a67a4a7abe61174f5e0daefa9b3a0e85a67b5e427497dd395f42260`**,
+Guix base32 **`0q12yjax6za94zjbarssx2hb7aggvbhgax0iwsmsg9373a1llrvh`**.
+Its original **Copyright (c) 2009, Adam Gatt** notice permits redistribution
+and modification subject to retaining the notice and disclaimer. The BSD-shaped
+endorsement clause literally says the name **"may be used"**, not "may not be
+used". The package preserves that wording as a **custom non-copyleft grant**;
+it does not repair the text or mislabel the game as standard BSD-3-clause.
+The exact notice is installed as `share/doc/dungeonminder/dungeonminder-license.txt`.
+
+The private renderer is built from the primary
+[`libtcod 1.4.0` source archive](https://codeload.github.com/libtcod/libtcod/tar.gz/refs/tags/1.4.0),
+tag commit **`9ac2a3a526e7cefe8b7b330e37619bb1c4b6fb96`**, SHA-256
+**`cbf7b636b8035b2ac686aa322d35d3b74cb5da8973bbd676796918395fb9d6cb`**,
+Guix base32 **`1jynp5gkj639g5vddfvki7dbak5pscsjscmahv32lnq3p0vbdxyb`**.
+Its global BSD-3-clause notice, credits, SDL README and font README are retained
+under `share/doc/dungeonminder/`. Bundled `libSDL.so`, `SDL.dll` and `zlib1.dll`
+are removed from the source input, not linked or installed as dependencies.
+
+The installed `share/dungeonminder/terminal.png` is the unmodified primary
+libtcod root font: **3150 bytes**, **128 × 128 pixels**, a **16 × 16** glyph grid
+of **8 × 8** cells in column-major ASCII order; SHA-256
+**`5e9e64246b857dc414bd0acde98820885274483580f751b9b3329b8ee86b82f4`**.
+It is byte-identical to the font in the official
+[`DungeonMinder v0.8 - Linux.tar.bz2`](https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/dungeonminder/DungeonMinder%20v0.8%20-%20Linux.tar.bz2)
+release (archive SHA-256
+**`d57e719d33b4dd34fd5e9d18f1d2220510033b2e2bbd09e0106d5e4fd6dc1242`**).
+No game/library executable from that release is used. The primary font README
+identifies the root asset as the non-antialiased terminal font carried forward
+from libtcod 1.3.2. Distribution relies on the source tree's positive global
+libtcod grant; no dedicated font author/license grant was found or invented,
+and the unrelated Celtic Garamond credit is not attributed to this font.
+
+The maintained local files have these SHA-256 hashes, obtained by file inspection
+for this receipt, not by a build or test:
+
+| Repository file | SHA-256 |
+| --- | --- |
+| [`files/dungeonminder-license.txt`](guix/tay/packages/files/dungeonminder-license.txt) | `32ef7a5f7a067ed6a0f2c0151b6d1ccc2379e59e47163810f2865b41795abacb` |
+| [`files/dungeonminder-font-provenance.txt`](guix/tay/packages/files/dungeonminder-font-provenance.txt) | `84709fcd6bf1fb2dfe46e1a992e409aad42cba7c9792930efea4b929a6628bc7` |
+| [`patches/dungeonminder-source-portability.patch`](guix/tay/packages/patches/dungeonminder-source-portability.patch) | `c87615348bd5e11d41f09c9ca6fa23240eccc30a4e83f5192ba5b43143b3f2ad` |
+| [`patches/dungeonminder-libtcod-portability.patch`](guix/tay/packages/patches/dungeonminder-libtcod-portability.patch) | `63bfa1d1f7c4cfe2262511c163047d54b272d91546aff139e76b554c2cd372a2` |
+
+### Source build and bounded native integration
+
+The game is compiled with GNU C++98; libtcod's C/C++ shared libraries are built
+from the pinned 1.4.0 source against Guix **sdl12-compat 1.2.68**, **libpng
+1.6.39** and **zlib 1.3.1**. Game changes normalize archived CRLF endings,
+provide direct standard declarations, fix the invalid qualified constructor,
+and select the immutable original font using the historical
+`setCustomFont(file, 8, 8, 0)` API. The renderer patch uses modern public libpng
+accessors, pointer-sized `TCOD_list` heap slots with explicit offset/direction
+conversions, and the existing SDL glyph mapper's explicit parameter prototype.
+The original pathfinding algorithm remains; it is not replaced with a shortcut.
+Build objects use a private build directory rather than shared `/tmp/libtcod`,
+and the C++ library is linked with the C++ driver. Installed private libraries
+live in `lib/dungeonminder/`, with store RUNPATHs, and `bin/dungeonminder` is the
+ordinary native ELF game. No consumer helpers are installed in its output.
+
+Main's source build **204 (14.31 s)**, retained in **artifact 16999**, produced
+**`/gnu/store/3xl6h19rsfnzkjgz2ylw3fny3svhcac3-dungeonminder-0.8`**.
+Reproducibility check **206 (12.56 s)**, **artifact 17002**, rebuilt the same
+derivation/output successfully. Upstream supplies no test suite; the build log
+explicitly says `test suite not run`, not an upstream test pass.
+
+The external [`tests/dungeonminder-smoke.sh`](tests/dungeonminder-smoke.sh) and
+[`tests/dungeonminder-native.py`](tests/dungeonminder-native.py) consume that
+prebuilt output. Main's integrated `make check-dungeonminder` run **208
+(37.38 s)** passed with evidence in **`/tmp/dungeonminder-native-3`**. The
+separate standalone run **209 (20.50 s)** subsequently passed with evidence in
+**`/tmp/dungeonminder-native-4`** and `DUNGEONMINDER_NATIVE_OK`. Both retained
+`native-result.json` files report success, and `shell-result.json` records
+`driver_status: 0` and `nar_unchanged: true`.
+
+The installed game runs in the consumer's Xvfb display; ordinary focused XTEST
+keyboard events drive its original menus and gameplay. Native captures, raw
+XWD/RGB data and decoded original-font cells establish:
+
+- Initial original **80 × 60** map/HUD, Level 1, hero health, power and welcome.
+- `Tab` opens the original spell menu; `Escape` dismisses it without a turn or
+  framebuffer change. `m` opens message history; dismissal also takes no turn.
+- `Tab`, then `q`, casts **PACIFISM**, produces **"The hero appears calmer!"**
+  and lowers visible hero-school power from five blips to four.
+- Ordinary movement enters adjacent empty floor selected from the observed
+  framebuffer, not a hard-coded seed or injected state.
+- `Tab`, then `d`, casts **CLOUD**, produces **"A thick cloud of smoke appears
+  around you!"**, lowers world-school power from five blips to two, and renders
+  native green smoke around the player. Main also inspected the integrated PNG,
+  seeing rooms/corridors, actors, smoke and the actual message rather than a
+  blank/error surface.
+- Eight ordinary `SPACE` turns advance the autonomous hero/world. Ordinary
+  `Escape` then exits naturally with status **0**, not a timeout or forced kill.
+
+The receipt records distinct user/mount/network/PID namespaces, current-user
+UID/GID mapping (**1000/998**, not root identity), a route-free private network,
+private HOME/XDG/tmp/CWD directories and read-only `/gnu/store` mounts. External
+consumer tools are audited separately from the game's runtime closure. The
+integrated output's before/after recursive NAR hash is identical:
+**`1hr3wmqgncgr7a1w6qvxhw5l2c6ygxfcb65kvybgah1l08gbwgy8`**.
+These are bounded isolation observations, not a general security certification.
+Upstream has **no save/load implementation**; no invented save feature or
+save-continuity claim is added. Acceptance covers early ordinary gameplay, not
+all spells, all ten levels or a completed campaign.
+
+### External consumer command and remaining lint gate
+
+The integrated and standalone paths require a canonical already-built direct
+store output and an absolute **fresh nonexistent** evidence directory (an
+existing empty directory is not accepted):
+
+```sh
+make check-dungeonminder DUNGEONMINDER_OUTPUT=/gnu/store/3xl6h19rsfnzkjgz2ylw3fny3svhcac3-dungeonminder-0.8 DUNGEONMINDER_EVIDENCE=/tmp/dungeonminder-new-evidence
+# Standalone external path, using another fresh nonexistent directory:
+sh tests/dungeonminder-smoke.sh /gnu/store/3xl6h19rsfnzkjgz2ylw3fny3svhcac3-dungeonminder-0.8 /tmp/dungeonminder-standalone-new-evidence
+```
+
+Main exercised the missing-variable Makefile guard: the invocation was rejected
+before consumer launch, outer make exit **2**. Only external consumer tools are
+realized by the smoke; it does not silently build the game. These commands do
+not use Goocastle executors, proof/contracts or an installed smoke hook.
+
+Main's literal full own lint **202 (39.77 s)** did **not** establish a clean
+result: DungeonMinder's generic-HTML release discovery attempts the Google
+Storage download directory and fails with **HTTP 403**. The unrelated global
+Flex warning is separate, not attributed to DungeonMinder or used to dismiss
+its own failure. No checker was excluded and no updater success is inferred
+from the successful fixed source download. **#338 stays OPEN**; no tracker
+closure or signed publication is claimed by this receipt.
+
+Main owns all executed checks. This documentation worker inspected files and
+existing evidence and ran no checks, builds, tests, linters or applications.
+The independent **629** source ledger and unrelated changes are preserved.
+No user profile, described host/service or material network-catalog fact changed;
+no OKF page/log update applies to this repository-only packaging receipt.
 
 ## dNetHack — ordinary native gameplay and save continuity (2026-10-10)
 
