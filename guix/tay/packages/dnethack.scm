@@ -13,8 +13,7 @@
   #:use-module (gnu packages bison)
   #:use-module (gnu packages compiler-tools)
   #:use-module (gnu packages ncurses)
-  #:use-module (gnu packages pkg-config)
-  #:use-module (gnu packages linux))
+  #:use-module (gnu packages pkg-config))
 
 (define %dnethack-commit
   "a6f0a1c43e66f4fb1bcac34d7d9709706682ec19")
@@ -50,17 +49,35 @@
               ;; generated version information tied to the fixed revision.
               (substitute* "GNUmakefile"
                 (("export COMMIT_DESC := \\$[(]shell git describe --always[)]")
-                 "export COMMIT_DESC := a6f0a1c43e66f4fb1bcac34d7d9709706682ec19"))
+                 (string-append
+                  "# Guix: pin version metadata, changed 2026-10-10.\n"
+                  "export COMMIT_DESC := "
+                  "a6f0a1c43e66f4fb1bcac34d7d9709706682ec19")))
               ;; The upstream admin-message hook reads an ambient relative
               ;; file; it is not part of the ordinary standalone game.
               (substitute* "include/config.h"
                 (("^#define SERVER_ADMIN_MSG.*$")
-                 "/* #define SERVER_ADMIN_MSG */"))
+                 (string-append
+                  "/* Guix: disable standalone server hook, "
+                  "changed 2026-10-10. */\n/* #define SERVER_ADMIN_MSG */")))
               ;; makedefs otherwise embeds the builder's wall clock in
               ;; include/date.h, verinfo, and the generated data archive.
               (substitute* "util/makedefs.c"
                 (("\\(void\\) time\\(\\(time_t \\*\\)&clocktim\\);")
-                 "clocktim = 1779991412L;"))))
+                 (string-append
+                  "/* Guix: pin build timestamp, changed 2026-10-10. */\n"
+                  "clocktim = 1779991412L;")))))
+          (add-before 'build 'preserve-corresponding-source
+            (lambda _
+              ;; NGPL paragraphs 2(a) and 3(a): distribute the complete
+              ;; build source with its copyright and third-party notices,
+              ;; including the dated modifications above.
+              (let ((doc (string-append #$output "/share/doc/dnethack")))
+                (mkdir-p doc)
+                (invoke "tar" "--sort=name" "--mtime=@1779991412"
+                        "--owner=0" "--group=0" "--numeric-owner"
+                        "-czf" (string-append doc "/dnethack-source.tar.gz")
+                        "."))))
           (replace 'build
             (lambda _
               (invoke "make" "all" "CC=gcc")))
@@ -75,14 +92,9 @@
                      (real (string-append libexec "/dnethack-real"))
                      (launcher (string-append bin "/dnethack"))
                      (shell #$(file-append bash-minimal "/bin/sh"))
-                     (cat #$(file-append coreutils-minimal "/bin/cat"))
                      (mkdir #$(file-append coreutils-minimal "/bin/mkdir"))
-                     (mktemp #$(file-append coreutils-minimal "/bin/mktemp"))
                      (ln #$(file-append coreutils-minimal "/bin/ln"))
-                     (rm #$(file-append coreutils-minimal "/bin/rm"))
-                     (readlink #$(file-append coreutils-minimal "/bin/readlink"))
-                     (sleep #$(file-append coreutils-minimal "/bin/sleep"))
-                     (script #$(file-append util-linux "/bin/script")))
+                     (chmod-command #$(file-append coreutils-minimal "/bin/chmod")))
                 (mkdir-p data)
                 (mkdir-p libexec)
                 (mkdir-p bin)
@@ -101,22 +113,31 @@
                  (find-files "doc" "^fixes"))
                 (call-with-output-file launcher
                   (lambda (port)
-                    (format port "#!~a~%set -eu~%" shell)
-                    (format port "real=~s~%data=~s~%mkdir=~s~%mktemp=~s~%"
-                            real data mkdir mktemp)
-                    (format port "ln=~s~%rm=~s~%readlink=~s~%sleep=~s~%"
-                            ln rm readlink sleep)
-                    (format port "script=~s~%cat=~s~%~%" script cat)
+                    (format port "#!~a~%set -eu~%umask 077~%" shell)
+                    (format port "real=~s~%data=~s~%mkdir=~s~%ln=~s~%chmod=~s~%~%"
+                            real data mkdir ln chmod-command)
                     (display
                      "state=\"${XDG_DATA_HOME:-${HOME:?}/.local/share}/dnethack\"\n"
                      port)
                     (display "export TERM=\"${TERM:-xterm-256color}\"\n" port)
-                    (display "\"$mkdir\" -p \"$state/save\" \"$state/dumplog\" \"$state/whereis\"\n"
-                             port)
+                    (display
+                     (string-append
+                      "\"$mkdir\" -p \"$state/save\" \"$state/dumplog\" "
+                      "\"$state/whereis\"\n")
+                     port)
+                    (display
+                     (string-append
+                      "\"$chmod\" 700 \"$state\" \"$state/save\" "
+                      "\"$state/dumplog\" \"$state/whereis\"\n")
+                     port)
+                    (display "cd \"$state\"\nstate=$PWD\n" port)
                     (display "test -e \"$state/perm\" || : > \"$state/perm\"\n"
                              port)
-                    (display "for file in record logfile xlogfile livelog paniclog hangup; do\n"
-                             port)
+                    (display
+                     (string-append
+                      "for file in record logfile xlogfile livelog "
+                      "paniclog hangup; do\n")
+                     port)
                     (display "  test -e \"$state/$file\" || : > \"$state/$file\"\n"
                              port)
                     (display "done\n\n" port)
@@ -125,93 +146,14 @@
                     (display "test -e \"$mailbox\" || : > \"$mailbox\"\n"
                              port)
                     (display "export MAIL=\"$mailbox\"\n\n" port)
-                    (display "new_playground() {\n" port)
-                    (display "  playground=$(\"$mktemp\" -d \"$state/playground.XXXXXX\")\n"
+                    ;; Use the persistent playground for upstream level locks,
+                    ;; bones and recovery files as well as saves and scores.
+                    ;; Only the two read-only data files point into the store.
+                    (display "\"$ln\" -sfn \"$data/nhdat\" nhdat\n" port)
+                    (display "\"$ln\" -sfn \"$data/license\" license\n" port)
+                    (display "export HACKDIR=\"$state\" NETHACKDIR=\"$state\"\n"
                              port)
-                    (display "  \"$ln\" -s \"$data/nhdat\" \"$playground/nhdat\"\n"
-                             port)
-                    (display "  \"$ln\" -s \"$data/license\" \"$playground/license\"\n"
-                             port)
-                    (display "  for file in perm record logfile xlogfile livelog paniclog hangup; do\n"
-                             port)
-                    (display "    \"$ln\" -s \"$state/$file\" \"$playground/$file\"\n"
-                             port)
-                    (display "  done\n" port)
-                    (display "  \"$ln\" -s \"$state/save\" \"$playground/save\"\n"
-                             port)
-                    (display "  \"$ln\" -s \"$state/dumplog\" \"$playground/dumplog\"\n"
-                             port)
-                    (display "  \"$ln\" -s \"$state/whereis\" \"$playground/whereis\"\n"
-                             port)
-                    (display "  printf '%s\\n' \"$playground\"\n" port)
-                    (display "}\n\n" port)
-                    (display "if test \"${1-}\" = --guix-smoke; then\n" port)
-                    (display "  test \"$#\" -eq 1 || { echo 'usage: dnethack [--guix-smoke]' >&2; exit 64; }\n"
-                             port)
-                    ;; Both runs use the same data directory and separate
-                    ;; private playgrounds.  The first run saves after a rest;
-                    ;; the second restores that save and quits cleanly.
-                    (display "  first=$(new_playground)\n" port)
-                    (display "  cd \"$first\"\n"
-                             port)
-                    (display "  export HACKDIR=\"$first\" NETHACKDIR=\"$first\"\n"
-                             port)
-                    (display "  first_log=\"$first/smoke-first\"\n" port)
-                    (display "  capture=\"${GOOCASTLE_RUNTIME_RAW_CAPTURE-}\"\n"
-                             port)
-                    (display "  run_session() {\n    log=$1\n    mode=${2-truncate}\n    if test -n \"$capture\"; then\n      if test \"$mode\" = append; then\n        \"$script\" -qefc \"$real -X -n -u goocastle-tourist-human-neutral-male\" \"$log\" >> \"$capture\"\n      else\n        \"$script\" -qefc \"$real -X -n -u goocastle-tourist-human-neutral-male\" \"$log\" > \"$capture\"\n      fi\n    else\n      \"$script\" -qefc \"$real -X -n -u goocastle-tourist-human-neutral-male\" \"$log\" >/dev/null\n    fi\n  }\n"
-                             port)
-                    (display "  if ! { \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf '.'; \"$sleep\" 1; printf 'S'; \"$sleep\" 1; printf 'y'; } | run_session \"$first_log\"; then\n"
-                             port)
-                    (display "    echo 'dnethack smoke: first game failed' >&2; exit 1\n  fi\n"
-                             port)
-                    (display "  saved=\"\"\n  for file in \"$state/save\"/*; do\n    test -f \"$file\" || continue\n    saved=\"$file\"\n  done\n  test -n \"$saved\"\n"
-                             port)
-                    (display "  first_text=$(\"$cat\" \"$first_log\")\n"
-                             port)
-                    (display "  case \"$first_text\" in *dNetHack*|*dNethack*) ;; *) echo 'dnethack smoke: gameplay title missing' >&2; exit 1 ;; esac\n"
-                             port)
-                    (display "  second=$(new_playground)\n" port)
-                    (display "  cd \"$second\"\n"
-                             port)
-                    (display "  export HACKDIR=\"$second\" NETHACKDIR=\"$second\"\n"
-                             port)
-                    (display "  second_log=\"$second/smoke-second\"\n" port)
-                    (display "  if ! { \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf ' '; \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf '#quit\\n'; \"$sleep\" 1; printf 'y'; \"$sleep\" 1; printf 'n'; \"$sleep\" 1; printf 'n'; \"$sleep\" 1; printf 'n'; \"$sleep\" 1; printf ' '; } | run_session \"$second_log\" append; then\n"
-                             port)
-                    (display "    echo 'dnethack smoke: restore game failed' >&2; exit 1\n  fi\n"
-                             port)
-                    (display "  second_text=$(\"$cat\" \"$second_log\")\n"
-                             port)
-                    (display "  case \"$second_text\" in *[Rr]estor*|*'Welcome back'*) ;; *) echo 'dnethack smoke: restoration missing' >&2; exit 1 ;; esac\n"
-                             port)
-                    (display "  for link in nhdat license perm record logfile xlogfile livelog paniclog hangup save dumplog whereis; do\n"
-                             port)
-                    (display "    test -L \"$second/$link\" || { echo \"dnethack smoke: missing $link link\" >&2; exit 1; }\n"
-                             port)
-                    (display "  done\n" port)
-                    (display "  test \"$(\"$readlink\" \"$second/nhdat\")\" = \"$data/nhdat\"\n"
-                             port)
-                    (display "  test \"$(\"$readlink\" \"$second/license\")\" = \"$data/license\"\n"
-                             port)
-                    (display "  case \"$second\" in \"$state/\"*) ;; *) echo 'dnethack smoke: playground escaped state' >&2; exit 1 ;; esac\n"
-                             port)
-                    (display "  \"$rm\" -rf \"$first\" \"$second\"\n"
-                             port)
-                    (display "  printf '%s\\n' 'dnethack guix smoke passed'\n  exit 0\nfi\n\n"
-                             port)
-                    (display "playground=$(new_playground)\n"
-                             port)
-                    (display "cleanup() { \"$rm\" -rf \"$playground\"; }\n"
-                             port)
-                    (display "trap cleanup EXIT HUP INT TERM\n"
-                             port)
-                    (display "cd \"$playground\"\n"
-                             port)
-                    (display "export HACKDIR=\"$playground\" NETHACKDIR=\"$playground\"\n"
-                             port)
-                    (display "set +e\n\"$real\" \"$@\"\nstatus=$?\nset -e\nexit \"$status\"\n"
-                             port)))
+                    (display "exec \"$real\" \"$@\"\n" port)))
                 (chmod launcher #o555))))
           (add-after 'install 'verify-license-notices
             (lambda _
@@ -222,7 +164,7 @@
                    (unless (file-exists? (string-append doc file))
                      (error "missing installed dNetHack document" file)))
                  '("README" "README.gray" "README.menucolor"
-                   "Guidebook.txt" "README.linux"))
+                   "Guidebook.txt" "README.linux" "dnethack-source.tar.gz"))
                 (unless (file-exists? (string-append data "/nhdat"))
                   (error "missing installed dNetHack data archive"))
                 (unless (file-exists? (string-append data "/license"))
@@ -231,8 +173,8 @@
                         (string-append data "/license"))
                 (invoke "grep" "-F" "dNetHack is free software"
                         (string-append doc "README"))
-                ;; MacroMagicMarker.py is MIT-licensed build input, not an
-                ;; installed runtime asset; make sure it was not copied.
+                ;; MacroMagicMarker.py is preserved with its MIT notice in
+                ;; the source archive, but is not a runtime script.
                 (unless (not (file-exists?
                               (string-append doc "MacroMagicMarker.py")))
                   (error "unintended MacroMagicMarker runtime install")))))
@@ -248,19 +190,23 @@
                               (else #o444))))
                (find-files #$output ".*" #:directories? #t)))))))
     (native-inputs (list bison flex pkg-config))
-    ;; Bash and coreutils support the store-safe launcher.  util-linux is used
-    ;; only by its reviewed --guix-smoke branch to provide a PTY to the real
-    ;; tty executable; ncurses/tinfo provides the Unix curses linkage.
-    (inputs (list bash-minimal coreutils-minimal ncurses/tinfo util-linux))
+    ;; Bash and coreutils support the store-safe launcher; ncurses/tinfo
+    ;; provides the Unix curses linkage.
+    (inputs (list bash-minimal coreutils-minimal ncurses/tinfo))
     (home-page "https://github.com/Chris-plus-alphanumericgibberish/dNAO")
     (synopsis "Terminal dungeon exploration game based on NetHack")
     (description
      "dNetHack is a maintained NetHack variant with a terminal interface and
      extensive new roles, races, monsters, items, and dungeon branches.  This
      package builds the ordinary Unix variant from a fixed dNAO revision,
-     installs only its tty executable and generated data archive, and provides
-     a launcher that keeps all mutable game state in XDG data directories.")
-    ;; The upstream dat/license is the NetHack General Public License for the
-    ;; C sources, generated map/data files, and the resulting executable.
-    (license (license:fsdg-compatible
-              "https://nethack.org/common/license.html"))))
+     installs its tty executable and generated data archive, and provides a
+     launcher that keeps all mutable game state in a persistent XDG data
+     directory.  The complete corresponding source, including upstream
+     copyright and third-party license notices, is installed alongside the
+     documentation.")
+    ;; The upstream dat/license covers the game and its generated data.
+    ;; The accompanying complete source also contains the MIT/Expat-licensed
+    ;; MacroMagicMarker generator with its full permission notice.
+    (license (list (license:fsdg-compatible
+                    "https://nethack.org/common/license.html")
+                   license:expat))))

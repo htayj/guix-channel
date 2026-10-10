@@ -77,6 +77,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [CalcRogue native i686 gameplay and save continuity](#calcrogue--native-i686-gameplay-and-save-continuity-2026-10-09)
 - [City of the Condemned original source and ordinary native gameplay](#city-of-the-condemned--original-source-and-ordinary-native-gameplay-2026-10-09)
 - [Cracks and Crevices recovered source and native save/restore](#cracks-and-crevices--recovered-source-and-native-saverestore-2026-10-09)
+- [dNetHack ordinary native gameplay and save continuity](#dnethack--ordinary-native-gameplay-and-save-continuity-2026-10-10)
 
 ## Relocation map (2026-10-04)
 
@@ -275,6 +276,154 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## dNetHack — ordinary native gameplay and save continuity (2026-10-10)
+
+Local acceptance covers the existing [`dnethack`](guix/tay/packages/dnethack.scm)
+**3.26.0** package, not another application or preservation snapshot. It remains
+in the existing `PROJECT_PACKAGES` inventory. The canonical **629** source
+snapshots, source pin/hash, listed-package counts and CalcRogue's
+`I686_ONLY_PACKAGES` default-native-build filtering are unchanged.
+**#331 remains OPEN pending signed publication and the actual tracker closure**;
+the completed local gates below make it eligible for closure, but neither this
+receipt nor a README status publishes the channel or closes the issue.
+
+### Complete source, distribution notices and ordinary launcher
+
+The recipe retains the complete
+[`Chris-plus-alphanumericgibberish/dNAO` source](https://github.com/Chris-plus-alphanumericgibberish/dNAO/tree/a6f0a1c43e66f4fb1bcac34d7d9709706682ec19)
+at **`a6f0a1c43e66f4fb1bcac34d7d9709706682ec19`**, Guix base32 SHA256
+**`0lakz0czfkymnnb64q7yjvm3r3yfj3xqbylrha3cpc2ix07x0cvj`**.
+Serial `make all CC=gcc` compiles the ordinary Unix tty game, yacc/flex
+generators and generated dungeon/data archive; it does not install a substitute
+engine or use a downloaded game binary. Version metadata and build timestamps
+are fixed to the preserved revision and epoch **1779991412**. The standalone
+server-admin-message hook is disabled, not the native game/save paths.
+
+The output installs `bin/dnethack`, `libexec/dnethack-real`,
+`share/dnethack/{nhdat,license}`, and upstream README/Guidebook/fixes documents
+under `share/doc/dnethack`. The NetHack General Public License covers the game
+and generated data. Its paragraphs **2(a)** and **3(a)** require dated
+modification notices and complete accompanying machine-readable source.
+`share/doc/dnethack/dnethack-source.tar.gz` contains the complete build source
+before compilation, with retained upstream copyright/license notices and
+prominent **2026-10-10** Guix modification notices in `GNUmakefile`,
+`include/config.h` and `util/makedefs.c`. Sorted archive names, fixed timestamps,
+numeric owner/group zero and Guix gzip timestamp normalization make this source
+distribution deterministic. The included `util/MacroMagicMarker.py` retains its
+full MIT/Expat permission and warranty grant; it is source, not an installed
+runtime generator. The recipe records NGPL and Expat, and the build's
+`verify-license-notices` phase checks the installed license/docs/source archive.
+
+The normal launcher uses **`${XDG_DATA_HOME:-$HOME/.local/share}/dnethack`**
+as the persistent native playground, with `umask 077` and mode-0700 state,
+`save`, `dumplog` and `whereis` directories. Native saves, level/character locks,
+bones, recovery state and score/log/mailbox files stay there; only `nhdat` and
+`license` are symlinks into the immutable store. `MAIL` is private, and
+`HACKDIR`/`NETHACKDIR` name the persistent playground. It uses store-bound shell
+and coreutils paths and forwards normal arguments directly to the native game.
+There is **no installed `--guix-smoke` mode or proof helper**. Python/pyte and
+util-linux namespace tools belong only to the external test harness, not the
+game's runtime closure.
+
+### Main-owned build, reproducibility and lint gates
+
+Main's final source build **bg189** passed in **121.44s** (build log
+**artifact16864**) for derivation
+`/gnu/store/1bcj3ksc0v3ra8yrxj3rf0cii1g6v23g-dnethack-3.26.0.drv`, producing:
+
+```text
+/gnu/store/2fcxcrcrp1sm6rfj6z2vhc7fy3jhrd1x-dnethack-3.26.0
+```
+
+The final **bg192 `--check` rebuild passed in 119.32s**, reproducing that exact
+output (build log **artifact16868**). Both logs show actual source compilation,
+data generation and installed notice verification. Main used:
+
+```sh
+guix build -L guix --no-grafts --no-offload --cores=1 --max-jobs=1 --keep-failed -e '(@ (tay packages dnethack) dnethack)'
+# Reproducibility gate: the same invocation with --check.
+```
+
+Dependencies may be substituted; the target was actually built from source.
+Final **full package lint bg190** exited **0** in **26.40s** with **no dNetHack
+findings**. Main's short inline result retained only the unrelated global
+deprecated-`flex` module warning (use `(gnu packages compiler-tools)` instead).
+This is a **clean own-package lint** result, not a claim that every repository
+package or global module warning is clean. No lint artifact ID is asserted.
+
+### Ordinary gameplay and native save/restore evidence
+
+Main's integrated **bg193** `make check-dnethack` passed in **21.76s**, retaining
+`/tmp/dnethack-native-2`; the separate external **bg194** consumer passed in
+**11.59s**, retaining `/tmp/dnethack-native-3`. Each `continuity.json` reports
+`success: true`, exact full-map/HUD/inventory continuity, native save consumption
+on restore and both games' natural zero-status exits. Raw `.pty`, redraw bytes,
+`*.screen.txt`, input offsets, process metadata and the copied native save are
+retained beside the structured receipt; the evidence save is **never reinjected**.
+
+Both runs start the ordinary installed launcher as **NativeDNet**, a lawful
+human female Valkyrie, with `-u NativeDNet -p Valkyrie -r human`, not `-X`,
+explore/debug mode, a seeded world, fabricated save or injected state.
+`/proc` identifies the real `libexec/dnethack-real` process and its persistent
+XDG working directory. Inventory opens on the native tty; a legal movement
+and two native searches advance **T:1 → T:4**. `S` and `y` create the game's
+native `save/1000NativeDNet` and exit **0**. A genuinely independent second
+process consumes that save through the ordinary restore path, preserving the
+entire discovered 80×21 map, exact player coordinate, both HUD lines, statistics
+and all eight inventory entries with equipment/quantity descriptions.
+
+| Evidence | Initial → saved/restored coordinate | Saved/restored native HUD | Native save |
+| --- | --- | --- | --- |
+| `dnethack-native-2` | `(48,3) → (49,3)` | `Dlvl:1 $:0 HP:16(16) Pw:4(4) Br:4 AC:2 DR:1 Exp:1 T:4` | **274480 bytes**, SHA256 `8559ae4928a9c22827d99c373d83f912ae9b287a3833736675d449659fab6862` |
+| `dnethack-native-3` | `(67,6) → (66,6)` | `Dlvl:1 $:0 HP:16(16) Pw:5(5) Br:4 AC:3 DR:1 Exp:1 T:4` | **274984 bytes**, SHA256 `6186d4a9c4309ea089a3eaa745ff68ee507f876774927c0d44e3256eaab1fd19` |
+
+Coordinates are zero-based in the native map viewport, not terminal-row
+coordinates. These independently generated worlds differ; continuity is exact
+**within each run**, not asserted between runs. Both native saves have the
+32-byte native-endian four-uint64 version header, incarnation `0x31a0000`,
+features `0x3e0c86`, entities `0x15c36c483` and struct sizes `0x162085b50`.
+The restored `whereis` record independently reports `Val/Hum/Fem/Law`, depth 1,
+HP 16/16 and turns 4. Continued native movement and searches advance to **T:7**
+before `#quit`, `y` and normal final disclosure acknowledgement exit **0**.
+The save has been consumed and native character locks removed by the game,
+not by killing it or fabricating cleanup success.
+
+Each consumer starts with an empty inherited environment, private HOME/XDG/
+TMPDIR, empty `PATH`, `LC_ALL=C` and `TERM=xterm-256color`, in private user,
+mount, PID and network namespaces. All real/effective/saved/fs UID fields remain
+**1000** and GID fields **998**, with matching same-ID namespace mappings, not
+root mappings. Only `lo` is present, `/gnu/store` is recursively read-only and
+host game paths are unchanged. Mutable state is retained only in each private
+evidence tree. The output NAR is unchanged before/after **both** consumers:
+
+```text
+1daaialr4wm3rkxps0qj1p1zv6nx3hk8ax436kldwimj6d138dny
+```
+
+### External consumer command and remaining limits
+
+The native consumer requires an already-built canonical store output and a
+fresh, nonexistent absolute evidence directory outside the store. It does not
+build or realize dNetHack/source. Main exercised the missing-variable guard:
+it rejected the invocation before consumer execution (outer check exit **2**).
+
+```sh
+make check-dnethack DNETHACK_OUTPUT=/gnu/store/2fcxcrcrp1sm6rfj6z2vhc7fy3jhrd1x-dnethack-3.26.0 DNETHACK_EVIDENCE=/tmp/dnethack-new-evidence
+# Standalone external path, using another fresh evidence directory:
+sh tests/dnethack-smoke.sh /gnu/store/2fcxcrcrp1sm6rfj6z2vhc7fy3jhrd1x-dnethack-3.26.0 /tmp/dnethack-standalone-new-evidence
+```
+
+Upstream provides no non-interactive test target; build logs explicitly say
+`test suite not run`. No upstream-suite test count is invented. Acceptance
+covers ordinary early tty gameplay, native save/restore and continued play,
+not every role/race/branch, a completed campaign or long-running server play.
+The obsolete installed-proof contract tracked by **#679** is retired without
+a replacement contract; its historical PNG is retained as historical evidence,
+not substituted for the actual native game/continuity records above. Main owns
+all executed checks; this documentation worker read the evidence and ran none.
+No user profile, described host/service or material network-catalog fact changed;
+no OKF page/log update applies to this repository-only packaging receipt.
 
 ## Cracks and Crevices — recovered source and native save/restore (2026-10-09)
 
