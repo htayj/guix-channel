@@ -284,9 +284,9 @@ Local acceptance covers the existing [`dnethack`](guix/tay/packages/dnethack.scm
 in the existing `PROJECT_PACKAGES` inventory. The canonical **629** source
 snapshots, source pin/hash, listed-package counts and CalcRogue's
 `I686_ONLY_PACKAGES` default-native-build filtering are unchanged.
-**#331 remains OPEN pending signed publication and the actual tracker closure**;
-the completed local gates below make it eligible for closure, but neither this
-receipt nor a README status publishes the channel or closes the issue.
+**#331 is CLOSED on both trackers after signed implementation publication**.
+The actual publication and closure receipts below, not a README status alone,
+establish that disposition; no deployment is claimed.
 
 ### Complete source, distribution notices and ordinary launcher
 
@@ -424,6 +424,33 @@ not substituted for the actual native game/continuity records above. Main owns
 all executed checks; this documentation worker read the evidence and ran none.
 No user profile, described host/service or material network-catalog fact changed;
 no OKF page/log update applies to this repository-only packaging receipt.
+
+### Signed implementation publication and actual tracker closure
+
+On **2026-10-10**, signed implementation commit
+[`d544aa4a8af2ad11dd26b9a980f67fc08bb6decd`](https://forge.nogroup.group/tay/guix-channel/commit/d544aa4a8af2ad11dd26b9a980f67fc08bb6decd),
+parent `bc38e90d197ef51f3a5250e8186ca7cf35c95c65`, was published to authoritative
+`origin master` by normal authenticated push. The publisher verified exact-OID
+Guix authorization, local signature and remote OID. The tracker worker
+independently read the exact published master OID and commit API signature
+`verification.verified: true`, signer `tay/2F12E6A35F417606`. This establishes
+publication of the accepted implementation, not installation in a user profile
+or deployment of a described service.
+
+The tracker worker then posted the exact acceptance evidence and closed #331
+on [authoritative Forgejo](https://forge.nogroup.group/tay/guix-channel/issues/331#issuecomment-3309)
+and the [GitHub tracker mirror](https://github.com/htayj/guix-channel/issues/331#issuecomment-6094024114).
+Both comment POSTs returned **201**, exact-comment GETs **200**, and subsequent
+issue GETs **200** with state **closed**; closure returned **201** on Forgejo
+and **200** on GitHub. Only obsolete `state:blocked`/`state:research` labels were
+removed; nonworkflow labels and original issue bodies/history were retained.
+Historical #679 remains closed and untouched. The retained
+`browser-tracker-dnethack-closure-receipt.json` records these separate actions
+against the published implementation and the Main-owned native/build/repro/lint
+evidence above. Neither tracker nor documentation workers reran acceptance
+checks or applications. This dated documentation correction records the actual
+closure after publication; it does not retroactively claim closure in the
+earlier prepublication receipt.
 
 ## Cracks and Crevices — recovered source and native save/restore (2026-10-09)
 
