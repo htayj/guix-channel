@@ -489,7 +489,8 @@ Its Lua binding and private historical renderer are source-built, not copied
 release binaries or a reconstructed game. **#341 remains OPEN** for literal
 own updater/archive lint findings. The local build, reproducibility and native
 evidence below are separate from signed publication, tracker closure and
-deployment; no signed Dwarftown publication is established by this receipt.
+deployment. Subsequent implementation publication is established by the dated
+publication receipt below, not by native acceptance.
 
 ### Exact source pins and positive license scopes
 
@@ -669,6 +670,46 @@ builds, tests, linters or applications. The independent **629** source ledger,
 unrelated changes and i686 filtering are preserved. No user profile or
 described host/service changed; no OKF page/log update applies to this
 repository-only packaging receipt.
+
+### Subsequent signed implementation publication (2026-10-10)
+
+After the local evidence above, the publisher delivered signed implementation
+commit
+[`a4e41b43af85695441ab37a9050ab1ee70f2d1c3`](https://forge.nogroup.group/tay/guix-channel/commit/a4e41b43af85695441ab37a9050ab1ee70f2d1c3),
+parent **`a76d8596dd57215f9511f70356b2b48a912a85ce`**, with subject
+**"feat: package original Dwarftown and verify native forest gameplay"**.
+The local signature status was **G**, fingerprint
+**`6A27F433DC22B4DFA278E8F32F12E6A35F417606`**. Exact-OID Guix channel
+authentication passed, and the normal pre-push hook independently authenticated
+the same OID. The ordinary **`git push origin master`** published to
+authoritative Forgejo; no force push, history rewrite or direct GitHub push was
+performed.
+
+The publisher observed the exact OID on SSH `master` and authenticated Forgejo
+master/commit/signature API responses (**200**), with
+**`verification.verified: true`**, signer **`tay / 2F12E6A35F417606`**. The
+isolated publication index included only the eight owned implementation files
+and Dwarftown hunks; unrelated work, the **629** preservation ledger and i686
+filtering remained preserved. These receipts establish implementation
+publication, separately from Main's build/native observations. They do not
+establish installation in a user profile, deployment, a clean lint result,
+tracker closure or reproducibility of the entire transitive dependency closure.
+**#341 remains OPEN** for the actual own no-updater, Software Heritage and
+Disarchive lint findings.
+
+
+The tracker worker subsequently posted matching dated evidence comments on
+[authoritative Forgejo](https://forge.nogroup.group/tay/guix-channel/issues/341#issuecomment-3319)
+and the [GitHub tracker mirror](https://github.com/htayj/guix-channel/issues/341#issuecomment-6100739694).
+Both comment POSTs returned **201** and individual authenticated exact-comment
+GETs **200**, with matching bodies verified. Both issues remained **OPEN**;
+their original bodies/history and all workflow/non-workflow labels, including
+`state:blocked` and `state:research`, were preserved. The paired
+`browser-tracker-dwarftown-receipt.json` independently records exact published
+Forgejo master/commit identity and verified signature through API **200**.
+This is a published-evidence correction, not issue closure, a lint waiver or
+deployment. The tracker comments supersede the historical binary-only/no-wrapper
+source conclusion while retaining the genuine remaining own lint gates.
 
 
 ## dNetHack — ordinary native gameplay and save continuity (2026-10-10)
