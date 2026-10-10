@@ -79,6 +79,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Cracks and Crevices recovered source and native save/restore](#cracks-and-crevices--recovered-source-and-native-saverestore-2026-10-09)
 - [dNetHack ordinary native gameplay and save continuity](#dnethack--ordinary-native-gameplay-and-save-continuity-2026-10-10)
 - [DungeonMinder original source and ordinary native gameplay](#dungeonminder--original-source-and-ordinary-native-gameplay-2026-10-10)
+- [Dwarftown original source and ordinary native gameplay](#dwarftown--original-source-and-ordinary-native-gameplay-2026-10-10)
 
 ## Relocation map (2026-10-04)
 
@@ -264,6 +265,17 @@ unpublished user entries remain included without being accepted by this task.
 The private source-built libtcod dependency is not another application. The
 canonical **629** preservation snapshots and CalcRogue's `I686_ONLY_PACKAGES`
 default-native-build filtering remain unchanged.
+Dwarftown's separate 2026-10-10 candidate adds exactly **one**
+`PROJECT_PACKAGES` entry (`dwarftown`) and one README game row. Inspection and
+textual counting of the actual Makefile lists gives **239 project + 7 font =
+246** installable names, up from **238 + 7 = 245** after DungeonMinder. One
+optional proprietary package and five check-only Imago dependencies give
+**252** check names, up from 251. These are definition counts, not an executed
+inventory check, accepted-package total, all-252 pass or publication claim;
+unrelated unpublished user entries remain included without being accepted.
+The private historical renderer and external Lua/SDL/zlib/Mesa dependencies
+are closure, not more applications. The canonical **629** preservation
+snapshots and CalcRogue's `I686_ONLY_PACKAGES` filtering remain unchanged.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -468,6 +480,195 @@ were preserved. The paired `browser-tracker-wave17-receipt.json` records these
 actions and independently read the exact published authoritative master and
 commit verification. This is a bounded published-evidence update, not issue
 closure or acceptance of the unresolved lint gate.
+
+## Dwarftown — original source and ordinary native gameplay (2026-10-10)
+
+The new [`dwarftown`](guix/tay/packages/dwarftown.scm) **1.0** recipe preserves
+hmp's original 2011 Lua roguelike, original fonts and native libtcod interface.
+Its Lua binding and private historical renderer are source-built, not copied
+release binaries or a reconstructed game. **#341 remains OPEN** for literal
+own updater/archive lint findings. The local build, reproducibility and native
+evidence below are separate from signed publication, tracker closure and
+deployment; no signed Dwarftown publication is established by this receipt.
+
+### Exact source pins and positive license scopes
+
+The source audit is retained in
+`/home/tay/.cache/omp/audits/dwarftown-20261010/manifest.json` and
+`audit-conclusions.json`, retrieved **2026-10-10**. It compares the original
+[1.0 release](https://pwmarcz.pl/dwarftown/dwarftown-1.0.tgz) with the pinned
+[game source](https://codeload.github.com/pwmarcz/dwarftown/tar.gz/9488ae4ec385459ed6c8d15a642e43c8a11607f7),
+commit **`9488ae4ec385459ed6c8d15a642e43c8a11607f7`**, archive SHA-256
+**`8676211b5b461de333393f6b93a870ea00a81b2391f1a85d9cc2b8327379588b`**,
+Guix base32 **`12sqg5rk5f62kifsiwci4cdsh07af2l96srz74ry67a6bcdj2xl6`**.
+All common files are byte-identical; the pin alone has `.hgignore`, and the
+release alone has an example `character.txt`. The release archive SHA-256 is
+**`c55277fe48289b7e7d79f4986892f000e6809e6846ff8ad99b769820d1dd6226`**.
+
+`LICENSE.txt` grants project-owned material under **MIT**, **Copyright (c)
+2011 hmp**, without limiting that grant to Lua code or excluding its own
+wrapper adaptations/assets. Copied third-party portions retain their separate
+grants. The private [official libtcod 1.5.1 source](https://codeload.github.com/libtcod/libtcod/tar.gz/a7cabfda0b0c770d4092f0dec02efbd2a3b6d990)
+is pinned to **`a7cabfda0b0c770d4092f0dec02efbd2a3b6d990`**, SHA-256
+**`90f2ade3e2651ae5f0fedeb6b9bae0ad57acfbf6e515a8b1dc85dc8663820827`**,
+Guix base32 **`09q8h9iqdp45vjqsh5g5yvxsqmxdw2xbkdnyzvqfa6k5wbisvwlh`**.
+Its 678 source-tree files match the official 1.5.1 tag byte-for-byte. The actual
+global **BSD-3-clause** notice names **Copyright (c) 2008, 2009, 2010, 2012
+Jice & Mingos**. That official distribution contains the SWIG interface and
+`BackgroundHelperFunctions.hpp`; the latter is identical to the game copy.
+Chris "donblas" Hamons's wrapper credit complements that positive global grant,
+not a substitute for license evidence. Dwarftown's Lua-specific interface and
+callback adaptations remain project-owned MIT material.
+
+The embedded **LodePNG 20120729** source retains its **zlib-style** grant,
+Copyright (c) 2005–2012 Lode Vandevenne. External SDL retains its LGPL scope;
+external **Lua 5.1.5** retains its actual MIT notice, Copyright (C) 1994–2012
+Lua.org, PUC-Rio. The package installs the game/wrapper notices, official
+libtcod license/credits/SDL README, complete LodePNG source/header, Lua
+`COPYRIGHT`, and [`dwarftown-provenance.txt`](guix/tay/packages/files/dwarftown-provenance.txt)
+under `share/doc/dwarftown/`. It does not relicense the dependency closure as MIT.
+
+### Original fonts, not a blanket public-domain claim
+
+The active **10 × 18** font, `fonts/terminal10x18.png`, is **2337 bytes**,
+**160 × 288 pixels**, SHA-256
+**`12bcd54b30b2eab6fd85e87d78781ab8064ef792df0d23bba254cc407ad51fe7`**.
+It is identical between the game pin and release. History records its addition
+by hmp in commit **`39b34e3d2e8cd61540d4bab845014be24d74cd0b`** on **2011-03-05**,
+without third-party credit. Distribution of project-owned font material rests
+on the positive project MIT umbrella grant; history establishes inclusion,
+**not independently proven pixel authorship**. No separate third-party author
+or upstream provenance was established. The exact font is not byte-identical
+to any PNG in official libtcod 1.5.1 or 1.5.0. The similarly sized official
+`terminal10x18_gs_ro.png` differs in **11,450 pixels**; this is not a
+transcoding-only match or evidence that the game's font is public domain.
+
+The retained **8 × 8** copies, `fonts/terminal.png` and `wrapper/terminal.png`,
+are **3150 bytes**, **128 × 128 pixels**, SHA-256
+**`5e9e64246b857dc414bd0acde98820885274483580f751b9b3329b8ee86b82f4`**.
+They exactly match official **1.5.1 `ascii-paint/terminal.png`**, and official
+1.5.0's root font, with positive official global BSD-3-clause grant evidence.
+They do **not** match 1.5.1's root font. The public-domain statement in official
+`data/fonts/README.txt` applies to that directory, not every bitmap in the
+archive or the distinct game 10×18 asset. No blanket public-domain designation
+or replacement font is introduced.
+
+### Source build and separately checked outputs
+
+Archived interpreters, executable/library copies and pregenerated wrapper code
+are removed. **SWIG 4.0.2** regenerates the original interface using
+`-c++ -lua -squash-bases`, and GNU C++98 compiles `libtcodlua.so` against
+external **Lua 5.1.5** and source-built **libtcod 1.5.1** C/C++ libraries.
+The renderer uses **sdl12-compat 1.2.68**, **zlib 1.3.1**, **Mesa 26.0.2** and
+its shipped LodePNG codec, not DungeonMinder's external-libpng path. Store
+RUNPATHs retain the exact dependencies; private build objects replace shared
+`/tmp`, and the C++ shared library is linked with the C++ driver.
+
+The actual [`portability patch`](guix/tay/packages/patches/dwarftown-libtcod-portability.patch)
+is applied after normalizing the two archived **CRLF** files, with
+**`patch --fuzz=0`**. It declares the existing SDL glyph mapper's three `int`
+parameters and provides **`uint32` storage** to the PNG file-read API, then
+**widens the returned value to `size_t`** for LodePNG. It does not cast a
+`size_t *` to `uint32 *`, mask a diagnostic, or alter gameplay/rendering logic.
+
+Main's source build **214 (14.74 s)**, **artifact 17091**, produced
+**`/gnu/store/4j8wpw6cb8l2bhn3az2j62hzxbpjdzvi-dwarftown-1.0`** and private
+**`/gnu/store/vbn90w1imdqx3fj0qmzl2wcw6qsksz1i-dwarftown-libtcod-1.5.1`**.
+Game reproducibility check **216 (6.74 s)**, **artifact 17094**, rebuilt and
+checked the game output. Main separately checked the private renderer with
+`guix build -L guix --no-grafts --no-offload --check -e '(@@ (tay packages dwarftown) dwarftown-libtcod)'`:
+**229 (8.00 s)**, **artifact 17118**, passed for the same private renderer
+output. These are two independent output checks, **not a rebuild/check of the
+entire transitive dependency closure**. Neither package has an upstream
+automated suite; `test suite not run` is not an upstream test pass.
+
+The ordinary launcher executes store Lua and store game sources. Module and
+font paths are immutable, while native `character.txt`, error `log.txt` and
+F11 screenshots remain in the caller's writable working directory. No proof
+helpers or special gameplay mode are installed. Upstream has **no save/load**:
+the character dump is a text report, not a resumable game state.
+
+### Ordinary native SDL gameplay and bounded dump oracle
+
+The external [`tests/dwarftown-smoke.sh`](tests/dwarftown-smoke.sh) and
+[`tests/dwarftown-native.py`](tests/dwarftown-native.py) consume the exact
+prebuilt output. Main's integrated `make check-dwarftown` run **227 (19.42 s)**
+passed with **`/tmp/dwarftown-native-10`** evidence. The separate standalone
+run **228 (15.56 s)** passed with **`/tmp/dwarftown-native-11`** evidence and
+**`DWARFTOWN_NATIVE_OK`**. Both retain successful `native-result.json` and
+`shell-result.json` with **`driver_status: 0`**, **`nar_unchanged: true`**.
+
+The genuine installed Lua process loads the source-built module/renderer in
+the consumer's Xvfb display. Focused native **XTEST keyboard events** drive
+the original interface, including held keys for help and modal cancellation.
+Captures retain PNG/XWD/RGB and decode the actual original-font glyphs:
+
+- The original **80 × 25**, **800 × 450** title/game surface shows a green
+  forest, white `@`, legible HUD and **"Find Dwarftown!"** objective; Main's
+  visual inspection found a real readable game rather than an error surface.
+- A legal forest movement selected from observed terrain advances turn **0
+  → 1**. The centered player is accompanied by exact terrain scrolling:
+  integrated **206/206** overlapping cells and standalone **162/162** match.
+- Ordinary period wait advances the world clock: integrated **1 → 5** and
+  standalone **1 → 3**. Held-key SDL repeat means a wait event is not asserted
+  to be exactly one world turn.
+- `i` shows **torch** and **potion of health**; cancellation restores the
+  gameplay view without advancing the turn. Help opens and dismisses without
+  a world turn. `q` opens a quit prompt and cancellation resumes gameplay.
+- Ordinary **Escape, then `y`** exits naturally with **status 0** and writes
+  a character dump with **"Quit the game"**, final turn **5** (integrated) or
+  **3** (standalone). Final map/HUD match the X11 capture exactly; inventory
+  lines match the observed inventory.
+- Dump messages match the **observed history prefix**, not an invented
+  full-list equality. Both runs have **two additional original `Quit? [yn]`
+  prompts** from SDL held-key repeat. Every glyph in the dump's rendered
+  message pane matches the verified history; these extra text-history prompts
+  do not justify a stronger complete-message-list claim.
+
+Zero status alone is insufficient because upstream's error handler also exits
+0. The consumer instead checks real rendering/actions, natural exit, logs and
+dump content. Selecting consumer-side software Mesa/llvmpipe resolves the
+observed GPU-device permission failure without suppressing errors or patching
+the game. This does not verify physical GPU access or hardware acceleration.
+
+Evidence records separate user/mount/network/PID namespaces, current-user
+UID/GID mapping **1000/998**, private HOME/XDG/tmp/CWD, no external network
+route, and read-only store mounts. External consumer tools are audited
+separately from the runtime closure. The output's before/after recursive NAR
+hash is unchanged:
+**`1nvlg936gv79wvgyyghsbc0wjylh16qny1h5fdf2m9hacvs6fwl2`**.
+These are bounded isolation observations, not a security certification or
+all-gameplay/completed-campaign proof. No save-continuity claim is made.
+
+### External consumer command and remaining lint gates
+
+Use the canonical already-built direct store output and an absolute **fresh
+nonexistent** evidence directory outside the store (an existing empty directory
+is not accepted):
+
+```sh
+make check-dwarftown DWARFTOWN_OUTPUT=/gnu/store/4j8wpw6cb8l2bhn3az2j62hzxbpjdzvi-dwarftown-1.0 DWARFTOWN_EVIDENCE=/tmp/dwarftown-new-evidence
+# Standalone external path, using another fresh nonexistent directory:
+sh tests/dwarftown-smoke.sh /gnu/store/4j8wpw6cb8l2bhn3az2j62hzxbpjdzvi-dwarftown-1.0 /tmp/dwarftown-standalone-new-evidence
+```
+
+Main exercised the missing-variable guard: make exits **2 before launch**.
+The smoke realizes only external consumer tools, never silently builds the
+game, and uses no Goocastle executor, proof/contracts or installed hook.
+
+Main's literal final full own lint **225 (98.42 s)** did **not** establish a
+clean result: own **no-updater**, **Software Heritage** and **Disarchive**
+findings remain. The package formatting finding was fixed; unrelated global
+Flex warnings are separate, not attributed to Dwarftown or used to excuse its
+own findings. No checker was omitted or warning suppressed. **#341 stays OPEN**;
+native acceptance does not close the issue or establish signed publication.
+
+Main owns all executed checks. This documentation worker inspected source and
+existing evidence and counted textual definitions only; it ran no checks,
+builds, tests, linters or applications. The independent **629** source ledger,
+unrelated changes and i686 filtering are preserved. No user profile or
+described host/service changed; no OKF page/log update applies to this
+repository-only packaging receipt.
 
 
 ## dNetHack — ordinary native gameplay and save continuity (2026-10-10)

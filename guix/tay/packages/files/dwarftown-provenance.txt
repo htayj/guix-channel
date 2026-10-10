@@ -1,0 +1,69 @@
+Dwarftown original-source and font provenance
+Audit date: 2026-10-10
+
+Game: original Dwarftown 1.0, not a later remake.
+https://github.com/pwmarcz/dwarftown
+Pinned commit: 9488ae4ec385459ed6c8d15a642e43c8a11607f7
+Archive: https://codeload.github.com/pwmarcz/dwarftown/tar.gz/9488ae4ec385459ed6c8d15a642e43c8a11607f7
+SHA256: 8676211b5b461de333393f6b93a870ea00a81b2391f1a85d9cc2b8327379588b
+Guix base32: 12sqg5rk5f62kifsiwci4cdsh07af2l96srz74ry67a6bcdj2xl6
+Its common file bytes equal https://pwmarcz.pl/dwarftown/dwarftown-1.0.tgz;
+the pin additionally has .hgignore and the release additionally has a
+character.txt dump.  No bundled interpreter or shared library is used.
+
+Historical renderer: libtcod 1.5.1, private to this package.
+https://github.com/libtcod/libtcod
+Pinned commit: a7cabfda0b0c770d4092f0dec02efbd2a3b6d990
+Archive: https://codeload.github.com/libtcod/libtcod/tar.gz/a7cabfda0b0c770d4092f0dec02efbd2a3b6d990
+SHA256: 90f2ade3e2651ae5f0fedeb6b9bae0ad57acfbf6e515a8b1dc85dc8663820827
+Guix base32: 09q8h9iqdp45vjqsh5g5yvxsqmxdw2xbkdnyzvqfa6k5wbisvwlh
+Official tag 1.5.1 resolves to this commit; audited tag and commit archives
+have byte-identical members.  Preserve the official LIBTCOD-LICENSE.txt
+(including 2012), LIBTCOD-CREDITS.txt and embedded LodePNG notice.
+This version uses shipped LodePNG, not the old external libpng path.
+
+The SWIG module is regenerated from the game's wrapper/swig/libtcod.i,
+LuaCallbacks.hpp and BackgroundHelperFunctions.hpp, using the official
+historical renderer headers.  The official global BSD-3-clause grant covers
+its distributed SWIG interface/helper portions; Dwarftown's project MIT
+notice covers its own adaptations.  Credits are attribution, not a
+substitute for the actual license grants.  The interpreter comes from the
+separate source-built Guix Lua 5.1 input, whose MIT notice is retained.
+
+The generator is the existing Guix SWIG 4.0.2 input, with -squash-bases
+to retain pre-3.0 inheritance layout.  Its source retains old metatable
+names by default and provides the Lua callback reference helpers:
+https://raw.githubusercontent.com/swig/swig/v4.0.2/Source/Modules/lua.cxx
+https://raw.githubusercontent.com/swig/swig/v4.0.2/Lib/lua/lua_fnptr.i
+https://raw.githubusercontent.com/swig/swig/v4.0.2/Lib/lua/luarun.swg
+Those source facts are not a claim of successful regeneration or build.
+fonts/terminal.png and wrapper/terminal.png:
+128x128 pixels, 3150 bytes; SHA256
+5e9e64246b857dc414bd0acde98820885274483580f751b9b3329b8ee86b82f4.
+These exact bytes match official libtcod 1.5.1 ascii-paint/terminal.png
+and libtcod 1.5.0 root terminal.png.  The official global BSD-3-clause
+grant supplies positive license evidence.  The 1.5.1 root terminal.png
+is not the matching file.  Do not apply the public-domain statement for
+libtcod data/fonts to a font outside that directory.
+
+fonts/terminal10x18.png (the game font):
+160x288 pixels, 2337 bytes; SHA256
+12bcd54b30b2eab6fd85e87d78781ab8064ef792df0d23bba254cc407ad51fe7.
+The pinned source and 1.0 release contain the same exact raster.
+Primary history includes it in hmp commit
+39b34e3d2e8cd61540d4bab845014be24d74cd0b, 2011-03-05.
+The project-level MIT grant positively covers project-owned material,
+without excluding this asset.  Inclusion history is not a fabricated
+pixel-authorship assertion.  No third-party credit or exact upstream
+font match was found.  In particular, libtcod's public-domain
+terminal10x18_gs_ro.png is a different raster (11450 differing pixels),
+so this game font is not identified as public domain.
+
+Runtime paths are immutable store paths.  The caller's working directory
+is preserved for character.txt dumps, failure log.txt and F11 screenshot
+files.  Character dumps are text summaries, not resumable saves.  Original
+main.lua exits zero even after its error handler; native verification must
+check captured errors and log files, not merely the process exit status.
+
+These are source/audit statements and packaging intentions, not evidence
+that this recipe has built or that native gameplay has been exercised.

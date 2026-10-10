@@ -1,0 +1,38 @@
+Retain the historical libtcod 1.5.1 API while giving this old-style
+parameter list its declared types.  The matching declaration in libtcod_int.h
+already takes three ints; no rendering behavior is changed.
+Use the file API's uint32 output storage, then widen its value to the
+size_t accepted by LodePNG.  Never pass a size_t pointer to a uint32 writer.
+
+--- a/src/sys_sdl_c.c
++++ b/src/sys_sdl_c.c
+@@ -170,7 +170,7 @@
+ 	TCOD_ctx.sdl_cbk=renderer;
+ }
+ 
+-void TCOD_sys_map_ascii_to_font(asciiCode, fontCharX, fontCharY) {
++void TCOD_sys_map_ascii_to_font(int asciiCode, int fontCharX, int fontCharY) {
+ 	if ( asciiCode > 0 && asciiCode < TCOD_ctx.max_font_chars )
+ 		TCOD_ctx.ascii_to_tcod[asciiCode] = fontCharX + fontCharY * TCOD_ctx.fontNbCharHoriz;
+ }
+
+--- a/src/sys_sdl_img_png.c
++++ b/src/sys_sdl_img_png.c
+@@ -46,6 +46,7 @@
+ 	unsigned char* image;
+ 	unsigned width, height, y, bpp;
+ 	unsigned char* png;
++	uint32 file_size;
+ 	size_t pngsize;
+ 	LodePNGState state;
+ 	SDL_Surface *bitmap;
+@@ -54,7 +55,8 @@
+ 
+ 	lodepng_state_init(&state);
+ 	/*optionally customize the state*/
+-	if (!TCOD_sys_read_file(filename,&png,&pngsize)) return NULL;
++	if (!TCOD_sys_read_file(filename,&png,&file_size)) return NULL;
++	pngsize = file_size;
+ 
+ 	lodepng_inspect(&width,&height,&state, png, pngsize);
+ 	bpp=lodepng_get_bpp(&state.info_png.color);
