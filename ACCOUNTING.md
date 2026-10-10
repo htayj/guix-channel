@@ -429,13 +429,46 @@ Storage download directory and fails with **HTTP 403**. The unrelated global
 Flex warning is separate, not attributed to DungeonMinder or used to dismiss
 its own failure. No checker was excluded and no updater success is inferred
 from the successful fixed source download. **#338 stays OPEN**; no tracker
-closure or signed publication is claimed by this receipt.
+closure or deployment is claimed. Implementation publication is established
+separately by the subsequent dated receipt below, not by native evidence.
 
 Main owns all executed checks. This documentation worker inspected files and
 existing evidence and ran no checks, builds, tests, linters or applications.
 The independent **629** source ledger and unrelated changes are preserved.
 No user profile, described host/service or material network-catalog fact changed;
 no OKF page/log update applies to this repository-only packaging receipt.
+
+### Subsequent signed implementation publication (2026-10-10)
+
+After the local evidence above, the publisher delivered signed implementation
+commit
+[`4280ec889d85f32e1ed404805650fe1a880f93b9`](https://forge.nogroup.group/tay/guix-channel/commit/4280ec889d85f32e1ed404805650fe1a880f93b9),
+parent **`5b3710d7b95a892077b60c51f1c4a9cbe21a10f1`**, with subject
+**"feat: package original DungeonMinder and verify native spell gameplay"**.
+The local signature status was **G**, fingerprint
+**`6A27F433DC22B4DFA278E8F32F12E6A35F417606`**. Exact-OID Guix channel
+authentication passed, and the normal pre-push hook independently authenticated
+the same OID. The ordinary **`git push origin master`** published only to
+authoritative Forgejo; no force push or direct GitHub push was performed.
+
+The publisher observed the exact OID on SSH `master` and authenticated Forgejo
+master/commit/signature API responses (**200**), with
+**`verification.verified: true`**, signer **`tay / 2F12E6A35F417606`**. These
+receipts establish publication of the implementation, separately from Main's
+build/reproducibility/native observations. They do not establish installation
+in a user profile, deployment, a clean lint result or tracker closure.
+**#338 remains OPEN** for its actual own Google Storage directory **HTTP 403**
+release-discovery gate. The tracker worker subsequently posted matching dated
+evidence comments on [authoritative Forgejo](https://forge.nogroup.group/tay/guix-channel/issues/338#issuecomment-3316)
+and the [GitHub tracker mirror](https://github.com/htayj/guix-channel/issues/338#issuecomment-6094310309).
+Both comment POSTs returned **201** and exact-comment GETs **200**, with exact
+matching bodies verified. Both issues remained **OPEN**; all prior labels,
+including `state:blocked` and `state:research`, and original bodies/history
+were preserved. The paired `browser-tracker-wave17-receipt.json` records these
+actions and independently read the exact published authoritative master and
+commit verification. This is a bounded published-evidence update, not issue
+closure or acceptance of the unresolved lint gate.
+
 
 ## dNetHack — ordinary native gameplay and save continuity (2026-10-10)
 
