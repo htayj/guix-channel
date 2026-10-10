@@ -409,6 +409,48 @@ and no material OKF correction was established, so no OKF page/log update
 applies. Documentation workers ran no commands, checks, builds, tests, linters
 or formatters; the exercised gate results above belong to Main.
 
+### Publication and mirrored tracker readback (2026-10-09)
+
+The local-delivery boundary above describes the pre-publication receipt.
+Main subsequently reports signed/authenticated implementation commit
+**[`9c24801efae418a7b99c4209b23c5671b0981426`](https://forge.nogroup.group/tay/guix-channel/commit/9c24801efae418a7b99c4209b23c5671b0981426)**,
+parent **`c6b17d4e08bdbfabedee2def998a23e255102eee`**, published by a normal
+push to authoritative `origin/master`. The publisher recorded exact-OID
+channel authentication, matching SSH/master/API values and a verified
+signature; the tracker worker independently read the same exact master/commit
+OID and verified signature from the Forgejo API. This is publication evidence,
+not profile installation or deployment, and no GitHub code push is claimed.
+
+Mirrored #307 evidence comments
+[Forgejo **3292**](https://forge.nogroup.group/tay/guix-channel/issues/307#issuecomment-3292)
+and [GitHub **6092058902**](https://github.com/htayj/guix-channel/issues/307#issuecomment-6092058902)
+retain the primary-grant correction and the exercised build/reproducibility/
+ordinary-native receipts above. Both issues remain **OPEN**, with existing
+`state:blocked` and `state:research` labels unchanged: the literal older
+`7drl` updater lint warning is still unmet, not suppressed or waived.
+
+The same bounded tracker wave added #306 Cinders comments
+[Forgejo **3293**](https://forge.nogroup.group/tay/guix-channel/issues/306#issuecomment-3293)
+and [GitHub **6092059174**](https://github.com/htayj/guix-channel/issues/306#issuecomment-6092059174).
+Its exact Bitbucket repository API and Software Heritage origin lookup
+returned **404**; the independent current Wayback availability request returned
+**429**, not a freshly verified empty result. An earlier worker-reported empty
+Wayback result is explicitly historical/bounded. These observations establish
+no recovered source through the checked routes, not exhaustive absence,
+nonexistence of mirrors or proof the project was never public. No opaque demo,
+replacement source or new runtime execution is accepted; #306 remains OPEN.
+
+The worker's retained `local://browser-tracker-wave9-receipt.json` records four
+comment POST responses **201** and individual authenticated readbacks **200**,
+with identical mirrored bodies and no state/label changes. Its complete
+tracker audit counted **755 Forgejo issues (387 open / 368 closed)** and
+**725 GitHub issues (385 open / 340 closed)**: **725 shared pairs**, **722 unique
+titles**, zero title/open-closed/`state:*` drift, **30 Forgejo-only issues
+728–757** and no GitHub-only issues. These are tracker inventory/readback
+counts, not package acceptance totals. This follow-up is append-only receipt
+documentation: no recipe, source pin, canonical 629 ledger, application state,
+build/test/lint or deployment changed, and no OKF update applies.
+
 ## CalcRogue — native i686 gameplay and save continuity (2026-10-09)
 
 The new [`calcrogue`](guix/tay/packages/calcrogue.scm) **6a-sp1** package
