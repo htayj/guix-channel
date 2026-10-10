@@ -400,6 +400,46 @@ delivery does not establish commit/publication, profile installation or
 deployment. No described host/service changed and no material OKF correction
 was established, so no OKF page/log update applies.
 
+### Publication and tracker readback (2026-10-09)
+
+The preceding local-delivery boundary is superseded **only for channel
+publication** by signed commit
+[`44cb0ac3e3d25d459765b2ee2d55d3de9834ce3d`](https://forge.nogroup.group/tay/guix-channel/commit/44cb0ac3e3d25d459765b2ee2d55d3de9834ce3d),
+parent **`bf0cad62229c76790d5b0b902cbf1e685975b72c`**, published by normal
+authoritative Forgejo `origin/master` push. Publisher/tracker receipts establish
+exact-OID channel authentication, matching SSH/master/API readback and Forgejo
+signature verification **true**. No GitHub code push, profile installation or
+deployment is established; publication does not waive the remaining gates.
+
+The identical evidence comments were posted and individually authenticated
+read back for **#295** on
+[Forgejo (3285)](https://forge.nogroup.group/tay/guix-channel/issues/295#issuecomment-3285)
+and [GitHub (6091357496)](https://github.com/htayj/guix-channel/issues/295#issuecomment-6091357496),
+and for **#304** on
+[Forgejo (3286)](https://forge.nogroup.group/tay/guix-channel/issues/304#issuecomment-3286)
+and [GitHub (6091359420)](https://github.com/htayj/guix-channel/issues/304#issuecomment-6091359420).
+All four POSTs returned **201** and readbacks **200**, with exact intended
+bodies. Both issues remain **OPEN**, retaining `state:blocked`, `state:research`
+and all other original labels; #295's literal full acceptance gate is unmet.
+
+The bounded #304 primary-source correction retains genuine upstream **MIT
+metadata evidence**, rather than treating missing license text as automatically
+“no grant.” The archive records `hasSource=false` and no source entries; the
+actual 1.1.2 ZIP contains only `readme.txt` and the compiled C64 D64 image.
+Whole-image component rights remain unverified and authentic reproducible
+source/build inputs absent. No opaque disk-image/emulator package, automatic
+whole-image rights clearance or substitute acceptance was delivered.
+
+The full wave-6 tracker audit counted **755 Forgejo issues (387 open, 368
+closed)** and **725 GitHub issues (385 open, 340 closed)**, with **725 shared
+pairs / 722 unique shared titles**, **30 Forgejo-only issues (728–757)** and
+zero GitHub-only issues. Shared-pair title, open/closed and workflow drift was
+**zero**. Retained receipt: `local://browser-tracker-wave6-receipt.json`.
+These are tracker reconciliation counts, not package acceptance totals. The
+tracker work performed no repository edits or build/test/lint/app/Goocastle
+reruns, changed no issue state/labels and preserved the **629** source ledger.
+No described deployed system changed; no OKF page/log update applies.
+
 ## Persephil — legacy PhiloLogic HTML to XLSX (2026-10-09)
 
 The new [`persephil`](guix/tay/packages/persephil.scm)
