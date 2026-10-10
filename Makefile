@@ -58,7 +58,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	lambdahack kimchi keeperrl \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
-	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue
+	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # Keep i686-only packages listed for inventory and lint, but realize them
 # through explicit architecture targets rather than the default native build.
@@ -279,6 +279,11 @@ build-calcrogue:
 check-calcrogue:
 	@test -n "$(CALCROGUE_OUTPUT)" -a -n "$(CALCROGUE_EVIDENCE)" || { echo 'Set CALCROGUE_OUTPUT and CALCROGUE_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/calcrogue-smoke.sh "$(CALCROGUE_OUTPUT)" "$(CALCROGUE_EVIDENCE)"
+
+.PHONY: check-city-of-the-condemned
+check-city-of-the-condemned:
+	@test -n "$(COTC_OUTPUT)" -a -n "$(COTC_EVIDENCE)" || { echo 'Set COTC_OUTPUT and COTC_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/city-of-the-condemned-smoke.sh "$(COTC_OUTPUT)" "$(COTC_EVIDENCE)"
 
 check-tui:
 	GUIX="$(GUIX)" sh tests/tui-smoke.sh

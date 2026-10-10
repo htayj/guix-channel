@@ -75,6 +75,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Astx native CTS loader and confirmed structural rewrite](#astx--native-cts-loader-and-confirmed-structural-rewrite-2026-10-09)
 - [Persephil legacy PhiloLogic HTML to XLSX](#persephil--legacy-philologic-html-to-xlsx-2026-10-09)
 - [CalcRogue native i686 gameplay and save continuity](#calcrogue--native-i686-gameplay-and-save-continuity-2026-10-09)
+- [City of the Condemned original source and ordinary native gameplay](#city-of-the-condemned--original-source-and-ordinary-native-gameplay-2026-10-09)
 
 ## Relocation map (2026-10-04)
 
@@ -228,6 +229,16 @@ alter any of the canonical **629** preservation snapshots.
 Architecture filtering does not remove CalcRogue from those textual inventories:
 `I686_ONLY_PACKAGES` excludes it from default native `make build` and the
 `make check` build dry-run, while preserving enumeration/lint coverage.
+City of the Condemned's separate 2026-10-09 candidate adds exactly **one**
+`PROJECT_PACKAGES` entry (`city-of-the-condemned`) and one README game row.
+The scoped textual inventory rises from **235 project + 7 font = 242**
+installable names to **236 project + 7 font = 243**; including one optional
+proprietary and five check-only dependencies gives **249** check names.
+These are listed definition counts, including preexisting unpublished user
+changes, not complete-inventory verification, accepted-package totals or
+publication. The canonical **629** preservation snapshots and CalcRogue's
+`I686_ONLY_PACKAGES` filtering remain unchanged. The new source-built game is
+not another preservation-ledger entry or a claim that all 249 names passed.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -252,6 +263,151 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## City of the Condemned — original source and ordinary native gameplay (2026-10-09)
+
+The new [`city-of-the-condemned`](guix/tay/packages/city-of-the-condemned.scm)
+**1.0-0.e9a8989** package builds Tapio Vierros's original C++/ncurses game
+from [tapio/cotc](https://github.com/tapio/cotc), exact commit
+**`e9a8989d34c9d3e0c68e7e42b526e1bee923ac7c`**, recursive Guix source NAR
+hash **`0wrjwsiy5vg27hz0mzdja2v3nyclpicajnl5xidkhxn5sjx0ldvk`**.
+This is City of the Condemned, not the separately packaged City of the Damned.
+The origin snippet removes upstream `bin/` (`CotC-1.0.exe`, `CotC-1.0.x86`
+and `pdcurses.dll`); the installed `libexec/cotc` is compiled from the complete
+game sources, not copied from those prebuilts. The CMake patch supplies a
+deterministic package version instead of build-time Git discovery and adapts
+the existing Boost/header/C++ build. It does not replace the game engine,
+town generation, field of view, ncurses interface or ordinary input handling.
+Upstream defines no automated test suite; no upstream test count is claimed.
+
+### Primary source grants and retained notices
+
+The [pinned root LICENSE](https://github.com/tapio/cotc/blob/e9a8989d34c9d3e0c68e7e42b526e1bee923ac7c/LICENSE)
+is the full MIT permission/disclaimer with **Copyright (c) 2010-2013 Tapio
+Vierros**, retained verbatim with the upstream README in
+`share/doc/city-of-the-condemned`. The author's own Knight of Faith town
+generator is already included in this source grant: `generator.cc` identifies
+its CoolBasic port. A missing external Knight of Faith download URL is not
+evidence that this included author-owned code lacks permission.
+
+The original [Google Code project metadata](https://storage.googleapis.com/google-code-archive/v2/code.google.com/reflexivelos/project.json)
+declares **`license: "mit"`** and explicitly invites reuse: “This is a
+roguelike engine I've been developing in my spare time. I'm putting it online
+so I don't lose it when my computer explodes, but please, reuse the code.”
+The fetched JSON is a pinned build input, installed as
+`share/doc/city-of-the-condemned/reflexivelos-project.json`: SHA-256
+**`6c5cc39ab5d737c28ff57857cb989e10aa966038711f31706eaed185b6b162e8`**,
+Guix base32 **`1s32n6v8bldfdrq327vi71h9dahhksccnmvqyn7w4dypnndc6p3c`**.
+This is primary project licensing evidence, not an inference from a mirror.
+
+The fetched [original source archive](https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/reflexivelos/source-archive.zip)
+has SHA-256
+**`8f7ca7e8f8f149f313753c483ba0ec4d1e920200064c95c1f6d43ee91a03919e`**.
+Comparison of its `trunk/los2.cpp` `showdir` with the pinned game's
+`world.cc` `fov_dir` finds the same `q/p`, `eps/ad2/s` digital-line loops,
+direction transformations and obstruction interval updates, adapted to game
+tile access and visibility. The original algorithm and upstream reflexivelos
+MIT attribution are retained, not dropped or replaced. The archive's SVN
+metadata gives the alias **notzeb**; the source investigation found no separate
+license notice, copyright year or legal holder name in its 39 non-SVN files.
+The original MIT declaration and reuse invitation correct the prior missing-
+permission blocker, but do not identify a missing legal name/year. Neither is
+fabricated. Installed `THIRD-PARTY-NOTICES` preserves the attribution, primary
+URLs and hashes, and explicitly labels the canonical MIT permission/disclaimer
+as a **terms reference**, not a newly authored grant or invented copyright
+notice. The later RealityWarper mirror is supplemental, not the authority.
+Separate Guix Boost, ncurses, Bash and Coreutils dependencies retain their own
+notices; the package records MIT/Expat and Boost Software License 1.0.
+
+Primary temporary reads were captured from
+`/tmp/cotc-package-upstream-20261009`, `/tmp/cotc-package-hash-20261009`,
+`/tmp/cotc-reflexivelos-source-20261009.zip` and
+`/tmp/cotc-reflexivelos-project-20261009.json`. These are task-owned fetch/hash
+workspaces, not installed runtime state or native evidence. Their primary
+facts are retained above and in the installed notices. After the native worker
+released its source reads and those facts were saved, Main removed exactly
+these four temporary paths (0.01 s). Native and failed-build receipts, user
+files and store outputs were preserved.
+
+### Ordinary native behavior and persistence boundary
+
+The launcher sets `umask 077`, preserves `HOME`, creates and enters
+`${XDG_STATE_HOME:-$HOME/.local/state}/city-of-the-condemned`, then execs
+`libexec/cotc` with store ncurses terminfo available. Upstream has **no save/load
+facility**. Its cwd-relative `log.log` is diagnostic, not a session save;
+logging was dormant and no log file was produced in either accepted run.
+The only observed private-state change was creation of the game state
+directory (0700, caller UID/GID). This is not save, resume or persistence proof.
+
+The integrated receipt `/tmp/cotc-native-1` and independent standalone receipt
+`/tmp/cotc-native-2` each retain **two ordinary native PTY processes**, Angel
+and Imp (namespace PIDs 2 and 4 in the integrated receipt), through the actual
+installed launcher. Each role has its real HUD, role-specific abilities and
+generated terrain; three successful movements are established by matching
+terrain/camera translations rather than merely finding a player glyph.
+Angel moved west three times (`g`); Imp moved west/east/west (`g`, `j`, `g`).
+Ordinary `5` waits advance actors and visible world state without forcing RNG,
+injecting fixtures or adding game hooks. Integrated Blessed counts changed
+**0 → 3** (Angel) and **0 → 5** (Imp), with Imp-world Demons **60 → 59**;
+standalone Blessed counts changed **0 → 2** for both roles. Angel/Imp health
+bars were retained at **16/9**, not falsely reported as HP damage.
+Both result files report adjacent combat **unavailable and unobserved**,
+with no attempted combat keys; world changes do not prove player combat.
+Each process used natural `q` to return to the title and `q` there to exit
+**0**. Namespace teardown is not accepted as a successful quit.
+
+The driver and games preserve caller UID/GID in isolated user, mount, network
+and PID namespaces, use an empty PATH during gameplay, and have no external
+network route. `/gnu/store` is recursively read-only. Before/after output NAR
+hashes match in both runs:
+**`1j40yq9gbch1qs4y95v80bmzadagv4l8fmyv5l94zbhvhy8kbig9`**.
+Raw PTY streams, inputs, parsed screens, process/namespace proofs, private-state
+inventories and cleanup receipts remain in the evidence directories; their
+temporary `private/` runtime trees were removed. This proves the exercised
+movement/wait/quit paths, not every ability, combat outcome or whole game.
+
+### Main-owned verification and remaining literal lint gate
+
+The final source build and `--check` rebuild realized the same output:
+**`/gnu/store/yacj68wbrjarj40apnsfilzr3rjg4xqc-city-of-the-condemned-1.0-0.e9a8989`**,
+derivation **`6vv6rxdbdr7dbw2h5wdn5zlxvml2sy7w-city-of-the-condemned-1.0-0.e9a8989.drv`**.
+
+| Gate | Main receipt |
+| --- | --- |
+| Final source build | PASS, 10.49 s; attempt 150, artifact 16447 |
+| `--check` reproducibility rebuild | PASS, 8.79 s; attempt 152, artifact 16449; identical output |
+| Full lint | Literal clean gate UNMET, 47.89 s; attempt 151, Main's retained result: only own warning is “can be upgraded to 7drl”; deprecated Flex dependency warning is separate |
+| Integrated `make check-city-of-the-condemned` native consumer | PASS, 15.51 s; attempt 154, `/tmp/cotc-native-1` |
+| Independent standalone native consumer | PASS, 9.95 s; attempt 155, `/tmp/cotc-native-2`; same final output |
+| Missing-variable Makefile guard | Expected rejection, make exit 2, 1.74 s; requires canonical prebuilt store output and fresh absolute evidence directory |
+
+Earlier malformed-patch, patch-name/synopsis and archive `BadHeader`/EOF
+failures were repaired before these final receipts. The final full lint run
+reported no archive warning. The remaining `7drl` updater suggestion points
+to a historically older tag; the actual pinned commit/version remains intact,
+without a fake version, updater suppression or waiver. **#307 remains OPEN**:
+source-grant, build, reproducibility and native proofs do not satisfy the
+literal clean-own-lint acceptance requirement.
+
+To exercise the consumer again, use the existing canonical output and a
+**new, nonexistent absolute evidence directory outside the store**:
+
+```sh
+COTC_OUTPUT=/gnu/store/yacj68wbrjarj40apnsfilzr3rjg4xqc-city-of-the-condemned-1.0-0.e9a8989 \
+COTC_EVIDENCE=/tmp/cotc-new-evidence make check-city-of-the-condemned
+# Or call the same native consumer directly:
+sh tests/city-of-the-condemned-smoke.sh \
+  /gnu/store/yacj68wbrjarj40apnsfilzr3rjg4xqc-city-of-the-condemned-1.0-0.e9a8989 \
+  /tmp/cotc-another-new-evidence
+```
+
+The consumer never builds the target game; it may realize its own tools before
+offline gameplay. `GUIX`, if supplied, must be an absolute executable path.
+This repository-only delivery does not establish publication, profile
+installation, deployment or issue closure. No described host/service changed
+and no material OKF correction was established, so no OKF page/log update
+applies. Documentation workers ran no commands, checks, builds, tests, linters
+or formatters; the exercised gate results above belong to Main.
 
 ## CalcRogue — native i686 gameplay and save continuity (2026-10-09)
 

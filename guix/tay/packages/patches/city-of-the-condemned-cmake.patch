@@ -1,0 +1,59 @@
+From: Tay <tay@localhost>
+Subject: [PATCH] Adapt CMakeLists.txt for Guix package build
+
+Make the build work with a modern CMake and toolchain:
+
+- Require CMake >= 3.5 and declare the project after the minimum
+  version, since CMake 4.x no longer accepts the old 2.6 minimum
+  and policy declaration.
+- Replace the VERSION_MAJOR/VERSION_MINOR machinery and the Git
+  revision discovery (which requires a .git checkout the tarball
+  does not have) with a single COTC_VERSION cache variable
+  supplied by the package builder, and define VERSION_STRING
+  from it.
+- Compile with -std=c++11 instead of -std=c++98: modern Boost
+  (1.89) Iterator headers unconditionally use <type_traits> and
+  std::enable_if, which are not available in C++98.
+
+No other logic is changed: the EXENAME target CotC and the
+absence of an install rule are preserved as upstream wrote them.
+This patch is authored for the Guix package; it has not been
+submitted upstream.
+---
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,7 +1,5 @@
+-project(CityOfTheCondemned)
+-cmake_minimum_required(VERSION 2.6)
+-cmake_policy(VERSION 2.6)
++cmake_minimum_required(VERSION 3.5)
++project(CityOfTheCondemned)
+ 
+ set(EXENAME "CotC")
+-set(VERSION_MAJOR 1)
+-set(VERSION_MINOR "") # Will be determined later
++set(COTC_VERSION "1.0" CACHE STRING "Version supplied by the package builder")
+@@ -23 +21 @@
+-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++98 -Wall -Wno-missing-field-initializers")
++	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++11 -Wall -Wno-missing-field-initializers")
+@@ -30,18 +28 @@
+-# Get revision number from Git
+-if(NOT VERSION_MINOR)
+-	execute_process(
+-		COMMAND git describe --tags --match ${VERSION_MAJOR}.0
+-		WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+-		OUTPUT_VARIABLE RAW_VERSION
+-		RESULT_VARIABLE GIT_RESULT
+-	)
+-	if(NOT GIT_RESULT)
+-		string(REPLACE "${VERSION_MAJOR}.0-" " " RAW_VERSION "${RAW_VERSION}")
+-		string(REGEX REPLACE "-g[a-f|0-9]*" "" VERSION_MINOR ${RAW_VERSION})
+-		string(STRIP ${VERSION_MINOR} VERSION_MINOR)
+-	else()
+-		set(VERSION_MINOR "0+")
+-	endif()
+-endif()
+-
+-add_definitions(-DVERSION_STRING="${VERSION_MAJOR}.${VERSION_MINOR}")
++add_definitions(-DVERSION_STRING="${COTC_VERSION}")
