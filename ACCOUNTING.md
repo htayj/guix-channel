@@ -76,6 +76,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Persephil legacy PhiloLogic HTML to XLSX](#persephil--legacy-philologic-html-to-xlsx-2026-10-09)
 - [CalcRogue native i686 gameplay and save continuity](#calcrogue--native-i686-gameplay-and-save-continuity-2026-10-09)
 - [City of the Condemned original source and ordinary native gameplay](#city-of-the-condemned--original-source-and-ordinary-native-gameplay-2026-10-09)
+- [Cracks and Crevices recovered source and native save/restore](#cracks-and-crevices--recovered-source-and-native-saverestore-2026-10-09)
 
 ## Relocation map (2026-10-04)
 
@@ -239,6 +240,17 @@ changes, not complete-inventory verification, accepted-package totals or
 publication. The canonical **629** preservation snapshots and CalcRogue's
 `I686_ONLY_PACKAGES` filtering remain unchanged. The new source-built game is
 not another preservation-ledger entry or a claim that all 249 names passed.
+Cracks and Crevices' separate 2026-10-09 candidate adds exactly **one**
+`PROJECT_PACKAGES` entry (`cracks-and-crevices`) and one README game row.
+The scoped textual inventory rises from **236 project + 7 font = 243**
+installable names to **237 project + 7 font = 244**; including one optional
+proprietary and five check-only dependencies gives **250** check names.
+These are listed definition counts, including preexisting unpublished user
+changes, not complete-inventory verification, accepted-package totals or
+publication. Recovery of the original 0.5 release does not add or alter any of
+the canonical **629** preservation snapshots. CalcRogue's `I686_ONLY_PACKAGES`
+filtering remains unchanged; neither the dependency closure nor the existing
+source ledger becomes another end-user application or an all-250 pass claim.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -263,6 +275,207 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Cracks and Crevices — recovered source and native save/restore (2026-10-09)
+
+The new [`cracks-and-crevices`](guix/tay/packages/cracks-and-crevices.scm)
+**0.5** package compiles Stu George's complete original C/SDL 1.2 game,
+reporting **v0.05/0757**, not a reconstructed engine or copied executable.
+The [original attachment 32](https://redmine.bloodycactus.com/attachments/download/32/cracks_and_crevices-0.5.tar.bz2)
+was recovered from its [2015-08-04 Wayback snapshot](https://web.archive.org/web/20150804175538if_/https://redmine.bloodycactus.com/attachments/download/32/cracks_and_crevices-0.5.tar.bz2):
+**121192 bytes**, SHA-256
+**`a00cf6ab0a189673fe152f9325b14c1a6b6a531a8510d1cc321c44ccdeb9fb66`**,
+Guix base32 **`0rpvp7gcqi0w6b6d2445399nlsqs9jqjb4rg2pz775hq1amzc350`**.
+MD5 **`dd6e27a5bfea81549c94d52c12b9682e`** agrees with the
+[archived primary release-files page](https://web.archive.org/web/20160417095515id_/https://redmine.bloodycactus.com/projects/sdlrl/files)
+and the [historical AUR recipe](https://raw.githubusercontent.com/aur-archive/cracks_and_crevices/277ff4450e3dcdeb255fc1edd1ec4099a18cabfc/PKGBUILD).
+This is the **latest recoverable release established by this investigation**,
+not an assertion about the latest release available today. The primary files
+page dates it September 18, 2010; the [release announcement](https://web.archive.org/web/20190719113254id_/https://redmine.bloodycactus.com/news/11)
+says 0.5 20100915, while the included Changelog retains 0.5 20091213.
+These differing historical dates are not silently harmonized. Source facts
+were recovered in this 2026-10-09 task; the search receipt's UTC timestamp is
+2026-10-10T01:38:40Z, not an upstream publication date.
+
+### Positive grants, retained fonts and recovered FOV notice
+
+`docs/readme.txt:4-5` explicitly releases **the project under GNU GPL version
+2**, with the complete text in `docs/COPYING`; it is not an explicit project
+GPL-2.0-or-later grant. All original embedded fonts are retained:
+`font_8x16.inc` (**4494 bytes**), `font_12x16.inc` (**7584 bytes**) and
+`font_14x24.inc` (**9945 bytes**), each an embedded PCX payload. No conflicting
+third-party font notice or separate font provenance was found in the project.
+The positive project-wide grant supports distribution of its project contents;
+it does **not** prove outside origin or that these were author-drawn. Missing
+per-file font notices were not treated as an automatic reason to drop or
+replace the fonts. The original maps, rumors and other embedded game data
+likewise remain compiled in, without replacement artwork or data.
+
+The bundled `random_mt.c:10-38` carries Matsumoto/Nishimura's **1997–2002
+BSD-3-clause** redistribution grant; `memwatch.c:3-26` and `memwatch.h`
+carry Johan Lindh's **GPL-2.0-or-later** grant. The installed
+`share/doc/cracks-and-crevices/licenses/` preserves these complete source
+notices, including MT19937's binary-redistribution terms. MEMWATCH debug mode
+is not activated in the release build. These grants are not inferred from the
+game's GPL COPYING.
+
+The original `fov.c`/`fov.h` refer to Greg McIntyre's separate COPYING, which
+was missing from the game tarball. The [primary libfov source archive](https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/libfov/source-archive.zip),
+supported by its [original project metadata](https://storage.googleapis.com/google-code-archive/v2/code.google.com/libfov/project.json),
+was recovered with SHA-256
+**`7dfc0ff6b53ef6002e5ff072807e1f26e72f39a5bef2ef9ed6ee7651881d3586`**.
+Its `libfov/trunk/COPYING` is the complete **MIT grant, Copyright (c) 2006
+Greg McIntyre**, SHA-256
+**`52aff126c6c7d33284e2e8fb9ff29e05eb03aff8ded0cd7f0914086b6fb513ca`**.
+The archive ChangeLog dates the BSD-to-MIT change September 3, 2007. Source
+comparison finds the same copyright, API and FOV algorithm with local game
+edits, not byte-identical files. The notice patch imports that exact grant as
+`COPYING.libfov` and corrects the source references; the algorithm is **not
+replaced**. The full grant and `PROVENANCE.txt` are installed alongside the
+game's GPL text. Primary-source research used Brave and complementary Serper
+searches, then read the original Google Code metadata, archive, COPYING and
+ChangeLog; a later mirror is not the licensing authority.
+
+### Actual build fixes and native state
+
+The release uses GNU make and GNU C99, with Guix's **sdl12-compat 1.2.68**
+supplying the SDL 1.2 API. The installed game is source-built; this does not
+assert that every dependency was rebuilt from source without substitutes.
+No SDL_image, Ruby/Rant generator, Lua interpreter or missing debug-only Lua
+headers are release dependencies. There is **no upstream test suite** in this
+release; `test suite not run` in the build log is not an upstream test pass.
+
+The build patch honors compiler/linker flags and links `libm` explicitly.
+It retains **`-Wshadow -Wall -Werror -std=gnu99 -pedantic`**, removes upstream's
+`-D_FORTIFY_SOURCE=0`, and fixes actual compiler defects rather than disabling
+warnings: misleading indentation, terminated item names, a MEMWATCH format
+type, checked `dlist_remove` failure, and MEMWATCH neighbor checksums using
+the actual neighboring block. Unused bindings are removed while retaining
+their calls and side effects; the unused shopping allocation is freed and
+the extra format argument removed. Unstable `__DATE__`/`__TIME__` reporting
+is replaced consistently in startup, version accessors and character dumps
+with explicit **not recorded/omitted for reproducibility** text, not a false
+historical build timestamp.
+
+The package bypasses upstream's privileged setgid `/usr/games` install.
+`bin/cracks-and-crevices` is a symlink to the compiled
+`libexec/cracks-and-crevices/cnc`, not a game-modifying wrapper. Native code
+sets `umask 077` and uses an absolute `XDG_STATE_HOME`, falling back to
+`$HOME/.local/state` for an unset or nonabsolute value, with the subdirectory
+`cracks-and-crevices` checked for caller ownership and made **0700**. `HOME`
+itself is not changed. Ordinary basenames `config`, `save.bin`, `scores` and
+`chardump.txt` are retained there; shared `/var/games` score fallback is removed.
+Configuration still checks the native state `config` then cwd `config.ini`.
+Only **ENOENT** means optional configuration is absent and built-in defaults
+are appropriate: other open/read/close failures remain reported failures.
+No synthetic configuration was injected for the accepted first launch.
+
+### Final ordinary SDL gameplay and save lineage
+
+Final integrated evidence **`/tmp/cracks-native-5`** and independent standalone
+evidence **`/tmp/cracks-native-6`** each retain four actual installed game
+processes, three native saves with read-only JSON decodes, raw PNG captures,
+input receipts, stdout/stderr, namespace/mount receipts and final character
+dump. In each fresh easy game, ordinary `e` starts character creation and the
+shop; `l` exits the shop. The first process moves **Left**, rests with `.`,
+saves with **Shift+S**, then acknowledges the saved prompt with Space. A fresh
+second process consumes that unchanged native save, resumes without the menu,
+moves Left, rests and resaves. The third consumes the second save, moves **Up**,
+rests and resaves; the fourth consumes the third, moves **Down**, rests, then
+uses **Shift+Q** and Space for natural quit and native character dump.
+All four game processes in each final run exited **0 naturally**, before
+teardown. Neither forced process termination nor zero exit with a native
+error is accepted as a successful quit.
+
+Decoded save positions (row, column) are **(21,16) → (21,15) → (20,15)**,
+with move counts **3 → 6 → 9** and clocks **9:20AM → 9:40AM → 10:00AM**;
+both final dumps advance to **10:20AM**. Saves retain the player handle, map,
+date, difficulty, gold, level, experience, base stats, skills, inventory payload
+hash and both level terrain hashes within their own lineage. Existing native
+save journal entries are preserved and grow from one to two to three, with
+the same **3/6/9** history in the final dump. Integrated gold stays **34**;
+standalone gold stays **42**, with independently generated stats and dungeon
+terrain: the runs were not seeded or forced into identical character fixtures.
+The reader targets the recovered **LP64 native-endian 0.5 save ABI** (220-byte
+Item, 3652-byte Actor). This is selected-field/terrain/inventory/journal
+continuity plus native save consumption and further play, not a claim of
+cross-architecture save portability or complete hidden-state equivalence.
+
+The actual integrated `third-restored.png` has legible **Life 10, Armour 0,
+Mana 40**, HUD text `21. 15  9:40AM`, the player `@`, floors/walls and no error
+overlay. This raw restored frame precedes the next input; it is not substituted
+for the decoded third-save clock. Map glyphs are small, not claimed pixel-perfect
+against an invented reference. Native stdout is empty; stderr carries the
+normal version/SDL/defaults/save/load messages, without native LogError,
+assertion or save failure in either accepted run. The proof is bounded **town
+movement/rest/save/restore/quit**, not dungeon combat, quest completion or victory.
+
+Both runs use an empty PATH and private HOME/XDG/work directories, user,
+mount, PID and network namespaces with unchanged nonroot **UID 1000/GID 998**,
+only loopback and no external route, private `/tmp` and `/run`, and a recursively
+read-only `/gnu/store`. Xvfb provides the real X11 display; SDL audio is dummy.
+Explicit private unavailable D-Bus addresses prevent host-session autoactivation,
+not a skipped filesystem-isolation assertion. Final HOME remains empty; the
+only retained game-state file after consumed saves and quit is `chardump.txt`.
+Both runs preserve the output NAR hash
+**`1q65qg0fm3p7if66j3igwml3p4799s5hg45x6jqy50fhkans8q9a`** before/after.
+Cleanup receipts show the game processes already stopped naturally; only
+task-owned Xvfb required teardown. Failed native evidence is retained separately.
+
+### Exercised final gates and honest failure history
+
+Main's final build used `/home/tay/.config/guix/current/bin/guix build -L guix
+--no-grafts --no-offload --cores=1 --max-jobs=1 --keep-failed -e '(@ (tay
+packages cracks-and-crevices) cracks-and-crevices)'`: **PASS, 7.93 s**, artifact
+**16612**, derivation
+`/gnu/store/d1k2gv2clqf9l4ja47cwqqidv9fw62za-cracks-and-crevices-0.5.drv`, output
+**`/gnu/store/lx12n7l2m8w2xjfbf696g2qmdnzf3g9m-cracks-and-crevices-0.5`**.
+The same command with **`--check`** added before `-e` passed **6.24 s**, artifact
+**16614**, for this final output. Earlier builds of a different output are not
+substituted for these final receipts.
+
+`make check-cracks-and-crevices GUIX=/home/tay/.config/guix/current/bin/guix
+CRACKS_OUTPUT=/gnu/store/lx12n7l2m8w2xjfbf696g2qmdnzf3g9m-cracks-and-crevices-0.5
+CRACKS_EVIDENCE=/tmp/cracks-native-5` passed **20.47 s** using Guix make 4.4.1.
+The independent invocation `env GUIX=/home/tay/.config/guix/current/bin/guix sh
+tests/cracks-and-crevices-smoke.sh
+/gnu/store/lx12n7l2m8w2xjfbf696g2qmdnzf3g9m-cracks-and-crevices-0.5
+/tmp/cracks-native-6` passed **16.83 s**. The smoke entrypoint consumes an
+already-realized canonical direct store output and a fresh canonical absolute
+evidence path outside the store, realizing only generic proof tools. Main's
+missing-variable target invocation correctly rejected with **exit 2, 1.74 s**;
+it did not build the game implicitly or invent an evidence directory.
+
+Earlier attempts are failures, not acceptance: `cracks-native-1` failed the
+evidence bind-mount setup (**13.43 s**); `cracks-native-2` rejected the first-run
+`options.c(133) : No ini file found` LogError even though the game saved and
+exited zero (**16.37 s**, artifact **16608**). The optional-ENOENT semantics
+above fix that real mismatch without accepting runtime errors.
+`cracks-native-3` failed the decoder's incorrect Actor-size assumption
+(**16.56 s**), corrected from the actual recovered struct ABI, not by editing
+game saves. `cracks-native-4` completed play but failed the empty-HOME assertion
+because D-Bus autoactivation created `.dbus` (**21.54 s**); private unavailable
+bus addresses fixed isolation while retaining the assertion. Initial compiler
+and patch-application failures likewise precede the final corrected build.
+Task-owned source/scratch workspaces were removed after their evidence was
+retained; failed/native evidence and store outputs were preserved.
+
+The full unfiltered command `/home/tay/.config/guix/current/bin/guix lint -L
+guix cracks-and-crevices` completed **23.50 s**, but was **not clean**: own
+generic HTML release discovery failed to find upstream releases (the archived
+directory request returned 404), and Software Heritage/Disarchive source
+archiving reported missing coverage. The unrelated Guix `flex` warning is
+separate; it does not erase the own-package warnings. No updater is disabled,
+archive evidence fabricated or clean-lint waiver claimed. **Forgejo #313 remains
+OPEN**, with its GitHub counterpart not closed. Build, reproducibility,
+integrated/standalone native behavior and the target guard have final receipts;
+the remaining gates are external **release discovery/source archive coverage**,
+not pending local gameplay verification. Publication/deployment is not asserted.
+
+This documentation worker ran no builds, tests, linters or execution checks;
+the receipts above are Main's observed gates. No documented host/service or
+network-catalog fact changed, so **no OKF page or log update applies** to this
+repository-only package receipt.
 
 ## City of the Condemned — original source and ordinary native gameplay (2026-10-09)
 
