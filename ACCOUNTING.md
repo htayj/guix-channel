@@ -290,10 +290,12 @@ The publisher's separate textual inspection of the isolated candidate finds
 **238 project + 7 font = 245** installable names and **251** check names in
 its baseline; the owned DungeonsOfDecay-only candidate is **239 + 7 = 246**
 installable names and **252** check names. Those isolated counts exclude Tern
-and Dualmaster and establish only the scoped **+1** candidate delta, **not yet
-publication**. All figures here are definition counts, not an executed
-inventory check, all-254 pass, accepted
-package total or publication claim. The private renderer and Python/SDL/png/zlib
+and Dualmaster and initially established only the scoped **+1** candidate delta,
+not publication. Subsequent signed implementation publication below establishes
+**239 project + 7 font = 246** installable names and **252** check names in
+that published tree. All figures here are textual definition counts, not an
+executed inventory check, all-252/all-254 pass or accepted-package total.
+The private renderer and Python/SDL/png/zlib
 closure are dependencies, not additional applications. The canonical **629**
 preservation snapshots and CalcRogue's `I686_ONLY_PACKAGES` filtering remain
 unchanged.
@@ -328,9 +330,11 @@ The new [`dungeonsofdecay`](guix/tay/packages/dungeonsofdecay.scm) **0.4.9**
 recipe preserves Matthias Sommer's original Python 2 coffee-break roguelike,
 its native SDL interface and its real shelve save implementation. The private
 historical renderer is built from source, not copied from a Windows release.
-**Local build/reproducibility and ordinary native acceptance passed; publication
-has not yet been established, and no deployment is claimed. #340 remains OPEN**
-for the package's genuine own SourceForge release-discovery lint finding.
+**Local build/reproducibility and ordinary native acceptance passed.** At that
+prepublication acceptance point, publication had not yet been established;
+the subsequent dated receipt below now establishes signed implementation
+publication. **No deployment is claimed. #340 remains OPEN** for the package's
+genuine own SourceForge release-discovery lint finding.
 
 ### Exact source pins, original assets and independent grants
 
@@ -532,9 +536,47 @@ This is distinct from successful fetching of the exact hashed source filename.
 The unrelated global Flex warning is recorded separately, not blamed on this
 package or used to excuse its own finding. No checker was omitted, fake version
 introduced or warning suppressed. **#340 stays OPEN** despite the passed local
-build/reproducibility and native save/Continue paths. A later publisher receipt
-must establish the actual signed OID and remote revision; none is asserted here.
+build/reproducibility and native save/Continue paths. Publication was pending
+at local acceptance; the subsequent receipt below establishes the actual
+signed OID and remote revision without closing that lint gate.
 No host/service deployment changed, so no OKF page/log update applies.
+
+### Subsequent signed implementation publication (2026-10-11)
+
+The publisher's retained `decay-publication-receipt.json`, separate
+`decay-publish-api-receipt.json` and `decay-publish-preservation-receipt.json`
+establish the
+implementation commit
+[`8a07ae3cd516077cf7f69dd5115303302ec695a9`](https://forge.nogroup.group/tay/guix-channel/commit/8a07ae3cd516077cf7f69dd5115303302ec695a9),
+parent **`5d8f42403763b781df147290b4290f37c6a58f48`**, with subject
+**`feat: package original DungeonsOfDecay and verify native look/save continuity`**.
+The commit signature status is **`G`**, fingerprint
+**`6A27F433DC22B4DFA278E8F32F12E6A35F417606`**. Exact-OID Guix authentication
+and the normal pre-push hook's exact-OID authentication both passed. The
+publisher used ordinary **`git push origin master`** to authoritative Forgejo,
+without force, hook bypass, history rewrite or direct GitHub push.
+
+The observed SSH `master` and pinned-CA-verified public Forgejo branch/commit APIs all
+report the exact implementation OID; both API reads returned **200**, and the
+commit reports **`verification.verified: true`**, signer **tay**. The published
+tree's textual inventory is **239 project + 7 font = 246** installable names,
+plus one optional proprietary and five check-only dependencies = **252**
+check names. This is not a complete-inventory build/check pass.
+
+Publication contains exactly **11 owned paths**: eight new DungeonsOfDecay
+package/patch/notice/consumer paths and owned hunks in **Makefile, README.md and
+ACCOUNTING.md**. The preservation receipt records **1028 unrelated raw index
+entries** and **60 unrelated working-tree files** byte-identical, as well as
+the owned working-tree bytes unchanged. **Tern and Dualmaster are excluded**
+from this implementation commit; the larger integrated counts above do not
+accept or publish them. The independent **629-source** ledger is unchanged.
+
+This subsequent publication does not rewrite the earlier bounded native
+receipts, assert installation in a user profile or deployment, suppress the
+own SourceForge updater **404**, or close **#340**. Tracker evidence-comment
+updates are not established by this publication receipt. No described host or
+service changed, so no OKF page/log update applies.
+
 
 ## DungeonMinder — original source and ordinary native gameplay (2026-10-10)
 
