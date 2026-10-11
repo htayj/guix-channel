@@ -1,0 +1,191 @@
+Correct the released wrapper against the exact 1.5.0 headers, not a modern API.
+Preserve Python 2 execution and gameplay; @LIBTCOD@ is a build-time store path.
+
+--- a/libtcodpy.py
++++ b/libtcodpy.py
+@@ -35,10 +35,8 @@
+ except ImportError:
+ 	numpy_available = False
+ 
+-if sys.platform.find('linux') != -1:
+-    _lib = ctypes.cdll['./libtcod.so']
+-else:
+-    _lib = ctypes.cdll['./libtcod-mingw.dll']
++# Substituted with the private source-built 1.5.0 library at installation.
++_lib = ctypes.CDLL('@LIBTCOD@')
+ 
+ HEXVERSION = 0x010500
+ STRVERSION = "1.5.0"
+@@ -48,9 +46,9 @@
+ # color module
+ ############################
+ class Color(Structure):
+-    _fields_ = [('r', c_uint, 8),
+-                ('g', c_uint, 8),
+-                ('b', c_uint, 8),
++    _fields_ = [('r', c_ubyte),
++                ('g', c_ubyte),
++                ('b', c_ubyte),
+                 ]
+ 
+     def __init__(self, r=0,g=0,b=0):
+@@ -217,20 +215,89 @@
+ # console module
+ ############################
+ class Key(Structure):
+-    _fields_=[('vk', c_int, 32),
+-              ('c', c_int, 8),
+-              ('pressed', c_uint, 8),
+-              ('lalt', c_uint, 8),
+-              ('lctrl', c_uint, 8),
+-              ('ralt', c_uint, 8),
+-              ('rctrl', c_uint, 8),
+-              ('shift', c_uint, 8),
++    _fields_=[('vk', c_int),
++              ('c', c_ubyte),
++              ('pressed', c_ubyte),
++              ('lalt', c_ubyte),
++              ('lctrl', c_ubyte),
++              ('ralt', c_ubyte),
++              ('rctrl', c_ubyte),
++              ('shift', c_ubyte),
+               ]
+ 
+ _lib.TCOD_console_wait_for_keypress.restype = Key
+ _lib.TCOD_console_check_for_keypress.restype = Key
+ _lib.TCOD_console_credits_render.restype = c_uint
+-_lib.TCOD_console_set_custom_font.argtypes=[c_char_p,c_int]
++# Exact libtcod 1.5.0 C ABI for every entry used by Dungeons of Decay.
++# Handles are void*, C bool is uint8, and Color is three uint8 bytes.
++# Keep Key.c numeric for the original chr(key.c) callers.
++# Print declarations specify the fixed prefix of the native variadic APIs.
++_lib.TCOD_console_init_root.restype = None
++_lib.TCOD_console_init_root.argtypes = [c_int, c_int, c_char_p, c_ubyte]
++_lib.TCOD_console_set_custom_font.restype = None
++_lib.TCOD_console_set_custom_font.argtypes = [c_char_p, c_int, c_int, c_int]
++_lib.TCOD_console_set_fullscreen.restype = None
++_lib.TCOD_console_set_fullscreen.argtypes = [c_ubyte]
++_lib.TCOD_console_is_fullscreen.restype = c_ubyte
++_lib.TCOD_console_is_fullscreen.argtypes = []
++_lib.TCOD_console_is_window_closed.restype = c_ubyte
++_lib.TCOD_console_is_window_closed.argtypes = []
++_lib.TCOD_console_flush.restype = None
++_lib.TCOD_console_flush.argtypes = []
++_lib.TCOD_console_new.restype = c_void_p
++_lib.TCOD_console_new.argtypes = [c_int, c_int]
++_lib.TCOD_console_clear.restype = None
++_lib.TCOD_console_clear.argtypes = [c_void_p]
++_lib.TCOD_console_set_background_color.restype = None
++_lib.TCOD_console_set_background_color.argtypes = [c_void_p, Color]
++_lib.TCOD_console_set_foreground_color.restype = None
++_lib.TCOD_console_set_foreground_color.argtypes = [c_void_p, Color]
++_lib.TCOD_console_put_char.restype = None
++_lib.TCOD_console_put_char.argtypes = [c_void_p, c_int, c_int, c_int, c_int]
++_lib.TCOD_console_put_char_ex.restype = None
++_lib.TCOD_console_put_char_ex.argtypes = [c_void_p, c_int, c_int, c_int, Color, Color]
++_lib.TCOD_console_print_left.restype = None
++_lib.TCOD_console_print_left.argtypes = [c_void_p, c_int, c_int, c_int, c_char_p]
++_lib.TCOD_console_print_center.restype = None
++_lib.TCOD_console_print_center.argtypes = [c_void_p, c_int, c_int, c_int, c_char_p]
++_lib.TCOD_console_print_left_rect.restype = c_int
++_lib.TCOD_console_print_left_rect.argtypes = [c_void_p, c_int, c_int, c_int, c_int, c_int, c_char_p]
++_lib.TCOD_console_height_left_rect.restype = c_int
++_lib.TCOD_console_height_left_rect.argtypes = [c_void_p, c_int, c_int, c_int, c_int, c_char_p]
++_lib.TCOD_console_rect.restype = None
++_lib.TCOD_console_rect.argtypes = [c_void_p, c_int, c_int, c_int, c_int, c_ubyte, c_int]
++_lib.TCOD_console_blit.restype = None
++_lib.TCOD_console_blit.argtypes = [c_void_p, c_int, c_int, c_int, c_int, c_void_p, c_int, c_int, c_float, c_float]
++_lib.TCOD_console_wait_for_keypress_wrapper.restype = None
++_lib.TCOD_console_wait_for_keypress_wrapper.argtypes = [POINTER(Key), c_ubyte]
++_lib.TCOD_console_check_for_keypress_wrapper.restype = c_ubyte
++_lib.TCOD_console_check_for_keypress_wrapper.argtypes = [POINTER(Key), c_int]
++_lib.TCOD_image_load.restype = c_void_p
++_lib.TCOD_image_load.argtypes = [c_char_p]
++_lib.TCOD_image_blit_2x.restype = None
++_lib.TCOD_image_blit_2x.argtypes = [c_void_p, c_void_p, c_int, c_int, c_int, c_int, c_int, c_int]
++_lib.TCOD_map_new.restype = c_void_p
++_lib.TCOD_map_new.argtypes = [c_int, c_int]
++_lib.TCOD_map_set_properties.restype = None
++_lib.TCOD_map_set_properties.argtypes = [c_void_p, c_int, c_int, c_ubyte, c_ubyte]
++_lib.TCOD_map_compute_fov.restype = None
++_lib.TCOD_map_compute_fov.argtypes = [c_void_p, c_int, c_int, c_int, c_ubyte, c_int]
++_lib.TCOD_map_is_in_fov.restype = c_ubyte
++_lib.TCOD_map_is_in_fov.argtypes = [c_void_p, c_int, c_int]
++_lib.TCOD_random_get_int.restype = c_int
++_lib.TCOD_random_get_int.argtypes = [c_void_p, c_int, c_int]
++_lib.TCOD_sys_set_fps.restype = None
++_lib.TCOD_sys_set_fps.argtypes = [c_int]
++_lib.TCOD_color_add_wrapper.restype = c_int
++_lib.TCOD_color_add_wrapper.argtypes = [c_int, c_int]
++_lib.TCOD_color_subtract_wrapper.restype = c_int
++_lib.TCOD_color_subtract_wrapper.argtypes = [c_int, c_int]
++_lib.TCOD_color_multiply_wrapper.restype = c_int
++_lib.TCOD_color_multiply_wrapper.argtypes = [c_int, c_int]
++_lib.TCOD_color_multiply_scalar_wrapper.restype = c_int
++_lib.TCOD_color_multiply_scalar_wrapper.argtypes = [c_int, c_float]
++_lib.TCOD_color_lerp_wrapper.restype = c_int
++_lib.TCOD_color_lerp_wrapper.argtypes = [c_int, c_int, c_float]
+ 
+ # background rendering modes
+ BKGND_NONE = 0
+@@ -397,7 +464,7 @@
+ 
+ # initializing the console
+ def console_init_root(w, h, title, fullscreen=False):
+-    _lib.TCOD_console_init_root(w, h, title, c_uint(fullscreen))
++    _lib.TCOD_console_init_root(w, h, title, c_ubyte(fullscreen))
+ 
+ def console_get_width(con):
+ 	return _lib.TCOD_console_get_width(con)
+@@ -432,7 +499,7 @@
+     return _lib.TCOD_console_is_fullscreen() == 1
+ 
+ def console_set_fullscreen(fullscreen):
+-    _lib.TCOD_console_set_fullscreen(c_int(fullscreen))
++    _lib.TCOD_console_set_fullscreen(c_ubyte(fullscreen))
+ 
+ def console_is_window_closed():
+     return _lib.TCOD_console_is_window_closed() == 1
+@@ -514,7 +581,7 @@
+     return _lib.TCOD_console_height_center_rect(con, x, y, w, h, s)
+ 
+ def console_rect(con, x, y, w, h, clr, flag=BKGND_SET):
+-    _lib.TCOD_console_rect(con, x, y, w, h, c_int(clr), flag)
++    _lib.TCOD_console_rect(con, x, y, w, h, c_ubyte(clr), flag)
+ 
+ def console_hline(con, x, y, l):
+     _lib.TCOD_console_hline( con, x, y, l)
+@@ -523,7 +590,7 @@
+     _lib.TCOD_console_vline( con, x, y, l)
+ 
+ def console_print_frame(con, x, y, w, h, clr, bkflg, s):
+-    _lib.TCOD_console_print_frame(con, x, y, w, h, c_int(clr), bkflg, s)
++    _lib.TCOD_console_print_frame(con, x, y, w, h, c_ubyte(clr), bkflg, s)
+ 
+ def console_set_color_control(con,fore,back) :
+     _lib.TCOD_console_set_color_control(con,fore,back)
+@@ -559,7 +626,7 @@
+ # handling keyboard input
+ def console_wait_for_keypress(flush):
+     k=Key()
+-    _lib.TCOD_console_wait_for_keypress_wrapper(byref(k),c_int(flush))
++    _lib.TCOD_console_wait_for_keypress_wrapper(byref(k),c_ubyte(flush))
+     return k
+ 
+ def console_check_for_keypress(flags=KEY_RELEASED):
+@@ -1140,13 +1207,13 @@
+     return _lib.TCOD_map_copy(source, dest)
+ 
+ def map_set_properties(m, x, y, isTrans, isWalk):
+-    _lib.TCOD_map_set_properties(m, x, y, c_int(isTrans), c_int(isWalk))
++    _lib.TCOD_map_set_properties(m, x, y, c_ubyte(isTrans), c_ubyte(isWalk))
+ 
+ def map_clear(m):
+     _lib.TCOD_map_clear(m)
+ 
+ def map_compute_fov(m, x, y, radius=0, light_walls=True, algo=FOV_RESTRICTIVE ):
+-    _lib.TCOD_map_compute_fov(m, x, y, c_int(radius), c_uint(light_walls), c_int(algo))
++    _lib.TCOD_map_compute_fov(m, x, y, c_int(radius), c_ubyte(light_walls), c_int(algo))
+ 
+ def map_is_in_fov(m, x, y):
+     return _lib.TCOD_map_is_in_fov(m, x, y) == 1

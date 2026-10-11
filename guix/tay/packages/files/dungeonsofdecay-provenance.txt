@@ -1,0 +1,115 @@
+Dungeons of Decay 0.4.9 — source and asset provenance
+Prepared 2026-10-11 from the retained source-only audit retrieved 2026-10-10.
+This is repository packaging work, not a deployed-system or runtime receipt.
+
+GAME SOURCE
+https://downloads.sourceforge.net/project/dungeonsofdecay/Dungeons_of_Decay_0_4_9_sources.zip
+Exact named upstream source release, published 2011-10-05 17:30:54 UTC.
+Raw ZIP SHA256:
+800d5d9be83077767c80f19c93d8d07a1f2552aba5d6f7d29d7734843c8d5c43
+Dungeons_of_Decay.py identifies VERSION = "0.4.9 [beta]" and BUILD = "05.10.2011".
+The archive contains Python source and four PNGs, not native executables.
+SourceForge's latest/download is intentionally not used: it selects Windows
+binaries. setup.py and py2exe.bat are Windows packaging helpers and are not
+installed or used as Linux build instructions.
+
+NATIVE RENDERER
+https://codeload.github.com/libtcod/libtcod/tar.gz/0f3a054b6ddd9ac8ffa676f600b24293da8595aa
+Official libtcod 1.5.0 tag resolves to that immutable commit.
+Raw compressed tar SHA256 (not a git-fetch NAR hash):
+f92676147d89fcbe92afb7d696872948d7ff8b571cdf4d83c4dcfd8be86bba02
+The dependencies directory and prebuilt shared/static/platform libraries are
+removed. Only the C object closure from makefiles/makefile-linux64:103-130,
+including wrappers.c, is compiled with -fPIC and linked into libtcod.so.
+Guix source-built sdl12-compat, libpng and zlib supply the runtime dependencies.
+No bundled SDL, png or zlib library is reused. No C++ or GUI library is needed.
+LIBTCOD-LICENSE.txt, LIBTCOD-CREDITS.txt and README-SDL.txt are retained intact.
+The historic credits describe upstream's old bundled versions; they do not
+assert those binaries are shipped by this package.
+
+WRAPPER BYTE PROVENANCE AND ABI
+Game libtcodpy.py is byte-identical to exact libtcod 1.5.0's upstream wrapper:
+SHA256 06cabce429a56a389fc7be3dbd79081032504601730b813121ea28a95772b3d1.
+Its original Jice BSD notice remains in the installed source and notices.
+The package repairs pointer return/argument types for every console/image/map
+entry used by the game and its helper modules, using the exact 1.5.0 headers.
+TCOD handles are void*, bool is uint8, Color is three uint8 bytes and Key is
+an int enum, one char byte and six uint8 booleans, with native alignment.
+Key.c remains numeric because original gameplay uses chr(key.c).
+Root console 0 and RNG 0 remain NULL handles. Root init takes the original
+four arguments; no modern renderer argument is introduced. Color arithmetic
+wrapper signatures and all used non-handle functions are declared too.
+The private CDLL and four asset references resolve to immutable store paths.
+Native repairs only use png_get_channels and NULL for retired libpng internals,
+and explicit int arguments for the old SDL ASCII mapper definition.
+
+GAME CURSOR ARGUMENT REPAIR
+The original Dungeons_of_Decay.py:1665 and :1669 pass color_light_background
+(a Color) as console_put_char's background enum when drawing the '+' look
+and 'X' targeting cursors. Their trailing comments identify BKGND_NONE as
+the intended argument. The game-portability patch replaces exactly these
+two arguments with libtcod.BKGND_NONE and removes the obsolete comments.
+Exact 1.5.0 console.h defines NONE as zero; console_c.c leaves the terrain
+background unchanged while drawing the glyph and foreground. The strict
+ctypes c_int background enum remains unchanged: no Color conversion shim
+or invalid packed-color flag is introduced. This patch applies after the
+existing source CRLF normalization and wrapper ABI patch.
+Main reproduced the original look-cursor failure on 2026-10-11: render_all
+at line 1665 raised ctypes.ArgumentError, argument 5 wrong type. The repaired
+game's rebuild and native regression verification remain Main's responsibility.
+
+FOUR RELEASED PNGs
+entrance.png SHA256:
+f1aea301d67a526e8dde2801e30efe0e5914af1cd354a621d7bb1cbd2662cb2e
+scroll.png SHA256:
+9386a998294e5a9d339c8b473193f13e90e75ea0cea5bff3ab8ef1fcde4c3e2c
+The game author's root GPL-3.0-or-later grant and readme.txt:32 authorship
+statement ("Everything else is done by me") cover his own entrance/scroll art.
+No individual PNG grant is invented; neither image matches the historical
+libtcod PNG collection examined in the source audit.
+
+arial10x10.png SHA256:
+9a752e0b308a9447b3a7d3c01232bac778aab6ac68eb8df670fc478e917b07f4
+arial12x12.png SHA256:
+9ecc8d2b6d702b46ba92a89c7e9963a90409b3cdd9c454464216a2310f63a1fb
+Both are byte-identical to data/fonts/arial10x10.png and arial12x12.png at the
+exact libtcod 1.5.0 commit. data/fonts/README.txt explicitly dedicates the
+antialiased bitmap fonts to the public domain. LIBTCOD-CREDITS.txt attributes
+the Arial 10x10/12x12 bitmaps to Mingos. The intact README is installed as
+libtcod-fonts-README.txt. This provenance applies to these exact bitmap PNGs,
+not Microsoft TrueType fonts or an unspecified historical font collection.
+
+COPIED GAME COMPONENTS
+readme.txt:21-23 and main-menu credits identify Jotaf's tutorial. The dated
+2011-04-10 15:45 UTC BSD-3 grant and its complete notice are retained in
+another installed file, dungeonsofdecay-third-party-notices.txt.
+https://www.roguebasin.com/index.php?title=Talk:Complete_Roguelike_Tutorial,_using_python%2Blibtcod&oldid=51116
+The later 2012-12-17 tentative public-domain discussion is not used instead
+of the author's earlier explicit BSD permission.
+
+readme.txt:28-30 identifies Steve Wallace's dungeon builder. dmap.py:41-271
+retains the recognizable dMap implementation (makeMap/makeRoom/makeCorridor/
+placeRoom/makeExit/makePortal/joinCorridor/finalJoins), with Sommer's changes
+to room bounds, random-number calls and room parameters.
+https://www.roguebasin.com/index.php?title=Dungeon_builder_written_in_Python&oldid=37819
+Steve's actual custom "feel free to use and modify" grant is preserved with
+attribution in dungeonsofdecay-third-party-notices.txt. It was accepted for
+this incorporation; it is not labeled BSD, and this package does not invent
+an express blanket redistribution grant or relicensing of that component.
+
+RUNTIME DESIGN
+The launcher executes the immutable main file as Python 2 __main__, not an
+imported module: native shelve protocol-2 class references therefore retain
+the original __main__ names. No game files are copied into writable state.
+The working directory is $XDG_DATA_HOME/dungeonsofdecay, defaulting to
+$HOME/.local/share/dungeonsofdecay. All native savegame.rls backend suffixes
+remain there. Python -B suppresses store bytecode; -s and -E avoid ambient
+user-site and interpreter-environment injection. No seeds, forced saves,
+smoke modes, input hooks, networking or synthetic game-state contracts are
+added. Original gameplay and the ordinary X11/SDL consumer remain intact.
+
+VERIFICATION BOUNDARY
+The two preserved archives were hashed again on 2026-10-11 and matched the
+raw SHA256 values above. Packaging builds, ABI/runtime tests, syntax checks,
+lint and applications were not run by this implementation worker. The main
+agent owns serial package/renderer builds and external native X11 verification.

@@ -1,0 +1,17 @@
+Use the background enum intended by the original cursor comments.
+TCOD_console_put_char's fifth argument is TCOD_bkgnd_flag_t, not a Color.
+BKGND_NONE preserves the terrain background while drawing each cursor.
+Keep the exact native ctypes ABI; do not reinterpret Color bytes as flags.
+
+--- a/Dungeons_of_Decay.py
++++ b/Dungeons_of_Decay.py
+@@ -1664,3 +1664,3 @@
+                 libtcod.console_set_foreground_color(con, libtcod.light_grey)
+-                libtcod.console_put_char(con, target.x, target.y, '+', color_light_background) # libtcod.BKGND_NONE)
++                libtcod.console_put_char(con, target.x, target.y, '+', libtcod.BKGND_NONE)
+                 #~ print " look cursor at ", target.x, ":", target.y
+@@ -1668,3 +1668,3 @@
+                 libtcod.console_set_foreground_color(con, libtcod.white)
+-                libtcod.console_put_char(con, target.x, target.y, 'X', color_light_background) # libtcod.BKGND_NONE)
++                libtcod.console_put_char(con, target.x, target.y, 'X', libtcod.BKGND_NONE)
+                 #~ print " target cursor at ", target.x, ":", target.y

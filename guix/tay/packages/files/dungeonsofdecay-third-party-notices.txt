@@ -1,0 +1,139 @@
+Dungeons of Decay 0.4.9 — third-party notices and permissions
+
+These notices identify independent components; the game's root GPL grant
+is not represented as the sole grant for copied third-party code or fonts.
+
+1. Matthias Sommer — game and original entrance/scroll artwork
+
+Copyright (c) 2011 Matthias Sommer
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+The complete license is installed alongside this notice as gpl-3.0.txt.
+readme.txt identifies the independent contributors below, then states:
+"Everything else is done by me, so I'm the one to blame for the bugs. :-)"
+The original entrance.png and scroll.png are retained under this author grant.
+
+2. Jotaf / João Henriques — Complete Roguelike Tutorial
+
+Primary permission:
+https://www.roguebasin.com/index.php?title=Talk:Complete_Roguelike_Tutorial,_using_python%2Blibtcod&oldid=51116
+Jotaf, 15:45, 10 April 2011 (UTC).
+
+"I'm going with BSD; but really, it's not incompatible with CC. You can
+basically add your name (in addition to mine) and release it under the same
+license, or add your chosen license terms right under mine. Really, the only
+thing required is that you keep the short license text, and other than that
+you can go crazy with the code. I know the tutorial doesn't have the license
+right now, that will change, but if you want to release now, here it is:"
+
+The full BSD-3 text follows verbatim from the retained page, including its
+historical "Jo??o" / "JO??O" spelling corruption. The attribution above
+identifies the author as João Henriques (Jotaf) without silently changing
+the preserved notice. The current markup strikes this passage through;
+the later 17 December 2012 tentative public-domain suggestion is not the
+permission relied upon for this package.
+
+Copyright (c) 2011, Jo??o Henriques
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * The names of its contributors may not be used to endorse or promote
+      products derived from this software without specific prior written
+      permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL JO??O HENRIQUES BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+3. Steve Wallace — Dungeon builder written in Python / dMap
+
+Attribution: Dungeon builder written in Python by Steve Wallace.
+https://www.roguebasin.com/index.php?title=Dungeon_builder_written_in_Python&oldid=37819
+
+Author's exact permission paragraph, immediately before IMPLEMENTATION:
+
+"Well I hope this all makes sence, and once again sorry if the code is kinda
+ugly, like I said I only started learning Python a few days ago (and this is
+my second attempt at writing a map algorithm). However, feel free to use
+and modify the code to suit your needs."
+
+This custom use/modify permission is accepted for incorporation of the
+released game's modified dMap implementation. No named BSD license, explicit
+blanket distribution grant, public-domain dedication or transfer of rights
+is claimed for Steve's code. Matthias Sommer's root GPL grant does not erase
+this attribution or replace the author's custom permission. The installed
+dmap.py retains the original implementation and Sommer's modifications.
+
+4. Jice — libtcod 1.5.0 native library
+
+The complete, unchanged upstream LIBTCOD-LICENSE.txt and
+LIBTCOD-CREDITS.txt are installed alongside this file. README-SDL.txt is
+retained as historical attribution, not as a claim to ship its old binary.
+Only the C library built from the exact pinned commit is installed; bundled
+SDL, PNG, zlib and other dependency binaries are removed before compilation.
+
+5. Jice — the released libtcod 1.5.0 Python wrapper
+
+Copyright (c) 2008 Jice
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * The name of Jice may not be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY Jice ``AS IS'' AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Jice BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+6. Mingos — exact Arial 10x10 / 12x12 bitmap fonts
+
+Exact libtcod 1.5.0 data/fonts/README.txt says:
+"This directory contains antialiased fonts for libtcod.
+These fonts are in public domain."
+
+LIBTCOD-CREDITS.txt says:
+"The celtic_garamond, arial, courier, dejavu, consolas, prestige and lucida
+10x10/12x12 bitmap fonts were created by Mingos."
+
+The two installed Arial PNGs are byte-identical to the corresponding exact
+libtcod 1.5.0 bitmaps; see dungeonsofdecay-provenance.txt for hashes. The
+complete font README is installed as libtcod-fonts-README.txt. This grant
+is not extended to Microsoft TTFs or all fonts mentioned in the credits.

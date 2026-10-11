@@ -79,6 +79,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Cracks and Crevices recovered source and native save/restore](#cracks-and-crevices--recovered-source-and-native-saverestore-2026-10-09)
 - [dNetHack ordinary native gameplay and save continuity](#dnethack--ordinary-native-gameplay-and-save-continuity-2026-10-10)
 - [DungeonMinder original source and ordinary native gameplay](#dungeonminder--original-source-and-ordinary-native-gameplay-2026-10-10)
+- [DungeonsOfDecay original source and native save continuity](#dungeonsofdecay--original-source-and-native-save-continuity-2026-10-11)
 - [Dwarftown original source and ordinary native gameplay](#dwarftown--original-source-and-ordinary-native-gameplay-2026-10-10)
 
 ## Relocation map (2026-10-04)
@@ -276,6 +277,26 @@ unrelated unpublished user entries remain included without being accepted.
 The private historical renderer and external Lua/SDL/zlib/Mesa dependencies
 are closure, not more applications. The canonical **629** preservation
 snapshots and CalcRogue's `I686_ONLY_PACKAGES` filtering remain unchanged.
+DungeonsOfDecay's separate 2026-10-11 candidate adds exactly **one**
+`PROJECT_PACKAGES` entry (`dungeonsofdecay`) and one README game row. Textual
+counting of the actual current Makefile lists gives **241 project + 7 font =
+248** installable names, versus **240 + 7 = 247** without this entry. One
+optional proprietary package and five check-only Imago dependencies give
+**254** check names, versus 253 without it. The current integrated list includes
+the intervening **`tern`** entry and unrelated unpublished **Dualmaster**;
+`tern` is absent from the historical `5d8f424` Makefile. This snapshot does not
+replace the dated DungeonMinder/Dwarftown counts above or accept Dualmaster.
+The publisher's separate textual inspection of the isolated candidate finds
+**238 project + 7 font = 245** installable names and **251** check names in
+its baseline; the owned DungeonsOfDecay-only candidate is **239 + 7 = 246**
+installable names and **252** check names. Those isolated counts exclude Tern
+and Dualmaster and establish only the scoped **+1** candidate delta, **not yet
+publication**. All figures here are definition counts, not an executed
+inventory check, all-254 pass, accepted
+package total or publication claim. The private renderer and Python/SDL/png/zlib
+closure are dependencies, not additional applications. The canonical **629**
+preservation snapshots and CalcRogue's `I686_ONLY_PACKAGES` filtering remain
+unchanged.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -300,6 +321,220 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## DungeonsOfDecay — original source and native save continuity (2026-10-11)
+
+The new [`dungeonsofdecay`](guix/tay/packages/dungeonsofdecay.scm) **0.4.9**
+recipe preserves Matthias Sommer's original Python 2 coffee-break roguelike,
+its native SDL interface and its real shelve save implementation. The private
+historical renderer is built from source, not copied from a Windows release.
+**Local build/reproducibility and ordinary native acceptance passed; publication
+has not yet been established, and no deployment is claimed. #340 remains OPEN**
+for the package's genuine own SourceForge release-discovery lint finding.
+
+### Exact source pins, original assets and independent grants
+
+The named primary
+[`Dungeons_of_Decay_0_4_9_sources.zip`](https://downloads.sourceforge.net/project/dungeonsofdecay/Dungeons_of_Decay_0_4_9_sources.zip)
+was released **2011-10-05 17:30:54 UTC**, identifies **0.4.9 [beta]**, and has
+raw SHA-256 **`800d5d9be83077767c80f19c93d8d07a1f2552aba5d6f7d29d7734843c8d5c43`**,
+Guix base32 **`0hswily88d3pkp9ggmm5md92a7vss3c9777ih1y7cxrhx2dms3c0`**.
+The recipe uses that exact filename through `mirror://sourceforge`, not
+`latest/download`, which selects Windows binaries. The source ZIP contains
+Python and four PNGs, not a native executable; its `setup.py`/`py2exe.bat` are
+Windows packaging helpers, not Linux build instructions.
+
+The official [libtcod 1.5.0 source](https://codeload.github.com/libtcod/libtcod/tar.gz/0f3a054b6ddd9ac8ffa676f600b24293da8595aa)
+is pinned to **`0f3a054b6ddd9ac8ffa676f600b24293da8595aa`**, raw archive SHA-256
+**`f92676147d89fcbe92afb7d696872948d7ff8b571cdf4d83c4dcfd8be86bba02`**,
+Guix base32 **`00msdgl8pzfwqj1lvpqway5zzms8563rdmmpmy9bxz49gla7c9pr`**.
+That compressed-archive hash is not a git-fetch NAR hash. The game's released
+`libtcodpy.py` is byte-identical to this revision's wrapper before the local
+ABI patch; its SHA-256 is
+**`06cabce429a56a389fc7be3dbd79081032504601730b813121ea28a95772b3d1`**.
+
+The retained [provenance](guix/tay/packages/files/dungeonsofdecay-provenance.txt)
+and [third-party notices](guix/tay/packages/files/dungeonsofdecay-third-party-notices.txt)
+record distinct positive grant scopes rather than treating the root GPL notice
+as permission for every copied component:
+
+- Sommer's program headers grant **GPL-3.0-or-later**. His readme's
+  **"Everything else is done by me"** authorship statement supports retaining
+  his original `entrance.png` and `scroll.png` under that grant; no per-PNG
+  license sentence is invented.
+- The exact `arial10x10.png` and `arial12x12.png` bytes match official 1.5.0
+  `data/fonts/` assets, whose README explicitly dedicates those antialiased
+  bitmap fonts to the **public domain**. Credits identify **Mingos**. This is
+  not permission for Microsoft TrueType fonts or every historical font.
+- The native renderer and released wrapper retain **Jice's BSD-3-clause**
+  notices. Original credits and the historical SDL README are retained, not
+  presented as evidence that upstream's old bundled binaries are shipped.
+- [Jotaf's dated 2011-04-10 tutorial permission](https://www.roguebasin.com/index.php?title=Talk:Complete_Roguelike_Tutorial,_using_python%2Blibtcod&oldid=51116)
+  supplies a complete **BSD-3-clause** notice. The later tentative public-domain
+  discussion does not replace the earlier explicit grant relied upon here.
+- [Steve Wallace's original dungeon-builder page](https://www.roguebasin.com/index.php?title=Dungeon_builder_written_in_Python&oldid=37819)
+  says **"feel free to use and modify the code to suit your needs."** That exact
+  custom permission and attribution are accepted for this incorporation and
+  retained with the modified `dMap` implementation. It is not relabeled BSD,
+  public domain, or an invented express blanket redistribution grant.
+
+All four installed PNG hashes match the released assets. Complete GPL text,
+native/wrapper notices, credits, font README and the two linked local records
+are installed under `share/doc/dungeonsofdecay/`.
+
+### Historical runtime and source-built private renderer
+
+The launcher executes the immutable main script as **Python 2.7.18 `__main__`**,
+preserving CP1252 source, integer-division semantics and protocol-2 shelve class
+references; it does not blindly convert the game to Python 3. `-B -s -E` avoids
+store bytecode writes and ambient interpreter/user-site injection. No writable
+copy of the game tree is made. The working directory is
+**`$XDG_DATA_HOME/dungeonsofdecay`**, falling back to
+**`$HOME/.local/share/dungeonsofdecay`**. Original `savegame.rls` and any backend
+suffixes live there; artwork/fonts and the native CDLL use immutable store paths.
+Shelve/pickle files are executable-data formats: do not load untrusted saves.
+
+The private **libtcod 1.5.0 C shared library**, including `wrappers.c`, is
+compiled with `-fPIC` and linked against separately source-built Guix
+**sdl12-compat 1.2.68, libpng 1.6.39 and zlib 1.3.1**, with store RUNPATHs.
+Bundled dependency directories and prebuilt libraries/executables are removed.
+No C++/GUI library or bundled SDL/png/zlib binary is reused.
+The [portability patch](guix/tay/packages/patches/dungeonsofdecay-libtcod-portability.patch)
+repairs retired libpng internals and the SDL mapper prototype;
+the [ctypes ABI patch](guix/tay/packages/patches/dungeonsofdecay-ctypes-abi.patch)
+declares the used pointer/color/key/boolean interfaces from exact 1.5.0 headers
+instead of allowing 64-bit pointer truncation. The additional
+[game cursor portability patch](guix/tay/packages/patches/dungeonsofdecay-game-portability.patch)
+replaces two original `Color` arguments with **`libtcod.BKGND_NONE`**, the valid
+background enum identified by the original cursor comments. This preserves the
+historical no-op terrain background behavior for look/target cursor drawing;
+the exact strict ctypes enum signature is retained, not bypassed with a shim.
+The linked provenance records this repair. No gameplay hook, seeded state,
+forced save, headless argument or installed smoke mode is added.
+
+Main's initial full source build **10.44 s** is retained in **artifact 17155**.
+The corrected final game build **7.87 s**, **artifact 17262**, produced
+**`/gnu/store/msy11c3lwv2vapffzbjal4vzhnjbi6rv-dungeonsofdecay-0.4.9`**.
+The private renderer output is
+**`/gnu/store/kfvfzsvq1d1w4zf490aag9kb6npqbl7g-dungeonsofdecay-libtcod-1.5.0`**.
+The unchanged renderer's separate `--check` **4.81 s** (**artifact 17160**)
+and corrected final game's `--check` **2.02 s** (**artifact 17266**) succeeded,
+establishing reproducibility of these outputs, not every dependency or platform.
+The earlier game build **3.72 s** (**artifact 17164**) and `--check` **1.89 s**
+(**artifact 17165**) refer to prior output
+**`/gnu/store/4g5xksfikdmz14fgfbg04gdsx93sywqr-dungeonsofdecay-0.4.9`**, before
+the cursor repair; those bounded successes did not exercise look mode.
+Both definitions disable
+nonexistent upstream automated suites; **"test suite not run"** in their build
+phases is not an upstream test pass. Native acceptance below is separate.
+
+### Ordinary native X11 save/Continue evidence
+
+Main ran the external [shell consumer](tests/dungeonsofdecay-smoke.sh) and
+[native driver](tests/dungeonsofdecay-native.py), using only the prebuilt output.
+The corrected final-revision standalone run **30.59 s** retained
+**`/tmp/dungeonsofdecay-native-10`**; the integrated
+`make guard-dungeonsofdecay` run **32.80 s** retained
+**`/tmp/dungeonsofdecay-native-11`**. Both actual result files report success,
+`driver_status: 0`, exact visible restore and `nar_unchanged: true`, including
+the added ordinary look-mode path below.
+The earlier successful native-5/6 receipts (**22.66 s / 27.04 s**) and
+native-7/8 (**22.82 s / 26.76 s**) remain historical evidence for the prior
+output. Native-7/8 exercised the corrected diagnostic classifier but did not
+establish look/target cursor acceptance.
+
+The installed game runs on the consumer's Xvfb display. Ordinary focused XTEST
+key edges and original-font framebuffer decoding establish:
+
+- Original title/race menus and an **80 × 50** dungeon/map/HUD surface.
+- Ordinary movement advances displayed **Steps 0 → 1**; rest advances to
+  **Steps 2**, with actual world/message response. Inventory opens and cancels
+  without a world turn.
+- Ordinary **`l`**, two arrow-key edges and **Escape** move only the look
+  cursor at **Steps 2** while the player remains stationary. Original Escape
+  leaves a stale cursor overlay because upstream's `fov_recompute` assignment
+  is local; no exact immediate repaint is claimed. A real inventory open/cancel
+  proves playing mode resumed and restores the exact map/HUD/message pane
+  without a world turn.
+- Original uppercase **`S`**, then indexed **`a` = Yes**, writes the real
+  shelve save. `y` is not the upstream confirmation. Ordinary main-menu `c`
+  quits the first interpreter naturally with **status 0**.
+- A **fresh interpreter**, ordinary menu **`b` = Continue**, restores the
+  exact observed map, HUD and message pane at **Steps 2**. Loading leaves save
+  bytes unchanged; this is not merely a launcher or screenshot-only check.
+- Further ordinary movement reaches **Steps 3**. A second real `S`, `a` save
+  changes the native save bytes, then menu `c` again exits naturally with
+  **status 0**. The integrated saves are each **122880 bytes**, but their
+  SHA-256 values differ. No claim of a second restore or equality of every
+  hidden serialized object is made.
+
+Main's earlier native-6 integrated continued-movement PNG inspection showed a
+legible native dungeon, **HP 43/50, Floor 1, Steps 3**, and orc-fight messages,
+not an error surface. Those exact randomized HUD values describe native-6,
+not an assertion that a later run generated the same dungeon.
+Main also inspected the historical native-8 view: **HP 50/50, Floor 1, Steps 3**, club
+**2d2+2**, buckler **1d2+0**, and a pink **`@`** on a dark, small
+limited-reveal map, with no error surface. This is the actual early-game view,
+not evidence of a fully revealed dungeon or completed campaign.
+Main inspected corrected final native-11 look mode: a plus cursor outside the
+left map area, pink **`@`** player, **Floor 1, Steps 2, HP 50/50**, and the actual
+dim limited-reveal map with no error surface. This observation proves neither
+all targeting/spell paths nor a completed campaign.
+
+Review found a real unexercised cursor regression in the prior output. Main
+reproduced ordinary **`l` + arrow** failure in
+**`/tmp/dungeonsofdecay-look-before`**, **15.41 s**: original `render_all` passed
+a `Color` as `console_put_char` argument 5 and strict ctypes raised
+**`ArgumentError`**. The two-callsite enum repair above addresses both original
+look and target cursor arguments. Final native-10/11 exercise look movement and
+cancel; they do not claim every spell/targeting interaction was played.
+Earlier native-1 failed on a diagnostic-classifier false positive for Xvfb's
+**"not fatal"** message, not SDL repeat. Native-2–4 exposed held-key repeat
+leading to modal cancellation; Main's direct physical-input native-4 receipts
+and original `SDL_EnableKeyRepeat` source ground that separate cause. Successful
+native-5 onward use short physical key edges below the repeat threshold.
+Neither the diagnostic correction nor the input correction patches away
+upstream repeat, and the earlier failures are not treated as one uniform cause.
+
+Retained process evidence records separate user/mount/network/PID namespaces,
+same-user **UID 1000 / GID 998**, private HOME/XDG/tmp/CWD, read-only store
+mounts and only loopback with no IPv4 route. Consumer tools are audited
+separately from the runtime closure. The integrated before/after output NAR is
+identical: **`1ka4pdzsh34viyj3lr7s4x2632f99n23gr7wllwj17rkm5k684v6`**.
+Cleanup records both natural zero-status exits, no cleanup errors, removal of
+private writable state and retention of evidence. These are bounded local
+isolation observations, not a security certification, all-gameplay/completed
+campaign proof, physical-GPU proof or deployment acceptance.
+
+### External consumer usage and genuine remaining lint blocker
+
+Use a canonical already-built direct store output and an absolute **fresh
+nonexistent** evidence directory outside the store; an existing empty directory
+is not accepted. The smoke realizes only external consumer tools, not the game:
+
+```sh
+make guard-dungeonsofdecay DUNGEONSOFDECAY_OUTPUT=/gnu/store/msy11c3lwv2vapffzbjal4vzhnjbi6rv-dungeonsofdecay-0.4.9 DUNGEONSOFDECAY_EVIDENCE=/tmp/dungeonsofdecay-new-evidence
+# Standalone path, using another fresh nonexistent directory:
+sh tests/dungeonsofdecay-smoke.sh /gnu/store/msy11c3lwv2vapffzbjal4vzhnjbi6rv-dungeonsofdecay-0.4.9 /tmp/dungeonsofdecay-standalone-new-evidence
+```
+
+Original PNG **`libpng warning: iCCP: known incorrect sRGB profile`** messages
+remain in game stderr and are explicitly classified as **warnings** in the
+final native-10/11 `native-result.json` **`nonfatal_warnings`** lists, alongside
+the Xvfb socket-owner advisory and unresolved XF86 keysym warnings. No asset
+bytes or diagnostics are suppressed to obtain the pass. No Goocastle executor
+or synthetic game-state contract is used.
+
+Main's corrected-final literal full own lint **26.89 s** retained the genuine updater
+finding: **`updater 'sourceforge' failed to find upstream releases`**, fetching
+**`http://downloads.sourceforge.net/project/dungeonsofdecay/`** with **HTTP 404**.
+This is distinct from successful fetching of the exact hashed source filename.
+The unrelated global Flex warning is recorded separately, not blamed on this
+package or used to excuse its own finding. No checker was omitted, fake version
+introduced or warning suppressed. **#340 stays OPEN** despite the passed local
+build/reproducibility and native save/Continue paths. A later publisher receipt
+must establish the actual signed OID and remote revision; none is asserted here.
+No host/service deployment changed, so no OKF page/log update applies.
 
 ## DungeonMinder — original source and ordinary native gameplay (2026-10-10)
 
@@ -12837,6 +13072,8 @@ make check-unnethack # isolated three native 100x24 TTYs, exact HUD/map/items re
 make check-grunthack # isolated three native 100x24 TTYs, movement/search turns, exact HUD/map/items restore and consumed saves/resaves
 make check-nitrohack # isolated three native 100x30 curses sessions, original menus, movement/search, exact HUD/map/items restore and same-file resaves
 make check-hermes-desktop # actual installed backend plus Electron/Xvfb surface, writable config, Guix update refusal, sandbox and NAR checks; no real model/GPU/microphone proof
+# Prebuilt game + fresh nonexistent absolute evidence directory; own lint gate remains open:
+make guard-dungeonsofdecay DUNGEONSOFDECAY_OUTPUT=/gnu/store/msy11c3lwv2vapffzbjal4vzhnjbi6rv-dungeonsofdecay-0.4.9 DUNGEONSOFDECAY_EVIDENCE=/tmp/dungeonsofdecay-new-evidence # isolated native movement/rest/look/inventory/save/fresh Continue/resave/NAR
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass
