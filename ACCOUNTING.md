@@ -577,6 +577,28 @@ own SourceForge updater **404**, or close **#340**. Tracker evidence-comment
 updates are not established by this publication receipt. No described host or
 service changed, so no OKF page/log update applies.
 
+### Subsequent matched tracker evidence comments (2026-10-11)
+
+The retained `decay-tracker-final-receipt.json` separately establishes matching
+dated evidence comments on [authoritative Forgejo #340](https://forge.nogroup.group/tay/guix-channel/issues/340#issuecomment-3320)
+and [GitHub #340](https://github.com/htayj/guix-channel/issues/340#issuecomment-6107140351),
+citing implementation **`8a07ae3cd516077cf7f69dd5115303302ec695a9`**.
+Exact readback confirms identical comment bodies; both issues remain **OPEN**,
+all **seven labels** unchanged (including `state:blocked` and `state:research`),
+and original titles/bodies preserved. These two comments are the only recorded
+tracker mutations, not closure or acceptance of the unresolved updater finding.
+
+The subsequent full-pagination, issue-only audit completed **2026-10-11
+08:30:10 UTC**: **755 Forgejo issues** (**386 open / 369 closed**), **725 GitHub
+issues** (**384 open / 341 closed**), **725 matched pairs** across **722 unique
+shared titles**, and **zero title, open/closed-state or `state:*` label drift**.
+The **30 Forgejo-only issues #728–757** are preserved; there are no GitHub-only
+issues. All **37 protected issue readbacks** remain unchanged. No additional
+state/title/label synchronization mutation was needed or performed. This audit
+does not close the remaining backlog or turn its issues into accepted packages.
+No described deployment changed; no OKF page/log update applies.
+
+
 
 ## DungeonMinder — original source and ordinary native gameplay (2026-10-10)
 
