@@ -81,6 +81,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [DungeonMinder original source and ordinary native gameplay](#dungeonminder--original-source-and-ordinary-native-gameplay-2026-10-10)
 - [DungeonsOfDecay original source and native save continuity](#dungeonsofdecay--original-source-and-native-save-continuity-2026-10-11)
 - [Dwarftown original source and ordinary native gameplay](#dwarftown--original-source-and-ordinary-native-gameplay-2026-10-10)
+- [Encircled original source and ordinary native gameplay](#encircled--original-source-and-ordinary-native-gameplay-2026-10-11)
 
 ## Relocation map (2026-10-04)
 
@@ -299,6 +300,20 @@ The private renderer and Python/SDL/png/zlib
 closure are dependencies, not additional applications. The canonical **629**
 preservation snapshots and CalcRogue's `I686_ONLY_PACKAGES` filtering remain
 unchanged.
+Encircled's separate 2026-10-11 candidate adds exactly **one**
+`PROJECT_PACKAGES` entry (`encircled`) and one alphabetical README game row.
+Against the published DungeonsOfDecay-only tree documented above (**239 project
++ 7 font = 246** installable names; **252** check names), the Encircled-only
+candidate is **240 project + 7 font = 247** installable names and **253** check
+names, retaining one optional proprietary package and five check-only Imago
+dependencies. The integrated working-tree list is **242 project + 7 font = 249**
+installable names and **255** check names, versus **241 + 7 = 248** and **254**
+without Encircled. That integrated list includes unrelated **Dualmaster** and
+**Tern** entries; it does not accept or publish them. These are scoped definition
+counts and a **+1** delta, not an executed inventory check, all-253/all-255 pass,
+accepted-package total or Encircled publication claim. The canonical **629**
+preservation snapshots and CalcRogue's `I686_ONLY_PACKAGES` filtering are unchanged;
+ncurses and test-tool dependencies are closure, not additional applications.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -323,6 +338,130 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Encircled — original source and ordinary native gameplay (2026-10-11)
+
+The new [`encircled`](guix/tay/packages/encircled.scm) **0.4.3** recipe builds
+SRD/Quendus's original public-domain C++ terminal arena roguelike from source.
+It does not reconstruct the game or run the bundled Windows executable.
+**#346 remains OPEN**: the local build, reproducibility and ordinary native
+evidence below do not clear the literal own updater/archive lint gates.
+This receipt establishes **local verified, unpublished** implementation, not
+signed publication, tracker closure, profile installation or host deployment.
+
+### Source provenance and positive rights scope
+
+The author's [Games page](https://kleinroguelikes.blogspot.com/p/games.html)
+links the exact [Dropbox source archive](https://dl.dropbox.com/s/ldw5k988ryubtli/encircled.zip),
+**465,808 bytes**, SHA-256
+**`5fc3157c0b986b3af62c5d196201870168fcea048683626f5d028e1e385b99e2`**.
+The **0.4.3** version follows `changes.txt` and the implemented terminal-size
+check; the archive's `readme` still says 0.2. This establishes the pinned source,
+not a claim that it is the globally latest release.
+
+`encircled.cpp:46` supplies the positive grant:
+
+> // This code is public domain. Do anything you want with it. If you have fun or do something interesting with it, email quendus@gmail.com .
+
+The installed `share/doc/encircled/SOURCE-NOTICE`, from
+[`files/encircled-source-notice.txt`](guix/tay/packages/files/encircled-source-notice.txt), retains
+this grant and provenance and identifies the public-domain PDCurses keypad
+constants. The source's scope, not the mere availability of the download,
+supports the public-domain classification. The bundled prebuilt EXE and three
+DLLs are removed; none is compiled, run or installed. The package installs the
+ordinary native `bin/encircled` ELF and the notice, not the original source,
+readme, changelog or upstream Makefile.
+
+### Native build and bounded report input
+
+The package compiles the sole `encircled.cpp` with the target C++ compiler,
+`-std=c++11 -O3`, and Guix ncurses (`-lncurses`). Source CRLF line endings are
+normalized in that file before the exact zero-fuzz
+[`encircled-bounded-report-filename.patch`](guix/tay/packages/patches/encircled-bounded-report-filename.patch)
+is applied. The patch changes `getstr(fname)` to
+`getnstr(fname, sizeof fname - 1)`: at most **29 input bytes** plus the terminating
+NUL in the existing `char[30]`. The native prompt and four-line report format
+are unchanged; this is not a replacement report implementation.
+
+The main agent's source build passed in **4.38 s** (retained build output
+`artifact://17481`) and produced
+**`/gnu/store/p2raxlwisca6dwg9l0g9pclncf5c18lk-encircled-0.4.3`**.
+The main agent's `--check` rebuild passed in **2.65 s** (`artifact://17483`).
+The native consumers also observed the unchanged output NAR hash
+**`02qhx0fb134hjhivqsqm1aacbcj7kkj9a66vkvnkcnp0cabxz0h1`**.
+These are package-specific reproducibility/integrity observations, not a
+whole-channel build claim.
+
+### Ordinary native PTY acceptance and limits
+
+The integrated native run retained **`/tmp/encircled-native-2`** and passed in
+**16.20 s**; the separate standalone run retained
+**`/tmp/encircled-native-3`** and passed in **17.77 s**. The driver uses Guix
+Python/pyte and `unshare` in a pure Guix environment, without user-site Python
+packages, and exercises the installed program rather than a synthetic game
+contract. Both runs used actual **80×30 PTYs** and observed:
+
+- The ordinary start surface, then `d` movement: integrated `native-2` moved
+  from **(41,6)** to **(42,6)**; standalone `native-3` moved from **(16,13)**
+  to **(17,13)**. The native layouts are randomized.
+- Rest turns with visible board changes: `native-2` observed enemy `E`
+  movement; `native-3` observed a fresh `E` spawn after six rests at a turn
+  boundary. The visible board change is the turn oracle, not an independently
+  instrumented turn counter.
+- Pause cancellation preserving the exact displayed game state, then `?`
+  opening the native pause menu and `Q` quitting with **exit status 0**.
+  The help page requires `H` and was **not exercised**.
+- In a fresh session, the native suicide/death path reaching **HP 0**, then `F`
+  and `report.txt` producing the native **four-line report**, followed by
+  **exit status 0**.
+- An unchanged installed output NAR and terminal settings restored by the
+  **external consumer**. The upstream program lacks `endwin`; this does not
+  claim that the game itself restores the terminal.
+
+Retained evidence includes `native-proof.json`, `namespace-launch.json`,
+`nar-before.txt`/`nar-after.txt`, per-session raw `.pty` streams, input logs,
+decoded `.screen.txt`/`.frame.json` surfaces and exit records. The exported
+report is retained as `native-postmortem-report.txt` and
+`private/work-2/report.txt`. The report statistics are the game's own contents,
+not independently instrumented gameplay measurements.
+
+There is **no resumable save/load**. Pause-menu quit discards the game; a death
+report is not a save. There is no wrapper, implicit `chdir`, HOME/XDG relocation
+or new persistence convention: the user's report filename is interpreted by the
+original game relative to the launch working directory unless it is absolute.
+The observed path covers ordinary gameplay, menus, death/export and clean exit,
+not every combat outcome, endgame, terminal size or report destination.
+The earlier `native-1` attempt failed an incidental notice-symlink assumption
+and impure host-pyte setup; it is not passing acceptance evidence. An unauthorized
+child check before the main agent's verification is likewise excluded.
+
+### Literal lint findings, disposition and repeat command
+
+The main agent's full lint run took **7.60 s**. It attempted the author's share
+directory `https://dl.dropbox.com/s/ldw5k988ryubtli/`, redirected to
+`https://dl.dropboxusercontent.com/s/ldw5k988ryubtli/`, and reported
+**404 Not Found**. At `encircled.scm:15:2`, `encircled@0.4.3`'s updater
+`generic-html` **failed to find upstream releases**; the source is **not archived
+on Software Heritage** and **missing from the Disarchive database**. Those own
+findings are not a clean lint pass and are not waived by the source build or
+native acceptance. The separate global warning that `flex` is deprecated in
+favor of `(@ (gnu packages compiler-tools) flex)` is unrelated and is not
+substituted for the own findings. **#346 stays OPEN**; no Git or tracker write
+is established by this documentation update.
+
+To repeat the installed native path, use the built output and a fresh,
+nonexistent absolute evidence directory:
+
+```sh
+make guard-encircled ENCIRCLED_OUTPUT=/gnu/store/p2raxlwisca6dwg9l0g9pclncf5c18lk-encircled-0.4.3 ENCIRCLED_EVIDENCE=/tmp/encircled-new-evidence
+# Standalone path, with another fresh nonexistent evidence directory:
+sh tests/encircled-smoke.sh /gnu/store/p2raxlwisca6dwg9l0g9pclncf5c18lk-encircled-0.4.3 /tmp/encircled-standalone-new-evidence
+```
+
+`GUIX` may be overridden for the guard's Guix executable. These are repeat
+instructions, not additional executions by the documentation worker, which ran
+no checks, apps or Git commands. No deployed system changed and no material
+network-catalog correction was established, so no OKF page/log update applies.
 
 ## DungeonsOfDecay — original source and native save continuity (2026-10-11)
 
@@ -13138,6 +13277,7 @@ make check-nitrohack # isolated three native 100x30 curses sessions, original me
 make check-hermes-desktop # actual installed backend plus Electron/Xvfb surface, writable config, Guix update refusal, sandbox and NAR checks; no real model/GPU/microphone proof
 # Prebuilt game + fresh nonexistent absolute evidence directory; own lint gate remains open:
 make guard-dungeonsofdecay DUNGEONSOFDECAY_OUTPUT=/gnu/store/msy11c3lwv2vapffzbjal4vzhnjbi6rv-dungeonsofdecay-0.4.9 DUNGEONSOFDECAY_EVIDENCE=/tmp/dungeonsofdecay-new-evidence # isolated native movement/rest/look/inventory/save/fresh Continue/resave/NAR
+make guard-encircled ENCIRCLED_OUTPUT=/gnu/store/p2raxlwisca6dwg9l0g9pclncf5c18lk-encircled-0.4.3 ENCIRCLED_EVIDENCE=/tmp/encircled-new-evidence # installed native 80x30 PTY movement/rest/pause-menu/quit/death/report/TTY/NAR; fresh absolute evidence directory, own lint gates remain open
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass

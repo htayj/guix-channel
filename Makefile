@@ -58,7 +58,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	lambdahack kimchi keeperrl \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
-	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned cracks-and-crevices dungeonminder dwarftown dungeonsofdecay
+	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned cracks-and-crevices dungeonminder dwarftown dungeonsofdecay encircled
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # Keep i686-only packages listed for inventory and lint, but realize them
 # through explicit architecture targets rather than the default native build.
@@ -119,7 +119,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES) \
 	check-gearhead2 check-gearhead check-fiqhack \
 	check-evilhack check-dynahack check-alone-rl check-allure \
 	check-agduria check-wenyan check-ludviglundgren-qbittorrent-cli \
-	check-lispy-rogue check-bodge-nuklear check-litegraph check-interlisp-medley check-natron check-sporkhack check-dungeonminder check-dwarftown guard-dungeonsofdecay
+	check-lispy-rogue check-bodge-nuklear check-litegraph check-interlisp-medley check-natron check-sporkhack check-dungeonminder check-dwarftown guard-dungeonsofdecay guard-encircled
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
 		{ echo "expected $(EXPECTED_SOURCE_PACKAGE_COUNT) exported source packages, found $(SOURCE_PACKAGE_COUNT)"; exit 1; }
@@ -169,6 +169,10 @@ check-dwarftown:
 guard-dungeonsofdecay:
 	@test -n "$(DUNGEONSOFDECAY_OUTPUT)" -a -n "$(DUNGEONSOFDECAY_EVIDENCE)" || { echo 'Set DUNGEONSOFDECAY_OUTPUT and DUNGEONSOFDECAY_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/dungeonsofdecay-smoke.sh "$(DUNGEONSOFDECAY_OUTPUT)" "$(DUNGEONSOFDECAY_EVIDENCE)"
+
+guard-encircled:
+	@test -n "$(ENCIRCLED_OUTPUT)" -a -n "$(ENCIRCLED_EVIDENCE)" || { echo 'Set ENCIRCLED_OUTPUT and ENCIRCLED_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/encircled-smoke.sh "$(ENCIRCLED_OUTPUT)" "$(ENCIRCLED_EVIDENCE)"
 
 check-durthang:
 	GUIX="$(GUIX)" tests/durthang-smoke.sh

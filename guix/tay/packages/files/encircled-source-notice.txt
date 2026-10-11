@@ -1,0 +1,45 @@
+Encircled -- SRD (Quendus)
+
+Author's Games page:
+https://kleinroguelikes.blogspot.com/p/games.html
+Author-linked archive:
+https://dl.dropbox.com/s/ldw5k988ryubtli/encircled.zip
+Archive SHA-256:
+5fc3157c0b986b3af62c5d196201870168fcea048683626f5d028e1e385b99e2
+Archive size: 465808 bytes
+Original encircled/encircled.cpp SHA-256:
+bced79fa88d796d733909862fbda98e1dd4f90b99ec149da62421c431d9e2cd1
+
+Version 0.4.3 is identified by changes.txt and the source's terminal-size
+check.  The separate readme says 0.2; the latest release globally is not
+established.  The archive is pinned by its digest, not by a repository commit
+or an invented release date.
+
+Source grant, verbatim from encircled.cpp line 46:
+// This code is public domain. Do anything you want with it. If you have fun or do something interesting with it, email quendus@gmail.com .
+
+This grant applies to the C++ source, including its embedded ASCII display,
+map generation, weapon patterns, tutorial and in-game text.  No separate
+permission is asserted for readme.txt, changes.txt or the Makefile; those
+files are not installed.  The prebuilt encircled.exe, pdcurses.dll,
+libgcc_s_dw2-1.dll and libstdc++-6.dll are removed before building and are
+neither used nor installed.  No external game assets are installed.
+
+The source labels its four active numeric keypad definitions KEY_A2,
+KEY_B1, KEY_B3 and KEY_C2 as originating from PDCurses (lines 30-39).
+The PDCurses project's primary notice at https://pdcurses.org/ states:
+"The core package and most ports are in the public domain, but a few files
+in the demos and X11 directories are subject to copyright under licenses
+described there."
+Only these core numeric definitions and their keypad comments are retained;
+no PDCurses implementation, demo, X11 material or DLL is installed.
+
+The native executable is compiled from encircled.cpp as C++11 and linked
+against separately packaged ncurses, not the archive's Windows libraries.
+The only source modification bounds the ordinary report filename input to
+29 characters plus its terminating null byte using getnstr; the prompt and
+report format are unchanged.  ncurses and the GCC runtime retain their own
+licenses; the game's source grant is not a grant for those dependencies.
+
+Source and primary notices inspected 2026-10-11.  This provenance record
+does not claim build or gameplay verification.

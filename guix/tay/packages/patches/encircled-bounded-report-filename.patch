@@ -1,0 +1,16 @@
+Bound the ordinary postmortem report filename to its existing 30-byte buffer.
+The ncurses getnstr limit excludes the terminating null byte; retain the
+original prompt, editing behavior and report format.
+API reference: https://invisible-island.net/ncurses/man/curs_getstr.3x.html
+
+--- a/encircled.cpp
++++ b/encircled.cpp
+@@ -3799,7 +3799,7 @@
+ 			mvaddstr(20,20, "Enter filename:");
+ 			move(21,20);
+ 			echo();
+-			getstr(fname);
++			getnstr(fname, sizeof fname - 1);
+ 			noecho();
+ 			std::ofstream of(fname);
+ 			//of.open//(std::string(fname)/*+".txt"*/);
