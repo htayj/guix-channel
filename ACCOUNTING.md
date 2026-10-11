@@ -300,18 +300,19 @@ The private renderer and Python/SDL/png/zlib
 closure are dependencies, not additional applications. The canonical **629**
 preservation snapshots and CalcRogue's `I686_ONLY_PACKAGES` filtering remain
 unchanged.
-Encircled's separate 2026-10-11 candidate adds exactly **one**
+Encircled's separate 2026-10-11 implementation adds exactly **one**
 `PROJECT_PACKAGES` entry (`encircled`) and one alphabetical README game row.
 Against the published DungeonsOfDecay-only tree documented above (**239 project
-+ 7 font = 246** installable names; **252** check names), the Encircled-only
-candidate is **240 project + 7 font = 247** installable names and **253** check
++ 7 font = 246** installable names; **252** check names), the signed Encircled
+publication is **240 project + 7 font = 247** installable names and **253** check
 names, retaining one optional proprietary package and five check-only Imago
 dependencies. The integrated working-tree list is **242 project + 7 font = 249**
 installable names and **255** check names, versus **241 + 7 = 248** and **254**
 without Encircled. That integrated list includes unrelated **Dualmaster** and
 **Tern** entries; it does not accept or publish them. These are scoped definition
-counts and a **+1** delta, not an executed inventory check, all-253/all-255 pass,
-accepted-package total or Encircled publication claim. The canonical **629**
+counts and a **+1** delta, not an executed inventory check, all-253/all-255 pass
+or accepted-package total. Signed publication is established separately below.
+The canonical **629**
 preservation snapshots and CalcRogue's `I686_ONLY_PACKAGES` filtering are unchanged;
 ncurses and test-tool dependencies are closure, not additional applications.
 Private dependency closures and the 629 source snapshots are not promoted to
@@ -346,8 +347,9 @@ SRD/Quendus's original public-domain C++ terminal arena roguelike from source.
 It does not reconstruct the game or run the bundled Windows executable.
 **#346 remains OPEN**: the local build, reproducibility and ordinary native
 evidence below do not clear the literal own updater/archive lint gates.
-This receipt establishes **local verified, unpublished** implementation, not
-signed publication, tracker closure, profile installation or host deployment.
+The original receipt established **local verified** implementation; subsequent
+signed repository publication is established below. Neither establishes tracker
+closure, profile installation or host deployment.
 
 ### Source provenance and positive rights scope
 
@@ -446,8 +448,8 @@ on Software Heritage** and **missing from the Disarchive database**. Those own
 findings are not a clean lint pass and are not waived by the source build or
 native acceptance. The separate global warning that `flex` is deprecated in
 favor of `(@ (gnu packages compiler-tools) flex)` is unrelated and is not
-substituted for the own findings. **#346 stays OPEN**; no Git or tracker write
-is established by this documentation update.
+substituted for the own findings. **#346 stays OPEN**; subsequent repository
+publication below does not waive these findings or close the issue.
 
 To repeat the installed native path, use the built output and a fresh,
 nonexistent absolute evidence directory:
@@ -462,6 +464,61 @@ sh tests/encircled-smoke.sh /gnu/store/p2raxlwisca6dwg9l0g9pclncf5c18lk-encircle
 instructions, not additional executions by the documentation worker, which ran
 no checks, apps or Git commands. No deployed system changed and no material
 network-catalog correction was established, so no OKF page/log update applies.
+
+### Subsequent signed implementation publication (2026-10-11)
+
+The publisher's retained `encircled-publication-receipt.json`,
+`encircled-publish-api-receipt.json` and
+`encircled-publish-preservation-receipt.json` establish signed implementation
+commit
+[`3e1ab76b3e981ba2a947d4ce334836a9fbc480ee`](https://forge.nogroup.group/tay/guix-channel/commit/3e1ab76b3e981ba2a947d4ce334836a9fbc480ee),
+parent **`aa510e067e07e21bd3af3435f535df7b98a98a4e`**, published to authoritative
+`origin/master` through a normal authenticated push. Exact-OID Guix
+authentication and the normal pre-push hook authentication both passed;
+the signing fingerprint is **`6A27F433DC22B4DFA278E8F32F12E6A35F417606`**.
+There was no bypass, force push, history rewrite or direct GitHub push.
+
+SSH readback matched both remote `HEAD` and `refs/heads/master` to that exact OID.
+Forgejo branch and commit API reads each returned **HTTP 200**, with
+**`verified: true`** and signer **`tay / 2F12E6A35F417606`**; the API receipt
+records retrieval at **2026-10-11T22:02:51.376036+00:00**. The published tree has
+**240 project + 7 font = 247** installable names and **253** check names;
+the integrated working-tree count remains **242 / 249 / 255**, including
+unrelated Dualmaster and Tern, which this publication does not accept.
+
+The publisher recorded **1,036 unrelated raw index entries byte-identical**
+and **28,770 entire working-tree files byte-identical** across publication,
+including ignored files, symlink targets and modes (`.git` excluded).
+The reviewed source and tests were unchanged. Publication executed no
+builds, tests, lint or apps and establishes no profile installation or host
+deployment. **#346 remains OPEN** for the own updater/archive lint findings.
+
+### Subsequent matched tracker evidence comments (2026-10-11)
+
+The retained `encircled-tracker-comment-readback.json` and
+`encircled-tracker-final-receipt.json` establish matching dated evidence comments
+on [authoritative Forgejo #346](https://forge.nogroup.group/tay/guix-channel/issues/346#issuecomment-3325)
+and [GitHub #346](https://github.com/htayj/guix-channel/issues/346#issuecomment-6114329724).
+The exact identical comment bodies have SHA-256
+**`d1c4943da6360797607ece2a67094e03c14415fe301d16afc48c82071cea1b50`**.
+Each tracker received exactly one new evidence comment; both issues remain
+**OPEN**, with all **seven existing labels unchanged**, including
+`state:blocked` and `state:research`. Original issue titles, bodies and comments
+were preserved. These comments update the historical disposition with evidence;
+they do not clear the lint gates or establish GitHub code-mirror publication.
+
+The subsequent issue-only full-pagination audit completed at
+**2026-10-11T22:04:19.841635+00:00**: **755 Forgejo issues** across **16 pages**
+(**386 open / 369 closed**) and **725 GitHub issues** across **8 pages**
+(**384 open / 341 closed**). It found **725 matched pairs** across **722 unique
+shared titles**, with **zero title, open/closed-state, all-label or `state:*`
+label drift**. All **37 protected issues** were unchanged, including the
+Forgejo-only **#728–#757** range; all non-target raw issue records were unchanged
+on both trackers. The audit excluded pull requests and exhausted pagination.
+Repository publication and evidence comments remain separate from deployment;
+no described deployed system changed, so no OKF page/log update applies.
+
+
 
 ## DungeonsOfDecay — original source and native save continuity (2026-10-11)
 
