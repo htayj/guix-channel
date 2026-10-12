@@ -82,6 +82,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [DungeonsOfDecay original source and native save continuity](#dungeonsofdecay--original-source-and-native-save-continuity-2026-10-11)
 - [Dwarftown original source and ordinary native gameplay](#dwarftown--original-source-and-ordinary-native-gameplay-2026-10-10)
 - [Encircled original source and ordinary native gameplay](#encircled--original-source-and-ordinary-native-gameplay-2026-10-11)
+- [Enemy Trench original source and native save continuity](#enemy-trench--original-source-and-native-save-continuity-2026-10-12)
 
 ## Relocation map (2026-10-04)
 
@@ -315,6 +316,19 @@ or accepted-package total. Signed publication is established separately below.
 The canonical **629**
 preservation snapshots and CalcRogue's `I686_ONLY_PACKAGES` filtering are unchanged;
 ncurses and test-tool dependencies are closure, not additional applications.
+Enemy Trench's separate 2026-10-12 candidate adds exactly **one**
+`PROJECT_PACKAGES` entry (`enemy-trench`) and one alphabetical README game row.
+Against the published Encircled baseline (**240 project + 7 font = 247**
+installable names; **253** check names), the Enemy Trench-only candidate is
+**241 project + 7 font = 248** installable names and **254** check names.
+The integrated working tree is **243 project + 7 font = 250** installable names
+and **256** check names, including unrelated **Dualmaster** and **Tern** entries.
+These are scoped listed-definition counts and a **+1** delta, not whole-inventory
+verification, acceptance of those unrelated changes or publication. The one
+optional proprietary entry and five check-only Imago dependencies are unchanged.
+The private Python/tcod/SoundFile/native closure is not another application;
+neither the canonical **629** preservation snapshots nor CalcRogue's
+`I686_ONLY_PACKAGES` filtering changes.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -339,6 +353,174 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Enemy Trench — original source and native save continuity (2026-10-12)
+
+The new [`enemy-trench`](guix/tay/packages/enemy-trench.scm)
+**1.0.5-0.698bee2** recipe runs Vulkanoid's original Python/SDL2 World War I
+roguelike from public source, not a reconstructed game or a repackaged
+PyInstaller executable. **#347 remains OPEN**: ordinary native acceptance
+and the source/reproducibility builds below do not clear its own updater/archive
+lint gates. This receipt establishes a locally verified, **unpublished**
+candidate, not tracker closure, profile installation or host deployment.
+
+### Exact source, version and positive rights evidence
+
+The [author's homepage](https://vulkanoid.net/) links the author's GitLab and
+the [official itch game](https://vulkanoid90.itch.io/enemy-trench). The package
+pins [the original repository](https://gitlab.com/vulkanoid/enemy-trench) at
+**`698bee218f76d16b98abc7eb2991a7690fffd9b4`**, the untagged **2024-03-25**
+“final update” after 1.0.5. GitLab's tags/releases lists were empty at the dated
+audit; the snapshot suffix is deliberate, not a fabricated 1.0.5 tag or proof
+of active 2026 development. The exact
+[GitLab API tarball](https://gitlab.com/api/v4/projects/30983243/repository/archive.tar.gz?sha=698bee218f76d16b98abc7eb2991a7690fffd9b4)
+is **15,093,471 bytes**, SHA-256
+**`23345c453f5acd159d095f640435cf66aef8b9d0d9fbadd1491ab89f273afb1e`**;
+the recipe uses its byte hash, not a git-checkout NAR hash.
+
+The pinned root
+[`LICENSE.EnemyTrench.txt:634–648`](https://gitlab.com/vulkanoid/enemy-trench/-/blob/698bee218f76d16b98abc7eb2991a7690fffd9b4/LICENSE.EnemyTrench.txt#L634-648)
+names “Enemy Trench - a roguelike set during WW1”, credits **Copyright (C)
+2022 vulkanoid**, and grants redistribution/modification under GPL version 3
+**or any later version**. This is a specifically named whole-program grant
+with no code-only restriction or asset exclusion. It corrects the historical
+“code-only GPL” and blanket “all assets unlicensed” claims: the positive grant
+supports **GPL-3.0-or-later for the author's own work**, not an invented license
+for demonstrably third-party material. Tutorial-derived code matches include
+`input_handlers.py:83–94` and `components/equipment.py:274–294` against
+[`TStand90/tcod_tutorial_v2`](https://github.com/TStand90/tcod_tutorial_v2/tree/6df33407c2146f45b424b7ffed15d67a18891b9f).
+These exact blocks establish derivation evidence, not an author admission;
+that pinned source's
+[CC0-1.0 grant](https://raw.githubusercontent.com/TStand90/tcod_tutorial_v2/6df33407c2146f45b424b7ffed15d67a18891b9f/LICENSE.txt)
+is retained as `share/doc/enemy-trench/tutorial-CC0.txt`, alongside upstream
+notices and an installed `THIRD-PARTY-NOTICES.txt`. The recipe records GPL3+
+and CC0, while separate source-built dependencies retain their own notices.
+
+The official **EnemyTrench v.1.0.5.zip**, upload **10022721**, dated
+**2024-03-25**, was fetched for comparison only: **112,825,158 bytes**, SHA-256
+**`3d13e3046f750252adc78c09fa26efc2176ebe4230da19af11c0141efe3adce4`**.
+Its Linux and Windows media trees each match all **44** pinned source media
+files byte-for-byte, and their root GPL/README notices also match. No released
+executable was run or installed. No conflicting external asset grant was
+identified in the bounded source/history/metadata audit. This is not a forensic
+proof of every glyph, base photograph or sampled sound's origin, nor proof that
+the PNG/OGG exports are each the author's editable preferred form; none of
+those unknowns is silently converted into attribution or blanket clearance.
+
+### Public-source closure and native state integration
+
+The private binding builds **python-tcod 13.6.0** and its matching
+**libtcod 1.20.1** C sources from the public tcod sdist (SHA-256
+**`8af710595c327f0ed37aa47ed70ede404733c5d94cf7c5763c238e40136f08bc`**),
+with Guix **SDL2**, zlib and utf8proc. The upstream SDL CFFI parser backport in
+[`enemy-trench-tcod-sdl-variadic.patch`](guix/tay/packages/patches/enemy-trench-tcod-sdl-variadic.patch)
+and a portable equivalent of the ASCII predicate allow this older binding to
+build against the selected toolchain; its bundled native source components'
+notices are installed. **SoundFile 0.13.1**, **NumPy 1.26.4**, CFFI, pycparser,
+typing-extensions and libsndfile complete the explicit public-source closure.
+There are no binary wheels, PyInstaller runtime or shipped prebuilt Python
+bytecode in the game output; **94** upstream `.pyc` files are removed.
+
+The installed zero-argument `bin/enemy-trench` invokes Python **`-I -S -B`**
+and adds only the game's source directory and explicit dependency paths.
+[`enemy-trench-paths.py`](guix/tay/packages/enemy-trench-paths.py) and
+[`enemy-trench-paths-and-gas-audio.patch`](guix/tay/packages/patches/enemy-trench-paths-and-gas-audio.patch)
+separate immutable absolute `share/enemy-trench/media` resource paths from
+mutable **`$XDG_DATA_HOME/enemy-trench/settings.ini`** and
+**`$XDG_DATA_HOME/enemy-trench/saves/*.sav`**. An unset or relative
+`XDG_DATA_HOME` falls back to **`$HOME/.local/share/enemy-trench`**; no resource
+copy or writable store is required. Native saves use the upstream LZMA/pickle
+format: do not load untrusted downloaded saves.
+
+The gas handler's missing `soundfile` import is restored. Its absent
+`cough.ogg` reference is corrected to authentic upstream `gas_breath.ogg`,
+SHA-256 **`be86f290e96e60c3dd515b8bbcd65bd87534bc9a2f9fbbdd5056b48f00b7829d`**.
+That asset entered with the gas handler at **`6363a81fc782ff55612990e6ee72bde76123b484`**
+and moved to `media/Audio` in the 1.0 history; the pin and both official released
+copies retain identical bytes, but neither contains `cough.ogg`.
+**[INFERENCE]** this is the intended gas-damage sound, a history-supported
+filename-mismatch repair, not an author-confirmed rename. All SoundFile decodes
+explicitly request **float32**, required by SDL2's supported source formats
+rather than SoundFile's default float64. Damage logic, channels, source sample
+rates, mixer timing, gain and audio remain active; no fabricated media, muted
+fallback or exception suppression is used.
+
+### Observed builds and ordinary native acceptance
+
+The main agent's full source-binding build passed in **45.86 s**
+(`artifact://17646`); the final float32-corrected game build passed in **3.67 s**
+(`artifact://17652`) and produced
+**`/gnu/store/z4i0fr0lznxgmsfkd9ir7yk01ic6hq60-enemy-trench-1.0.5-0.698bee2`**.
+The final **`--check`** rebuild passed in **2.12 s** (`artifact://17677`).
+These are exercised package-specific source/reproducibility observations,
+not a whole-channel build claim or an upstream test-suite claim.
+
+The standalone native run **`/tmp/enemy-trench-native-5`** passed in **24.21 s**;
+the integrated **`/tmp/enemy-trench-native-6`** passed in **27.46 s**.
+[`tests/enemy-trench-smoke.sh`](tests/enemy-trench-smoke.sh) resolves generic
+Guix tools around a prebuilt output, then
+[`tests/enemy-trench-native.py`](tests/enemy-trench-native.py) launches the
+actual zero-argument installed game with private Xvfb and PulseAudio. Retained
+`proof.json`, screenshots and save bytes establish:
+
+- The real **800×500 SDL window**, **80×50** cells with **10×10** tiles; normal
+  `N` mode, Infantry selection, ordinary BackSpace name clearing to observed
+  length zero, **GuixNative** naming, story dismissal and map rendering.
+- Right movement by **one world cell**, an ordinary wait, and native inventory
+  display. The integrated player's screen tile moves **(25,35) → (26,35)**.
+- `Esc`, then `m` creates the native save and returns to the main menu; `C`,
+  Down and Return select/load that save. Before/after map and inventory pixels
+  are identical, the player's tile is identical and loading leaves the save
+  bytes unchanged. This is a **same-process native Continue**, not an asserted
+  full hidden-state equality or fresh-process restore. Continued Right movement
+  reaches **(27,35)**; `Esc`, then `q` saves and exits with status **0**.
+- Three actual **float32 stereo 44,100 Hz** audio streams reach the private
+  PulseAudio null sink. This proves SDL audio initialization/stream activity,
+  **not physical speaker audibility** or every effect's playback.
+- Game and proof services retain host **UID/GID 1000/998** inside private
+  user/mount/network/PID namespaces, with only loopback and no external route.
+  The store is mounted read-only; before/after output NAR hashes are identical:
+  **`1gxc40cwqkm6xb0vysmdvrfi3fqki8pv7ir81kb910sqlw83y7lz`**.
+
+Ordinary window/input/render/state evidence corrects the historical claim that
+missing a headless/stdout contract blocks packaging. The game is an SDL native
+consumer; acceptance does not add a synthetic game mode. Earlier failed
+binding/audio/name-oracle attempts are not counted as passes. These runs do not
+establish exhaustive combat, hardcore mode, all classes, all effects or endgame.
+
+### Controlled hazard regression, separate from native UI proof
+
+The main agent's throwaway **real-constructor** Engine/GameMap/player-factory
+probe passed with status **0**; retained output is
+**`/tmp/enemy-trench-hazard-h9xy52r1/result.stdout`**. The unmodified source
+reproduced `NameError: soundfile` after gas damage **24 → 23 HP** and fire
+damage **24 → 14 HP**; separately opening its absent `cough.ogg` raised the
+actual `LibsndfileError`. The installed patched Engine then retained those
+exact **1/10 HP** damage semantics and exercised real SoundFile decoding,
+SDL conversion and mixer consumption through a private PulseAudio null sink:
+
+- Gas: absolute upstream `gas_breath.ogg`, **23,247 float32 samples at 44,100
+  Hz**, converted to **[23247,1]**, real `Channel` volume **1.0**, consumed.
+- Fire: absolute upstream `hit.ogg`, **13,307 float32 samples at 44,100 Hz**,
+  converted to **[13307,1]**, real `Channel` volume **1.0**, consumed.
+
+This controlled fixture uses the actual constructors and hazard handler, with
+no function replacement, production save injection or game hooks. It is
+**not** a claim that the ordinary native UI runs walked through gas/fire,
+physical audio was heard, or combat/endgame was exhaustively verified.
+
+### Literal lint gate and publication boundary
+
+The main agent's full final **`guix lint`** took **28.35 s** and retained own
+warnings for **no updater**, **not archived on Software Heritage** and
+**missing Disarchive information**. Those diagnostics are not reclassified as
+clean lint merely because the source is retrievable and the native consumer
+passes. **[Forgejo #347](https://forge.nogroup.group/tay/guix-channel/issues/347)
+must remain OPEN.** This dated receipt records an unpublished repository
+candidate, not deployed software; future signed publication requires a
+separate publisher receipt. No described host/service changed in this docs
+slice, so no OKF page/log update applies here; any broader catalog correction
+is owned by the integrating agent.
 
 ## Encircled — original source and ordinary native gameplay (2026-10-11)
 
@@ -13335,6 +13517,7 @@ make check-hermes-desktop # actual installed backend plus Electron/Xvfb surface,
 # Prebuilt game + fresh nonexistent absolute evidence directory; own lint gate remains open:
 make guard-dungeonsofdecay DUNGEONSOFDECAY_OUTPUT=/gnu/store/msy11c3lwv2vapffzbjal4vzhnjbi6rv-dungeonsofdecay-0.4.9 DUNGEONSOFDECAY_EVIDENCE=/tmp/dungeonsofdecay-new-evidence # isolated native movement/rest/look/inventory/save/fresh Continue/resave/NAR
 make guard-encircled ENCIRCLED_OUTPUT=/gnu/store/p2raxlwisca6dwg9l0g9pclncf5c18lk-encircled-0.4.3 ENCIRCLED_EVIDENCE=/tmp/encircled-new-evidence # installed native 80x30 PTY movement/rest/pause-menu/quit/death/report/TTY/NAR; fresh absolute evidence directory, own lint gates remain open
+make guard-enemy-trench ENEMY_TRENCH_OUTPUT=/gnu/store/z4i0fr0lznxgmsfkd9ir7yk01ic6hq60-enemy-trench-1.0.5-0.698bee2 ENEMY_TRENCH_EVIDENCE=/tmp/enemy-trench-new-evidence # installed zero-argument SDL normal Infantry movement/wait/inventory/native save/Continue/quit/audio-stream/NAR; fresh nonexistent absolute evidence directory, own lint gates remain open
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass
