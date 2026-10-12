@@ -316,15 +316,17 @@ or accepted-package total. Signed publication is established separately below.
 The canonical **629**
 preservation snapshots and CalcRogue's `I686_ONLY_PACKAGES` filtering are unchanged;
 ncurses and test-tool dependencies are closure, not additional applications.
-Enemy Trench's separate 2026-10-12 candidate adds exactly **one**
+Enemy Trench's separate 2026-10-12 implementation adds exactly **one**
 `PROJECT_PACKAGES` entry (`enemy-trench`) and one alphabetical README game row.
 Against the published Encircled baseline (**240 project + 7 font = 247**
-installable names; **253** check names), the Enemy Trench-only candidate is
-**241 project + 7 font = 248** installable names and **254** check names.
+installable names; **253** check names), the publisher verified the signed
+Enemy Trench-only publication at **241 project + 7 font = 248** installable
+names and **254** check names.
 The integrated working tree is **243 project + 7 font = 250** installable names
 and **256** check names, including unrelated **Dualmaster** and **Tern** entries.
-These are scoped listed-definition counts and a **+1** delta, not whole-inventory
-verification, acceptance of those unrelated changes or publication. The one
+These are publisher-verified scoped listed-definition counts and a **+1** delta,
+not whole-inventory runtime verification or acceptance/publication of those
+unrelated changes. Signed Enemy Trench publication is established below. The one
 optional proprietary entry and five check-only Imago dependencies are unchanged.
 The private Python/tcod/SoundFile/native closure is not another application;
 neither the canonical **629** preservation snapshots nor CalcRogue's
@@ -361,8 +363,9 @@ The new [`enemy-trench`](guix/tay/packages/enemy-trench.scm)
 roguelike from public source, not a reconstructed game or a repackaged
 PyInstaller executable. **#347 remains OPEN**: ordinary native acceptance
 and the source/reproducibility builds below do not clear its own updater/archive
-lint gates. This receipt establishes a locally verified, **unpublished**
-candidate, not tracker closure, profile installation or host deployment.
+lint gates. This receipt establishes locally verified implementation and the
+subsequent signed repository publication below, not tracker closure, profile
+installation or host deployment.
 
 ### Exact source, version and positive rights evidence
 
@@ -516,11 +519,59 @@ warnings for **no updater**, **not archived on Software Heritage** and
 **missing Disarchive information**. Those diagnostics are not reclassified as
 clean lint merely because the source is retrievable and the native consumer
 passes. **[Forgejo #347](https://forge.nogroup.group/tay/guix-channel/issues/347)
-must remain OPEN.** This dated receipt records an unpublished repository
-candidate, not deployed software; future signed publication requires a
-separate publisher receipt. No described host/service changed in this docs
-slice, so no OKF page/log update applies here; any broader catalog correction
-is owned by the integrating agent.
+must remain OPEN.** The initial local acceptance was an unpublished candidate;
+the subsequent signed repository publication is established below, not deployed
+software. No described host/service changed in this docs slice, so no OKF
+page/log update applies here; any broader catalog correction is owned by the
+integrating agent.
+
+### Signed repository publication (2026-10-12)
+
+The publisher's retained publication, preservation and anonymous HTTPS API
+readback receipts establish normal Forgejo `origin/master` publication at
+**2026-10-12 11:11:00.679273 UTC** of
+[`64bd72155b8acf2cc691f39b68f2efdff0208986`](https://forge.nogroup.group/tay/guix-channel/commit/64bd72155b8acf2cc691f39b68f2efdff0208986),
+parent **`36e45681c43e6455a9e3b930e9dbd536f8fa9ce7`**. Its valid signature uses
+fingerprint **`6A27F433DC22B4DFA278E8F32F12E6A35F417606`**. Exact-commit
+Guix authentication and the normal pre-push hook succeeded; no hook bypass,
+force push, history rewrite or direct GitHub push was used. SSH remote HEAD
+and `refs/heads/master` matched the exact commit; Forgejo branch/commit API
+readbacks returned **HTTP 200**, with **verified=true**, signer
+**tay / 2F12E6A35F417606**.
+
+The publisher verified **241 project / 248 installable / 254 check names** in
+the published scoped tree and **243 / 250 / 256** in the integrated worktree.
+All **1,041** unrelated raw index entries remained byte-identical; all
+**28,776** worktree files, including ignored material, retained their bytes,
+symlink targets and modes across publication. Published source/test hashes
+matched the main agent's verified manifest. This preserves unrelated work,
+not acceptance of Tern or Dualmaster, and does not change the **629** source
+ledger. The publisher ran no builds/tests/lint/apps: those observations remain
+the separately dated main-agent evidence above. Repository publication does
+not establish profile installation, host deployment or closure of **#347**.
+
+### Matched tracker evidence update (2026-10-12)
+
+After verified source publication, one identical dated evidence comment was
+appended to each matched issue: [Forgejo #347, comment 3326](https://forge.nogroup.group/tay/guix-channel/issues/347#issuecomment-3326)
+and [GitHub #347, comment 6123139708](https://github.com/htayj/guix-channel/issues/347#issuecomment-6123139708).
+Both comment API readbacks returned **HTTP 200**; exact bodies match SHA-256
+**`d76e33c17fe44bec92ce9f150bf07701ebbe421fa5aa4a9cf592d94243204efa`**.
+These comments supplement, rather than replace, the historical blocked
+disposition with the positive source/license evidence and bounded native
+acceptance. Both issues remain **OPEN**, with all **seven** original labels
+(including `state:blocked` and `state:research`), titles, issue bodies and
+prior comments unchanged; neither updater/archive lint nor issue acceptance
+is silently marked complete.
+
+The final tracker readback completed at **2026-10-12 11:14:37.999891 UTC**:
+**755** Forgejo issues across **16** pages, **725** GitHub issues across **8**
+pages, and **725** matched pairs, with **zero** title, state, all-label or
+state-label drift. All **37** protected issues and all non-target raw issue
+records remained unchanged. The only tracker mutations were these two
+authorized appended comments (one per #347); no state/label/body edits or
+closure occurred. Tracker receipts do not extend the native gameplay proof
+or establish installation/deployment.
 
 ## Encircled — original source and ordinary native gameplay (2026-10-11)
 
