@@ -58,7 +58,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	lambdahack kimchi keeperrl \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
-	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned cracks-and-crevices dungeonminder dwarftown dungeonsofdecay encircled enemy-trench
+	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned cracks-and-crevices dungeonminder dwarftown dungeonsofdecay encircled enemy-trench freebasic escape-from-lab-42
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # Keep i686-only packages listed for inventory and lint, but realize them
 # through explicit architecture targets rather than the default native build.
@@ -119,7 +119,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES) \
 	check-gearhead2 check-gearhead check-fiqhack \
 	check-evilhack check-dynahack check-alone-rl check-allure \
 	check-agduria check-wenyan check-ludviglundgren-qbittorrent-cli \
-	check-lispy-rogue check-bodge-nuklear check-litegraph check-interlisp-medley check-natron check-sporkhack check-dungeonminder check-dwarftown guard-dungeonsofdecay guard-encircled guard-enemy-trench
+	check-lispy-rogue check-bodge-nuklear check-litegraph check-interlisp-medley check-natron check-sporkhack check-dungeonminder check-dwarftown guard-dungeonsofdecay guard-encircled guard-enemy-trench guard-escape-from-lab-42
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
 		{ echo "expected $(EXPECTED_SOURCE_PACKAGE_COUNT) exported source packages, found $(SOURCE_PACKAGE_COUNT)"; exit 1; }
@@ -177,6 +177,10 @@ guard-encircled:
 guard-enemy-trench:
 	@test -n "$(ENEMY_TRENCH_OUTPUT)" -a -n "$(ENEMY_TRENCH_EVIDENCE)" || { echo 'Set ENEMY_TRENCH_OUTPUT and ENEMY_TRENCH_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/enemy-trench-smoke.sh "$(ENEMY_TRENCH_OUTPUT)" "$(ENEMY_TRENCH_EVIDENCE)"
+
+guard-escape-from-lab-42:
+	@test -n "$(ESCAPE_FROM_LAB_42_OUTPUT)" -a -n "$(ESCAPE_FROM_LAB_42_EVIDENCE)" || { echo 'Set ESCAPE_FROM_LAB_42_OUTPUT and ESCAPE_FROM_LAB_42_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/escape-from-lab-42-smoke.sh "$(ESCAPE_FROM_LAB_42_OUTPUT)" "$(ESCAPE_FROM_LAB_42_EVIDENCE)"
 
 check-durthang:
 	GUIX="$(GUIX)" tests/durthang-smoke.sh
