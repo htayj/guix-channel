@@ -83,6 +83,8 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Dwarftown original source and ordinary native gameplay](#dwarftown--original-source-and-ordinary-native-gameplay-2026-10-10)
 - [Encircled original source and ordinary native gameplay](#encircled--original-source-and-ordinary-native-gameplay-2026-10-11)
 - [Enemy Trench original source and native save continuity](#enemy-trench--original-source-and-native-save-continuity-2026-10-12)
+- [Escape From Lab 42 original source and ordinary native gameplay](#escape-from-lab-42--original-source-and-ordinary-native-gameplay-2026-10-12)
+- [FreeBASIC source-bootstrapped compiler and limited bindings](#freebasic--source-bootstrapped-compiler-and-limited-bindings-2026-10-12)
 
 ## Relocation map (2026-10-04)
 
@@ -331,6 +333,21 @@ optional proprietary entry and five check-only Imago dependencies are unchanged.
 The private Python/tcod/SoundFile/native closure is not another application;
 neither the canonical **629** preservation snapshots nor CalcRogue's
 `I686_ONLY_PACKAGES` filtering changes.
+Escape From Lab 42's separate 2026-10-12 implementation adds exactly **two**
+`PROJECT_PACKAGES` entries (`freebasic`, `escape-from-lab-42`) and two README
+rows, plus one `guard-escape-from-lab-42` Makefile target. The guard is a native
+consumer target, not a package name, so it does not enter `CHECK_PACKAGES`.
+The publisher parsed the committed Makefiles: published parent `c303067` has
+**241 project / 248 installable / 254 check names**, and the signed Lab 42
+implementation commit `cffef14` has **243 / 250 / 256**, with no duplicate check
+names and `EXPECTED_SOURCE_PACKAGE_COUNT` still **629**. The main agent's `make`
+evaluation of the integrated working tree gives **245 project + 7 font = 252**
+installable names and **258** check names, up from **243 / 250 / 256**; it still
+includes unrelated **Dualmaster** and **Tern** entries without accepting or
+publishing them. The one optional proprietary entry, five check-only Imago
+dependencies, CalcRogue's `I686_ONLY_PACKAGES` filtering and the canonical **629**
+preservation ledger are unchanged; the FreeBASIC toolchain/X11 closure is the
+game's build dependency, now also listed as its own developer tool.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -355,6 +372,246 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Escape From Lab 42 — original source and ordinary native gameplay (2026-10-12)
+
+The new [`escape-from-lab-42`](guix/tay/packages/escape-from-lab-42.scm)
+**0.2** recipe builds Richard D. Clark's (“Rick Clark”) 7DRL 2009 graphical
+roguelike from his original FreeBASIC source with the new
+[`freebasic`](#freebasic--source-bootstrapped-compiler-and-limited-bindings-2026-10-12)
+compiler. It does not run, install or reconstruct the bundled Windows
+executable. **#349 remains OPEN**: the builds and ordinary native acceptance
+below do not clear the own updater/archive lint gates. This receipt establishes
+locally verified implementation and the subsequent signed implementation
+publication below, not profile installation, deployment or tracker closure.
+
+### Exact source, version and positive rights evidence
+
+The author's [programs page](https://users.freebasic-portal.de/rdc/programs.html#mozTocId901547)
+links [`lab4202win.zip`](https://users.freebasic-portal.de/rdc/programs/lab4202win.zip)
+(HTTP Last-Modified **2010-09-26**), **233,780 bytes**, SHA-256
+**`0b5f03ac310a8ef5b180b9b4f5dff4a564277c49f11717035284f6b4e4cf978d`**,
+Guix base32 **`13cprzjb9xl4a81if5zi95y2fr55ykgzbd5rh2qzb3ha66n06pqb`**. No
+public repository, tag or commit was found; this author-hosted archive is the
+only primary artifact, matching the 2026-09-04 journal's size and hash. Version
+**0.2** follows `readme42.txt` line 1 (“0.2 (Post 7DRL Release)”),
+`changelog42.txt` (“Current Version 0.2”, 2009-03-15) and
+`src/labdata.bi`'s `lbversion = "0.2"`. RogueBasin's listing is secondary only.
+
+The root grant is `readme42.txt:157`:
+
+> The source code is available and is licensed under the GPL license.
+
+The source headers name Richard D. Clark and carry a truncated free-software
+boilerplate without a version line. The archive has no COPYING/LICENSE file.
+GPLv2 §9 and GPLv3 §14 both let a recipient choose any published version when
+the Program specifies none, so the recipe records **`gpl1+`** for the original
+unversioned grant; RogueBasin's secondary “GPL 3.0” label is not substituted
+for the author's wording. The grant covers the program source, including the
+six embedded 80×60 image arrays (`42title`, `backgrnd`, `corridor`, `escape`,
+`mush`, `zombie`); no file is carved out and no noncommercial, no-redistribution
+or no-modification term was found. The 2010 “All Rights Reserved” footer covers
+the website, not the game. `font_read_this.txt` permits redistribution of the
+Zombie title font with that readme; no font file ships and the source loads none.
+`src/mersenne.bi` keeps its BSD-3 MT19937 notice and is not included by the
+build. Image origin was **not visually identified**: the vision service returned
+HTTP 503 during source review, so no attribution is inferred.
+
+**Superseded blocker.** The 2026-09-04 disposition blocked on “GPL license”
+without a version and without COPYING. That reading is corrected: the readme is
+an explicit original GPL grant by the root author, and an unversioned grant is
+a choice of version, not a missing or restrictive notice. Likewise, the game is
+an ordinary native X11 program; acceptance uses its real window, keyboard and
+rendered state, and no headless/stdout game mode is required or added.
+
+### Build, compatibility edits and installed notices
+
+The build unpacks the archive, deletes `lab42.exe`, copies every original
+`src/*.bas`/`*.bi` file **before any edit**, and runs
+`fbc lab42.bas -x escape-from-lab-42`. The upstream `-s gui`/`lab42.rc` Windows
+resource build does not apply; there is no launcher, CWD change or runtime hook.
+Two source edits are required by modern FreeBASIC on Unix:
+
+- **Booleans.** The main agent reproduced the original failure,
+  `labdata.bi:95` “Expected identifier” at `Type boolean As bool`: FreeBASIC
+  1.10 reserves `BOOLEAN` and predefines `TRUE`/`FALSE` as −1/0. Whole-word
+  renames to `lab42_bool`, `lab42_boolean`, `LAB42_TRUE` and `LAB42_FALSE`
+  in the five game logic files preserve the game's own **1/0** values.
+- **Timer precision.** Unix `Timer` returns epoch seconds as Double. Storing
+  that magnitude in Single loses sub-second precision, unlike the original
+  Windows counter; native run 2 observed the resulting title-fade stall at
+  alpha 0. Only the five Single timer storages recorded in the main agent's receipt
+  are widened to Double; the 0.5 s zombie/frame/delay durations and all
+  comparisons are unchanged.
+
+The output installs `bin/escape-from-lab-42`; `readme42.txt`,
+`changelog42.txt` and `font_read_this.txt`; the unmodified original sources
+under `share/doc/escape-from-lab-42/source/`, with FreeBASIC's LGPL 8×8
+`fnt08x08.fnt`; `GPL-2.txt` as the GPL text for the unversioned grant; and
+`freebasic-runtime/lgpl.txt` plus FreeBASIC's `readme.txt`, whose static-linking
+exception covers the statically linked runtime/gfx libraries.
+
+The main agent's build passed in **3.30 s** and its `--check` rebuild in
+**1.63 s**, producing
+**`/gnu/store/w83i23g1l4k7kw9vhg6cmp2cpzxpbs2l-escape-from-lab-42-0.2`**
+(derivation `15knkwaq3icjrxc51q722cnfcxgwj06p`), output NAR hash
+**`07szijxl5p3fxkv39wk3183xv4g99zz56bzsqfdqzj1ad5xp9h1w`**. These are
+package-specific observations, not a whole-channel build or upstream test-suite
+claim; the game has no upstream tests.
+
+### Ordinary native acceptance and limits
+
+[`tests/escape-from-lab-42-smoke.sh`](tests/escape-from-lab-42-smoke.sh)
+accepts only a canonical direct `/gnu/store` output and a fresh, nonexistent,
+canonical absolute evidence directory outside the store; it resolves generic
+Guix tools through the overridable `GUIX` executable before isolation and never
+builds the game. [`tests/escape-from-lab-42-native.py`](tests/escape-from-lab-42-native.py)
+then drives the actual zero-argument installed program in private Xvfb with
+XTest keyboard events and XGetImage screenshots, navigating only from rendered
+terrain: no seed, state introspection, save injection, fixture, hook or proof
+renderer. Both runs kept the same UID/GID in private user/mount/network/PID
+namespaces, a recursively read-only store, and fresh HOME/XDG state.
+
+| Run | Mode | Time | Movement observations | Shots | Captures | Exit |
+| --- | --- | --- | --- | --- | --- | --- |
+| `/tmp/lab42-native-4` | standalone | 93.43 s | 491 | 12 | 528 | 0 |
+| `/tmp/lab42-native-5` | integrated Makefile guard | 32.86 s | 73 | 0 | 83 | 0 |
+
+Both observed the title fade (checked against installed source bitmaps) and
+intro, a real random level 10, starting-pistol unequip/drop, native `g` pickup
+and re-equip, movement, access-code pickup, the genuine **level 10 → 9 elevator
+transition**, continued level 9 movement, and `Esc` with **exit 0**. The
+unfiltered native `game.log` was empty in both runs, and the output NAR was
+identical before and after. A vision read of native 5's `level10-to-level9.png`
+quotes **Level: 9**, **Time Left: 30** and **Entering level 9**, with the tiled
+room and green player/sidebar visible; the native 4 vision request returned
+HTTP 503, so its screenshots were not vision-read.
+
+The game has **no save/load** (its readme says so); none is claimed. The
+optional death/win screens and the relative-path morgue prompt were not
+exercised, and window-close was not separately exercised. Because there is no
+CWD change, a morgue the user chooses to save is written relative to the launch
+directory. Source reading also shows readme discrepancies (code drops with
+F5–F8 and uses a 30-minute timer); the program is not altered to match them.
+Earlier native 1–3 attempts are not passes: native 1 skipped the intro with a
+premature key; native 2 exposed the Timer stall fixed above; native 3 was
+rejected by the consumer's camera oracle, then corrected to the source's
+half-even camera rounding. Their output NAR receipts were unchanged.
+
+### Lint gate, repeat commands and publication boundary
+
+`guix lint -L guix freebasic escape-from-lab-42` retained own findings: the
+game's `generic-html` updater failed to find upstream releases, and its source
+is not archived on Software Heritage/Disarchive (FreeBASIC's findings are in its
+receipt). They are not waived or suppressed; **#349 stays OPEN**. The main
+agent's guard run without `ESCAPE_FROM_LAB_42_OUTPUT`/`_EVIDENCE` correctly
+rejected with status **2**. To repeat the native path:
+
+```sh
+make guard-escape-from-lab-42 ESCAPE_FROM_LAB_42_OUTPUT=/gnu/store/w83i23g1l4k7kw9vhg6cmp2cpzxpbs2l-escape-from-lab-42-0.2 ESCAPE_FROM_LAB_42_EVIDENCE=/tmp/escape-from-lab-42-new-evidence
+# Standalone, with another fresh nonexistent evidence directory:
+GUIX=guix sh tests/escape-from-lab-42-smoke.sh /gnu/store/w83i23g1l4k7kw9vhg6cmp2cpzxpbs2l-escape-from-lab-42-0.2 /tmp/escape-from-lab-42-standalone-new-evidence
+```
+
+The main agent's `make check-source-count` evaluation currently fails on a
+**preexisting** textual/export mismatch: **629** exported versus **630** parsed
+source names, the parsed-only name being `hermes-agent-source`. It is
+unrelated to these packages, is not remediated here, and leaves the canonical
+**629** ledger unchanged. Repository-only package work changed no described
+host or service, so no OKF page/log update applies.
+
+### Lab 42 signed implementation publication (2026-10-12)
+
+The publisher's retained `lab42-publication-receipt.json` establishes signed
+implementation commit
+[`cffef14f8295140f80025a9baeec64912debcc8f`](https://forge.nogroup.group/tay/guix-channel/commit/cffef14f8295140f80025a9baeec64912debcc8f)
+(“feat: package FreeBASIC and Escape from Lab 42 and verify native play”),
+tree **`daab128d1aa97df0fdba9e424d9cf5157b7205f1`**, parent
+**`c3030672583d4ea4d4c79400c6d98bc12eec514f`**, which was re-fetched as live
+`HEAD`/`origin/master` immediately before commit and push. `git verify-commit`
+reported a good **EdDSA** signature from fingerprint
+**`6A27F433DC22B4DFA278E8F32F12E6A35F417606`**; `guix git authenticate` of
+that exact commit and the normal pre-push hook both succeeded. The normal push
+`c303067..cffef14 -> master` used no hook bypass or force, and `git ls-remote`
+then returned the exact commit for `refs/heads/master`. There was no direct
+GitHub push.
+
+The commit adds the two recipes and the two test scripts, and changes only three
+Lab 42 Makefile hunks (5 files, 1,159 insertions, 2 deletions). The user's
+worktree-only Dualmaster and Tern Makefile hunks were excluded. README.md,
+ACCOUNTING.md, `THIRD_PARTY_NOTICES.md`, `alone-rl-java-build.scm`,
+`caelestia-shell.scm` and other untracked material (including `.staged/`,
+`apps/` and the `hermes-agent-source` state) are identical to the parent. Non-owned index
+entries and status-listed worktree bytes were unchanged; the README bytes
+differed only through this concurrent documentation work. The publisher ran no
+builds, tests, lint or applications: the observations above remain the main
+agent's separately dated evidence. This documentation is published separately
+from that implementation commit. The commit does
+not establish profile installation, host deployment or closure of **#349**.
+
+## FreeBASIC — source-bootstrapped compiler and limited bindings (2026-10-12)
+
+The new [`freebasic`](guix/tay/packages/freebasic.scm) **1.10.1** recipe is
+the compiler for Escape From Lab 42 and an installable developer tool. It is
+locally verified under **#349 (OPEN)** and published in the signed
+[implementation commit](#lab-42-signed-implementation-publication-2026-10-12).
+
+### Source, bootstrap and license
+
+The pinned [`FreeBASIC-1.10.1-source-bootstrap.tar.xz`](https://downloads.sourceforge.net/project/fbc/FreeBASIC-1.10.1/Source/FreeBASIC-1.10.1-source-bootstrap.tar.xz)
+has SHA-256 **`2fae2c66b435240d4de11bb534843baa188574508a8a5bdaa5020bf729bf0a3e`**
+(Guix base32 **`0ghapwlzf2q2lpd5p2laa1s8a65a7f239d8vw56hs91mnik2rbig`**). Its
+`bootstrap/linux-x86_64` payload is textual generated C, not an opaque compiler
+seed. GCC builds that C and a minimal runtime (`make bootstrap-minimal`); every
+minimal runtime object is discarded, the full runtime and X11 graphics library
+are built, and the whole compiler is rebuilt from its BASIC sources by that
+bootstrap. The interpreter path and `dlopen` names for libX11, libgpm and libGL
+point to store items; the real compiler is `libexec/fbc`, and `bin/fbc` exports
+GCC/AS/AR/LD (overridable) and passes store library paths.
+
+`readme.txt:115–142` licenses the compiler as **GPL-2.0-or-later**, the runtime
+and graphics libraries as **LGPL-2.0-or-later with a static-linking exception**,
+and the documentation under **FDL-1.2-or-later**, with a LibFFI MIT/Expat notice.
+The output installs `readme.txt`, `changelog.txt`, `gpl.txt`, `lgpl.txt`,
+`fdl-1.2.txt`, `libffi-license.txt`, the `fbc.1` manual page and `fnt08x08.fnt`.
+
+### Limited external-library bindings
+
+The readme grants no blanket license for the bundled third-party `inc/`
+bindings. **145** header files say they “can't be included in other
+distributions without authorization”, including **60** CRT, libart_lgpl, Win32,
+big_int, SpiderMonkey, GLADE, MySQL, PDFlib, JNI, JAPI and DISLIN headers; BASS
+and BASSMOD are free only for noncommercial use, and PDFlib is commercial or
+Aladdin-licensed. The source snippet therefore keeps only the compiler-owned
+BASIC/runtime API (`datetime.bi`, `dir.bi`, `fbc-int`, `fbgfx.bi`, `fbio.bi`,
+`fblimits.bi`, `fbprng.bi`, `fbthread.bi`, `file.bi`, `string.bi`,
+`utf_conv.bi`, `vbcompat.bi`) and removes the other bindings, examples,
+`contrib/swig` (including a Windows executable), `contrib/djgpp` and
+`lib/win32`. Native graphics, Visual Basic compatibility and other core BASIC
+API remain; programs that `#include` an omitted C-library binding (for example
+`crt/*.bi`, BASS or SDL headers) must supply their own legitimately licensed
+declarations. The retained runtime's native X11 keyboard/graphics input path is
+what the game depends on.
+
+### Build, checks and limits
+
+The main agent's build passed in **224.72 s** and its `--check` rebuild in
+**219.95 s**, producing
+**`/gnu/store/k901jhjp1wqjn6am3q8ak8997wwvzmvv-freebasic-1.10.1`** (derivation
+`755w833x4c64gs5gr2l3r3x3z7a08pnh`). The check phase uses the installed
+`bin/fbc`: all four upstream log-test dialect suites (`fb`, `fblite`, `qb`,
+`deprecated`) ran with `ABORT_CMD=false` and found no failures, and the
+`linux-x86_64` warning and syntax snapshots matched exactly. The `fbcunit`
+unit tests were **not** run: the bundled fbcunit sources themselves include the
+restricted CRT binding excluded above. These are package-specific observations,
+not a complete upstream test-suite claim.
+
+`guix lint` retained own FreeBASIC findings: the SourceForge updater failed
+to find upstream releases (**HTTP 404**), and the source is not archived on
+Software Heritage/Disarchive. They remain part of #349's open lint gate. To
+rebuild locally: `guix build -L guix freebasic` (add `--check` to repeat the
+reproducibility comparison). Publication of the recipe is not a deployment
+claim.
 
 ## Enemy Trench — original source and native save continuity (2026-10-12)
 
@@ -13569,6 +13826,7 @@ make check-hermes-desktop # actual installed backend plus Electron/Xvfb surface,
 make guard-dungeonsofdecay DUNGEONSOFDECAY_OUTPUT=/gnu/store/msy11c3lwv2vapffzbjal4vzhnjbi6rv-dungeonsofdecay-0.4.9 DUNGEONSOFDECAY_EVIDENCE=/tmp/dungeonsofdecay-new-evidence # isolated native movement/rest/look/inventory/save/fresh Continue/resave/NAR
 make guard-encircled ENCIRCLED_OUTPUT=/gnu/store/p2raxlwisca6dwg9l0g9pclncf5c18lk-encircled-0.4.3 ENCIRCLED_EVIDENCE=/tmp/encircled-new-evidence # installed native 80x30 PTY movement/rest/pause-menu/quit/death/report/TTY/NAR; fresh absolute evidence directory, own lint gates remain open
 make guard-enemy-trench ENEMY_TRENCH_OUTPUT=/gnu/store/z4i0fr0lznxgmsfkd9ir7yk01ic6hq60-enemy-trench-1.0.5-0.698bee2 ENEMY_TRENCH_EVIDENCE=/tmp/enemy-trench-new-evidence # installed zero-argument SDL normal Infantry movement/wait/inventory/native save/Continue/quit/audio-stream/NAR; fresh nonexistent absolute evidence directory, own lint gates remain open
+make guard-escape-from-lab-42 ESCAPE_FROM_LAB_42_OUTPUT=/gnu/store/w83i23g1l4k7kw9vhg6cmp2cpzxpbs2l-escape-from-lab-42-0.2 ESCAPE_FROM_LAB_42_EVIDENCE=/tmp/escape-from-lab-42-new-evidence # installed X11 title/intro/equipment/drop/pickup/movement/access-code/level 10->9/Esc exit/NAR; fresh nonexistent absolute evidence directory, own lint gates remain open
 make check-sentinelone # no SentinelOne artifact/vendor network; free deps may use substitutes
 make lint           # offline/local linters; no source-URL network checks
 make lint-cve       # optional network-backed CVE database pass
