@@ -353,7 +353,7 @@ EtRD's separate 2026-10-13 implementation adds exactly **one**
 `PROJECT_PACKAGES` entry (`etrd`) and one README game row, plus
 `guard-etrd`, which is a native consumer target, not a package name. Against the
 published Lab 42 baseline above (**243 project / 250 installable / 256 check
-names**), the EtRD-only candidate is **244 / 251 / 257**. The integrated
+names**), the signed EtRD-only publication is **244 / 251 / 257**. The integrated
 working-tree inventory is **246 project + 7 font = 253** installable names,
 **252** default native build names (excluding i686-only CalcRogue), and
 **259** check names, versus **245 / 252 / 258** without EtRD. This is a
@@ -365,11 +365,11 @@ The optional proprietary package, five check-only Imago dependencies and
 enumeration is claimed. `java-etrd-libraries`, Java/Guava, graphics and audio
 closures are dependencies, not additional top-level applications or
 preservation snapshots.
-The publisher's read-only preflight identifies **`9526d4fa`** as both HEAD
-and `origin/master`, with the same **243 / 250 / 256** Makefile baseline.
+The publisher's dated preflight identified **`9526d4fa`** as both HEAD
+and `origin/master` before publication, with the **243 / 250 / 256** baseline.
 Its README already contains the unrelated Dualmaster row; that inherited row
 is preserved, not introduced by EtRD. The baseline has **268** linked package
-rows; the EtRD-only candidate has **269**, while the integrated README has
+rows; the signed EtRD-only publication has **269**, while the integrated README has
 **270**, including Tern. These textual row counts include catalog/research
 entries and are not substitutes for the Makefile package inventory.
 Private dependency closures and the 629 source snapshots are not promoted to
@@ -402,8 +402,8 @@ therefore no OKF page/log update applies to this repository-only guide rewrite.
 [`etrd`](guix/tay/packages/etrd.scm) **0.0019-0.ebd9259** packages Philip
 Collin's (Lyeeedar) **Enter the Roguelike Dimension**, the original first-person,
 real-time 3D ASCII roguelike. **#350 remains OPEN.** This receipt establishes
-locally verified implementation and native acceptance, not profile installation,
-deployment or publication.
+locally verified implementation/native acceptance and the signed implementation
+publication below, not profile installation, deployment or tracker closure.
 It does not substitute a later game or the incomplete March 2013 refactor for
 the playable original release-era source.
 
@@ -668,6 +668,38 @@ clean because a build succeeds or the lint process returns normally.
 The corrected final definitions have no remaining local input-label,
 description-length or lint-crash findings. **#350 remains OPEN** on the own
 lint gates; dependency/native success does not close either package's gate.
+
+### EtRD signed implementation publication (2026-10-13)
+
+The publisher's retained `etrd-publication-receipt.json` establishes signed
+implementation commit
+[`7a176751282bdaa75a8a7a34e60989bdd448910b`](https://forge.nogroup.group/tay/guix-channel/commit/7a176751282bdaa75a8a7a34e60989bdd448910b)
+(“feat: package EtRD and verify native save continuity”), parent
+**`9526d4fa420ca5eaa90fef0df8e391269772a74b`**. `git verify-commit`
+returned **0** with good signature status **G** from fingerprint
+**`6A27F433DC22B4DFA278E8F32F12E6A35F417606`**; `guix git authenticate`
+of that exact commit and the normal pre-push hook both succeeded. The normal,
+non-force origin push used no hook bypass; the direct remote receipt returned
+the exact implementation commit for `HEAD` and `refs/heads/master`.
+
+The publication contains **10 owned paths**, **1,061 tracked files**,
+**244 project + 7 font = 251** installable names and **257** check names;
+the default native build count is **250**, the README has **269** linked
+package rows and the preservation ledger remains **629**. It includes the
+two package modules, three owned patches, two native consumer scripts and only
+EtRD hunks in Makefile/README/ACCOUNTING. Unrelated Tern and Dualmaster
+Makefile changes were excluded; the already-published Dualmaster README row
+was retained. No other application's delivery is accepted by that inventory.
+
+The publisher reports the original raw index **byte-identical** and all
+**1,119** fingerprinted worktree files unchanged by publication. Unrelated
+Tern material, `THIRD_PARTY_NOTICES.md`, `alone-rl-java-build.scm`,
+`caelestia-shell.scm`, `auxiliary.scm`, `.staged/`, `apps/` and other user
+changes were not swept into the commit. The publisher ran no builds, tests,
+lint or applications; the main agent's evidence above remains the exercised
+acceptance. This publication does **not** establish profile installation,
+host deployment or closure of **#350**. No described deployed system changed,
+so no OKF page/log update applies.
 
 ## Escape From Lab 42 — original source and ordinary native gameplay (2026-10-12)
 
