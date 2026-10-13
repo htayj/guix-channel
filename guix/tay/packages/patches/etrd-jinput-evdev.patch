@@ -1,0 +1,109 @@
+Backport JInput's removal of the nonexistent EVIOCGUSAGE ioctl.
+Upstream commit bbf4c985f06c58046c1dc0859a59e31180547589 (2016-05-19):
+https://github.com/jinput/jinput/commit/bbf4c985f06c58046c1dc0859a59e31180547589
+
+Device classification keeps the real component/capability-based algorithm.
+Also remove the corresponding stale JNI declaration and unused usage constants.
+No ioctl stub, fabricated capability data, or warning suppression is introduced.
+
+--- a/plugins/linux/src/java/net/java/games/input/LinuxEventDevice.java
++++ b/plugins/linux/src/java/net/java/games/input/LinuxEventDevice.java
+@@ -94,28 +94,6 @@
+ 	}
+ 
+ 	private final Controller.Type guessType() throws IOException {
+-		Controller.Type type_from_usages = guessTypeFromUsages();
+-		if (type_from_usages == Controller.Type.UNKNOWN)
+-			return guessTypeFromComponents();
+-		else
+-			return type_from_usages;
+-	}
+-	
+-	private final Controller.Type guessTypeFromUsages() throws IOException {
+-		byte[] usage_bits = getDeviceUsageBits();
+-		if (isBitSet(usage_bits, NativeDefinitions.USAGE_MOUSE))
+-			return Controller.Type.MOUSE;
+-		else if (isBitSet(usage_bits, NativeDefinitions.USAGE_KEYBOARD))
+-			return Controller.Type.KEYBOARD;
+-		else if (isBitSet(usage_bits, NativeDefinitions.USAGE_GAMEPAD))
+-			return Controller.Type.GAMEPAD;
+-		else if (isBitSet(usage_bits, NativeDefinitions.USAGE_JOYSTICK))
+-			return Controller.Type.STICK;
+-		else
+-			return Controller.Type.UNKNOWN;
+-	}
+-
+-	private final Controller.Type guessTypeFromComponents() throws IOException {
+ 		List components = getComponents();
+ 		if (components.size() == 0)
+ 			return Controller.Type.UNKNOWN;
+@@ -342,15 +320,6 @@
+ 	}
+ 	private final static native void nGetBits(long fd, int ev_type, byte[] evtype_bits) throws IOException;
+ 
+-	private final byte[] getDeviceUsageBits() throws IOException {
+-		byte[] bits = new byte[NativeDefinitions.USAGE_MAX/8 + 1];
+-		if (getVersion() >= 0x010001) {
+-			nGetDeviceUsageBits(fd, bits);
+-		}
+-		return bits;
+-	}
+-	private final static native void nGetDeviceUsageBits(long fd, byte[] type_bits) throws IOException;
+-
+ 	public final synchronized void pollKeyStates() throws IOException {
+ 		nGetKeyStates(fd, key_states);
+ 	}
+--- a/plugins/linux/src/native/net_java_games_input_LinuxEventDevice.c
++++ b/plugins/linux/src/native/net_java_games_input_LinuxEventDevice.c
+@@ -112,20 +112,6 @@
+ 	return num_effects;
+ }
+ 
+-JNIEXPORT void JNICALL Java_net_java_games_input_LinuxEventDevice_nGetDeviceUsageBits(JNIEnv *env, jclass unused, jlong fd_address, jbyteArray usages_array) {
+-#if EV_VERSION >= 0x010001
+-	int fd = (int)fd_address;
+-	jsize len = (*env)->GetArrayLength(env, usages_array);
+-	jbyte *usages = (*env)->GetByteArrayElements(env, usages_array, NULL);
+-	if (usages == NULL)
+-		return;
+-	int res = ioctl(fd, EVIOCGUSAGE(len), usages);
+-	(*env)->ReleaseByteArrayElements(env, usages_array, usages, 0);
+-	if (res == -1)
+-		throwIOException(env, "Failed to get device usages (%d)\n", errno);
+-#endif
+-}
+-
+ JNIEXPORT void JNICALL Java_net_java_games_input_LinuxEventDevice_nGetBits(JNIEnv *env, jclass unused, jlong fd_address, jint evtype, jbyteArray bits_array) {
+ 	int fd = (int)fd_address;
+ 	jsize len = (*env)->GetArrayLength(env, bits_array);
+--- a/plugins/linux/src/native/net_java_games_input_LinuxEventDevice.h
++++ b/plugins/linux/src/native/net_java_games_input_LinuxEventDevice.h
+@@ -97,14 +97,6 @@
+ JNIEXPORT void JNICALL Java_net_java_games_input_LinuxEventDevice_nGetBits
+   (JNIEnv *, jclass, jlong, jint, jbyteArray);
+ 
+-/*
+- * Class:     net_java_games_input_LinuxEventDevice
+- * Method:    nGetDeviceUsageBits
+- * Signature: (J[B)V
+- */
+-JNIEXPORT void JNICALL Java_net_java_games_input_LinuxEventDevice_nGetDeviceUsageBits
+-  (JNIEnv *, jclass, jlong, jbyteArray);
+-
+ /*
+  * Class:     net_java_games_input_LinuxEventDevice
+  * Method:    nGetKeyStates
+--- a/plugins/linux/src/java/net/java/games/input/NativeDefinitions.java
++++ b/plugins/linux/src/java/net/java/games/input/NativeDefinitions.java
+@@ -435,11 +435,6 @@
+     public static final int ABS_VOLUME = 0x20;
+     public static final int ABS_MISC = 0x28;
+     public static final int ABS_MAX = 0x3f;
+-    public static final int USAGE_MOUSE = 0x00;
+-    public static final int USAGE_JOYSTICK = 0x01;
+-    public static final int USAGE_GAMEPAD = 0x02;
+-    public static final int USAGE_KEYBOARD = 0x03;
+-    public static final int USAGE_MAX = 0x0f;
+     public static final int BUS_PCI = 0x01;
+     public static final int BUS_ISAPNP = 0x02;
+     public static final int BUS_USB = 0x03;

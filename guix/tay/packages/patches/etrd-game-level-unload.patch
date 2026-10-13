@@ -1,0 +1,91 @@
+Unload graphics without deleting the saved level's logical entities and lights.
+
+GameData.changeLevel installs the destination LightManager before the loading
+screen cleans up the old level.  Calling entity deletion during this cleanup
+removes the destination's same-UID lights after Continue, and removes dormant
+levels' persistent emitters/lights when revisiting them.  Give graphics unloading
+its own lifetime operation; ordinary gameplay deletion retains dispose().
+
+--- a/src/com/lyeeedar/Roguelike3D/Game/GameObject.java
++++ b/src/com/lyeeedar/Roguelike3D/Game/GameObject.java
+@@ -374,0 +375,6 @@
++	// Guix: unload GPU state without deleting a persistent level entity.
++	public void disposeGraphics()
++	{
++		vo.dispose();
++	}
++	
+--- a/src/com/lyeeedar/Roguelike3D/Game/Item/Equipment_HAND.java
++++ b/src/com/lyeeedar/Roguelike3D/Game/Item/Equipment_HAND.java
+@@ -246,0 +247,6 @@
++	// Guix: equipment remains part of the saved actor during level unload.
++	public void disposeGraphics()
++	{
++		model.disposeGraphics();
++	}
++	
+--- a/src/com/lyeeedar/Roguelike3D/Graphics/Models/RiggedModels/RiggedModel.java
++++ b/src/com/lyeeedar/Roguelike3D/Graphics/Models/RiggedModels/RiggedModel.java
+@@ -90,0 +91,10 @@
++	// Guix: release graphics while retaining persistent emitter membership.
++	public void disposeGraphics()
++	{
++		rootNode.disposeGraphics();
++		for (Material m : materials)
++		{
++			m.dispose();
++		}
++	}
++	
+--- a/src/com/lyeeedar/Roguelike3D/Graphics/Models/RiggedModels/RiggedModelNode.java
++++ b/src/com/lyeeedar/Roguelike3D/Graphics/Models/RiggedModels/RiggedModelNode.java
+@@ -278,0 +279,15 @@
++	// Guix: unloading is not logical particle/light deletion.
++	public void disposeGraphics()
++	{
++		for (RiggedSubMesh rsm : submeshes)
++		{
++			rsm.dispose();
++		}
++		for (RiggedModelNode rmn : childNodes)
++		{
++			rmn.disposeGraphics();
++		}
++		if (particleEmitter != null)
++			particleEmitter.disposeGraphics();
++	}
++	
+--- a/src/com/lyeeedar/Roguelike3D/Graphics/ParticleEffects/ParticleEmitter.java
++++ b/src/com/lyeeedar/Roguelike3D/Graphics/ParticleEffects/ParticleEmitter.java
+@@ -502,0 +503,15 @@
++	// Guix: shared node/level references may unload the same GPU resources.
++	public void disposeGraphics()
++	{
++		if (meshPoint != null)
++		{
++			meshPoint.dispose();
++			meshPoint = null;
++		}
++		if (meshQuad != null)
++		{
++			meshQuad.dispose();
++			meshQuad = null;
++		}
++	}
++	
+--- a/src/com/lyeeedar/Roguelike3D/Graphics/Screens/LevelLoadingScreen.java
++++ b/src/com/lyeeedar/Roguelike3D/Graphics/Screens/LevelLoadingScreen.java
+@@ -101 +101 @@
+-					ga.dispose();
++					ga.disposeGraphics();
+@@ -103,2 +103,2 @@
+-					if (ga.L_HAND != null) ga.L_HAND.dispose();
+-					if (ga.R_HAND != null) ga.R_HAND.dispose();
++					if (ga.L_HAND != null) ga.L_HAND.disposeGraphics();
++					if (ga.R_HAND != null) ga.R_HAND.disposeGraphics();
+@@ -108 +108 @@
+-					lo.dispose();
++					lo.disposeGraphics();
+@@ -113 +113 @@
+-					pe.dispose();
++					pe.disposeGraphics();

@@ -85,6 +85,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Enemy Trench original source and native save continuity](#enemy-trench--original-source-and-native-save-continuity-2026-10-12)
 - [Escape From Lab 42 original source and ordinary native gameplay](#escape-from-lab-42--original-source-and-ordinary-native-gameplay-2026-10-12)
 - [FreeBASIC source-bootstrapped compiler and limited bindings](#freebasic--source-bootstrapped-compiler-and-limited-bindings-2026-10-12)
+- [EtRD original release-era source and native desktop](#etrd--original-release-era-source-and-native-desktop-2026-10-13)
 
 ## Relocation map (2026-10-04)
 
@@ -348,6 +349,29 @@ publishing them. The one optional proprietary entry, five check-only Imago
 dependencies, CalcRogue's `I686_ONLY_PACKAGES` filtering and the canonical **629**
 preservation ledger are unchanged; the FreeBASIC toolchain/X11 closure is the
 game's build dependency, now also listed as its own developer tool.
+EtRD's separate 2026-10-13 implementation adds exactly **one**
+`PROJECT_PACKAGES` entry (`etrd`) and one README game row, plus
+`guard-etrd`, which is a native consumer target, not a package name. Against the
+published Lab 42 baseline above (**243 project / 250 installable / 256 check
+names**), the EtRD-only candidate is **244 / 251 / 257**. The integrated
+working-tree inventory is **246 project + 7 font = 253** installable names,
+**252** default native build names (excluding i686-only CalcRogue), and
+**259** check names, versus **245 / 252 / 258** without EtRD. This is a
+read-only parse of declared Makefile lists, not an executed whole-inventory
+check or evidence of publication. The integrated list retains unrelated
+**Dualmaster** and **Tern** entries without accepting or publishing them.
+The optional proprietary package, five check-only Imago dependencies and
+`EXPECTED_SOURCE_PACKAGE_COUNT` **629** are unchanged; no fresh live source
+enumeration is claimed. `java-etrd-libraries`, Java/Guava, graphics and audio
+closures are dependencies, not additional top-level applications or
+preservation snapshots.
+The publisher's read-only preflight identifies **`9526d4fa`** as both HEAD
+and `origin/master`, with the same **243 / 250 / 256** Makefile baseline.
+Its README already contains the unrelated Dualmaster row; that inherited row
+is preserved, not introduced by EtRD. The baseline has **268** linked package
+rows; the EtRD-only candidate has **269**, while the integrated README has
+**270**, including Tern. These textual row counts include catalog/research
+entries and are not substitutes for the Makefile package inventory.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
@@ -372,6 +396,278 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## EtRD — original release-era source and native desktop (2026-10-13)
+
+[`etrd`](guix/tay/packages/etrd.scm) **0.0019-0.ebd9259** packages Philip
+Collin's (Lyeeedar) **Enter the Roguelike Dimension**, the original first-person,
+real-time 3D ASCII roguelike. **#350 remains OPEN.** This receipt establishes
+locally verified implementation and native acceptance, not profile installation,
+deployment or publication.
+It does not substitute a later game or the incomplete March 2013 refactor for
+the playable original release-era source.
+
+### Identity, exact source and rights
+
+The author's [EtRD article](https://www.roguebasin.com/index.php?title=EtRD)
+names Lyeeedar, GPL3, the 14 February 2013 release and the 27 February update.
+Its author-blog links and embedded videos coincide with the author's original
+release posts; the [November 2012 repository post](https://web.archive.org/web/20231125123152id_/https://lyeeedar.blogspot.com/2012/11/gameside-unnamed-3droguelike-repository.html)
+links the predecessor `infinity8/3DRoguelike` repository. The surviving author
+repositories and desktop `.project` link bind the core, desktop and Android
+asset projects to that game, despite the older E.D.A.R/Askey design README.
+
+The recipe pins these author sources; hashes are the main agent's downloaded
+archive hashes in Guix base32:
+
+| Source | Exact commit | Date | Guix SHA-256 |
+| --- | --- | --- | --- |
+| [Core](https://github.com/Lyeeedar/3DRoguelike) | `ebd9259561f6f3a27ccb3ec6e08bb43b11cee780` | 2013-02-26 | `154c1bdfg5vig66hcgsii5mwa12rkwv0vgdl5fimx3bi5rq8744f` |
+| [Assets](https://github.com/Lyeeedar/3DRoguelikeAssets) | `79491379c463eede37b078a8aeb15894652d96d1` | 2013-02-22 | `0cqp18wjjhc5n8l3rdl2whd5wx94m0sflxk7zz5d3sc43c95a71y` |
+| [Desktop](https://github.com/Lyeeedar/3DRoguelikeDesktop) | `1bcdec7e4f76b1a470ef32ed76deba6277be5bac` | 2013-02-22 | `1k0bcp9v1r3hlrs2knvjyf7wp1fndbvnawpbhg2cf1kv15ci7d08` |
+
+The version identifies the last author core snapshot before the 0.0019 release,
+not a claim of byte identity with its distributed binary JAR. The later
+`58b94aa` snapshot references an absent `Controls` class and contains null/no-op
+game-state methods; it was rejected rather than filled in with invented logic.
+
+The core's `license.txt` explicitly grants GPLv3 for the program **and
+accompanying materials**, copyright 2013 Philip Collin. **[INFERENCE]** The
+same-author companion projects and their explicit asset linkage support that
+grant's application to author-owned accompanying art/data; no independent
+assets-root license was found or invented, and the grant does not relicense
+third-party works. The output preserves the original license and these notices:
+
+- The six triangulation Java files retain **L. Paul Chew's 2005/2007 permissive
+  copyright, permission and warranty notices**; `Delaunay-NOTICES.java` also
+  preserves the complete original `Pnt.java` notice.
+- The actual UI font remains **Droid Sans**. The required `default.fnt` and
+  `default.png`, and the skin JSON, match the LibGDX 0.9.8 sample Git blobs.
+  Android/AOSP's Apache-2.0 attribution, full Apache text and LibGDX
+  AUTHORS/NOTICE are installed; other Droid Sans variants are retained.
+- **Lorc's [Grasping Claws](https://game-icons.net/1x1/lorc/grasping-claws.html)**
+  is attributed under **CC BY 3.0**, with the full legal code and an explicit
+  acknowledgment of the reduced 50-pixel derivative. This is a strong visual
+  derivative match, not identical source bytes. The distinct brown
+  `icon-claw.png` is retained separately.
+- Exactly eight unused Arial/Verdana derivative files are omitted:
+  `arial-15.fnt`, `arial-15_00.png`, `verdana.fnt`, `verdana.png`,
+  `verdana39.fnt`, `verdana39.png`, `verdana39distancefield.fnt` and
+  `verdana39distancefield.png`. No source/XML/skin reference selects them.
+  This is unused-data pruning, not a claim that their font rights were granted.
+
+All other original companion assets, including models/Blender sources, XML,
+maps, shaders, sky textures, UI and icons, remain; no arbitrary replacement art
+or font is introduced.
+
+### Source-built graphics closure and compatibility
+
+[`java-etrd-libraries`](guix/tay/packages/etrd-libraries.scm)
+**0.9.8-lwjgl-2.9.0** is the game's dependency, not another top-level app.
+It compiles LibGDX 0.9.8, official LWJGL 2.9.0 textual generated Java/C,
+JInput/JUtils, JOrbis and the actual LibGDX JLayer fork from source. The seven
+ordinary Java JARs and GDX/LWJGL/JInput JNI libraries are locally compiled;
+upstream opaque JARs, native binaries and executable seeds are deleted.
+The `*-sources.jar` inputs contain source text, not runnable dependency JARs.
+JLayer's `sfd.ser` is the original coefficient data, not executable bytecode.
+Guix source-built OpenAL and Mesa supply audio/OpenGL. Corresponding sources,
+Apache/BSD/LGPL notices and embedded component notices accompany the libraries.
+The matching LWJGL Git-tag BSD license is a pinned companion notice: the
+official generated-source ZIP itself lacks `doc/LICENSE`. Real JDK8 `javah`
+generates the required native headers from rebuilt classes. The JInput evdev
+correction backports the [upstream 2016 removal](https://github.com/jinput/jinput/commit/bbf4c985f06c58046c1dc0859a59e31180547589)
+of a nonexistent usage ioctl, retaining genuine component-based device
+classification rather than supplying a fake native capability. LWJGL uses
+Guix's exact `xrandr` executable and Mesa store library, not commands guessed
+from the user's PATH.
+
+| Library source | Pin | Guix SHA-256 |
+| --- | --- | --- |
+| LibGDX core/backends/JNI | `0.9.8`, `ab8c85edb8c5fd0b71d748ada456f779edf40d8c` | `1q5qa2bldh6xvdzy5m10ra0zw7rc6z0aimbp2apr05xc3d8rcm2d` |
+| LWJGL official generated-source ZIP | `2.9.0` | `1jj8wrzqzpjbpnz4ivcm3wvkl6wzris9g3zwz2ix9if3w679fzcc` |
+| JInput textual source artifact | `2.0.5` | `0b8yvj5xyq9k41za8hjqk03klz0j48a5rmbx2lj24lgiasif30s6` |
+| JUtils textual source artifact | `1.0.0` | `1kd17q0rnjpg4xgqzxp8iw7mjg0jzvk2k0d4y4zma695q2imwwgm` |
+| JOrbis author source | `0.0.17`, `28592f3dde5134871165470e7390d66ed5f1dce5` | `1p7awrqi4rvilcd4cd1rwd562idivihy8k75lwwj2ydc48q7w70n` |
+
+The JLayer **1.0.1-libgdx** fork is extracted as source from the pinned LibGDX
+origin, not fetched as a binary. The embedded full LWJGL notice is authenticated
+against matching upstream tag commit `8deac76a5b374ce2f1011c772f989c3368c935d6`.
+
+The single game API port uses the **genuine LibGDX 0.9.8 wavefront ObjLoader**:
+`new ObjLoader().loadObj(Gdx.files.internal(meshLocation)).subMeshes[0].mesh`.
+All 12 pinned OBJ files have one face-bearing group and triangular faces;
+the real loader drops empty groups and retains all original geometry, with
+unchanged default `flipV=false`. There is no old-loader shim, stub, or copied/
+merged vertex buffer. The unused, unfinished experimental `XMLData.java` is
+preserved as source but not compiled; no caller depends on it.
+
+Native run 7 reached real level generation and `Player Placer`, then exposed
+seven strict desktop GLSL compile errors. Six original shader resources now
+receive type-correct float literals in normal encoding/decoding, attenuation
+and lighting arithmetic, and `vec3(unpackHalf(colour.ba))` for the scalar depth
+value assigned to RGB. The original formulas, forward/deferred renderers and
+GLSL version are retained; no shader is skipped, upgraded or error-suppressed.
+The complete original shader tree is frozen **before** these edits under
+`share/etrd/source/assets/shaders`; installed runtime assets contain the
+corresponding corrected shaders.
+
+The original minimap drew 10-pixel cells into a `width*10` by `height*10`
+framebuffer, but LibGDX's default SpriteBatch projection retained the 800×600
+window size. Changing the framebuffer viewport alone did not change that
+projection, compressing the real glyph map. `LevelGraphics.createMap` now
+sets an orthographic Matrix4 projection to the actual framebuffer dimensions
+once per generated map. Original cell spacing, glyphs and player-position
+formula remain unchanged; this fixes the ordinary game map, not a proof-only
+renderer. The frozen original core and actual patched source both remain.
+
+Genuine Continue exposed a separate lifetime bug: `GameData.changeLevel`
+installs the destination LightManager before the loading screen disposes the
+old level. Permanent entity deletion then removed restored same-UID lights
+and persistent emitter membership, causing `Light not found`. The
+[`etrd-game-level-unload.patch`](guix/tay/packages/patches/etrd-game-level-unload.patch)
+separates graphics unloading from logical deletion in six Java files. Loading
+cleanup releases real GPU resources but preserves serialized logical lights,
+emitter membership and IDs; normal gameplay deletion still uses the original
+`dispose()` operations. This repairs native level reload/revisit, not a
+special Continue bypass or seeded save. The original save/load model is kept.
+
+Ordinary menu Exit initially returned 255 because LibGDX 0.9.8's default
+`forceExit` calls `System.exit(-1)` after normal cleanup. The desktop
+configuration now sets **`cfg.forceExit=false`**, permitting natural finished-
+thread termination after `Gdx.app.exit`. No shell status masking, exception
+suppression or changed error handling is used. Original desktop source remains
+under `source/desktop/src`; the actual compiled desktop source is also installed
+under `source/build/desktop/src`.
+
+Original core and desktop source are frozen under `share/etrd/source/core/src`
+and `share/etrd/source/desktop/src`; the actual patched compiled core is also
+installed under `share/etrd/source/build/core/src`. Ordinary JAR creation uses
+sorted entries, `zip -X`, fixed 1980 timestamps and no generated dated manifest.
+
+The main agent's final library build passed in **28.69 s**, including native
+RUNPATH validation, and the final game build passed in **5.24 s**, producing:
+
+- **`/gnu/store/xkx1srd7zll5bnh0p5q2v6hzx5lh6mz4-java-etrd-libraries-0.9.8-lwjgl-2.9.0`**
+- **`/gnu/store/iwhk2ynxv9ac1jsls425v138rpg4nzk3-etrd-0.0019-0.ebd9259`**
+
+The corresponding full **`--check`** rebuilds passed in **27.32 s** for the
+library and **3.07 s** for the game, reproducing those same outputs. The
+derivations are respectively `kmv03iz8b9l46hcznf4parw20l9akvxr` and
+`pzmbvx1gm437z9f5m2r1gf05hfh983ph`.
+
+These are observed package-specific builds, not an upstream test-suite result
+or a whole-channel build. The original game has no upstream test suite.
+
+### Launcher, state and original save semantics
+
+`bin/etrd` starts the original desktop `com.lyeeedar.Roguelike3D.Main` with
+source-built IcedTea 8. Immutable resources under `share/etrd/assets` are on
+the classpath, not copied into user state. The launcher creates and enters
+`${XDG_DATA_HOME:-$HOME/.local/share}/etrd` with `umask 077`; JVM `user.home`
+points there for the original LibGDX external preferences, without globally
+overwriting HOME. The original relative `game.sav` consequently uses that
+private directory. Native loaders use exact store libraries; a launcher-local
+C++ runtime path prepend supplies OpenAL's required ABI while retaining any
+existing `LD_LIBRARY_PATH` suffix, without mutating the global environment.
+The original application's first-run preferences select **Deferred**;
+`LwjglApplicationChanger` reads that preference into `GameData.lightQuality`,
+overriding the static Forward initializer. The observed native HUD consequently
+says **Deferred - Final**. No default-renderer change is introduced, and that
+normal source-defined selection is not an unresolved discrepancy.
+
+Upstream `GameData.finishLoading` creates the real serialized **level-entry
+autosave**. Continue reloads that snapshot and places the player through the
+original `PlayerPlacer`; it does **not** promise to retain movement since
+level entry. No save injection, serialized-state introspection, game hook,
+headless game executor or test-only launcher mode is introduced.
+
+### Building and the explicit native guard
+
+```sh
+guix build -L guix etrd
+guix build -L guix --check etrd
+guix lint -L guix etrd
+guix lint -L guix java-etrd-libraries
+
+# Set these to the final built output and a fresh evidence path first.
+: "${ETRD_OUTPUT:?Set the canonical direct /gnu/store EtRD output}"
+: "${ETRD_EVIDENCE:?Set a fresh nonexistent absolute path outside /gnu/store}"
+make guard-etrd GUIX=guix ETRD_OUTPUT="$ETRD_OUTPUT" ETRD_EVIDENCE="$ETRD_EVIDENCE"
+```
+
+[`tests/etrd-smoke.sh`](tests/etrd-smoke.sh) requires both explicit values,
+rejects noncanonical output/evidence paths, resolves generic Guix tools before
+isolation and **never builds the game**. The adjacent Makefile guards use the
+same explicit-output/evidence convention. `guard-etrd` is not a default
+`make check` prerequisite: it needs that already-built output and fresh path.
+[`tests/etrd-native.py`](tests/etrd-native.py) consumes the ordinary installed
+launcher in private Xvfb using native XTest input and XGetImage captures,
+with same-UID/GID user/mount/network/PID namespaces, recursively read-only
+store mounts, fresh HOME/XDG state, software Mesa and isolated PulseAudio.
+It reads the frozen original source and bitmap font as render/save oracles,
+not game-state introspection or execution of a substitute game.
+
+### Ordinary native acceptance and exact limits
+
+Both final runs exercised the ordinary installed launcher on the final output
+above; earlier diagnostic or observer-failed runs are not counted as passes.
+
+| Evidence directory | Mode | Time | Result | Normal menu Exit |
+| --- | --- | --- | --- | --- |
+| `/tmp/etrd-native-15` | standalone consumer | 44.70 s | PASS | 0 |
+| `/tmp/etrd-native-16` | integrated `make guard-etrd` | 48.68 s | PASS | 0 |
+
+Both observed the authentic main menu, New Game, real generated level and
+**Deferred - Final** HUD; native GDX/LWJGL libraries and Mesa were mapped by
+the Java process. Native movement changed the source-defined minimap glyph
+position, resumed first-person view and grabbed-pointer mouse-look changed
+the rendered scene. Native left/right torch attack inputs were issued and
+captured, without claiming enemy damage.
+
+Native 16's rigid map movement proof matched **168/177 glyph anchors** and
+**2039/2165 exact foreground pixels** over **20 spatial blocks**, with
+noncollinear anchors, verified negative holes and **(−10, −10)** pixel
+translation. These are rendered position observations, not invented world
+coordinates. Its genuine level-entry autosave was **74,409 bytes**, Java
+serialization stream SHA-256
+`21f618867bae38bd3daca1cdad72084910ee93afc91eb12c4ac17c79cd7c0d3b`.
+Ordinary menu Continue restored the original PlayerPlacer map at **(0, 0)**
+translation: **209/216 anchors**, **2610/2667 exact pixels**, **20 blocks**.
+Continued native `w` action then yielded **168/177 anchors**, **2071/2259
+pixels**, **20 blocks**, and **(−10, −10)** translation. Native reloading
+also produced the ordinary **83,765-byte** autosave. The consumer reads stream
+magic/size and hashes without deserializing or injecting a save; it does not
+claim the moved position survived Continue.
+
+Both navigated the actual inventory's **HEAD, BODY, LEGS, BOOTS, L_HAND and
+R_HAND** slots, selected **HEAD** and **BODY**, and used the native recipe
+grid to select **`blade_edge`** and **“Tooth thingy”**. The initial carried
+equipment is empty; no equipped item or completed crafted item is claimed.
+The bounded view survey found no nearby door/stair prompt, so neither door
+interaction nor stair traversal is counted. No enemy damage is claimed.
+
+Ordinary menu Exit returned **0** in both runs and left no game window.
+Their unfiltered native logs contained no Exception/Error, `error:`,
+`Problem loading` or `Light not found` match. Both consumer receipts report
+the same output NAR before and after:
+**`13csk3qcxwlfvjpl8zpzwr4y6zwz9c3pxdcyhy8nyl0myfz5f15x`**.
+Evidence includes the native capture sequence, source/font/palette oracles,
+input sequence, namespace/mount/process/native-library records and save hashes.
+Source-glyph and palette geometry checks and independent OCR were exercised;
+the vision screenshot provider returned **HTTP 503**, so **no vision-model
+visual-review pass is claimed**. This is isolated local software-rendered
+desktop acceptance, not physical GPU/audio hardware coverage or deployment.
+
+### Literal own lint gates
+
+The main agent ran the literal full
+`guix lint -L guix etrd java-etrd-libraries` in **7.41 s** against the final
+definitions. Both packages still have own **no-updater** and source archival
+findings (**Software Heritage/Disarchive**). Those are not waived or called
+clean because a build succeeds or the lint process returns normally.
+The corrected final definitions have no remaining local input-label,
+description-length or lint-crash findings. **#350 remains OPEN** on the own
+lint gates; dependency/native success does not close either package's gate.
 
 ## Escape From Lab 42 — original source and ordinary native gameplay (2026-10-12)
 
