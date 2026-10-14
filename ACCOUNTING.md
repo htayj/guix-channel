@@ -407,8 +407,9 @@ Friesen's original Java/Swing/AWT space-simulation roguelike. The canonical
 and source; this is not a substitute implementation. **#351 remains OPEN.**
 The source/rights record and local acceptance below establish an exercised,
 reproducibly source-built native path. Literal full lint still reports own
-updater/archive gates; build and native success do not waive them. This is not
-publication, profile installation or deployment.
+updater/archive gates; build and native success do not waive them. Signed
+implementation publication is recorded below, not profile installation or
+deployment.
 
 ### Exact original source and source-built closure
 
@@ -569,27 +570,60 @@ tracker closure.
 
 ### Inventory boundary and verification state
 
-The publisher's read-only inventory distinguishes three actual text-list
-snapshots. The remote-matching current HEAD is
+The publisher's inventory distinguishes three actual text-list snapshots.
+The pre-EverSector published baseline is
 **`eff68a06cc2c22ecb71c91438a1c8baf8c667b75`**:
 
 | Inventory boundary | Project names | Font names | Installable names | Check names | Default-native build names | README linked rows |
 | --- | --- | --- | --- | --- | --- | --- |
-| Current published HEAD | 244 | 7 | 251 | 257 | 250 | 269 |
-| Scoped EverSector-only candidate | 245 | 7 | 252 | 258 | 251 | 270 |
+| Pre-EverSector published baseline | 244 | 7 | 251 | 257 | 250 | 269 |
+| Scoped EverSector implementation, subsequently published | 245 | 7 | 252 | 258 | 251 | 270 |
 | Integrated working tree, including unrelated user entries | 247 | 7 | 254 | 260 | 253 | 271 |
 
-The scoped candidate excludes unrelated Tern/Dualmaster changes and contains
-**8 owned changed paths** (five new, three mixed existing files), with **1,066
-tracked files** versus **1,061** in current HEAD. The integrated inventory
-includes those unrelated entries; it neither accepts nor publishes them.
+The scoped implementation excludes unrelated Tern/Dualmaster changes and
+contains **8 owned changed paths** (five new, three mixed existing files),
+with **1,066 tracked files** versus **1,061** in the baseline. The integrated
+inventory includes those unrelated entries; it neither accepts nor publishes
+them.
 One i686-only package is excluded from each default-native build count.
-These are literal definition/text-list counts, not live Guix enumeration,
-complete-inventory build coverage or proof that the candidate was published.
+These are literal definition/text-list counts, not live Guix enumeration or
+complete-inventory build coverage. Publication is established separately below.
 No new preservation snapshot is introduced; the expected **629** ledger count
 is retained, not newly enumerated by this documentation worker.
-Signed publication remains separate publisher evidence, not inferred from the
-local build/test/native results or candidate inventory.
+
+### EverSector signed implementation publication (2026-10-14)
+
+The publisher's retained `eversector-publication-receipt.json` establishes signed
+implementation commit
+[`30a8db2f6fdc1d0bf9c5e9c21db7c632b163fa23`](https://forge.nogroup.group/tay/guix-channel/commit/30a8db2f6fdc1d0bf9c5e9c21db7c632b163fa23)
+(“feat: package EverSector and verify native save continuity”), parent
+**`eff68a06cc2c22ecb71c91438a1c8baf8c667b75`**. `git verify-commit`
+returned **0** with good signature status **G** from fingerprint
+**`6A27F433DC22B4DFA278E8F32F12E6A35F417606`**; `guix git authenticate`
+of that exact commit and the normal pre-push hook succeeded. The normal,
+non-force origin push used no hook bypass. The direct remote receipt returned
+the exact implementation commit for both `HEAD` and `refs/heads/master`.
+
+The published tree has **245 project + 7 font = 252 installable** names,
+**258** check names, **251** default-native build names, **270** README linked
+package rows and **1,066** tracked files. Its eight owned paths comprise the
+game and test-library modules, store-data patch, two native consumer scripts
+and EverSector-only hunks in Makefile/README/ACCOUNTING. The expected **629**
+preservation ledger count remains unchanged; the publisher did not run a new
+Guix source enumeration. These published counts exclude unrelated Tern and
+Dualmaster Makefile changes and do not accept any other application's delivery.
+
+The publisher reports the original **1,054-entry** raw index **byte-identical**,
+SHA-256 **`906f71f85839009b4487a3182cc2d718f0d2baffc4520cb883085e17596bb1be`**,
+and all **1,124** fingerprinted worktree files unchanged. Unrelated Tern,
+Dualmaster, EtRD wording/index reversions, `THIRD_PARTY_NOTICES.md`,
+`alone-rl-java-build.scm`, `caelestia-shell.scm`, `.staged/`, `apps/` and other
+user changes were excluded. The intentionally preserved user's index was not
+reset/restaged to hide its changed relationship to the advanced HEAD.
+The publisher ran no builds, tests, lint or applications; the main agent's
+acceptance above remains the exercised evidence. **#351 remains OPEN** on the
+literal own updater/archive lint gates; signed publication is neither tracker
+closure nor deployment.
 
 No described deployed host or service changed, and no network-catalog
 correction was established. `/home/tay/okf/network/index.md` was read; no OKF
