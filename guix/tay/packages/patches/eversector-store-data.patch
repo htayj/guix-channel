@@ -1,0 +1,41 @@
+Keep mutable upstream local/ files in the launcher's private working directory,
+while selecting the original fonts from the immutable installation.  AsciiPanel
+continues to load the same resource names through the ordinary class loader.
+
+--- a/src/main/java/maugrift/eversector/Main.java
++++ b/src/main/java/maugrift/eversector/Main.java
+@@ -152,12 +152,8 @@
+ 			}
+ 		});
+ 
+-		if (FileManager.getPath().contains("lib"))
+-		{
+-			FileManager.movePathUp();
+-		}
+-
+-		fonts = new File(FileManager.getPath() + Paths.FONTS)
++		// Guix: immutable fonts are separate from the player's local/ state.
++		fonts = new File("@EVERSECTOR_DATA@/" + Paths.FONTS)
+ 			.listFiles(File::isDirectory);
+ 
+ 		if (FileManager.checkExistence(Paths.OPTIONS))
+@@ -379,10 +375,14 @@
+ 
+ 	public static Properties getFontProperties(int index) throws IOException
+ 	{
+-		return FileManager.load(
+-				Paths.FONTS
+-					+ fonts[index].getName()
+-					+ "/"
+-					+ Paths.FONT_PROPERTIES);
++		// Guix: use the same immutable resource root as AsciiPanel.
++		Properties properties = new Properties();
++		try (java.io.InputStream stream = Main.class.getClassLoader()
++			.getResourceAsStream(Paths.FONTS + fonts[index].getName()
++				+ "/" + Paths.FONT_PROPERTIES))
++		{
++			properties.load(stream);
++		}
++		return properties;
+ 	}
+ }

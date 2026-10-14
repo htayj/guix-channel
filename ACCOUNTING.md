@@ -86,6 +86,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Escape From Lab 42 original source and ordinary native gameplay](#escape-from-lab-42--original-source-and-ordinary-native-gameplay-2026-10-12)
 - [FreeBASIC source-bootstrapped compiler and limited bindings](#freebasic--source-bootstrapped-compiler-and-limited-bindings-2026-10-12)
 - [EtRD original release-era source and native desktop](#etrd--original-release-era-source-and-native-desktop-2026-10-13)
+- [EverSector original source, font rights and native desktop](#eversector--original-source-font-rights-and-native-desktop-2026-10-14)
 
 ## Relocation map (2026-10-04)
 
@@ -396,6 +397,203 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## EverSector — original source, font rights and native desktop (2026-10-14)
+
+[`eversector`](guix/tay/packages/eversector.scm) **0.7.3** packages Aaron
+Friesen's original Java/Swing/AWT space-simulation roguelike. The canonical
+[author homepage](https://frie.dev/eversector/) and its linked
+[repository](https://github.com/friedev/eversector) identify the game, author
+and source; this is not a substitute implementation. **#351 remains OPEN.**
+The source/rights record and local acceptance below establish an exercised,
+reproducibly source-built native path. Literal full lint still reports own
+updater/archive gates; build and native success do not waive them. This is not
+publication, profile installation or deployment.
+
+### Exact original source and source-built closure
+
+The recipe pins release **0.7.3**, commit
+[`224ead104afc6bc9df9d7dcf86f87766ff1b5152`](https://github.com/friedev/eversector/commit/224ead104afc6bc9df9d7dcf86f87766ff1b5152),
+not the later main branch. The author's changelog and commit date identify
+**2022-10-15** as the game release date; the GitHub release publication on
+**2024-11-27** is a later rehosting timestamp, not the original release.
+The exact source archive's Guix SHA-256 is
+**`05s63hlml13jnd6zg071d7zfqd9xg0986hg97laym9gy202qp2xy`**.
+
+Four private production dependencies complete the source closure:
+
+| Dependency | Exact source commit | Role and grant |
+| --- | --- | --- |
+| [APWT](https://github.com/friedev/apwt) | `9dfe7b026c8ab8ab3d92a73bdc6a63ccb121c8e1` | Exact release git submodule; MIT |
+| [AsciiPanel](https://github.com/trystan/AsciiPanel) | `4af354155a0c5f4d66efe3d837a9f327f5f2a358` | Native glyph renderer and font resources; MIT |
+| [SquidLib-util 3.0.4](https://github.com/yellowstonegames/SquidLib) | `a2e5a061f085a5e3fe34b3353757d4209f6a8f33` | Simulation utilities, not the libGDX graphics module; Apache-2.0 and retained embedded notices |
+| [Regexodus 0.1.12](https://github.com/tommyettinger/RegExodus) | `135e7400a03f459655cf8cb93a45f24786ca9519` | SquidLib-util's transitive dependency; BSD-3-Clause and retained embedded Apache notice |
+
+The chosen frontend compiles the original complete main-source sets with
+**Java 8 `javac` offline** and builds sorted JARs with fixed 1980 ZIP timestamps.
+It replaces the upstream Gradle/JitPack download frontend, not the game.
+No downloaded executable dependency JAR or opaque game binary is used.
+SquidLib-util's upstream `emu`/`etc` exclusions are retained. These four
+dependencies are not extra top-level applications or preservation snapshots.
+The installed `share/eversector/SOURCE-PINS.txt` records all five source pins;
+`share/eversector/source/` retains original source trees and patched build
+sources for the game/APWT.
+
+The main agent's **30.55 s** complete source-closure build ran the genuine
+upstream suites successfully: **28 AsciiPanel**, **11 Regexodus** and **68
+SquidLib-util** tests. The unchanged AsciiPanel PowerMock/Mockito tests use a
+source-built **PowerMock 1.6.5** test adapter with Guix's **Mockito 1.10.19**;
+it is test-only, not a fifth production dependency. Game and APWT have no
+upstream automated suite; original ignored tests remain ignored. The adapter's
+separate build and rebuild/check completed in **5.19 s** and **3.22 s**.
+The final game output is
+**`/gnu/store/a3pil41m44fgnlq0jmpm2kw17bki8w8h-eversector-0.7.3`**.
+Its build completed in **4.49 s** and reproducibility check in **2.67 s**;
+all four production dependency checks passed in **19.98 s**, retaining the
+same dependency outputs and rerunning the unchanged upstream suites.
+
+### Font grants, original artwork and retained notices
+
+The root GPL version 3 grant covers Friesen's own code and custom added tiles;
+no “or later” grant is invented. It does not itself relicense copied third-party
+pixels. The recipe retains **all three original families**, each with
+`ascii.png`, `tiles.png` and `font.properties`: **Alloy 12×12**, **Cooz 16×16**
+and **qbicfeet 10×10**. No replacement font, edited glyph workaround or
+font-family removal is used.
+
+The historical missing-font-notice block was overturned by affirmative primary
+licensing declarations, not by assuming the game's GPL covers every asset:
+
+- The exact [Alloy File page](https://dwarffortresswiki.org/index.php?title=File:Alloy_curses_12x12.png&oldid=258907)
+  and [Cooz File page](https://dwarffortresswiki.org/index.php?title=File:Cooz_curses_square_16x16.png&oldid=52204)
+  declare **“Content is available under GFDL & MIT unless otherwise noted.”**
+  The [Copyrights policy, revision 212313](https://dwarffortresswiki.org/index.php?title=Dwarf_Fortress_Wiki:Copyrights&oldid=212313),
+  effective **2014-11-17** and retrieved **2026-10-14**, states **all
+  contributions** are released under MIT and GFDL, with no stated image
+  exemption. Packaging relies on the MIT side of the dual grant and retains
+  the full MIT notice and attribution.
+- Alloy's direct author uploads in November/December 2010 postdate the explicit
+  all-contributions MIT/GFDL terms. **Cooz's 2009-10-04 record is a recovered
+  file with a missing upload log**, not an authenticated original author upload.
+  Its documented Klokjammer/Marble Dice and other-set ancestry is retained.
+  The current file declaration is affirmative permission evidence; it does not
+  retroactively prove the original pre-2010 uploader's identity or assent.
+  That unresolved historical provenance is labeled, not turned into an
+  invented noncommercial/no-derivatives restriction.
+- qbicfeet is distributed as an
+  [AsciiPanel resource at the exact pin](https://github.com/trystan/AsciiPanel/blob/4af354155a0c5f4d66efe3d837a9f327f5f2a358/src/main/resources/qbicfeet_10x10.png)
+  under [AsciiPanel's MIT grant](https://github.com/trystan/AsciiPanel/blob/4af354155a0c5f4d66efe3d837a9f327f5f2a358/LICENSE.md)
+  and Dwarf Fortress tileset attribution. No currently live qbicfeet wiki
+  File-page grant is claimed. EverSector's modified PNGs are not byte-identical
+  to that resource; Friesen's custom-tile credit is preserved separately.
+
+`share/eversector/FONT-NOTICES.txt` preserves the grants, primary-policy
+references and Alloy, Cooz, Klokjammer, Marble Dice, qbicfeet and Friesen
+attributions with the Cooz recovery caveat. The original root license,
+README/credits and `licenses/` notices are retained, together with SquidLib-util's
+full `NOTICE.txt`, math license/math notice and Regexodus's BSD-3-Clause license
+in the installed source trees. The TAAG/Patrick Gillespie title-art credit is
+retained; generator licensing is not asserted to relicense every FIGlet font.
+The exact release disabled audio upstream; no active soundtrack was removed
+or replaced by packaging.
+
+### Desktop keyboard interface and private state
+
+The packaged command is `eversector`; it opens the original AWT desktop and
+requires a display. Upstream play is entirely keyboard driven: arrows navigate,
+`?` lists currently available actions, Enter/`y` confirms, `n` declines and
+Escape/`q` cancels. Enter/Space begins or continues, `v` changes map view, `l`
+looks and station `r` restocks. Controls not exercised by the bounded native
+acceptance below remain source-documented, not tested feature claims.
+
+The launcher and file-base patch direct mutable data to
+`${XDG_STATE_HOME:-$HOME/.local/state}/eversector`: native
+`local/save.properties`, `local/options.properties`, `local/leaderboard`
+and root `crash.txt` remain there. Immutable fonts stay under
+`share/eversector/assets/fonts/` in the store; no asset copies go into user state.
+Native title Continue loads the original save format. No synthetic seed/save
+or alternative game loop is used by the package.
+
+### Ordinary native acceptance and exact limits
+
+The main agent exercised two separate installed-command consumers:
+`/tmp/eversector-native-6` (**35.50 s**, standalone) and
+`/tmp/eversector-native-7` (**39.76 s**, integrated `make guard-eversector`).
+Both exercised the final output identified above and used the
+ordinary AWT keyboard interface, not injected saves/seeds or a substitute
+loop. An AWT FocusProxy in the consumer handled initial keyboard focus; no
+gameplay code was changed to drive acceptance. Both Save-and-Quit and the
+final quit returned **0** with no reported native error.
+
+The standalone ship moved **orbit 2 → 1 → 2** and the integrated ship
+**3 → 2 → 3**; both consumed fuel **15 → 14 → 13** with visible turn and
+player-glyph displacement. Ordinary station fuel purchases changed fuel
+**13 → 14**, with credits **100 → 92** (standalone) and **100 → 89**
+(integrated). Fresh-process Continue restored saved resources, credits,
+player cell, orbit, sector, star and ruler. The displayed turn reset
+**4 → 0** is original game behavior: the game regenerates galaxy/NPC state
+and resets turn/reputation on load. Continued movement changed the orbit and
+player cell again, consuming fuel **14 → 13** with turn **0 → 1**.
+Full NPC/reputation continuity and mining are not claimed.
+
+Runtime font coverage is **the default qbicfeet tiled family only**. All three
+original font families were retained and hash-checked, but Alloy/Cooz runtime
+rendering and every font/display option were not exercised. Source-only
+production builds and private XDG mutable state were verified by the main
+agent. The consumers ran with the same UID/GID in private namespaces and a
+recursively read-only store, reporting unchanged installed output NAR
+**`03j0c3q37zhxagz77wvi8a5ar7i4a82y58nbx8ia5m2fxsninkvr`**.
+All four new/load native game logs were empty. The actual source-bitmap glyph
+observation was exercised; the image-vision provider was unavailable with
+**HTTP 503**, so no vision-model review pass is claimed.
+
+An earlier integrated attempt encountered an ordinary election popup and failed
+because the consumer did not dismiss it; this was retained as a real consumer
+failure, not a game error or an unexplained retry. The consumer now recognizes
+the source's Election Results/Voting popups and can dismiss them normally.
+Recognition passed against authentic captured popup text, but final runs 6/7
+did not encounter that popup: the runtime Escape-handler branch is unexercised.
+This is local desktop acceptance, not installation in the user's profile,
+deployment or exhaustive gameplay/hardware coverage.
+
+### Literal full lint and open issue boundary
+
+The main agent ran literal full lint for **all six package definitions** in
+**56.79 s**: `guix lint -L guix eversector` and individual `-e` expressions
+for the four hidden production dependencies and test adapter, without checker
+exclusions. Each retains **no-updater** and **Software Heritage/Disarchive**
+source-archival findings. No local constructor-default or overlong-description
+findings remain in the final definitions. **#351 stays OPEN**: successful
+rebuilds, upstream tests and native consumers do not establish clean lint or
+tracker closure.
+
+### Inventory boundary and verification state
+
+The publisher's read-only inventory distinguishes three actual text-list
+snapshots. The remote-matching current HEAD is
+**`eff68a06cc2c22ecb71c91438a1c8baf8c667b75`**:
+
+| Inventory boundary | Project names | Font names | Installable names | Check names | Default-native build names | README linked rows |
+| --- | --- | --- | --- | --- | --- | --- |
+| Current published HEAD | 244 | 7 | 251 | 257 | 250 | 269 |
+| Scoped EverSector-only candidate | 245 | 7 | 252 | 258 | 251 | 270 |
+| Integrated working tree, including unrelated user entries | 247 | 7 | 254 | 260 | 253 | 271 |
+
+The scoped candidate excludes unrelated Tern/Dualmaster changes and contains
+**8 owned changed paths** (five new, three mixed existing files), with **1,066
+tracked files** versus **1,061** in current HEAD. The integrated inventory
+includes those unrelated entries; it neither accepts nor publishes them.
+One i686-only package is excluded from each default-native build count.
+These are literal definition/text-list counts, not live Guix enumeration,
+complete-inventory build coverage or proof that the candidate was published.
+No new preservation snapshot is introduced; the expected **629** ledger count
+is retained, not newly enumerated by this documentation worker.
+Signed publication remains separate publisher evidence, not inferred from the
+local build/test/native results or candidate inventory.
+
+No described deployed host or service changed, and no network-catalog
+correction was established. `/home/tay/okf/network/index.md` was read; no OKF
+page/log update applies to this repository-only package documentation.
 
 ## EtRD — original release-era source and native desktop (2026-10-13)
 
