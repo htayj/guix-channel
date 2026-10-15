@@ -410,7 +410,8 @@ elemental coins and casting spells in pursuit of Ba'zlbub's black heart.
 and [GitHub](https://github.com/htayj/guix-channel/issues/352).
 Local source builds and bounded native acceptance
 succeeded; literal full lint retains own updater/archive findings. Signed
-implementation publication is pending, not established by those local checks.
+implementation publication is recorded below, separately from local checks;
+it is not profile installation, deployment or tracker closure.
 
 ### Exact original source and recovered build path
 
@@ -588,9 +589,46 @@ This package adds one project/installable/check/default-native name and one
 linked README row. It introduces no preservation snapshot; the existing
 expected **629** source-ledger count is unchanged, not newly enumerated here.
 Unrelated Dualmaster/Tern entries and their accounting are preserved.
-Final publication inventory and signed/authenticated remote publication
-remain **pending**; no commit, remote match or published tracked-file count
-is invented from a working-tree estimate.
+The publisher's final scoped inventory is recorded below; it excludes those
+unrelated entries and is not a claim that the entire inventory was built.
+
+### Everything Is Fodder signed implementation publication (2026-10-15)
+
+The retained `fodder-publication-receipt.json` establishes signed implementation
+commit
+[`db91eefcfc0960fab7ddebb715f5c9b2d5c71302`](https://forge.nogroup.group/tay/guix-channel/commit/db91eefcfc0960fab7ddebb715f5c9b2d5c71302)
+(“feat: package Everything Is Fodder with native save continuity”), parent
+**`00ffd5e6cfff8c02efed3035568c38448407af30`**. The publisher's
+`git verify-commit` returned **0**, good signature status **G**, fingerprint
+**`6A27F433DC22B4DFA278E8F32F12E6A35F417606`**. Exact-commit
+`guix git authenticate` and the normal pre-push authentication hook succeeded.
+The normal, non-force origin push used no hook bypass; direct remote readback
+returned that exact implementation commit for both `HEAD` and
+`refs/heads/master`.
+
+The published implementation has **8 owned changed paths**, **5 new**:
+the package module, launcher, retained notices and two native consumer scripts,
+plus Fodder-only hunks in Makefile/README/ACCOUNTING. Its literal text-list
+inventory is **246 project + 7 font = 253 installable** names,
+**259** check names, **252** default-native build names, **271** README
+linked package rows and **1,071** tracked files. One i686-only package is
+excluded from the default-native count. These are scoped published-tree
+counts, not the integrated working tree containing unrelated Dualmaster/Tern
+entries, live Guix enumeration or complete-inventory build coverage.
+The expected **629** preservation-source ledger count remains unchanged.
+
+The publisher reports the user's original **104,800-byte** raw index
+byte-identical, SHA-256
+**`906f71f85839009b4487a3182cc2d718f0d2baffc4520cb883085e17596bb1be`**,
+and all **1,129** fingerprinted worktree paths unchanged across publication.
+Unowned candidate entries equal the parent; no unrelated change was included.
+The preserved user's index was not reset/restaged to hide its changed
+relationship to the advanced HEAD. The publisher ran no builds, tests, lint
+or applications; the main agent's acceptance above remains the exercised
+evidence. Paired tracker result comments have not yet been posted.
+**#352 remains OPEN** on the literal own updater/archive findings; signed
+implementation publication is neither a waiver nor deployment.
+
 
 No described deployed host or service changed and no network-catalog correction
 was established. `/home/tay/okf/network/index.md` and its Forgejo page were read;
