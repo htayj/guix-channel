@@ -87,6 +87,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [FreeBASIC source-bootstrapped compiler and limited bindings](#freebasic--source-bootstrapped-compiler-and-limited-bindings-2026-10-12)
 - [EtRD original release-era source and native desktop](#etrd--original-release-era-source-and-native-desktop-2026-10-13)
 - [EverSector original source, font rights and native desktop](#eversector--original-source-font-rights-and-native-desktop-2026-10-14)
+- [Everything Is Fodder original source, rights and native save continuity](#everything-is-fodder--original-source-rights-and-native-save-continuity-2026-10-15)
 
 ## Relocation map (2026-10-04)
 
@@ -397,6 +398,203 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Everything Is Fodder — original source, rights and native save continuity (2026-10-15)
+
+[`everything-is-fodder`](guix/tay/packages/everything-is-fodder.scm)
+**2017-03-12** packages Jeff Lait's original C++/SDL Seven Day Roguelike,
+not a substitute game. The [author's page](http://www.zincland.com/7drl/fodder/)
+describes exploring the City of a Thousand Rooms, transmuting objects into
+elemental coins and casting spells in pursuit of Ba'zlbub's black heart.
+**#352 remains OPEN** on [Forgejo](https://forge.nogroup.group/tay/guix-channel/issues/352)
+and [GitHub](https://github.com/htayj/guix-channel/issues/352).
+Local source builds and bounded native acceptance
+succeeded; literal full lint retains own updater/archive findings. Signed
+implementation publication is pending, not established by those local checks.
+
+### Exact original source and recovered build path
+
+The author's page links the same
+[`fodder7drl.zip`](http://www.zincland.com/7drl/fodder/fodder7drl.zip)
+as both the most recent version and the original **2017-03-12** release.
+The main agent fetched that archive from the canonical HTTP endpoint;
+the `www` HTTPS hostname has a certificate mismatch. No unauthenticated HTTPS
+success is claimed. The pinned archive's SHA-256 is
+**`ff7a3a70ae65cfecaa6a9aafe689821f8ca566478930f1c180faefe66d5b7a2b`**,
+Guix base32
+**`0avsbdnydvzsh30z2c498xkab30zha4ydbwsdamfrkv5mrq3lypz`**.
+`guix download` independently reproduced that digest. The main agent found
+no existing available `*fodder*` package row; the archive is the original
+author distribution, not a preservation-source package.
+
+The historical build-recipe gap was real: the bundled libtcod makefile
+builds samples, not the library needed by the game's Linux makefile.
+The package now compiles the archive's **libtcod 1.5.0** directly into a
+private static library, following the channel's Six Two One convention,
+then compiles the exact **27** game translation units from the original
+Linux object list, including `gamedef` and `thesaurus`. Checked-in generated
+enums are used; no opaque generator, game executable or bundled shared
+library participates in the build.
+
+Compatibility adjustments replace obsolete libpng struct access/typed NULL
+macros with public APIs, correct an old C prototype, initialize libtcod's
+static startup before font setup and add missing POSIX declaration includes.
+They do not alter gameplay, world generation, the default configuration or
+the original assets. All original game `.cpp`/`.h` files and
+`mt19937ar.c` are installed under
+`share/everything-is-fodder/source/game/`; the main agent's byte comparison
+found all identical to the archive. Original Linux Makefile/BUILD instructions
+are retained under `share/doc/everything-is-fodder/upstream-linux/`.
+
+The main agent's complete build succeeded in **22.05 s** (compiler work
+**14.6 s**), followed by a successful **16.43 s** reproducibility check
+(compiler work **14.2 s**). Upstream provides no automated test suite or
+test target; these are build/check results, not passed upstream tests.
+The final output is
+**`/gnu/store/6gyqf9qxx6i9yy5svz9xq3wknlgiy2m7-everything-is-fodder-2017-03-12`**,
+derivation
+**`/gnu/store/zjzv5g42867rah7jr297g6kdgqfcb7d3-everything-is-fodder-2017-03-12.drv`**,
+with output NAR hash
+**`17hmfkqbp93na2grqy1cf8bsz5n5px5w3i6jbxdnn1jzi47mvics`**.
+Upstream `thread.h` unused non-void stub warnings were source-reviewed,
+not suppressed or "fixed" by changing their behavior.
+
+### Separate game, map, font and library rights
+
+The archive's root grant is not treated as permission to redistribute
+unrelated copied demo fonts:
+
+- Jeff Lait's own game source, checked-in generated definitions,
+  configuration and text use **BSD-3-Clause**. Embedded `mt19937ar.c`
+  retains Makoto Matsumoto and Takuji Nishimura's three-clause BSD notice.
+- `rooms/village.map` is explicitly **public domain** in `LICENSE.TXT`.
+- The native `linux/terminal.png` atlas is **Oxygen Mono**, copyright 2012
+  Vernon Adams, Reserved Font Name **Oxygen**, under **SIL OFL 1.1**.
+  Despite its suffix the file has a BMP header; it supplies the original
+  **8×17** glyphs. Its SHA-256 is
+  **`7ed1cc4cc91e35b4b10330dcaac8ab2d4635174e69b8a9adc553f8067fc09c1f`**,
+  identical to the previously identified Six Two One atlas. The unmodified
+  author-provided font is retained with `OFL.txt`, not replaced.
+- Private libtcod **1.5.0** retains Jice's **BSD-3-Clause**
+  `LIBTCOD-LICENSE.txt` and `LIBTCOD-CREDITS.txt`.
+
+Installed `share/doc/everything-is-fodder/THIRD-PARTY-NOTICES.txt` records
+those grants and the source/build distinction, alongside the original
+`LICENSE.TXT`, `README.TXT`, `7drlchanges.TXT`, OFL and library notices.
+The historical SDL LGPL redistribution notice is retained; it describes
+the archive's old binaries, not the separately packaged Guix replacement.
+The game dynamically uses Guix SDL 1.2 compatibility, libpng and zlib.
+The main agent found only the source-built `libexec/everything-is-fodder`
+ELF in the output, with absolute Guix RUNPATH and SDL/png/z/C++ runtime
+dependencies, no `libtcod.so` or `SDL_mixer`.
+
+All four required runtime resources (font, configuration, text and map)
+were byte-compared equal to the archive. Opaque platform executables,
+bundled shared libraries, demos, UPX tooling and unused third-party sample
+fonts/data are excluded. `USE_AUDIO` is disabled upstream and the music
+directory is empty; packaging neither removes an active soundtrack nor
+adds SDL_mixer.
+
+### Graphical command, controls and writable native state
+
+The installed command is **`everything-is-fodder`**. It requires a graphical
+display and accepts no command-line options; extra arguments receive usage
+and status **64**. The main agent exercised the installed `--version` rejection
+with an empty `PATH` and `LC_ALL=C`: status **64**, empty stdout and the
+documented usage on stderr, without starting a graphical display.
+The native Play menu and welcome screen lead into the original game.
+Its help documents arrows/numpad/vi movement, `i` inventory,
+`g`/`,` pickup, `t` transmute, `z` spellcasting, `x` look, `?` help and
+uppercase `Q` quit-and-save. These are interface documentation, not claims
+that every listed action was exercised.
+
+The launcher uses
+**`${XDG_DATA_HOME:-$HOME/.local/share}/everything-is-fodder`**, not the
+immutable store, for native state. It creates private `linux/`, `rooms/`
+and `save/` directories and initializes a writable `fodder.cfg` only when
+absent. Original `terminal.png`, `text.txt` and `rooms/village.map` remain
+immutable store assets reached through symlinks. Native saves are
+`save/Default.sav` and `save/Default.txt`; fresh-process startup consumes
+the resumable save before play, and ordinary `Q` writes the next save.
+Existing user configuration is preserved across launches.
+
+The build/check/lint entry points are `guix build -L guix everything-is-fodder`,
+`guix build -L guix --check everything-is-fodder` and
+`guix lint -L guix everything-is-fodder`. For an already built canonical
+store output, the native consumer entry points are:
+
+```sh
+sh tests/everything-is-fodder-smoke.sh "$OUTPUT" "$EVIDENCE"
+make guard-everything-is-fodder \
+  EVERYTHING_IS_FODDER_OUTPUT="$OUTPUT" \
+  EVERYTHING_IS_FODDER_EVIDENCE="$EVIDENCE"
+```
+
+`EVIDENCE` must be a fresh, nonexistent canonical absolute directory outside
+the store. `GUIX` can select the Guix executable. These are reusable command
+forms; the exact exercised output and evidence directories are recorded below.
+
+### Ordinary native acceptance and exact limits
+
+The main agent exercised the installed command in two independent consumers:
+**`/tmp/fodder-native-3`**, standalone, **32.29 s**, and
+**`/tmp/fodder-native-4`**, integrated `make guard-everything-is-fodder`,
+**35.92 s**. Each used a fresh default random world, native help/inventory,
+four separate game processes and ordinary uppercase `Q` save/quit exits,
+all status **0**. All **eight** native game logs were empty.
+
+Each flow first saved the baseline world, restored in a fresh process,
+moved through a visibly adjacent safe floor with ordinary vi-direction input
+and saved again, then performed an independent no-turn restore/save comparison
+and a fourth-process continued move. The save reader only observes the
+original format; it never injects saves, seeds, configuration, process memory
+or private game calls. The observations were:
+
+| Consumer | Initial → moved native position | Native clock | Exact no-turn restore | Continued native position / clock |
+| --- | --- | --- | --- | --- |
+| Standalone native 3 | `[6,8,0,0]` → `[6,7,0,0]` | `1` → `2` | Player, clock and inventory identical | `[7,7,0,0]` / `4` |
+| Integrated native 4 | `[5,3,0,0]` → `[5,4,0,0]` | `1` → `2` | Player, clock and inventory identical | `[6,4,0,0]` / `4` |
+
+The tuples are the original saved position fields, not inferred pixel motion.
+Player HP remained **50**. Private same-UID/GID user/mount/network/PID
+namespaces, recursively read-only store mounts, writable native save/config
+confinement and immutable asset symlinks were exercised. Both before/after
+consumer receipts retain the exact output NAR hash above. Source-atlas glyph
+surfaces and native save transitions establish real rendering and movement;
+the vision provider returned **HTTP 503**, so no vision-model review pass
+is claimed.
+
+**Transmutation was not exercised:** neither accepted world provided a
+carried or safely adjacent eligible item. No spell, combat, victory, full
+world/NPC continuity or exhaustive option/hardware coverage is claimed.
+Earlier native attempt 1 failed because its observer wrongly required the
+player `@` to be unique despite NPC glyphs; attempt 2 failed an arrow-repeat
+movement observation with root cause unresolved. These are retained consumer
+failures, not erased or presented as engine bugs/fixes. The accepted driver
+uses source-centered player observation and explicit vi key down/up with
+server-side release observation; gameplay code was not changed for acceptance.
+This is local native acceptance, not profile installation or deployment.
+
+### Literal full lint, inventory and publication boundary
+
+The main agent's literal full `guix lint -L guix everything-is-fodder`
+completed in **283.07 s**, without checker exclusions. It reports
+**`generic-html` updater failed to find upstream releases** and
+**source not archived by Software Heritage / missing Disarchive data**.
+No clean-lint pass or waiver is asserted. **#352 stays OPEN** despite
+successful source build, reproducibility check and bounded native gameplay.
+
+This package adds one project/installable/check/default-native name and one
+linked README row. It introduces no preservation snapshot; the existing
+expected **629** source-ledger count is unchanged, not newly enumerated here.
+Unrelated Dualmaster/Tern entries and their accounting are preserved.
+Final publication inventory and signed/authenticated remote publication
+remain **pending**; no commit, remote match or published tracked-file count
+is invented from a working-tree estimate.
+
+No described deployed host or service changed and no network-catalog correction
+was established. `/home/tay/okf/network/index.md` and its Forgejo page were read;
+no OKF page/log update applies to this repository-only documentation.
 
 ## EverSector — original source, font rights and native desktop (2026-10-14)
 

@@ -1,0 +1,47 @@
+Everything Is Fodder, original 7DRL release (2017-03-12)
+======================================================
+Author: Jeff Lait
+Canonical source: http://www.zincland.com/7drl/fodder/fodder7drl.zip
+SHA-256: ff7a3a70ae65cfecaa6a9aafe689821f8ca566478930f1c180faefe66d5b7a2b
+
+Game C++ source, checked-in generated enums, configuration and text:
+copyright 2017 Jeff Lait, BSD-3-Clause.  The embedded mt19937ar.c is
+copyright 1997-2002 Makoto Matsumoto and Takuji Nishimura under its
+three-clause BSD terms.  The complete notices for both are reproduced
+in LICENSE.TXT.  rooms/village.map is public domain, as explicitly
+declared in LICENSE.TXT.
+
+linux/terminal.png is the game's Oxygen Mono glyph image (despite the
+.png suffix it has a BMP header).  Oxygen Mono is copyright 2012 Vernon
+Adams, with Reserved Font Name Oxygen.  Its SIL Open Font License 1.1 and
+copyright notice are reproduced in OFL.txt.  The installed image is the
+unmodified author-provided game atlas, SHA-256:
+7ed1cc4cc91e35b4b10330dcaac8ab2d4635174e69b8a9adc553f8067fc09c1f.
+No other libtcod demo fonts are installed; the game's redistribution
+grant is not treated as a license for unrelated third-party sample fonts.
+
+libtcod 1.5.0 is rebuilt from the same pinned archive and linked into the
+game: copyright 2008,2009,2010 Jice, BSD-3-Clause.  See LIBTCOD-LICENSE.txt
+and LIBTCOD-CREDITS.txt.  No upstream executable/shared library is reused.
+The library's compatibility adjustments use the public modern libpng API,
+correct a C prototype and initialize its static startup before font setup.
+The game changes only add missing POSIX declaration includes.  Gameplay,
+random-world generation, default configuration, text, map and font are not
+modified.  The original, unpatched game .cpp/.h files and mt19937ar.c are
+installed under share/everything-is-fodder/source/game; the upstream Linux
+build instructions and game Makefile are retained in upstream-linux/.
+The archive lacks a libtcod library build recipe: this package compiles a
+private static archive directly, using the channel's Six Two One pattern.
+
+The game links dynamically to separately packaged Guix SDL 1.2 compatibility,
+libpng and zlib libraries.  SDL12-compat and its SDL2 backend use the zlib
+license; libpng uses the libpng license; zlib uses the zlib license.  Their
+source and licenses are provided by their respective Guix packages.  The
+historic LGPL SDL redistribution notice from the archive is retained as
+README-SDL.txt and in LICENSE.TXT; it describes the old upstream binaries,
+not the replacement SDL12-compat supplied by Guix.
+
+Audio is disabled in upstream main.cpp (USE_AUDIO is commented out), and
+the archive's music directory is empty.  SDL_mixer is not linked.
+Windows DLLs, opaque Linux executables, bundled SDL/libtcod shared libraries,
+UPX tooling, demos and their data/font assets are not installed.
