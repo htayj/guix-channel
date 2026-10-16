@@ -1,0 +1,93 @@
+Exalt 0.3.0 — source and Linux port notices
+=========================================
+
+Identity and source
+-------------------
+Exalt is Jake Keel's Exalt engine and pre-alpha roguelike sample, not an
+unrelated program sharing the name.  This package uses the source archive
+published on 2010-10-18:
+https://downloads.sourceforge.net/project/exaltengine/exalt-0.3.0.zip
+SHA-256: eb12dc32476105b025fbddabfb91634f6ed472d3017270ccf1f02b66d0f4f3c9
+Upstream project: https://sourceforge.net/projects/exaltengine/
+The archive filename and package version are 0.3.0.  Its original
+src/compiledef.h sets MAJOR_VERSION=0, MINOR_VERSION=3 and BUILD=1, so the
+game reports v0.3.1 internally.  This is an upstream archive/internal
+version discrepancy, not evidence of a separately published 0.3.1 release.
+
+The game's original source notices state:
+  Exalt
+  Copyright (C) 2009-2010 Jake Keel
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+The upstream full GPL version 3 is installed alongside this file as
+copying.txt.  The game's own source and data retain their original contents
+and notices, apart from the exclusions below, under share/exalt/source.
+
+Linux changes
+-------------
+On 2026-10-15, the channel's SDL2/SDL_ttf rendering patch and POSIX/input
+patch replace the Win32 terminal, font, keyboard, event-loop and filesystem
+interfaces.  They retain the original game logic and five terminal windows.
+Patched source and the two port patches are installed under
+share/exalt/source-linux, together with the package recipe and launcher.
+The working C++ sources and headers have CRLF normalized to LF before patch
+application; the prepatch original-source snapshot retains original bytes.
+The launcher arranges writable private user state while immutable game
+assets remain in the store.  There are no game command-line options.
+
+The original Visual C++ project supplies the game's C++ translation-unit
+list.  The build compiles those units serially and links Guix SDL2,
+SDL2_ttf and SQLite, rather than using the bundled SQLite amalgamation.
+No bundled executable binaries are executed or installed.  The private
+SQLite, unused zlib source, Windows Visual Leak Detector headers/import
+library/DLL are removed from the source derivation.  System library notices
+and source remain available through their corresponding Guix packages.
+
+Runtime layout and limitations
+------------------------------
+Runtime assets are installed under share/exalt/data.  The working directory
+is ${XDG_DATA_HOME:-$HOME/.local/share}/exalt.  Its data/display, data/fonts,
+data/help, data/templates and data/worlds entries link to immutable assets;
+data/log.xsl links to the upstream log stylesheet.  SQLite creates the
+writable FILE data/db.  data/save is a writable directory and log.xml is
+written in the working directory.  No configuration or saved games are
+injected by the launcher.  Upstream's InitLoadedGame is unfinished: this
+package does not claim or add save/resume support.
+
+Fonts: deliberate same-family substitution
+-----------------------------------------
+All three original TTF binaries are removed from the source derivation,
+the retained original-source snapshot, and runtime installation.  The
+original terminal's only SetFont request is Liberation Mono; AngloSaxon
+Runes and Droid are registered at startup but never selected for rendering.
+AngloSaxon Runes has nonfree postcardware terms; no affirmative free grant
+for the exact bundled Droid file has been established.  Exact applicability
+of the historical Liberation 1.04 grant and corresponding-source evidence
+to the shipped binary was not established.  No redistribution permission
+for those original files is asserted here.
+
+On 2026-10-15, the package deliberately substitutes unmodified Liberation
+Mono Regular 2.1.5 from the existing Guix font-liberation package under the
+SIL Open Font License 1.1.  This preserves the selected font family, NOT
+the original 1.04 version or pixel-identical typography.  It is a conscious
+font-data version substitution to establish clear redistribution rights,
+not a claim that the original font was verified or that the game was
+reimplemented.  The original game's C++ units and SDL port are compiled
+from source; the Guix font-build-system installs upstream pre-generated
+TTF font data, not newly rendered font sources.
+
+The runtime data/fonts/liberation.ttf symlink points to the store's
+share/fonts/truetype/LiberationMono-Regular.ttf in font-liberation.
+The complete font copyright notice and SIL OFL 1.1 are copied, unchanged,
+from that package into LIBERATION-LICENSE.txt alongside this file.
+Copyrights: digitized data (c) 2010 Google Corporation (Reserved Font Names
+Arimo, Tinos and Cousine); (c) 2012 Red Hat, Inc. (Reserved Font Name
+Liberation).  No font data or primary family names are modified.
+
+Selected Guix font source:
+https://github.com/liberationfonts/liberation-fonts/files/7261482/liberation-fonts-ttf-2.1.5.tar.gz
+Guix base32 SHA-256:
+1l15iwk0x75621q67qlh9wv561c0gc7x0kh9l9rrz29qpxlwd4bi
+Upstream project: https://github.com/liberationfonts/liberation-fonts

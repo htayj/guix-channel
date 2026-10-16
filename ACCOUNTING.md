@@ -88,6 +88,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [EtRD original release-era source and native desktop](#etrd--original-release-era-source-and-native-desktop-2026-10-13)
 - [EverSector original source, font rights and native desktop](#eversector--original-source-font-rights-and-native-desktop-2026-10-14)
 - [Everything Is Fodder original source, rights and native save continuity](#everything-is-fodder--original-source-rights-and-native-save-continuity-2026-10-15)
+- [Exalt original source, Linux port and bounded native gameplay](#exalt--original-source-linux-port-and-bounded-native-gameplay-2026-10-15)
 
 ## Relocation map (2026-10-04)
 
@@ -398,6 +399,208 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Exalt — original source, Linux port and bounded native gameplay (2026-10-15)
+
+[`exalt`](guix/tay/packages/exalt.scm) **0.3.0** packages the original
+[Exalt / exaltengine](https://sourceforge.net/projects/exaltengine/) C++
+roguelike, not a replacement game. Upstream identifies it as **Pre-Alpha**.
+**#354 remains OPEN** on
+[Forgejo](https://forge.nogroup.group/tay/guix-channel/issues/354) and
+[GitHub](https://github.com/htayj/guix-channel/issues/354): local builds and
+bounded native acceptance succeeded, but literal full lint retains own
+release-discovery and archive findings. **Publication is pending**; no signed
+commit, remote OID, profile installation, deployment or tracker closure is
+claimed by this receipt.
+
+### Exact source identity and Linux port
+
+The canonical source is
+[`exalt-0.3.0.zip`](https://downloads.sourceforge.net/project/exaltengine/exalt-0.3.0.zip),
+released **2010-10-18**, with SHA-256
+**`eb12dc32476105b025fbddabfb91634f6ed472d3017270ccf1f02b66d0f4f3c9`**,
+Guix base32
+**`1jgkyk86cazhy7670wh1sdrd8vjgcf8zpayxzcjv01b18wrdq4pb`**.
+The archive/package version remains **0.3.0** even though its original
+`src/compiledef.h` constants and native log display **v0.3.1**. The separately
+named `docs-0.3.0.zip` Doxygen output also labels itself 0.3.1; neither
+discrepancy establishes a separate 0.3.1 source release.
+
+The Windows GDI terminal/input/filesystem layer is ported to system
+**SDL2**, **SDL_ttf** and POSIX facilities while retaining the original
+five windows: Exalt, Inventory, Equipment, Messages and Minimap. Original
+gameplay and world data are retained. Required C++ portability changes cover
+standard declaration includes, const-correct logger/formatting interfaces,
+C++11 iterator-returning map erasure, a null return, direct `CString`
+initialization and numeric `sscanf` parsing; they do not add game mechanics
+or implement unfinished upstream features. The recipe compiles the complete
+original C++ translation-unit list in `exalt.vcproj`, using GNU++11 and
+system SQLite rather than the bundled copy. Unused zlib and Visual Leak
+Detector code/binaries are excluded, along with bundled libraries and fonts.
+No prebuilt game executable participates in the build.
+
+`share/exalt/source/` preserves original own source and data before Linux
+patches, excluding the removed bundled dependencies and font binaries.
+`share/exalt/source-linux/` carries the Linux source, both named patches,
+recipe, launcher and notices. Original `copying.txt` and `exalt.vcproj` are
+retained. The original game grant is **GPL-3.0-or-later**; installed
+`share/doc/exalt/THIRD-PARTY-NOTICES.txt` separates it from font and system
+dependency rights and records the modified-source provenance.
+
+The main agent's complete source build succeeded in **42.99 s**, followed
+by a successful **41.36 s** `guix build --check` reproducibility run. The
+output is
+**`/gnu/store/q0x41dmccrl7fdf75f0yq9way6cba59m-exalt-0.3.0`**,
+derivation
+**`/gnu/store/lgspbsxaqq2x5jmvmwgii0dcjbg939zk-exalt-0.3.0.drv`**,
+with output NAR hash
+**`1by392bmv91b9nj2rxijpdhk38f9y0mcsbin3h6wx66v0sxh5x6g`**.
+Upstream has no automated test suite; the build's skipped test phase is not
+a passed upstream suite.
+
+### All bundled fonts excluded; same-family substitution disclosed
+
+All bundled TTF binaries are removed from both sanitized source and runtime:
+
+- **AngloSaxon** has a nonfree postcardware condition.
+- The exact bundled **Droid** build's redistribution grant remains unresolved.
+- The exact bundled **Liberation Mono 1.04** grant and preferred-source
+  applicability remain unverified. A historical font name or a license for
+  another build is not treated as proof for this binary.
+
+The runtime instead links `data/fonts/liberation.ttf` to Guix
+**`font-liberation` 2.1.5**, specifically
+`share/fonts/truetype/LiberationMono-Regular.ttf`, under its own **SIL OFL
+1.1** grant. Its verbatim license is installed as
+`share/doc/exalt/LIBERATION-LICENSE.txt`. This is a documented **same-family
+font-data substitution**, not the original 1.04 font, not a source-built
+font and not an original-pixel-equivalence claim. The game and Linux port
+are compiled from source; the Guix font package installs upstream
+pre-generated TTF data. The exercised font dependency is
+**`/gnu/store/xkxhq8l8qy014plpnnzb82k0bl6zr6ks-font-liberation-2.1.5`**;
+the selected TTF SHA-256 is
+**`f2b83c763e8afd21709333370bed4774337fae82267937e2b5aea7e2fbd922c1`**.
+The native observer independently measured **9×14** cells at **12 pt** and
+matched the installed font's glyph masks to actual X11 captures. Original
+release logging naturally excludes INFO font metrics; no production log
+level was changed to satisfy the observer.
+
+### Launcher, native state and reusable guard
+
+Run **`exalt`** on a graphical display with no arguments. The launcher
+rejects arguments with usage/status **64** before creating state and
+requires an absolute HOME/XDG data root. Native writable state lives under
+**`${XDG_DATA_HOME:-$HOME/.local/share}/exalt`**, with private permissions:
+`data/db` is a writable SQLite **file**, `data/save` a directory and
+`log.xml` the native log. Display, font, help, template and world data and
+`data/log.xsl` are immutable store-backed symlinks. The launcher executes
+the real game from the state root without injecting saves or options.
+The existence of a save directory is not evidence of working save/load.
+
+Build, reproducibility and literal lint entry points are:
+
+```sh
+guix build -L guix exalt
+guix build -L guix --check exalt
+guix lint -L guix exalt
+```
+
+For a canonical prebuilt store output and a fresh, nonexistent absolute
+evidence directory outside the store:
+
+```sh
+GUIX=/absolute/path/to/guix sh tests/exalt-smoke.sh "$OUTPUT" "$EVIDENCE"
+make guard-exalt GUIX=/absolute/path/to/guix \
+  EXALT_OUTPUT="$OUTPUT" EXALT_EVIDENCE="$EVIDENCE"
+```
+
+The Makefile guard requires both variables and forwards the selected
+`GUIX` executable, following `guard-everything-is-fodder`. The main agent
+exercised this integrated target in `/tmp/exalt-native-6`, as recorded below.
+
+### Actual bounded native acceptance and pre-alpha limits
+
+The final expanded standalone consumer **`/tmp/exalt-native-5`** passed in
+**40.68 s**; the integrated **`make guard-exalt`** consumer
+**`/tmp/exalt-native-6`** passed in **42.74 s**, both against the output
+above. The earlier **`/tmp/exalt-native-4`** pass (**30.62 s**) remains
+valid evidence for its narrower movement/UI/visibility scope; it did not
+exercise resize, look cursor or auxiliary close/reopen. In all three,
+actual XTest input selected New Character, Human, the name **NativeProof**
+and the bundled **Test World**.
+The unique original yellow `@` moved exactly one cell right and returned
+left: visible screen coordinates **(29,16) → (30,16) → (29,16)** and
+source-backed world coordinates **(27,12) → (28,12) → (27,12)**. Vacated
+cells revealed the expected floor, and unchanged original-data terrain
+landmarks ruled out a mere camera or arbitrary-pixel change. The observer
+uses independent SDL_ttf masks on actual X11 screenshots, not game hooks,
+private game APIs, process-memory reads, seeds or injected game state.
+
+The main agent's image review of `/tmp/exalt-native-6/new-game.png`
+confirmed legible ASCII, cyan terrain and the yellow player glyph, without
+visible rendering corruption or explicit error text. The native HUD showed
+**HP 0/40 and MP 0/40**; this is not described as a healthy/full-HP state.
+Image review alone did not establish gameplay correctness: the independent
+source-backed displacement and input receipts supply the movement proof.
+
+Each real process exercised inventory, switching to equipment, direct
+equipment, help topics/commands and cancellation; F1–F4 showed and hid the
+four auxiliary windows. In both expanded consumers, normal
+`WM_DELETE_WINDOW` on **each** auxiliary hid only that window while the
+main process survived; its F-key reopened the same native window and then
+hid it again. Normal ICCCM `WM_DELETE_WINDOW` closure of the main window
+returned **0** in each consumer. Their `driver.stderr` and `game.log` are
+empty; each `native-log.xml` is a completed header-only log at the original
+critical/warning output level, with no warning or critical entries. The
+guard rejects those entries and native error diagnostics even when a
+process exits zero.
+
+Both expanded consumers resized the main client
+**724×428 → 814×484 → 724×428**, observing grids **80×30 → 90×34 → 80×30**,
+the original HUD and source-backed camera/player/terrain landmark
+relationships. The player stayed at world **(27,12)** while its screen
+position changed **(29,16) → (34,18) → (29,16)**. Real **`l`, `6`, `4`,
+Escape** input entered look mode, moved its cyan frame one cell right and
+back, and cancelled it. `native-gameplay.json` records exact cyan
+perimeters, absence of obsolete frame trails, unchanged player world
+position and the original description **“You see yourself.”**
+
+Each game ran with the caller's same UID/GID in private user, mount,
+network and PID namespaces, fresh HOME/XDG state and recursively read-only
+`/gnu/store`. Each `consumer-receipt.json` records driver status **0**,
+success and identical before/after output NAR hash
+**`1by392bmv91b9nj2rxijpdhk38f9y0mcsbin3h6wx66v0sxh5x6g`**. Evidence
+includes native screenshots, decoded surfaces, `movement.json`,
+`native-gameplay.json`, font identity/metrics, namespace/mount receipts
+and mutable-state hashes. This is local bounded acceptance, not
+host/profile installation.
+
+**Test World has original handcrafted fixed terrain and a fixed player
+start**, with ordinary unseeded native randomized items; it is not a
+random-terrain test. Upstream `InitLoadedGame` returns false, and Open
+Character/Retire Character are unfinished: **no save/load/resume claim**.
+Auxiliary content population is likewise unfinished and is not inferred
+from successful visibility/close/reopen checks. No combat, victory or
+complete-game acceptance is claimed.
+
+### Literal lint gate and publication state
+
+The main agent completed literal **`guix lint -L guix exalt`** in
+**12.79 s**. It reported the SourceForge project-root **404** during
+generic-HTML release discovery, failure to find releases, source missing
+from Software Heritage and missing Disarchive data. Those are **own
+updater/archive findings**, not waived external noise and not a failed
+fetch of the pinned ZIP: the complete source build fetched that exact
+archive. **#354 stays OPEN**, with no clean-lint claim. Publication remains
+pending until a separate signed commit/push/readback receipt exists.
+
+This documentation/guard worker ran no commands, builds, checks, lint,
+tests, applications or Git; execution facts above come from the main
+agent's actual build/native receipts and completed literal-lint report.
+No described host/service or deployment changed, and no material network
+catalog correction was established, so no OKF page/log update applies to
+this repository-only slice. Unrelated inventory counts and user changes
+are preserved.
 
 ## Everything Is Fodder — original source, rights and native save continuity (2026-10-15)
 
