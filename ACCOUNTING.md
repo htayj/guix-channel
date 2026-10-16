@@ -480,7 +480,9 @@ omitted. It is not a byte-for-byte pristine archive. `source-linux` contains
 the patched corresponding source, composed font and `guix/` integration
 recipe/helper/wrapper/patch/notices. `share/doc/experienced-pixel-dungeon`
 retains full GPL text, original `AboutScene.java`, detailed `NOTICES.txt`,
-Apache text, font notices and links to complete dependency source/notices.
+Apache text, font notices and dependency-documentation links. Those links are
+not a complete index of installed dependency sources; GDX and controllers
+also retain source under their own `share/src` trees.
 The GPL-3.0-or-later grant comes from Java headers, not merely the GPLv3
 license-text file. Original audio credits preserve CC0 and **CC-BY with
 version unspecified**; no invented CC-BY version or blanket relicensing is
@@ -539,8 +541,11 @@ The actual Noto
 [`fonts/LICENSE` OFL](https://raw.githubusercontent.com/notofonts/notofonts.github.io/e3bdd5e75581e2b46d93343ec98594f3c89669c0/fonts/LICENSE)
 is retained, not incorrectly replaced by the Noto repository-root Apache
 license. The modified composite as a whole is **SIL OFL 1.1**; the original
-Droid data retains its full **Apache-2.0** notice. Both grants, original
-name-table notices, pins and composition recipe are installed.
+Droid data retains its full **Apache-2.0** notice. Both grants and original
+name-table notices are installed. The exact pins and composition recipe remain
+in the channel's `guix/tay/packages/exppd-font.scm` and
+`guix/tay/packages/exppd-font-compose.py`; the font recipe/composer are not
+installed in the game's `source-linux/guix` or the font documentation output.
 
 Main's actual built cmap comparison found **36,882** mappings, covering all
 **29,788** mappings of the removed game font with **zero missing mappings**.
