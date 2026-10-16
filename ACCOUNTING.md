@@ -378,6 +378,19 @@ entries and are not substitutes for the Makefile package inventory.
 Private dependency closures and the 629 source snapshots are not promoted to
 end-user applications. The public library families intentionally in Makefile
 remain covered, with desktop support libraries in their own small table.
+Exalt's separate implementation publication adds exactly **one**
+`PROJECT_PACKAGES` entry (`exalt`), one README game row and `guard-exalt`;
+the guard is a consumer target, not a package name. The publisher's actual
+committed-tree inventory for signed/authenticated **`ede272d44610197f19e586bba524df1af1240ecc`**
+is **247 project + 7 font = 254 installable names**, **260 check names**
+and **253 default native build names**, with **272** linked README rows
+and **1,078** tracked files. Its parent `a81b0c607fdfc4b937a358676b05c31100ea1b59`
+has **246 / 253 / 259 / 252** project/installable/check/default-native
+names and **271** linked README rows. The unchanged **629** preservation
+ledger is a literal expected count, not a newly executed source enumeration.
+These are scoped published-definition counts, not an all-package build/test
+pass or acceptance of unrelated Dualmaster, Tern or other user changes.
+
 
 Versions and descriptions were extracted from the linked `guix/tay/packages/`
 definitions, resolving literal strings, constant `git-version` expressions and
@@ -409,9 +422,10 @@ roguelike, not a replacement game. Upstream identifies it as **Pre-Alpha**.
 [Forgejo](https://forge.nogroup.group/tay/guix-channel/issues/354) and
 [GitHub](https://github.com/htayj/guix-channel/issues/354): local builds and
 bounded native acceptance succeeded, but literal full lint retains own
-release-discovery and archive findings. **Publication is pending**; no signed
-commit, remote OID, profile installation, deployment or tracker closure is
-claimed by this receipt.
+release-discovery and archive findings. The signed/authenticated
+implementation is **published to `origin/master`**, with the exact receipt
+below. Publication is not profile installation, deployment or tracker
+closure; paired tracker follow-up remains pending.
 
 ### Exact source identity and Linux port
 
@@ -591,8 +605,54 @@ generic-HTML release discovery, failure to find releases, source missing
 from Software Heritage and missing Disarchive data. Those are **own
 updater/archive findings**, not waived external noise and not a failed
 fetch of the pinned ZIP: the complete source build fetched that exact
-archive. **#354 stays OPEN**, with no clean-lint claim. Publication remains
-pending until a separate signed commit/push/readback receipt exists.
+archive. **#354 stays OPEN**, with no clean-lint claim. The implementation
+publication below does not waive those findings or establish tracker closure.
+
+### Independent review and signed implementation publication
+
+The independent read-only review found **no material patch-introduced
+defect**, with overall correctness assessed as **correct, confidence
+0.86**. It compared the owned package, launcher, notices, two patches and
+native consumers with original source and actual native4/5/6 receipts.
+It ran no commands, builds, lint, tests, apps or Git; its bounded review is
+not a substitute for the separately recorded main-agent execution evidence.
+
+The publisher's actual receipt, observed **2026-10-16 00:53:54 UTC**
+(signature dated **2026-10-15 EDT**), establishes implementation commit
+**[`ede272d44610197f19e586bba524df1af1240ecc`](https://forge.nogroup.group/tay/guix-channel/commit/ede272d44610197f19e586bba524df1af1240ecc)**,
+subject **“feat: package Exalt with bounded native SDL gameplay”**, parent
+**`a81b0c607fdfc4b937a358676b05c31100ea1b59`**, tree
+**`64a0f2c0b1c571db7e5bf881da9ddee09eef85c7`**. Existing-key verification
+reported **Good EDDSA**, status **`G`**, fingerprint
+**`6A27F433DC22B4DFA278E8F32F12E6A35F417606`**. Exact-OID
+`guix git authenticate --end=ede272d44610197f19e586bba524df1af1240ecc`
+succeeded. A normal, non-force, non-bypassed push to
+`git@192.168.7.121:tay/guix-channel.git` authenticated the same OID in the
+ordinary pre-push hook; direct remote readback matched both **HEAD** and
+**`refs/heads/master`** to that OID. This proves the recorded origin
+publication, not a separate GitHub-mirror readback.
+
+The isolated publication contains exactly the ten owned paths: Makefile,
+README, this accounting record, the Exalt recipe/launcher/notices, two
+patches and two native-consumer files. Published inventory is
+**247 project / 7 font / 254 installable / 260 check / 253 default-native
+names**, **272** linked README rows and **1,078** tracked files; the
+preservation ledger remains **629**. The publisher kept the real index
+byte-identical: **104,800 bytes**, **1,054 entries**, SHA-256
+**`906f71f85839009b4487a3182cc2d718f0d2baffc4520cb883085e17596bb1be`**.
+All **1,136** observed worktree paths, including **1,126** unowned paths
+and unrelated mixed hunks, matched the released snapshots. That preservation
+boundary is the tracked/index/nonignored-untracked union; ignored paths
+were excluded and sequential snapshots were not atomic.
+
+The implementation commit deliberately retained prepublication wording;
+this separate documentation-only follow-up records its now-observed receipt.
+No future documentation commit OID is asserted here. The publisher ran only
+scope/inventory, signature/authentication, normal push/readback and
+preservation checks, without rerunning builds, lint, tests or apps.
+Paired tracker accounting remains Main's pending operation, and **#354
+remains OPEN** for the own lint findings. No profile installation,
+deployment, full-game acceptance or tracker closure follows from the push.
 
 This documentation/guard worker ran no commands, builds, checks, lint,
 tests, applications or Git; execution facts above come from the main
