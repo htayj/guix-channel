@@ -391,15 +391,19 @@ names and **271** linked README rows. The unchanged **629** preservation
 ledger is a literal expected count, not a newly executed source enumeration.
 These are scoped published-definition counts, not an all-package build/test
 pass or acceptance of unrelated Dualmaster, Tern or other user changes.
-Experienced Pixel Dungeon's separate **2026-10-16 candidate** adds exactly
+Experienced Pixel Dungeon's separate **2026-10-16 publication** adds exactly
 **one** `PROJECT_PACKAGES` entry (`experienced-pixel-dungeon`), one alphabetical
 README game row and `guard-experienced-pixel-dungeon`. The guard is a consumer
 target, not a package name. Its **five private direct dependencies**
 (`java-exppd-gdx`, `java-exppd-lwjgl`, `java-exppd-controllers`,
 `java-exppd-json`, `font-exppd-unicode`) are dependency closure, not five extra
 end-user programs or an addition to `FONT_PACKAGES`. The published Exalt counts
-above remain historical published counts; this **+1 candidate delta** does not
-establish a new publication, whole-inventory recount or all-package check pass.
+above remain historical. The actual scoped implementation publication has
+**248 project + 7 font = 255 installable names**, **261 check names**,
+**254 default native build names**, **273 linked README rows** and **1,093
+tracked files** (**15** additions over **1,078**); this is a **+1** game delta,
+not a whole-inventory enumeration/build/test pass. Publication evidence and
+the separate integrated-worktree source-count failure are recorded below.
 The optional proprietary entry, five check-only Imago dependencies, i686-only
 CalcRogue filter and canonical **629** preservation ledger remain unchanged.
 Unrelated Dualmaster, Tern, auxiliary and AloneRL changes are not accepted or
@@ -441,9 +445,10 @@ This is a local implementation/native-evidence record: the final game build
 and reproducibility recheck passed, and the six current dependency rechecks
 passed. Native17 verifies the final notice-corrected output. Literal full
 lint completed with own findings, not clean lint. Final read-only review assessed
-the implementation as correct (**0.93 confidence**); its two P3 accuracy
-findings were corrected. Publication is pending; no publication OID,
-deployment, profile installation or tracker closure is claimed.
+the implementation as correct after corrections (**0.95 confidence**, no open
+findings). The signed/authenticated implementation is published to
+**`origin/master`**; the exact receipt is below. Publication is not deployment,
+profile installation or tracker closure.
 
 ### Exact source and offline desktop integration
 
@@ -711,12 +716,57 @@ GLFW/JSON expressions and **without checker exclusions**, completed in
 There are no remaining format or input-label warnings in that final run.
 Successful lint command status does not erase the enumerated own findings
 or establish the literal clean-lint acceptance gate.
-**#356 stays OPEN.** Integration is not implementation publication, remote
-readback, deployment or acceptance of unrelated user edits. This documentation
-worker ran **no commands, checks, builds, linters, formatters or applications**.
-No documented host/service changed or material network-catalog correction was
-established; the mandatory OKF network index was read, and no OKF page/log
-update applies to this repository-only integration record.
+**#356 stays OPEN.** Publication does not establish deployment or acceptance
+of unrelated user edits. This documentation worker ran **no commands, checks,
+builds, linters, formatters or applications**. No documented host/service
+changed or material network-catalog correction was established; the mandatory
+OKF network index was read. Main delegated any aggregate OKF record separately.
+
+### Signed implementation publication and inventory limitation
+
+The retained **`local://exppd-publication.json`**, captured
+**2026-10-16 23:27:14 UTC**, establishes signed implementation commit
+[`dcb9a95279cfc8114f2fb0933b8fa340b263db68`](https://forge.nogroup.group/tay/guix-channel/commit/dcb9a95279cfc8114f2fb0933b8fa340b263db68),
+parent **`07a05a86cb8096292bce94a1248144e3253cbd3b`**. Signature status is
+**G**, fingerprint **`6A27F433DC22B4DFA278E8F32F12E6A35F417606`**.
+Exact-end `guix git authenticate` succeeded from the configured introduction;
+normal **`git push origin master`**, including the ordinary authentication
+pre-push hook, succeeded without force or hook bypass. SSH remote readback
+returned that same OID for both symbolic `HEAD → refs/heads/master` and
+`refs/heads/master`. This receipt proves Forgejo SSH refs, **not a Forgejo API
+or GitHub mirror readback**; neither is invented here.
+
+The committed change is **18 scoped paths: 15 additions and three modified
+shared files**. Published textual inventory changes from **247 project / 254
+installable / 260 check / 253 default-native / 272 README rows / 1,078 files**
+to **248 / 255 / 261 / 254 / 273 / 1,093**, with **seven font names** and
+literal expected source count **629** unchanged. Private dependencies are not
+extra end-user entries. The publisher verified all **1,151 observed worktree
+paths** retained their bytes/modes and the real index remained byte-identical:
+**104,800 bytes**, **1,054 entries**, SHA-256
+**`906f71f85839009b4487a3182cc2d718f0d2baffc4520cb883085e17596bb1be`**.
+Unrelated shared hunks and user work were excluded from the scoped commit,
+not reset, restaged or accepted.
+
+Separately, Main's **whole integrated-worktree** `check-source-count` failed
+in **4.41 s**. The explicit-Guix diagnostic in **4.28 s** found **629 exported
+available names versus 630 textually parsed names**, with extra textual
+**`hermes-agent-source`** from unrelated existing user work. This is not a
+successful source-enumeration check and is not a scoped committed-tree
+enumeration failure. The literal **629** ledger and unrelated source file were
+preserved; scoped textual publication counts above do not conceal this failed
+worktree check. No all-inventory pass is claimed.
+
+Main's actual cleanup removed **three extraction trees**, **five font probes**
+and **two throwaway Java utility sources/classes**; no failed ExpPD build
+trees remain. Pinned archives, **native1–17** evidence, utility evidence,
+profile/store contents and the user's vault session were retained. No garbage
+collection or filesystem balance is claimed. Final independent review closed
+with **0.95 confidence** and **no open findings** after the accuracy fixes.
+Implementation publication does not satisfy the remaining literal lint gate;
+**#356 remains OPEN**. This record makes no claim about a future documentation
+follow-up OID or tracker readback.
+
 
 ## Exalt — original source, Linux port and bounded native gameplay (2026-10-15)
 
