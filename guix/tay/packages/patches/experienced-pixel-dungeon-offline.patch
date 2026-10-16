@@ -1,0 +1,70 @@
+Make the Guix desktop build offline while retaining the built-in guide.
+
+Updates.service being null is the existing disabled-updates path.  The
+GitHub implementation is still compiled, but the desktop launcher no longer
+registers it.  The twelve guide articles contain local data, not news fetched
+from the network, so do not gate them on network connectivity.
+
+Also treat an empty XDG_DATA_HOME like an unset one, as required by XDG.
+
+--- a/desktop/src/main/java/com/shatteredpixel/shatteredpixeldungeon/desktop/DesktopLauncher.java
++++ b/desktop/src/main/java/com/shatteredpixel/shatteredpixeldungeon/desktop/DesktopLauncher.java
+@@ -34,8 +34,6 @@
+ import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+ import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
+ import com.shatteredpixel.shatteredpixeldungeon.services.news.NewsImpl;
+-import com.shatteredpixel.shatteredpixeldungeon.services.updates.UpdateImpl;
+-import com.shatteredpixel.shatteredpixeldungeon.services.updates.Updates;
+ import com.watabou.noosa.Game;
+ import com.watabou.utils.FileUtils;
+ import com.watabou.utils.Point;
+@@ -125,9 +123,8 @@
+ 			Game.versionCode = Integer.parseInt(System.getProperty("Implementation-Version"));
+ 		}
+ 
+-		if (UpdateImpl.supportsUpdates()){
+-			Updates.service = UpdateImpl.getUpdateService();
+-		}
++		// Guix manages updates. Leave Updates.service unset, its supported
++		// disabled state, instead of registering the outbound GitHub checker.
+ 		if (NewsImpl.supportsNews()){
+ 			News.service = NewsImpl.getNewsService();
+ 		}
+@@ -159,7 +156,7 @@
+ 			baseFileType = Files.FileType.External;
+ 		} else if (SharedLibraryLoader.isLinux) {
+ 			String XDGHome = System.getenv("XDG_DATA_HOME");
+-			if (XDGHome == null) XDGHome = System.getProperty("user.home") + "/.local/share";
++			if (XDGHome == null || XDGHome.isEmpty()) XDGHome = System.getProperty("user.home") + "/.local/share";
+ 
+ 			String titleLinux = title.toLowerCase(Locale.ROOT).replace(" ", "-");
+ 			basePath = XDGHome + "/." + vendor + "/" + titleLinux + "/";
+--- a/services/news/ingameNews/src/main/java/com/shatteredpixel/shatteredpixeldungeon/services/news/IngameNews.java
++++ b/services/news/ingameNews/src/main/java/com/shatteredpixel/shatteredpixeldungeon/services/news/IngameNews.java
+@@ -25,7 +25,6 @@
+ package com.shatteredpixel.shatteredpixeldungeon.services.news;
+ 
+ import com.shatteredpixel.shatteredpixeldungeon.services.news.guideEntries.*;
+-import com.watabou.noosa.Game;
+ 
+ import java.util.ArrayList;
+ 
+@@ -34,17 +33,7 @@
+ 	@Override
+ 	public void checkForArticles(boolean useMetered, boolean forceHTTPS, NewsResultCallback callback) {
+ 
+-		if (!useMetered && !Game.platform.connectedToUnmeteredNetwork()){
+-			callback.onConnectionFailed();
+-			return;
+-		}
+-
+-		//turn on to test connection failure
+-		if (false){
+-			callback.onConnectionFailed();
+-			return;
+-		}
+-
++		// These twelve articles are bundled game guides, available offline.
+ 		ArrayList<NewsArticle> articles = new ArrayList<>();
+ 		articles.add(new FateLock());
+ 		articles.add(new Bbat());

@@ -89,6 +89,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [EverSector original source, font rights and native desktop](#eversector--original-source-font-rights-and-native-desktop-2026-10-14)
 - [Everything Is Fodder original source, rights and native save continuity](#everything-is-fodder--original-source-rights-and-native-save-continuity-2026-10-15)
 - [Exalt original source, Linux port and bounded native gameplay](#exalt--original-source-linux-port-and-bounded-native-gameplay-2026-10-15)
+- [Experienced Pixel Dungeon final source, font composition and bounded native gameplay](#experienced-pixel-dungeon--final-source-font-composition-and-bounded-native-gameplay-2026-10-16)
 
 ## Relocation map (2026-10-04)
 
@@ -390,6 +391,19 @@ names and **271** linked README rows. The unchanged **629** preservation
 ledger is a literal expected count, not a newly executed source enumeration.
 These are scoped published-definition counts, not an all-package build/test
 pass or acceptance of unrelated Dualmaster, Tern or other user changes.
+Experienced Pixel Dungeon's separate **2026-10-16 candidate** adds exactly
+**one** `PROJECT_PACKAGES` entry (`experienced-pixel-dungeon`), one alphabetical
+README game row and `guard-experienced-pixel-dungeon`. The guard is a consumer
+target, not a package name. Its **five private direct dependencies**
+(`java-exppd-gdx`, `java-exppd-lwjgl`, `java-exppd-controllers`,
+`java-exppd-json`, `font-exppd-unicode`) are dependency closure, not five extra
+end-user programs or an addition to `FONT_PACKAGES`. The published Exalt counts
+above remain historical published counts; this **+1 candidate delta** does not
+establish a new publication, whole-inventory recount or all-package check pass.
+The optional proprietary entry, five check-only Imago dependencies, i686-only
+CalcRogue filter and canonical **629** preservation ledger remain unchanged.
+Unrelated Dualmaster, Tern, auxiliary and AloneRL changes are not accepted or
+published by this integration.
 
 
 Versions and descriptions were extracted from the linked `guix/tay/packages/`
@@ -412,6 +426,297 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Experienced Pixel Dungeon — final source, font composition and bounded native gameplay (2026-10-16)
+
+[`experienced-pixel-dungeon`](guix/tay/packages/experienced-pixel-dungeon.scm)
+**2.19** builds Trashbox Bobylev's original **Experienced Pixel Dungeon Redone**
+desktop fork, not Shattered Pixel Dungeon relabeled as ExpPD. The final
+[author release `ExpPD-2.19`](https://github.com/TrashboxBobylev/Experienced-Pixel-Dungeon-Redone/releases/tag/ExpPD-2.19),
+published **2024-09-28**, states that it ports Shattered 2.5 additions and is
+“the last version of Experienced PD.” The packaged manifest retains
+**`ExpPD-2.19.0`**, implementation code **666** and the exact upstream commit.
+**[#356](https://forge.nogroup.group/tay/guix-channel/issues/356) remains OPEN.**
+This is a local implementation/native-evidence record: the final game build
+and reproducibility recheck passed, and the six current dependency rechecks
+passed. Native17 verifies the final notice-corrected output. Literal full
+lint completed with own findings, not clean lint. Final read-only review assessed
+the implementation as correct (**0.93 confidence**); its two P3 accuracy
+findings were corrected. Publication is pending; no publication OID,
+deployment, profile installation or tracker closure is claimed.
+
+### Exact source and offline desktop integration
+
+The pinned
+[source archive](https://codeload.github.com/TrashboxBobylev/Experienced-Pixel-Dungeon-Redone/tar.gz/7a71df6a56b371a6b0efffcbe6210dbcfaf8611d)
+is commit **`7a71df6a56b371a6b0efffcbe6210dbcfaf8611d`**, SHA-256
+**`3242757d206ee86217120d4af306bdca25d9ca858aeb5aab215818a82d7daa68`**,
+Guix base32 **`0s5aglnsh62q46mmmswahp5dj9fapl3g6jhd28bn5s3f41ypahij`**.
+OpenJDK 17 `javac --release 8` compiles the complete desktop game's
+`SPD-classes`, `core`, `desktop`, `services`, `githubUpdates` and `ingameNews`
+Java roots against explicit source-built dependency jars. Both original core
+and desktop asset trees are bundled. No upstream release jar, bundled JVM,
+Gradle-wrapper binary, Maven binary dependency, opaque JNI library or network
+bootstrap supplies the game implementation.
+
+The small [offline integration patch](guix/tay/packages/patches/experienced-pixel-dungeon-offline.patch)
+does not register the outbound GitHub update checker: Guix owns updates, while
+the service implementation and its sources remain compiled. All **twelve**
+bundled guide entries remain intact; only their network-connectivity gate is
+removed because their content is local. Explicit user-selected external links
+retain their normal behavior. The upstream game rules, progression, assets,
+audio, translations and controller input are retained, not replaced by a
+test-specific game or reduced mechanics.
+
+Installed `share/experienced-pixel-dungeon/source-original` is the complete
+**sanitized** upstream tree before the integration patch/font insertion:
+opaque executable artifacts and the unresolved desktop outline font are
+omitted. It is not a byte-for-byte pristine archive. `source-linux` contains
+the patched corresponding source, composed font and `guix/` integration
+recipe/helper/wrapper/patch/notices. `share/doc/experienced-pixel-dungeon`
+retains full GPL text, original `AboutScene.java`, detailed `NOTICES.txt`,
+Apache text, font notices and links to complete dependency source/notices.
+The GPL-3.0-or-later grant comes from Java headers, not merely the GPLv3
+license-text file. Original audio credits preserve CC0 and **CC-BY with
+version unspecified**; no invented CC-BY version or blanket relicensing is
+applied to the samples.
+
+### Source-built dependencies and disclosed substitutions
+
+The five direct private dependencies do not enter the end-user inventory:
+
+- [`java-exppd-lwjgl`](guix/tay/packages/exppd-lwjgl.scm) **3.3.3** compiles the
+  selected Java bindings and native JNI C for core, GLFW, OpenGL, OpenAL,
+  jemalloc, STB and tinyfd. It compiles upstream's committed generated C;
+  this is not a claim to regenerate it with a source-built Kotlin generator.
+  System **GLFW 3.4**, OpenAL, jemalloc, libffi and Mesa replace bundled native
+  binaries. The private GLFW variant explicitly retains X11 and Wayland and
+  fixes the new Xlib/Xext and optional libdecor store `dlopen` paths. Earlier
+  native failures exposed both missing `glfwInitAllocator` in GLFW 3.3.10 and
+  the GLFW 3.4 loader-path defect; those failed runs are not acceptance passes.
+- [`java-exppd-gdx`](guix/tay/packages/exppd-gdx.scm) **1.12.1** builds LibGDX
+  Java and native code, with source-built **gdx-jnigen 2.2.0** supplying one
+  shared JNI loader. Its explicit colon-separated native path serves both
+  GDX and Jamepad; native libraries do not extract into writable game assets.
+- [`java-exppd-controllers`](guix/tay/packages/exppd-controllers.scm)
+  **2.2.4** and **Jamepad 2.26.5.0** retain the real controller backend with
+  Guix SDL2. The released 2.2.4 pin is a **deliberate migration** from upstream's
+  unavailable `2.2.4-SNAPSHOT`, not a claim of snapshot identity. Controller
+  hardware behavior was not exercised by the native receipt below.
+- Private `java-exppd-json` builds **JSON-java 20240303**, commit
+  **`f9b5587c87aaf02e4a5ed1991d48d6c05993624a`**, whose `LICENSE` says
+  **“Public Domain.”** It replaces JSON-java 20170516's nonfree “Good, not
+  Evil” condition. `Bundle.java`, including its legacy JSON fallback, is
+  unchanged. The observed fresh native save/resume is not an exhaustive
+  old-version save compatibility test.
+- [`font-exppd-unicode`](guix/tay/packages/exppd-font.scm) composes licensed
+  upstream font data as disclosed next; it is not an additional end-user font
+  entry. Matching system FreeType and the rest of the graphics/audio closure
+  remain runtime dependencies, not additional applications.
+
+### Whole desktop font replacement, not original typography
+
+The manually modified upstream desktop `droid_sans.ttf` has a known editing
+lineage but no conclusive exact derivation/license map. The entire asset is
+removed from sanitized sources and runtime, rather than calling all Droid
+fonts nonfree or treating an uncertain revision as licensed by its filename.
+The approved replacement is deterministic **ExpPD Unicode Sans**: complete
+**Noto Sans Regular, Guix 2026.01.01**, followed by complete **AOSP Gingerbread
+Droid Sans Fallback**, with Noto taking precedence on shared mappings and
+Droid outlines rescaled from **256 to 1000 units per em** before merging.
+There is no subsetting. The neutral family name and fixed font timestamps
+disclose a modified composition, not an original Noto/Droid release.
+
+The AOSP input is pinned to
+[commit `9b19b93a5b0018414784cfdc070b462ea65451d8`](https://raw.githubusercontent.com/aosp-mirror/platform_frameworks_base/9b19b93a5b0018414784cfdc070b462ea65451d8/data/fonts/DroidSansFallback.ttf),
+SHA-256 **`f63694f2d0910e2f31d00a818e23b13c8e3a24af04672789c19c1fb1c9da24ce`**.
+The actual Noto
+[`fonts/LICENSE` OFL](https://raw.githubusercontent.com/notofonts/notofonts.github.io/e3bdd5e75581e2b46d93343ec98594f3c89669c0/fonts/LICENSE)
+is retained, not incorrectly replaced by the Noto repository-root Apache
+license. The modified composite as a whole is **SIL OFL 1.1**; the original
+Droid data retains its full **Apache-2.0** notice. Both grants, original
+name-table notices, pins and composition recipe are installed.
+
+Main's actual built cmap comparison found **36,882** mappings, covering all
+**29,788** mappings of the removed game font with **zero missing mappings**.
+That is repertoire evidence, not all-language shaping/rendering verification.
+This is **composition from upstream TTF data**, not compilation from editable
+outline-design sources. Typography changes; no original-pixel equivalence is
+claimed. The original core `pixel_font.ttf` and `pixel_font.png` are untouched,
+with their Roboto/Google Apache-2.0 and Watabou/Evan author/project notices
+retained separately.
+
+### Ordinary launcher and reusable prebuilt-output guard
+
+Run **`experienced-pixel-dungeon`** on a graphical desktop. The wrapper selects
+exact store Java, classpath and native-library paths, passes normal arguments
+to `DesktopLauncher`, and supplies Zenity, `which` and `xdg-open` for actual
+desktop dialogs/explicit links. The upstream launcher owns writable settings,
+journal and native saves under
+**`$XDG_DATA_HOME/.trashboxbobylev/experienced-pixel-dungeon/`**; unset or empty
+`XDG_DATA_HOME` falls back to **`$HOME/.local/share`**. No game hooks, test API,
+seed, injected configuration or edited save is used by the consumer.
+
+[`tests/experienced-pixel-dungeon-smoke.sh`](tests/experienced-pixel-dungeon-smoke.sh)
+accepts only a canonical already-built direct store output and a **fresh,
+nonexistent canonical absolute evidence directory outside the store** (an
+existing empty directory is rejected). It never builds the game; it may
+realize observer/tool dependencies before isolation. `GUIX` selects the Guix
+executable in both the direct consumer and the Makefile guard. For the final
+realized output, with a still-unused evidence path:
+
+```sh
+/gnu/store/is7b1l1rirbgkah1fhh26943p00ycvhf-make-4.4.1/bin/make guard-experienced-pixel-dungeon \
+  GUIX=/home/tay/.config/guix/current/bin/guix \
+  EXPPD_OUTPUT=/gnu/store/2jr7yb4qxwba73y0qkpma52ahfr9plrn-experienced-pixel-dungeon-2.19 \
+  EXPPD_EVIDENCE=/tmp/exppd-native-repeat-1
+```
+
+The integrated guard passed with **`EXPPD_EVIDENCE=/tmp/exppd-native-17`**
+against the final output as recorded below. The example uses a fresh evidence
+path because retained run directories must not be reused. Earlier observer
+failures are not acceptance passes. The ordinary
+Guidebook search explores visible, passable door approaches heuristically;
+it neither reveals hidden doors nor guarantees exhaustive entrance coverage.
+No seeds, injected configuration or edited saves are used. Standalone use has
+the same contract:
+
+```sh
+GUIX=/home/tay/.config/guix/current/bin/guix \
+  sh tests/experienced-pixel-dungeon-smoke.sh /gnu/store/2jr7yb4qxwba73y0qkpma52ahfr9plrn-experienced-pixel-dungeon-2.19 /tmp/exppd-native-standalone-1
+```
+
+### Actual native17 receipt and strict claim limits
+
+Main's final integrated **`/tmp/exppd-native-17`** guard passed in **120.77 s**,
+driver status **0**, against exactly
+**`/gnu/store/2jr7yb4qxwba73y0qkpma52ahfr9plrn-experienced-pixel-dungeon-2.19`**.
+`consumer-receipt.json` records identical before/after NAR hashes
+**`1pn32w6vi18kvli72lph8sfn7l0wqh0qd16l35qmbjnzmmsrf16w`** and
+`output_unchanged: true`. `native-gameplay.json`, actual PNG/OCR observations,
+input transcript, game logs, native save copies and audio capture retain:
+
+- A real GLFW/OpenGL desktop window on private Xvfb, not a headless game,
+  using same-UID/GID **1000/998**, distinct user/mount/PID/network namespaces,
+  a read-only store, private HOME/XDG/tmp and no external network route.
+  Software rendering is explicit in the private subprocess environment;
+  this is not hardware-GPU acceptance or host-environment modification.
+- Ordinary XTest mouse/keyboard birth of an **unseeded Warrior**, first-region
+  introduction, source-asset-identified Guidebook pickup, **J** journal reading
+  and **Escape** dismissal. These ordinary actions complete the genuine fresh
+  tutorial and enable Main Menu; no tutorial flag is written by the observer.
+  Native17 found the Guidebook immediately visible with source-match score
+  **1.0** and `tutorial_exploration: []`; the heuristic search fallback was
+  **not exercised** by this successful run.
+- Source-derived exact opaque warrior RGBA matching plus terrain-relative
+  **48-pixel tile** movement, with only **±1 actual raster pixel** rounding
+  allowance and a separately scored stationary alternative. Camera-centering
+  is not misreported as a stationary player. Visible health is **20/20**.
+- Read-only inspection of **native menu-produced gzip JSON saves**, kept
+  separate from visible evidence: depth **1**, width **29**, position
+  **615 → 616**, `Statistics.duration` **3 → 4**, unchanged HP **20**; ordinary
+  save/quit, fresh-process Continue at **616 / duration 4**, then continued
+  movement and native resave at **615 / duration 5**. The observer records
+  `observer_wrote_native_path: false`; it does not inject or repair a save.
+- Both real game processes exit normally with status **0**. Both game
+  stdout/stderr logs are strictly rejected for errors/warnings. Separate Xvfb
+  amdgpu and xkbcomp diagnostics are retained and explicitly classified as
+  display-server diagnostics, not silently deleted or called clean game logs.
+- A private **real PulseAudio null sink** and monitor capture native OpenAL
+  output; audio is not disabled. `audio-monitor.wav` is **95.47 s**, **22050 Hz
+  stereo**, RMS **1836.24**, SHA-256
+  **`4082b359a247d3a2516cecfc969147b13e72eaf8804e875f34c5e1fe543dbb79`**.
+  This proves non-silent native game audio, not tune identification, hardware
+  audio-device behavior or a listening-quality assessment.
+- Ordinary **five Tab cycles** (`WndTabbed` / `SPDAction.CYCLE`) and an XTest
+  settings click reach the real English/Chinese selector. The retained
+  `font-latin-cjk-selector.png` and `font-chinese-selector-glyphs.png` show
+  actual Latin/CJK glyphs. **`font-chinese-title-menu.png` still has the
+  Chinese language-settings dialog over the title background**, with legible
+  `语言设置`, `中文`, mixed Latin text (`English`, `Transifex`) and underlying
+  Chinese title buttons. It is **not an unobscured full Chinese title-menu
+  screenshot**. This native UI evidence is distinct from the utility rasters.
+
+Acceptance is bounded to early-floor birth/tutorial, movement, save/quit,
+fresh-process resume and continued movement. It does not establish a full
+playthrough, late-game ExpPD systems, combat/boss balance, every character,
+controller hardware, Wayland runtime behavior, every locale/font shaping,
+external links/dialogs or cross-version save migration. Those features remain
+in the packaged game; unexercised is not removed. Earlier failed native runs
+are diagnostic history, not additional successful consumers.
+The pinned upstream `Languages.java` exposes only **English and Chinese** as
+selectable UI languages. Retaining translation resources does not mean every
+resource locale is selectable: no Russian or Korean UI selection is claimed.
+The actual native17 UI evidence is limited to Latin and Chinese. Separate
+utility rendering evidence below does not establish selectable Russian or
+Korean game UI. Native13's **102.60 s** pass on **55rv** and native16's
+**118.79 s** pass on **d7hi** remain historical output-specific evidence;
+native17 supplies acceptance on final **2jr7**.
+
+### Separate actual Bundle and native FreeType utility probes
+
+Main compiled two throwaway external utilities in **0.65 s** and ran both
+with exit status **0** against the earlier **d7hi** game and its actual installed
+dependencies. Main's actual SHA-256 comparison subsequently established that
+the d7hi and final **2jr7** game jars are byte-identical:
+**`0eaacfe55febf2a759904253905e6de70a54a1c01124f82635e0e7fa1c952c34`**;
+the dependency outputs are unchanged. The utilities therefore exercised the
+same game-jar bytes/native dependencies, not a rerun on the new store path.
+These are utility-level evidence, not native gameplay or a replacement for
+the final-output guard. Retained evidence is under
+**`/tmp/exppd-utility-evidence`**:
+
+- `bundle.stdout` records **`ROUNDTRIP_OK`** for uncompressed (**803 bytes**)
+  and compressed (**421 bytes**) saves and **`DUPLICATE_FALLBACK_OK`** with
+  `modernRejected=true` and `firstWinsRootNestedArray=true`. The actual
+  `Bundle` reader's legacy fallback handles duplicate keys at root, nested
+  object and array levels. The expected modern-reader `JSONException` is
+  retained in `bundle.stderr`, not suppressed. `BUNDLE_PROBE_PASS` explicitly
+  records `utility_only=true gameplay_invocations=0`.
+- `font.stdout` records **`FONT_PROBE_PASS native_freetype=true`**, actual
+  source-built GDX FreeType glyph rasters at **12 and 32 pixels** for sampled
+  **Latin, Cyrillic, Greek, CJK, Hangul and mixed-script** strings. Per-glyph
+  dimensions, advances, nonzero bitmap counts and hashes accompany **twelve
+  PNGs**. The actual installed font SHA-256 is
+  **`bc3518c050393de705419d7fd5cf53331a7f29cb770b8f9366e65d00ba0aadd3`**;
+  `font.stderr` is empty. This is real native FreeType raster evidence for the
+  samples, not every glyph, all-language shaping, game-UI screenshots or
+  selectable Russian/Korean locales.
+
+### Final-build, lint and publication boundary
+
+Following final review's notice-accuracy correction, Main's final game build
+passed in **14.63 s** (`artifact://19020`) and its reproducibility `--check`
+in **11.19 s** (`artifact://19022`), realizing
+**`/gnu/store/2jr7yb4qxwba73y0qkpma52ahfr9plrn-experienced-pixel-dungeon-2.19`**.
+The native17 integrated guard passed on this exact output as recorded above.
+The earlier d7hi utility probes exercised the identical final game-jar bytes
+and unchanged native dependencies, as established by the actual comparison
+above; native16 remains historical store-output evidence. Main's serial
+reproducibility rechecks of all **six current dependencies** (LWJGL, GDX,
+controllers, font, private GLFW and JSON) passed
+in **89.77 s** (`artifact://18911`). Earlier historical library outputs are
+not substituted for those current closure checks.
+
+Main's final literal full lint of all **seven definitions**, including private
+GLFW/JSON expressions and **without checker exclusions**, completed in
+**33.77 s** with command status **0**, but it is **not clean**:
+
+- The game, LWJGL, GDX, controllers and JSON each retain **no-updater** and
+  **Software Heritage/Disarchive** findings.
+- The private font retains **no-updater**.
+- Private **GLFW 3.4** is reported as upgradable to **3.5.1**. The deliberately
+  selected 3.4 compatibility dependency is not claimed to be the newest GLFW.
+
+There are no remaining format or input-label warnings in that final run.
+Successful lint command status does not erase the enumerated own findings
+or establish the literal clean-lint acceptance gate.
+**#356 stays OPEN.** Integration is not implementation publication, remote
+readback, deployment or acceptance of unrelated user edits. This documentation
+worker ran **no commands, checks, builds, linters, formatters or applications**.
+No documented host/service changed or material network-catalog correction was
+established; the mandatory OKF network index was read, and no OKF page/log
+update applies to this repository-only integration record.
 
 ## Exalt — original source, Linux port and bounded native gameplay (2026-10-15)
 

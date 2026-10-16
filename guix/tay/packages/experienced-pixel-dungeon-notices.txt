@@ -1,0 +1,162 @@
+Experienced Pixel Dungeon Redone 2.19 — Guix source build
+========================================================
+
+Upstream: https://github.com/TrashboxBobylev/Experienced-Pixel-Dungeon-Redone
+Release: ExpPD-2.19, published 2024-09-28 (final author release).
+Source commit: 7a71df6a56b371a6b0efffcbe6210dbcfaf8611d
+Internal version: ExpPD-2.19.0; implementation version code: 666.
+
+This package compiles SPD-classes, core, desktop, services, githubUpdates and
+ingameNews from Java source with the source-built desktop libraries.  It does
+not use the upstream release jar, bundled JVM, Gradle wrapper binary, Maven
+binary dependencies, prebuilt JNI libraries, or a network bootstrap.
+
+The source-original directory is the upstream source tree after removing
+opaque executable artifacts and desktop/src/main/assets/fonts/droid_sans.ttf.
+It is intentionally a
+sanitized source distribution, NOT a byte-for-byte original archive.  The
+source-linux directory adds the declared font composition and the offline
+integration patch; its guix directory contains the package, helper, wrapper,
+patch and these notices.  Dependency documentation links provide their
+installed notices; corresponding sources are in the dependency outputs'
+documentation or source directories, as detailed below.
+
+GAME LICENSE AND AUTHORS
+------------------------
+Pixel Dungeon: Copyright (C) 2012-2015 Oleg Dolya (Watabou).
+Shattered Pixel Dungeon: Copyright (C) 2014-2024 Evan Debenham.
+Experienced Pixel Dungeon: Copyright (C) 2019-2024 Trashbox Bobylev.
+
+The Java source headers grant GNU GPL version 3 or, at your option, any later
+version.  LICENSE.txt is the complete GPL version 3 text and accompanies this
+package and both corresponding source trees.  The upstream GPL project scope
+and inherited author contributions cover the game code, graphics, translations
+and assets; additional sound and font notices below are preserved, not erased
+by that statement.  No warranty is provided; see LICENSE.txt.
+
+The original AboutScene.java is installed separately and in both source trees.
+Its complete in-game credits remain available.  In particular:
+  Shattered developer: Evan Debenham — https://ShatteredPixel.com
+  Splash art and design: Aleksandar Komitov — https://akomitov.artstation.com/
+  Sound effects: Celesti — https://s9menine.itch.io
+  Music: Kristjan Haaristo — https://www.youtube.com/@kristjanthomashaaristo
+  Pixel Dungeon developer: Watabou — https://watabou.itch.io/
+  Pixel Dungeon music: Cube Code
+  Pixel Dungeon GDX: Edu García — https://mastodon.gamedev.place/@arcnor
+  Shattered GDX help: Kevin MacMartin — https://github.com/prurigro/
+  Experienced developer: Trashbox Bobylev — https://reddit.com/u/TrashboxBobylev
+  Shattered volunteer translators via Transifex:
+    https://explore.transifex.com/shattered-pixel/shattered-pixel-dungeon/
+
+SOUND ATTRIBUTIONS (VERBATIM TITLES/AUTHORS FROM ABOUTSCENE)
+----------------------------------------------------------
+Shattered Pixel Dungeon uses the following samples from https://freesound.org.
+The upstream credits identify Creative Commons Attribution or Creative Commons
+Zero as below; they do not specify an Attribution license version.  This
+package does not invent a version or remove the original credits.  The sample
+credits describe inherited sound contributions, not the separately authored
+Experienced-specific black-mimic and arena music, which remains under the
+project GPL grant.
+
+Creative Commons Attribution License — https://creativecommons.org/licenses/by/
+  SFX ATTACK SWORD 001.wav — JoelAudio
+  Pack: Slingshots and Longbows — saturdaysoundguy
+  Cracking/Crunching, A.wav — InspectorJ
+  Extracting a sword.mp3 — Taira Komori
+  Pack: Uni Sound Library — timmy h123
+
+Creative Commons Zero License — https://creativecommons.org/publicdomain/zero/1.0/
+  Pack: Movie Foley: Swords — Black Snow
+  machine gun shot 2.flac — qubodup
+  m240h machine gun burst 4.flac — qubodup
+  Pack: Onomatopoeia — Adam N
+  Pack: Watermelon — lolamadeus
+  metal chain — Mediapaja2009
+  Pack: Sword Clashes Pack — JohnBuhr
+  Pack: Metal Clangs and Pings — wilhellboy
+  Pack: Stabbing Stomachs & Crushing Skulls — TheFilmLook
+  Sheep bleating — zachrau
+  Lemon,Juicy,Squeeze,Fruit.wav — Filipe Chagas
+  Lemon,Squeeze,Squishy,Fruit.wav — Filipe Chagas
+
+FONT NOTICES AND DELIBERATE TYPOGRAPHY CHANGE
+--------------------------------------------
+core/src/main/assets/fonts/pixel_font.ttf and pixel_font.png are retained.
+The TTF's original name-table notices state:
+  Character sizing based on Roboto by Google
+  Original bitmaps by Oleg Dolya (Watabou)
+  TTF Conversion by Evan Debenham (Shattered Pixel)
+  This font uses Characters from Roboto for in certain cases, all Roboto
+  font data copyright Google 2014
+  Licensed under the Apache License, Version 2.0
+  apache.org/licenses/LICENSE-2.0
+The Roboto-derived data is Apache-2.0; the original bitmaps and conversion
+retain their author notices and project GPL coverage.  Apache-2.0.txt supplies
+the full Apache license.  No original metadata or font bytes are rewritten.
+
+The upstream desktop droid_sans.ttf is omitted because its exact manually
+edited derivation has not been mapped to a conclusive license grant.  The
+replacement is ExpPD Unicode Sans, generated from explicitly licensed Noto
+Sans (SIL Open Font License 1.1) and immutable AOSP Gingerbread Droid Sans
+Fallback (Apache-2.0) font data.  Noto glyphs take precedence; the AOSP fallback
+is scaled from 256 to 1000 units per em before merging.  Its neutral name does
+not imply it is the original Droid or Noto font.  The font/ directory includes
+verbatim OFL.txt, AOSP Apache-2.0-NOTICE.txt and composition NOTICE.txt.  These
+record immutable input URLs, hashes, original name-table notices and the
+composition/modification disclosure.  They do not embed the full input font
+files or executable composition recipe.  The channel files
+guix/tay/packages/exppd-font.scm and guix/tay/packages/exppd-font-compose.py
+specify the pinned inputs and implement that recipe; retrieve the input data
+using the recorded immutable URLs and hashes.
+
+This is licensed font composition from declared TTF data, NOT a claim that
+the original desktop outline font has been rebuilt from editable outlines.
+Typography changes.  No game rule, feature, translation or Unicode language
+support is intentionally removed.  No pixel-identical typography claim is made.
+
+OFFLINE DESKTOP INTEGRATION
+---------------------------
+Guix manages software updates.  DesktopLauncher no longer registers the
+outbound GitHub service; the compiled GitHub implementation and its sources
+remain, but Updates.service stays null, the existing disabled-updates state.
+The twelve bundled guide entries remain compiled and unchanged.  Their
+network-connectivity gate is removed because their content is local.  This is
+NOT removal of the in-game guide or a replacement with fabricated news.
+Explicit user-selected external links retain their upstream behavior.
+
+The upstream desktop launcher retains its ordinary AWT/GLFW window and writes
+preferences and saves to:
+  $XDG_DATA_HOME/.trashboxbobylev/experienced-pixel-dungeon/
+where an unset or empty XDG_DATA_HOME falls back to $HOME/.local/share.
+The wrapper only selects exact store Java/class/native-library paths and
+makes Zenity, which (native dialog detection), and xdg-open available for
+ordinary desktop dialogs and explicit links.
+It does not inject configuration, manipulate saves, expose test hooks or
+replace native gameplay with a simulator.
+
+LIBRARY AND JSON SUBSTITUTIONS
+------------------------------
+LibGDX 1.12.1, LWJGL 3.3.3 and gdx-controllers 2.2.4 are built from source by
+companion packages.  Their dependency outputs install notices under share/doc.
+LibGDX corresponding sources, including audio/loader inputs and generated JNI,
+are under share/src/java-exppd-gdx; controller/Jamepad corresponding sources
+are under share/src/java-exppd-controllers.  These source directories are not
+targets of the game's dependency documentation links.  LWJGL sources are
+under share/doc/java-exppd-lwjgl/sources.  JSON sources are under
+share/doc/java-exppd-json/source.  LibGDX includes JLayer/JOrbis audio decoders;
+its source-built shared JNI loader is from gdx-jnigen 2.2.0.  LWJGL uses system
+GLFW, OpenAL, jemalloc,
+libffi and Mesa instead of opaque bundled native libraries.  Controller 2.2.4
+is a deliberate compatible release pin, NOT a claim that the upstream
+2.2.4-SNAPSHOT is byte-identical; Jamepad uses Guix SDL2 rather than its old
+statically bundled SDL release.  These changes do not remove controller input.
+The dependency documentation preserves Apache-2.0, BSD, MIT/Expat, zlib,
+Unlicense/public-domain and LGPL component notices as applicable.
+
+The original JSON-java 20170516 dependency imposes the nonfree "Good, not Evil"
+restriction and is NOT used.  The private java-exppd-json package builds
+JSON-java release 20240303, commit f9b5587c87aaf02e4a5ed1991d48d6c05993624a,
+from https://github.com/stleary/JSON-java.  That source's LICENSE states exactly
+"Public Domain." and is installed with its complete src tree.  This is an
+explicit desktop API-compatible dependency substitution, not the old licensed
+release.  Bundle.java, including its legacy JSON parsing fallback, is unchanged.
