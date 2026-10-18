@@ -410,21 +410,20 @@ CalcRogue filter and canonical **629** preservation ledger remain unchanged.
 Unrelated Dualmaster, Tern, auxiliary and AloneRL changes are not accepted or
 published by this integration.
 
-FAangband's **2026-10-18 candidate** adds one project name, **`faangband`**,
+FAangband's **2026-10-18 publication** adds one project name, **`faangband`**,
 one alphabetical README row and the prebuilt-output **`guard-faangband`**
 consumer target. From the scoped published ExpPD baseline, the publisher's
-isolated candidate-tree measurement is **249 project + 7 font = 256 installable
+isolated committed-tree measurement is **249 project + 7 font = 256 installable
 names**, **262 check names**, **255 default-native names** and **274 linked
 README rows**. Five new package/launcher/notices/consumer files make **1,098
-tracked files** from **1,093**. These are measured **unpublished candidate**
-counts, not a whole-inventory pass; the prepared-tree receipt is
-**`local://faangband-publish-prepared.json`**. Main's actual current
+tracked files** from **1,093**. These are measured **scoped published**
+counts, not a whole-inventory pass; the actual publication receipt is
+**`local://faangband-publication.json`**. Main's actual current
 **whole-worktree** Make expansion instead yielded **251
 project / 7 font / 258 installable / 264 check / 257 default-native**, with
 ledger **629**; its two additional project entries belong to unrelated work
 and must not silently become scoped publication counts. The literal **629**
 source ledger, optional entry and i686-only filter are unchanged.
-
 
 
 
@@ -462,8 +461,9 @@ with codeload archive SHA-256
 repack. **[#358](https://forge.nogroup.group/tay/guix-channel/issues/358) remains
 OPEN**: literal full lint retains own findings. Final independent read-only
 review found the corrected implementation **correct (0.85 confidence, no
-findings)**. Publication remains pending; no publication OID, deployment,
-profile installation or tracker closure is claimed.
+findings)**. The signed/authenticated implementation is published to
+**`origin/master`** as recorded below; publication is not deployment, profile
+installation or tracker closure.
 
 ### Rights and the single restricted-asset omission
 
@@ -605,11 +605,11 @@ Main's **literal full lint**, without checker exclusions, completed in
 **20.54 s** with command status **0**, but **is not clean**: FAangband retains
 **no-updater** and **Software Heritage/Disarchive** findings. Thus **#358 must
 remain OPEN**. Final independent read-only review found both earlier accuracy
-defects corrected, **0.85 confidence**, **no findings**. The original
-**`local://faangband-gates.json`** remains historical hs6qw evidence; the final
-7yb receipts and Main's final build/lint results above supersede it.
-The isolated candidate inventory was measured as recorded above; publication
-remains pending. This documentation worker ran no commands, checks or apps.
+defects corrected, **0.85 confidence**, **no findings**. The current
+**`local://faangband-gates.json`** records the final **7yb** output and the
+actual final build, reproducibility, lint and native receipts above.
+The scoped committed-tree inventory was measured as recorded above. This
+documentation worker ran no commands, checks or apps.
 
 Main completed the scoped cleanup of **three failed build trees and rev-fa**
 in **0.59 s**, with about **190 MiB** of tree usage reported. Archives and
@@ -618,6 +618,39 @@ GiB free**, **91.94% metadata**) are observations, not space changes attributed
 to this cleanup. Main recorded the outcome in OKF
 **`network/servers/basedbox.md`** and **`network/log.md`**; this documentation
 worker made no OKF or vault/session changes.
+
+### Signed implementation publication
+
+Actual receipt **`local://faangband-publication.json`**, captured
+**2026-10-18 05:46:52 UTC**, records signed implementation commit
+[`a472f70c74b8674968a11c7bec0e4ec46f07368d`](https://forge.nogroup.group/tay/guix-channel/commit/a472f70c74b8674968a11c7bec0e4ec46f07368d),
+parent **`3079e1ed6b05a3f44ae46232ad58bb6de14a2551`**. Signature status is
+**G**, fingerprint **`6A27F433DC22B4DFA278E8F32F12E6A35F417606`**.
+Main's exact-end authentication succeeded in **0.30 s**; the ordinary
+authentication pre-push hook independently authenticated that same OID.
+Normal **`git push origin master`** succeeded without force, hook bypass or
+amend. Live SSH remote readback returned the exact OID for symbolic
+**`HEAD → refs/heads/master`** and **`master`**. This is authoritative Forgejo
+**SSH-ref evidence only**, not Forgejo API or GitHub mirror readback.
+
+The scoped implementation changes **eight paths**, including **five added
+files** and the owned Makefile/README/ACCOUNTING hunks. Published totals are
+**249 project / 7 font / 256 installable / 262 check / 255 default-native /
+274 README rows / 1,098 tracked files**, literal ledger **629** unchanged.
+They do not adopt the two extra unrelated whole-worktree project entries or
+establish all-package/source enumeration, build or test acceptance.
+
+During push the publisher preserved all **2,261 observed worktree paths**
+byte/mode-identically and the real index exactly: **104,800 bytes**, **1,054
+entries**, SHA-256
+**`906f71f85839009b4487a3182cc2d718f0d2baffc4520cb883085e17596bb1be`**.
+The Main-approved current gate-reference correction made after signing was
+preserved for this documentation follow-up, not amended into the implementation.
+Unrelated shared hunks remain excluded and unchanged. No future documentation
+commit OID or tracker readback is asserted here. **#358 remains OPEN** because
+publication does not erase the literal updater/archive lint findings or imply
+deployment/profile installation.
+
 
 ## Experienced Pixel Dungeon — final source, font composition and bounded native gameplay (2026-10-16)
 
