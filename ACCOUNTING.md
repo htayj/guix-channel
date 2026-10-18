@@ -198,6 +198,31 @@ the smoke fails rather than claiming a successful new channel build. Smoke does
 not establish complete inventory health, signed publication, or client-side
 substitution. Those remain separate deployment/acceptance evidence.
 
+### Current-Guix package-cache correction (2026-10-18)
+
+Manual smoke workflow run **3** authenticated Guix
+`1ec570b5aa491551e40bdc2db3b038cb467b1fae`, Nonguix
+`4b21ba0c885907aff3b1b6c717ac830144d3c575` and tay
+`f6add2ac7138be0d83db4806af7b718f1e34f6f2`, then failed while generating
+`guix-package-cache`. The observed log
+`/var/log/guix/drvs/4g/8zpsrl163h5lnhymldnw21vp8na8kk-guix-package-cache.drv.gz`
+traced Fontra's `python-glyphslib-fontra` native inputs to **unbound variable
+`python-py`**. This is a failed evaluation, not a completed smoke or build pass.
+
+The scoped [Fontra dependency correction](guix/tay/packages/fontra-python.scm)
+removes the redundant standalone `python-py` inputs from glyphsLib and UFO2FT.
+Both already inherit `python-pytest` from
+[Guix's exact fontutils definitions](https://codeberg.org/guix/guix/src/commit/1ec570b5aa491551e40bdc2db3b038cb467b1fae/gnu/packages/fontutils.scm).
+Their pinned [glyphsLib tests](https://github.com/googlefonts/glyphsLib/blob/v6.14.0/tests/conftest.py)
+and [UFO2FT tests](https://github.com/googlefonts/ufo2ft/blob/v3.9.0/tests/conftest.py)
+use `py.path.local`; Guix's current pytest **9.0.2** supplies that API through its
+[installed `py.py` compatibility module](https://github.com/pytest-dev/pytest/blob/9.0.2/src/py.py)
+and [vendored path implementation](https://github.com/pytest-dev/pytest/blob/9.0.2/src/_pytest/_py/path.py).
+No test phase, cache generation or channel authentication was disabled, and no
+old Guix revision was pinned. Primary source was read on **2026-10-18**; no
+post-correction package build or cache/workflow pass is established by this
+receipt. Those remain main-agent execution gates.
+
 ## Relocation map (2026-10-04)
 
 The previous README is retained below without dropping its substantive content.

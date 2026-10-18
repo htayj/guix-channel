@@ -17,6 +17,8 @@
 
 ;; Keep Guix's generally useful definitions unchanged.  These variants meet
 ;; Fontra 2026.9.0's requirements without modifying its dependency metadata.
+;; UFO2FT and glyphsLib inherit pytest's py.path compatibility API for tests;
+;; the retired standalone python-py package is not needed.
 
 (define-public python-unicodedata2-fontra
   (package
@@ -131,7 +133,7 @@
     (native-inputs
      (modify-inputs (package-native-inputs python-ufo2ft)
        (delete "python-wheel")
-       (prepend python-ufolib2-fontra python-syrupy python-py
+       (prepend python-ufolib2-fontra python-syrupy
                 python-compreffor-fontra
                 (with-fontra-fonttools python-defcon))))
     ;; Drop the old 2.x-only exclusions; the 3.x source has its own snapshots.
@@ -152,8 +154,7 @@
        (base32 "0alg47id36j0iv2xnhvl13f6hazf5y4ric0amgbwjs2qk8kdlnr7"))))
     (native-inputs
      (modify-inputs (package-native-inputs python-glyphslib)
-       (prepend python-py
-                (with-fontra-fonttools python-defcon)
+       (prepend (with-fontra-fonttools python-defcon)
                 python-ufo2ft-fontra
                 (with-fontra-fonttools python-ufonormalizer))))
     (propagated-inputs
