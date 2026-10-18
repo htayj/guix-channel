@@ -1000,3 +1000,11 @@ check-imago:
 check-browsh:
 	@test -n "$(BROWSH_OUTPUT)" -a -n "$(BROWSH_EVIDENCE)" || { echo 'Set BROWSH_OUTPUT and BROWSH_EVIDENCE (prebuilt /gnu/store output and fresh nonexistent evidence directory outside /gnu/store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/browsh-smoke.sh "$(BROWSH_OUTPUT)" "$(BROWSH_EVIDENCE)"
+
+# Separate from the historical hand-maintained build/check inventories above.
+.PHONY: substitutes substitutes-smoke
+substitutes:
+	python3 scripts/substitutes.py --mode all
+
+substitutes-smoke:
+	python3 scripts/substitutes.py --mode smoke

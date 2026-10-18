@@ -9,6 +9,7 @@ pinned; adding the channel does not start services or change your desktop.
 
 - [Add the channel](#add-the-channel)
 - [Install, build, or try a package](#install-build-or-try-a-package)
+- [Automated substitutes](#automated-substitutes)
 - [Programs](#programs)
   - [Desktop, window layouts and input](#desktop-window-layouts-and-input)
   - [AI and coding assistants](#ai-and-coding-assistants)
@@ -117,6 +118,57 @@ flags and runtime setup; for example, [Fontra](ACCOUNTING.md#installable-package
 uses a locally verified `--no-grafts --no-offload` path, while Hyprland plugins
 must match the compositor ABI. Installation alone does not configure a service,
 load a plugin, choose a font, connect to a MUD, or authenticate an AI provider.
+
+## Automated substitutes
+
+**Prepared, not deployed (2026-10-18):** the repository contains
+[`substitutes.yaml`](.forgejo/workflows/substitutes.yaml) and the build/status
+scripts. Their presence does not establish an enabled workflow, registered
+runner, signed substitute endpoint, or successful full evaluation.
+
+The trusted host runner label is `guix-channel`. Master pushes, a daily
+03:23 UTC schedule, and manual dispatch run a fresh checkout of current
+authoritative Forgejo `master`; pull requests and other branches cannot select
+build code. The workflow uses no third-party Actions, containers, `sudo`, or
+workflow signing secrets. It inherits the runner's current Guix profile `PATH`.
+
+```sh
+make substitutes        # full evaluation (the default)
+make substitutes-smoke  # explicit fresh-output acceptance probe
+```
+
+The substitute inventory is **all exported package objects** discovered in the
+authenticated channel, not the older manually maintained Makefile package list.
+It retains module/binding identities to avoid same-name upstream collisions.
+Each evaluation resolves current Guix, Nonguix and tay refs once and records an
+authenticated exact-commit lock; uncommitted checkout modules are not inputs.
+Native `x86_64-linux` targets are represented throughout; CalcRogue's native
+target is explicitly skipped as unsupported and its `i686-linux` target built.
+Fontra uses `--no-grafts`; all targets, including Fontra, build with
+`--no-offload`. `tern` and `sentinelone` are excluded. Every selected target
+error is reported and fails
+the full run rather than silently reducing the inventory.
+
+Before and during every command, the orchestrator checks free space on the
+store/state filesystem (`/gnu/store`): if it falls below 5 GiB the evaluation
+stops, reports a failure, preserves existing GC roots, and runs no automatic
+garbage collection.
+
+State lives under `/home/guixbot/substitutes`: per-target `latest` and `previous`
+GC roots retain the two successful outputs, while failed builds preserve old
+roots. `status/latest.json` describes the latest completed **full** evaluation;
+`status/running.json` identifies an active full evaluation, and `status/smoke.json`
+is separate. The prepared HTTP companion exposes `/status/latest.json`
+(alias `/status.json`), `/status/success`, `/status/fresh`, and `/metrics` on port
+8081. Freshness means full evaluation completion within 30 hours, not success;
+check success separately. A smoke run cannot refresh the full-evaluation status:
+it must actually build a previously absent channel source/font output with
+substitutes disabled, and fails when no fresh candidate exists. Only an explicit
+manual dispatch with `smoke: true` changes the workflow's full default.
+
+See [the automation record](ACCOUNTING.md#substitute-automation--prepared-not-deployed-2026-10-18)
+for credential lifetime, retention and verification boundaries. Existing package
+acceptance receipts and build/check targets are unchanged.
 
 ## Programs
 

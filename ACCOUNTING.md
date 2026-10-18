@@ -36,6 +36,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Historical Allure/AloneRL acceptance context](#alonerl-and-allure--allure-verified-alonerl-acceptance-pending) and [final AloneRL acceptance](#alonerl-final-local-acceptance-2026-10-04)
 - [Developer validation commands](#validate)
 - [License](#license) and [third-party notices](THIRD_PARTY_NOTICES.md)
+- [Substitute automation prepared state](#substitute-automation--prepared-not-deployed-2026-10-18)
 - [Agduria, Wenyan and Ludvig Lundgren's qBittorrent CLI](#agduria-wenyan-and-ludvig-lundgrens-qbittorrent-cli--verified-native-paths)
 - [Lispy Rogue, bodge-nuklear and LiteGraph](#lispy-rogue-bodge-nuklear-and-litegraph--verified-native-paths)
 - [Medley and Maiko](#medley-and-maiko--verified-native-path)
@@ -91,6 +92,105 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Exalt original source, Linux port and bounded native gameplay](#exalt--original-source-linux-port-and-bounded-native-gameplay-2026-10-15)
 - [Experienced Pixel Dungeon final source, font composition and bounded native gameplay](#experienced-pixel-dungeon--final-source-font-composition-and-bounded-native-gameplay-2026-10-16)
 - [FAangband free assets, native save continuity and SDL2 audio](#faangband--free-assets-native-save-continuity-and-sdl2-audio-2026-10-18)
+
+## Substitute automation — prepared, not deployed (2026-10-18)
+
+This entry records repository preparation, **not deployment or successful
+acceptance**. No runner registration, workflow execution, build, signature,
+client substitution, or HTTP health result is established by these additions.
+The original dirty workstation checkout is not the automation's source of truth.
+Existing package definitions, manual build/check inventories and dated receipts
+are intentionally unchanged.
+
+### Trusted execution and authenticated inputs
+
+`.forgejo/workflows/substitutes.yaml` follows the
+[Forgejo 15 Actions reference](https://forgejo.org/docs/v15.0/user/actions/reference/)
+(read 2026-10-18). It allows only master pushes, a daily 03:23 UTC schedule and
+manual dispatch; shell guards require the authoritative `tay/guix-channel`
+repository, an allowed event and `refs/heads/master`. It has no pull-request
+trigger or third-party `uses:` step. The `guix-channel` host runner inherits its
+current Guix profile `PATH` and has a 1440-minute job timeout. Builds require no
+`sudo`, Docker, or workflow signing key/secret.
+
+The workflow initializes a fresh temporary repository and fetches current
+`master` from `https://192.168.7.121/tay/guix-channel.git`; it does not execute
+an existing checkout's uncommitted files or a dispatch-selected non-master ref.
+TLS verification pins the installer's combined CA at
+`/opt/guix-substitutes/forgejo-lan-ca.crt`; verification is never disabled. The
+host's scoped trust store remains configured separately for the runner user.
+Before and during every command, the orchestrator checks the store/state
+filesystem (`/gnu/store`): if free space falls below 5 GiB the evaluation stops,
+reports a failure, preserves existing GC roots, and performs no automatic
+garbage collection.
+
+The automatic workflow token is passed through the environment to a temporary
+askpass script whose contents reference the environment variable, never embed
+the token. Credential helpers are disabled through inherited environment-only
+Git configuration. An exit/signal trap removes the temporary checkout and
+askpass; no token is put in remote URLs or persisted Git credential settings.
+The orchestrator may use this askpass for its initial authoritative Git fetch,
+then strips credential environment from Guix/build subprocesses.
+
+`scripts/substitutes.py` resolves the current authenticated Guix, Nonguix and
+tay refs once per evaluation and records their exact commits in the run lock.
+Tay is evaluated from a fresh authoritative Git mirror with its introduction
+and keyring, not uncommitted modules or a stale hand-maintained channel pin.
+The state lock `/home/guixbot/substitutes/evaluation.lock` provides single-flight
+execution across scheduled, push and manual invocations.
+
+### Inventory, results and retention
+
+`make substitutes` invokes `python3 scripts/substitutes.py --mode all`.
+The full inventory is discovered from every exported package object in the
+channel's package modules, including dynamically exported source snapshots and
+exported dependency variants. It does not reuse `PROJECT_PACKAGES`,
+`SOURCE_PACKAGES` or a manually curated substitute list. Module and binding
+identity select actual package objects, avoiding ambiguous `name@version`
+lookups. Native `x86_64-linux` targets are represented, including an explicit
+unsupported skip for CalcRogue's native target alongside its selected
+`i686-linux` build. Fontra retains `--no-grafts`; every target, including
+Fontra, builds with `--no-offload`. `tern` and
+`sentinelone` are explicit exclusions, not successful builds. Existing source
+licensing and redistribution caveats still apply; build success is not a grant
+of redistribution rights.
+
+An inventory/import/evaluation error is not an empty successful inventory.
+Every selected target records its result and any target failure makes the full
+run fail; unrelated targets can still produce useful successful outputs.
+Every declared derivation output is read and built explicitly. Successful
+outputs have registered GC roots under
+`/home/guixbot/substitutes/roots/<module+binding-safe-hash>/<system>/<output>/`;
+the identity key is a sanitized `module:binding` plus a SHA-256 prefix, not a
+package name. Roots retain `latest` and `previous`; a failed target leaves its
+old roots intact. The automation prunes only its own state/profile generations
+and retains the latest 20 report/log records rather than growing without bound.
+
+The status companion serves port 8081 with these read-only paths:
+
+| Path | Meaning |
+| --- | --- |
+| `/status/latest.json` (alias `/status.json`) | Latest completed full evaluation, backed by `status/latest.json` under the state directory |
+| `/status/success` | Whether that full evaluation completed with zero failures |
+| `/status/fresh` | Whether a full evaluation completed within the past 30 hours; freshness alone does not mean success |
+| `/metrics` | Machine-readable evaluation status |
+
+`status/running.json` separately records an active full evaluation.
+`status/smoke.json` records only explicit smoke results; it cannot replace or
+refresh full-evaluation evidence. HTTP status is operational evidence only when
+the companion is actually deployed and the responses have been observed.
+
+### Explicit smoke acceptance boundary
+
+`make substitutes-smoke` invokes `python3 scripts/substitutes.py --mode smoke`.
+The workflow selects that mode **only** for manual `workflow_dispatch` with the
+boolean input `smoke: true`; all other accepted events and omitted/false inputs
+use the full mode. Smoke discovers source-snapshot/font candidates and requires
+an output absent from the store before running a real build with
+`--no-substitutes`. A cache hit is not acceptance; if there is no fresh candidate,
+the smoke fails rather than claiming a successful new channel build. Smoke does
+not establish complete inventory health, signed publication, or client-side
+substitution. Those remain separate deployment/acceptance evidence.
 
 ## Relocation map (2026-10-04)
 

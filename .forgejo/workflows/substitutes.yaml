@@ -1,0 +1,73 @@
+name: Channel substitutes
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+    inputs:
+      smoke:
+        description: Build one genuinely new channel output instead of the full inventory
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  substitutes:
+    runs-on: guix-channel
+    timeout-minutes: 1440
+    steps:
+      - name: Build current authenticated master
+        shell: bash
+        env:
+          EVENT_NAME: ${{ forgejo.event_name }}
+          EVENT_REF: ${{ forgejo.ref }}
+          EVENT_REPOSITORY: ${{ forgejo.repository }}
+          SMOKE_INPUT: ${{ inputs.smoke }}
+          FORGEJO_CHECKOUT_TOKEN: ${{ forgejo.token }}
+        run: |
+          set -euo pipefail
+          case "$EVENT_NAME:$EVENT_REF" in
+            push:refs/heads/master|schedule:refs/heads/master|workflow_dispatch:refs/heads/master) ;;
+            *) printf '%s\n' 'Refusing an untrusted event or non-master ref.' >&2; exit 1 ;;
+          esac
+          test "$EVENT_REPOSITORY" = tay/guix-channel
+          mode=all
+          if test "$EVENT_NAME" = workflow_dispatch; then
+            case "$SMOKE_INPUT" in
+              true) mode=smoke ;;
+              false|'') ;;
+              *) printf '%s\n' 'Invalid smoke input.' >&2; exit 1 ;;
+            esac
+          fi
+          test -n "$FORGEJO_CHECKOUT_TOKEN"
+          umask 077
+          work=$(mktemp -d)
+          trap 'rm -rf -- "$work"' EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' HUP TERM
+          export GIT_ASKPASS="$work/askpass"
+          export GIT_TERMINAL_PROMPT=0
+          # Disable inherited credential helpers for checkout and Guix's Git calls.
+          export GIT_CONFIG_COUNT=2
+          export GIT_CONFIG_KEY_0=credential.helper
+          export GIT_CONFIG_VALUE_0=
+          export GIT_CONFIG_KEY_1=http.https://192.168.7.121/.sslCAInfo
+          export GIT_CONFIG_VALUE_1=/opt/guix-substitutes/forgejo-lan-ca.crt
+          cat > "$GIT_ASKPASS" <<'ASKPASS'
+          #!/bin/sh
+          case "$1" in
+            *Username*) printf '%s\n' x-access-token ;;
+            *Password*) printf '%s\n' "$FORGEJO_CHECKOUT_TOKEN" ;;
+            *) exit 1 ;;
+          esac
+          ASKPASS
+          chmod 700 "$GIT_ASKPASS"
+          git init "$work/channel"
+          git -C "$work/channel" remote add origin https://192.168.7.121/tay/guix-channel.git
+          git -C "$work/channel" fetch --no-tags origin refs/heads/master:refs/remotes/origin/master
+          git -C "$work/channel" checkout --detach refs/remotes/origin/master
+          cd "$work/channel"
+          python3 scripts/substitutes.py --mode "$mode"
