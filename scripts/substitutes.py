@@ -238,6 +238,16 @@ def retain_outputs(guix, target, system, variant, outputs, state, log, env):
 def build_target(guix, target, system, variant, outputs, drv, state, log, seconds, env, smoke):
     staging = log.parent / ("build-root-" + target_key(target) + "-" + system + "-" + variant)
     try:
+        if smoke:
+            missing = [path for path in outputs.values() if not Path(path).exists()]
+            if not missing:
+                raise RuntimeError("smoke target is already present before dependency prewarm")
+            run([guix, "repl", str(SCRIPTS / "substitute-derivation.scm")],
+                log, seconds + 120,
+                dict(env, SUBSTITUTE_DERIVATION=drv, SUBSTITUTE_PREWARM_INPUTS="1",
+                     SUBSTITUTE_BUILD_TIMEOUT=str(seconds)))
+            if any(Path(path).exists() for path in missing):
+                raise RuntimeError("dependency prewarm unexpectedly produced a smoke target output")
         run([guix, "build", drv, "--root=" + str(staging), *build_options(variant, system, seconds),
              *(["--no-substitutes"] if smoke else [])], log, seconds + 120, env)
         retain_outputs(guix, target, system, variant, outputs, state, log, env)
@@ -258,7 +268,11 @@ def evaluate(args, state, report, directory, env):
     report["inventory_count"] = len(inventory)
     atomic_json(directory / "inventory.json", inventory)
     smoke_done = False
-    for target in inventory:
+    # Prefer small source snapshots for smoke without narrowing its candidates
+    # or changing the full inventory's order and coverage.
+    targets = (sorted(inventory, key=lambda target: not target["name"].endswith("-source"))
+               if args.mode == "smoke" else inventory)
+    for target in targets:
         name = target["name"]
         if name in RESTRICTED or target["module"] in {"tay packages tern", "tay packages sentinelone"}:
             report["skipped"].append(dict(target, reason="excluded: operator-supplied restricted artifact"))

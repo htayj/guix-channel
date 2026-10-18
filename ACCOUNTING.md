@@ -245,6 +245,29 @@ the smoke fails rather than claiming a successful new channel build. Smoke does
 not establish complete inventory health, signed publication, or client-side
 substitution. Those remain separate deployment/acceptance evidence.
 
+### Smoke dependency-closure correction (2026-10-18)
+
+Manual smoke run **5** passed authenticated current-Guix profile/package-cache
+generation, but its first eligible font target (`font-material-symbols-rounded`)
+then started building bootstrap `binutils 2.20.1`: `--no-substitutes` applies to
+the entire missing dependency closure, not only the selected channel output.
+That target build and the complete smoke had **not completed**; the passed
+profile stage is not a smoke pass.
+
+Smoke now prefers source snapshots before fonts, with the same publication
+policy and candidate set; full-mode inventory, variants and coverage are
+unchanged. Before the real target build, the locked Guix helper prewarms only
+the exact selected derivation's `derivation-inputs` (including each requested
+output and implicit builder/tool inputs) and `derivation-sources`, using normal
+daemon-trusted substitutes and no offloading. This is not a package-level
+development-input approximation and does not request the target derivation.
+The orchestrator requires a missing target output both before prewarming and
+immediately afterward, then retains the real target's `--no-substitutes` and
+`--no-offload` build. Unexpected target production during prewarming fails;
+old retained roots are unchanged on failure. No fallback weakens this proof.
+These are source corrections, not a completed rerun or publication receipt;
+runtime smoke acceptance remains pending.
+
 ### Current-Guix package-cache correction (2026-10-18)
 
 Manual smoke workflow run **3** authenticated Guix
