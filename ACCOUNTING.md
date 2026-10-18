@@ -139,6 +139,12 @@ and keyring, not uncommitted modules or a stale hand-maintained channel pin.
 The state lock `/home/guixbot/substitutes/evaluation.lock` provides single-flight
 execution across scheduled, push and manual invocations.
 
+The generated lock is a single `(list (channel ...) ...)` expression. Guix's
+restricted channel-file evaluator supplies its constructors; it does not expose
+`use-modules`. The first live workflow attempt reached `guix pull` and exposed
+that distinction; the generator was corrected after the reported failure.
+This correction alone is not evidence of a successful subsequent evaluation.
+
 ### Inventory, results and retention
 
 `make substitutes` invokes `python3 scripts/substitutes.py --mode all`.

@@ -136,7 +136,9 @@ def lock_channels(state, report, log, env):
                scheme_string(channel["commit"]), scheme_string(channel["introduction"]),
                scheme_string(channel["signer"])))
     locked = log.parent / "channels.scm"
-    locked.write_text("(use-modules (guix channels))\n(list\n" + "\n".join(expressions) + ")\n")
+    # Channel files run in Guix's restricted evaluator, which prebinds channel
+    # constructors but intentionally does not provide use-modules.
+    locked.write_text("(list\n" + "\n".join(expressions) + ")\n")
     bootstrap = shutil.which("guix", path=env.get("PATH"))
     if not bootstrap:
         raise RuntimeError("authenticated bootstrap Guix executable is missing")
