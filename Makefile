@@ -58,8 +58,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	lambdahack kimchi keeperrl \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
-	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned cracks-and-crevices dungeonminder dwarftown dungeonsofdecay encircled enemy-trench freebasic escape-from-lab-42 etrd eversector everything-is-fodder exalt experienced-pixel-dungeon faangband
-	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned cracks-and-crevices dungeonminder dwarftown dungeonsofdecay encircled enemy-trench freebasic escape-from-lab-42 etrd eversector everything-is-fodder exalt experienced-pixel-dungeon faangband autolith
+	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned cracks-and-crevices dungeonminder dwarftown dungeonsofdecay encircled enemy-trench freebasic escape-from-lab-42 etrd eversector everything-is-fodder exalt experienced-pixel-dungeon faangband autolith farmingrl
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # Keep i686-only packages listed for inventory and lint, but realize them
 # through explicit architecture targets rather than the default native build.
@@ -76,7 +75,6 @@ OPTIONAL_PROPRIETARY_PACKAGES ?= sentinelone
 # are checked without becoming separate top-level application builds.
 CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES) \
 	sbcl-zlib sbcl-cl-jpeg-imago sbcl-common-lisp-jupyter-imago \
-	sbcl-cl-libheif sbcl-cl-libtiff
 	sbcl-cl-libheif sbcl-cl-libtiff \
 	autolith-colorlisp-native autolith-sandbox-helper autolith-fff-c \
 	sbcl-autolith-runtime autolith-sbcl-source-tree sbcl-autolith-nyaml sbcl-autolith-yason \
@@ -137,6 +135,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES) \
 .PHONY: guard-experienced-pixel-dungeon
 .PHONY: guard-faangband
 .PHONY: guard-autolith
+.PHONY: guard-farmingrl
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
 		{ echo "expected $(EXPECTED_SOURCE_PACKAGE_COUNT) exported source packages, found $(SOURCE_PACKAGE_COUNT)"; exit 1; }
@@ -226,6 +225,10 @@ guard-faangband:
 guard-autolith:
 	@test -n "$(AUTOLITH_OUTPUT)" -a -n "$(AUTOLITH_EVIDENCE)" || { echo 'Set AUTOLITH_OUTPUT and AUTOLITH_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/autolith-smoke.sh "$(AUTOLITH_OUTPUT)" "$(AUTOLITH_EVIDENCE)"
+
+guard-farmingrl:
+	@test -n "$(FARMINGRL_OUTPUT)" -a -n "$(FARMINGRL_EVIDENCE)" || { echo 'Set FARMINGRL_OUTPUT and FARMINGRL_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/farmingrl-smoke.sh "$(FARMINGRL_OUTPUT)" "$(FARMINGRL_EVIDENCE)"
 
 check-durthang:
 	GUIX="$(GUIX)" tests/durthang-smoke.sh

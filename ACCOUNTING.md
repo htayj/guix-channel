@@ -93,6 +93,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Experienced Pixel Dungeon final source, font composition and bounded native gameplay](#experienced-pixel-dungeon--final-source-font-composition-and-bounded-native-gameplay-2026-10-16)
 - [FAangband free assets, native save continuity and SDL2 audio](#faangband--free-assets-native-save-continuity-and-sdl2-audio-2026-10-18)
 - [Autolith source-built live Common Lisp agent](#autolith--source-built-live-common-lisp-agent-2026-10-18)
+- [FarmingRL unchanged browser roguelike and bounded native flow](#farmingrl--unchanged-browser-roguelike-2026-10-18)
 
 ## Substitute automation — prepared, not deployed (2026-10-18)
 
@@ -649,6 +650,107 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## FarmingRL — unchanged browser roguelike (2026-10-18)
+
+[`farmingrl`](guix/tay/packages/farmingrl.scm) **0.0.0-0.5f4e722** packages
+Koji Horaguchi's original FarmingRL at pinned revision
+[`5f4e722644d1fe266aae4a015cc366e7e1dec6f4`](https://github.com/horaguchi/FarmingRL/tree/5f4e722644d1fe266aae4a015cc366e7e1dec6f4).
+The codeload archive SHA-256 is base32
+**`1qj8v0ph9cxnpr17gnlmpgh3i1qlzjxkagqjh6hrp6h0lr47hbbh`**
+(archive hash, not a Git NAR). All five upstream files are installed unchanged:
+`index.html`, `game.js` and bundled `rot.js` under `share/farmingrl`, and
+`LICENSE` and `README.md` under `share/doc/farmingrl`. The retained notices
+cover **MIT/Expat (Koji Horaguchi)** and **BSD-3-Clause (Ondrej Zara's rot.js)**;
+the source-rights review found no material flaw. This is the original local
+browser game, not a rewrite, substitute engine or downloaded runtime payload.
+
+### Launcher and prebuilt-output consumer
+
+The launcher opens the immutable local `file://` game in the store-pinned
+**Ungoogled Chromium** application window; it needs no server or runtime
+downloads. With **umask 077**, it namespaces data/config/cache under
+`$XDG_DATA_HOME/farmingrl`, `$XDG_CONFIG_HOME/farmingrl` and
+`$XDG_CACHE_HOME/farmingrl`. Unset or relative XDG roots use the standard
+absolute HOME fallbacks; a relative fallback is rejected. The dedicated
+browser profile is `data-root/farmingrl/chromium` and the disk cache is
+`cache-root/farmingrl/chromium`, not the user's ordinary browser profile.
+Additional arguments pass to the pinned browser. A generated private
+Fontconfig file selects the store's **DejaVu Sans Mono** for `monospace`, with
+XDG font caching, rather than depending on host font discovery. No upstream
+HTML or JavaScript is modified for paths or typography.
+
+**`make guard-farmingrl`** takes **`FARMINGRL_OUTPUT`**, a canonical
+already-built direct store output, and **`FARMINGRL_EVIDENCE`**, a fresh,
+nonexistent absolute evidence directory outside the store. It drives
+[`tests/farmingrl-smoke.sh`](tests/farmingrl-smoke.sh) and
+[`tests/farmingrl-browser.mjs`](tests/farmingrl-browser.mjs), not a package
+build. The consumer observes ordinary native browser input and rendering;
+it does not inject game state to manufacture progress.
+
+### Actual gates, native5 receipt and limits
+
+Main's **build passed** (`.goocastle/farmingrl-build2.log`) for
+**`/gnu/store/2snyl0yc9rd8yzkc01sh47jsvn5krj0a-farmingrl-0.0.0-0.5f4e722`**.
+The reproducibility **`--check` passed**
+(`.goocastle/farmingrl-repro2.log`). **Literal full lint**, with no checker
+exclusions, completed with status **0** in **20.873 s**
+(`.goocastle/farmingrl-full-lint2.log`), but **is not clean**: the package
+retains **no updater** and **source not archived on Software Heritage and
+missing from Disarchive** findings. A zero lint exit status does not discharge
+those residual gates.
+
+Main's **native5 guard passed in 35.771 s**
+(`.goocastle/farmingrl-native5.log`), with evidence retained under
+**`.goocastle/evidence/farmingrl-native5`**. Its `evidence.json`, native stderr,
+process/namespace observations and screenshots establish:
+
+- The same **UID 1000 / GID 998** inside private user/mount/network/PID
+  namespaces, a **read-only store**, **only loopback** networking and a
+  private real session **`dbus-daemon`**. The actual process tree uses the
+  store's Ungoogled Chromium **`lib/chromium`** executable, not a host browser.
+- A fresh dedicated profile with an observed **`Local State`** file below
+  **`$XDG_DATA_HOME/farmingrl/chromium`**. Chromium stderr contains only the
+  expected **DevTools listening** line; no native errors are recorded.
+- Native **CDP keypresses** move the player on the visible canvas, verified
+  against a player raster template. Natural combat records positive hits,
+  player HP damage, a monster kill, **EXP 0 → 2** and loot/equipment progress.
+  `initial.png`, movement/return frames and `combat.png` retain visual evidence.
+- Local HTML and script responses are **2xx**, with **no network failures**.
+  The before/after output NAR is unchanged at
+  **`070mggl113sy34sh3c09frsfirxkii3skn45i5p4vsxp2lj01i1c`**.
+
+Historical **native1–4** attempts were observer-only failures, not passing
+acceptance runs: resource-timing observation was corrected, rejected D-Bus
+ERROR output was addressed with a private real session bus, and the browser
+identity scan was corrected to recognize the actual store process tree.
+Those diagnostic attempts do not replace the final native5 receipt or imply
+changes to the five upstream files.
+
+Acceptance is bounded to the observed local launch, visible movement and
+early natural combat/EXP/loot/equipment flow. It does not establish a full
+playthrough, all farming/progression paths, long-term profile or game-state
+continuity, every browser/display backend or cross-version migration.
+The README's **Verified native flow** status is not deployment/profile
+installation, clean lint, publication evidence or tracker closure; none of
+those is claimed by this receipt. This documentation worker ran no commands,
+checks or apps.
+
+### Release prerequisite and cleanup-only repeat
+
+The release also removes **two inherited stale duplicate inventory lines**
+from the Makefile as published by Autolith commit **`ef38442`**: the old
+`PROJECT_PACKAGES` line ending in `faangband`, and the old `CHECK_PACKAGES`
+line ending in `libheif libtiff` without a continuation. These duplicates
+prevented Makefile parsing; removing them is a prerequisite for a runnable
+published `guard-farmingrl`, not a broader feature change.
+
+Main's **native6 guard passed in 36.39 s** after the cleanup-only trap change,
+with clean native stderr (only the expected Chromium DevTools line).
+**`.goocastle/evidence/farmingrl-native6/scratch-cleanup.txt`** records
+**2,786,100 bytes** for **`/tmp/farmingrl-native.nNsKM6`** and removal of that
+exact temporary scratch tree. This repeat supplements, rather than rewrites,
+the detailed native5 receipt above.
 
 ## FAangband — free assets, native save continuity and SDL2 audio (2026-10-18)
 
