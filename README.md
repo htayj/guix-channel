@@ -160,9 +160,10 @@ outputs are rooted under both variant keys.
 The inventory is discovery-based, not an allowlist: every exported package
 object is a candidate unless excluded first by the publication policy.
 `tern` and `sentinelone` are explicit exclusions. Beyond those, a target is
-blocked when its package definition lacks a `license` field (`#f`) or
-declares exactly `https://choosealicense.com/no-permission/` as its license
-URI, and the block propagates transitively through the native, runtime and
+blocked when its package definition lacks a `license` field (`#f`) or when
+its declared license (including any element of a license list) carries the
+no-permission URI `https://choosealicense.com/no-permission/`, and the block
+propagates transitively through the native, runtime and
 propagated input graphs to dependent packages. There is no broad
 nonfree/noncopyleft ban. Blocked targets are reported with a
 license-blocked reason and excluded from the build inventory; smoke runs

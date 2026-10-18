@@ -165,9 +165,9 @@ of redistribution rights.
 **Publication policy.** The inventory is discovery-based: every exported
 package object is a candidate, and exclusions apply before selection rather
 than through an allowlist. `tern` and `sentinelone` are explicit exclusions.
-Beyond those, a target is license-blocked when its package definition lacks a
-`license` field (`#f`) or declares exactly
-`https://choosealicense.com/no-permission/` as its license URI; the block
+`license` field (`#f`) or when its declared license (including any element
+of a license list) carries the no-permission URI
+`https://choosealicense.com/no-permission/`; the block
 propagates transitively through the native, runtime and propagated input
 graphs to dependent packages. There is no broad nonfree/noncopyleft ban.
 The memoized target selector records an eighth TSV field, `publication_policy`,
@@ -184,7 +184,9 @@ no broad nonfree/noncopyleft ban. Input/license metadata exceptions
 are recorded as evaluation-failed target failures, not license-blocked skips,
 while a module/export discovery failure fails the whole evaluation strictly.
 No target counts are stated here; the selector census remains pending.
-
+while a module/export discovery failure fails the whole evaluation strictly.
+Per-selector target counts are recorded only in the parent's receipt output,
+not here.
 **Variant rationale.** Guix grafting replaces derivations so a grafted
 build's references point at the grafted replacement items
 ([guix/grafts.scm](https://codeberg.org/guix/guix/src/branch/master/guix/grafts.scm));

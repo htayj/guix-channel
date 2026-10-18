@@ -282,9 +282,11 @@ def evaluate(args, state, report, directory, env):
                 continue
             variants = ["ungrafted"] if name == "fontra" else ["ungrafted", "grafted"]
             completed = {}
+            failed_derivations = {}
             for variant in variants:
                 variant_item = dict(item, variant=variant)
                 target_log = directory / (target_key(target) + "-" + system + "-" + variant + ".log")
+                identity = None
                 try:
                     drv, outputs = derivation(guix, target, system, variant, target_log,
                                               args.target_timeout, env)
@@ -293,6 +295,12 @@ def evaluate(args, state, report, directory, env):
                     before = {output: Path(path).exists() for output, path in outputs.items()}
                     identity = (drv, tuple(sorted(outputs.items())))
                     duplicate_of = completed.get(identity)
+                    if identity in failed_derivations:
+                        prior_variant, prior_error = failed_derivations[identity]
+                        report["failed"].append(dict(variant_item, derivation=drv,
+                                                     error=prior_error, duplicate_of=prior_variant,
+                                                     log=str(target_log)))
+                        continue
                     if duplicate_of is None:
                         build_target(guix, target, system, variant, outputs, drv, state, target_log,
                                      args.target_timeout, env, args.mode == "smoke")
@@ -305,6 +313,8 @@ def evaluate(args, state, report, directory, env):
                 except (EvaluationInterrupted, DiskReserveError):
                     raise
                 except (RuntimeError, OSError, ValueError, subprocess.TimeoutExpired) as error:
+                    if identity is not None:
+                        failed_derivations[identity] = (variant, str(error))
                     report["failed"].append(dict(variant_item, error=str(error), log=str(target_log)))
                 atomic_json(state / "status" / "running.json", report)
                 if smoke_done:
