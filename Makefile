@@ -59,6 +59,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
 	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned cracks-and-crevices dungeonminder dwarftown dungeonsofdecay encircled enemy-trench freebasic escape-from-lab-42 etrd eversector everything-is-fodder exalt experienced-pixel-dungeon faangband
+	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned cracks-and-crevices dungeonminder dwarftown dungeonsofdecay encircled enemy-trench freebasic escape-from-lab-42 etrd eversector everything-is-fodder exalt experienced-pixel-dungeon faangband autolith
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # Keep i686-only packages listed for inventory and lint, but realize them
 # through explicit architecture targets rather than the default native build.
@@ -71,9 +72,22 @@ OPTIONAL_PROPRIETARY_PACKAGES ?= sentinelone
 # Check Imago's five SBCL dependency recipes explicitly without adding them to
 # the top-level build inventory.  Its libtiff variant keeps the upstream name
 # and is realized through sbcl-cl-libtiff, not an ambiguous "libtiff" check.
+# Autolith's public compiler, source tree, Lisp and native dependency recipes
+# are checked without becoming separate top-level application builds.
 CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES) \
 	sbcl-zlib sbcl-cl-jpeg-imago sbcl-common-lisp-jupyter-imago \
 	sbcl-cl-libheif sbcl-cl-libtiff
+	sbcl-cl-libheif sbcl-cl-libtiff \
+	autolith-colorlisp-native autolith-sandbox-helper autolith-fff-c \
+	sbcl-autolith-runtime autolith-sbcl-source-tree sbcl-autolith-nyaml sbcl-autolith-yason \
+	$(addprefix sbcl-autolith-,agentcomms fetch-gist cl-colorist cl+ssl \
+	clinedi clermaid cl-jobpond clinker-transcript cl-rfc8252 cl-rfc8628 \
+	cl-llm-provider-api cl-lsp cl-resources clasted daphne cl-skills \
+	cl-termdown cl-worktree cl-exec-sandbox cl-hashline clifff colorlisp \
+	colordiff parenchek org-templater image-daemon ls-compat ls-flock \
+	idsmall mcparen sbcl-generations sexp-config sexp-store \
+	sophisticated-clipboard sbcl-workers surgeon structlisp argo setinka \
+	lambda-debugger yolokuva)
 
 .PHONY: check check-source-count check-sentinelone check-datamosh-security check-ffglitch check-praat check-buzz \
 	check-axmud check-blightmud check-durthang check-frostbite check-go-mud check-godisc check-image-tape check-kbtin \
@@ -122,6 +136,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES) \
 	check-lispy-rogue check-bodge-nuklear check-litegraph check-interlisp-medley check-natron check-sporkhack check-dungeonminder check-dwarftown guard-dungeonsofdecay guard-encircled guard-enemy-trench guard-escape-from-lab-42 guard-etrd guard-eversector guard-everything-is-fodder guard-exalt
 .PHONY: guard-experienced-pixel-dungeon
 .PHONY: guard-faangband
+.PHONY: guard-autolith
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
 		{ echo "expected $(EXPECTED_SOURCE_PACKAGE_COUNT) exported source packages, found $(SOURCE_PACKAGE_COUNT)"; exit 1; }
@@ -207,6 +222,10 @@ guard-experienced-pixel-dungeon:
 guard-faangband:
 	@test -n "$(FAANGBAND_OUTPUT)" -a -n "$(FAANGBAND_EVIDENCE)" || { echo 'Set FAANGBAND_OUTPUT and FAANGBAND_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/faangband-smoke.sh "$(FAANGBAND_OUTPUT)" "$(FAANGBAND_EVIDENCE)"
+
+guard-autolith:
+	@test -n "$(AUTOLITH_OUTPUT)" -a -n "$(AUTOLITH_EVIDENCE)" || { echo 'Set AUTOLITH_OUTPUT and AUTOLITH_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/autolith-smoke.sh "$(AUTOLITH_OUTPUT)" "$(AUTOLITH_EVIDENCE)"
 
 check-durthang:
 	GUIX="$(GUIX)" tests/durthang-smoke.sh

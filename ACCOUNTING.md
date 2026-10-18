@@ -92,6 +92,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Exalt original source, Linux port and bounded native gameplay](#exalt--original-source-linux-port-and-bounded-native-gameplay-2026-10-15)
 - [Experienced Pixel Dungeon final source, font composition and bounded native gameplay](#experienced-pixel-dungeon--final-source-font-composition-and-bounded-native-gameplay-2026-10-16)
 - [FAangband free assets, native save continuity and SDL2 audio](#faangband--free-assets-native-save-continuity-and-sdl2-audio-2026-10-18)
+- [Autolith source-built live Common Lisp agent](#autolith--source-built-live-common-lisp-agent-2026-10-18-buildrepronative-passed-publication-and-lint-residual-pending)
 
 ## Substitute automation — prepared, not deployed (2026-10-18)
 
@@ -12273,6 +12274,106 @@ local client/configuration behavior, **not torrent operations, daemon startup,
 SCGI/XML-RPC integration or live tracker actions**.  No torrent, rTorrent
 instance, credentials, user configuration or installed profile was used or
 changed.
+
+## Autolith — source-built live Common Lisp agent (2026-10-18; build/repro/native passed, publication and lint residual pending)
+
+[`autolith`](guix/tay/packages/autolith.scm) **0.66.0** builds
+lambda-symbolics/autolith from source at pinned revision
+[`68db763eaae60f5e930c195eba4c76ac029b0781`](https://github.com/lambda-symbolics/autolith/tree/68db763eaae60f5e930c195eba4c76ac029b0781)
+(codeload archive, sha256 base32
+`00xa6ikpz0a783iasql98nkbp8gacfvyw9rldk8i68hg8zk87cw4`), using a dedicated
+pinned SBCL **2.6.6** runtime ([`sbcl-autolith-runtime`](guix/tay/packages/autolith-dependencies.scm))
+and a full locked Lisp dependency closure so every system — including
+transitive Guix libraries — shares one compiler identity. No feature cuts. A fresh **native20 guard pass** established the actual
+public PTY flow, so the README row records **Verified** for that verified
+native path — with the documented residual **literal lint findings
+(explicitly not clean)** and **pending publication** as the remaining gates.
+
+Licensing: the upstream source at the pinned revision is **ISC**;
+channel-authored definitions, patches, launcher scripts, smoke harness and
+documentation are GPL-3.0-or-later. Custom upstream notice sets are retained
+as packaged (including the ColorLisp native shim/runtime/grammar split and the
+locked FFF crate notices in [`autolith-rust-crates.scm`](guix/tay/packages/autolith-rust-crates.scm)).
+
+### Build and test status (2026-10-18)
+
+Main's **build18** passed in **194.683 s**, producing store output
+**`/gnu/store/05wap6hivbfi8rhnxn43219cz4zzyfyn-autolith-0.66.0`** with
+**949 cases / 11,901 checks / 0 failures**, plus structural **8 cases /
+86 checks** and debug **6 cases / 95 checks**. The **`--check`**
+reproducibility rebuild **passed in 180.527 s with byte-identical outputs and
+all tests passing**; the earlier build17/repro17 3-FASL nondeterminism was
+traced to build-only type metadata (OR/AND/MEMBER ordering, hook repairs and
+SBCL allocation hash residual union order) and fixed. Independent focused
+review found the fix sound and closed a VECTOR gap. An earlier build17 run (184.553 s, 949 cases / 11,902 checks / 0 failures,
+structural 8 cases / 86 checks, debug 6 cases / 95 checks) and its repro17
+run (181.185 s, 3 FASL byte differences) are superseded by build18/repro18.
+
+The first native guard attempt (native17, failed 17.475 s on ASDF naming
+WARNINGS for `ieee-floats`/`parse-float` after the 0.66.0 cores materialized)
+was traced to those warnings and fixed in the source with proper secondary
+system references. Subsequent consumer runs progressed further: native18 hit
+a private-network `lo DOWN` error (fixed in the harness so it now retains a
+sole loopback interface on offline routes), and native19 completed onboarding
+but stopped at the combined form where a CR was seen as paste rather than
+submission (Clinedi's actual burst semantics). The key-press pacing fix in
+the smoke worker required no application or matcher change; native20 below
+then passed. These earlier runs are recorded as diagnostic history, not
+passes.
+
+A literal **full lint4** run — one full lint command covering all 49
+packages — completed with exit 0 in **136.024 s**. This is still **not clean
+lint**: remaining findings are the usual no-updater and no-source-archive
+classes and the pin's SourceForge 404 / Quicklisp 403 fetch probing; no
+Software Heritage 429 was printed this run. The packaged check recipes use
+full Bash intentionally; the corresponding lint warning remains an actual
+residual finding because the recipes' `/dev/tcp` tests require it.
+
+**Native20 guard PASSED in 24.065 s** (log
+`.goocastle/autolith-native20.log`, fresh evidence
+`.goocastle/evidence/autolith-native20/`). It exercised the actual public
+onboarding flow: Space/Escape tour exit, `(help)`, `(help 'quit)`,
+`(+ 20 22)` ⇒ `42`, and `(quit)` with exit status 0; the active/recovery
+image pair materialized and was reused on relaunch; CLI and help surfaces
+answered. The run used the same UID 1000/GID 998 as a private user, in
+separate user/mount/network/PID namespaces; an actual TCP loopback round-trip
+proved the local transport, and route tables plus the sole UP loopback
+interface proved the offline/no-egress property; the store was mounted read-only and
+the output NAR stayed unchanged at
+**`102xc8djv2x4k2xy959k4iwdncwyb9qayxwj61c02yhcyfnfi0f2`**. No injected
+configuration, seeds, saves, private APIs, provider auth or contact were
+involved. The retained terminal-help screenshot shows the main view legibly
+headed **“Autolith help — Everyday commands”** with the new/resume/model/cwd
+entries and no error output. A separate throwaway **partial-seed recovery**
+smoke passed on the same output (log
+`.goocastle/autolith-partial-seed18.log`): with a deliberately constructed
+partial ASDF cache (a FASL at mode 0444 under a 0555 parent, no seeding
+markers), the ordinary launcher `--version` recovered by chmod-ing the file
+to 0644 — byte-identical FASL by `cmp` — published the `.guix-seeded` marker
+and reused the existing image pair on a second `--version`. That smoke used
+no network or private API; it ran on an isolated network. The prebuilt-output consumer target is `make guard-autolith` with
+`AUTOLITH_OUTPUT` (canonical direct store output) and `AUTOLITH_EVIDENCE`
+(fresh, nonexistent absolute path outside the store), driving
+[`tests/autolith-smoke.sh`](tests/autolith-smoke.sh). Tracker
+status is not addressed by this receipt: no issue closure is claimed or
+implied. Inventory delta attributable to Autolith is **+1 program** and
+**+48 check-only names** (7 base recipes plus the 41-name locked
+`sbcl-autolith-*` closure); the **629** source-snapshot ledger is unchanged.
+Publication (signed OID) will be recorded once available.
+
+### Runtime shape
+
+The store output is immutable; mutable state lives below the ordinary user
+XDG state home as a per-identity image root. First launch lazily materializes
+an image with an `active/autolith-active.core` and
+`recovery/autolith-recovery.core` pair (plus manifests and identity) under
+`$XDG_STATE_HOME/autolith/guix/images/<identity>/`, behind a flock-guarded
+materialization step that validates the pair before publishing it. Live
+compilation writes only to a per-identity writable ASDF cache seeded once from
+the store output; the store itself is never written. The launcher exports the
+pinned runtime, exact SBCL source tree, source root and installed XDG config
+root, plus ColorLisp tree-sitter and FFF library paths, without changing the
+user's Git configuration (scoped `safe.directory` trust entries are appended).
 
 ## License
 

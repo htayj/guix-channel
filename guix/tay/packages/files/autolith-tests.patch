@@ -1,0 +1,45 @@
+Keep upstream update behavior checks without asserting package-manager prose.
+The immutable-package protocol is shared by Guix and Nix; its refusal to use
+the release service is the behavior under test, not a particular label.
+
+--- a/tests/application-tests.lisp
++++ b/tests/application-tests.lisp
+@@ -592,16 +592,0 @@
+-             (let* ((availability
+-                      (make-instance 'update-availability
+-                                     :tag tag
+-                                     :method ':nix))
+-                    (application
+-                      (make-instance 'application
+-                                     :configuration configuration
+-                                     :update-availability availability))
+-                    (notice (application--update-notice application))
+-                    (text (format nil "~{~A~}"
+-                                  (mapcar #'terminal-span-text notice))))
+-               (test-assert
+-                (and (search "Installed through Nix" text)
+-                     (search "flake or profile" text))
+-                "Nix receives package-manager advice without an update action"))
+-
+@@ -644,14 +628,10 @@
+-              (dolist (case '((:source "running from source")
+-                              (:nix "installed through Nix")))
+-                (destructuring-bind (method expected) case
+-                  (setf (application-installation-provenance application)
+-                        (make-instance 'installation-provenance :method method)
+-                        presented nil)
+-                  (application-update application)
+-                  (test-assert (search expected (first presented))
+-                               "external installations receive their update advice")
+-                  (test-assert (zerop fetches)
+-                               "external installations never query the release service")))
++              (dolist (method '(:source :nix))
++                (setf (application-installation-provenance application)
++                      (make-instance 'installation-provenance :method method)
++                      presented nil)
++                (application-update application)
++                (test-assert (zerop fetches)
++                             "external installations never query the release service"))
+               (setf (application-installation-provenance application)
+                     (make-instance
+                      'installation-provenance
