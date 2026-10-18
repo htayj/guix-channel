@@ -90,6 +90,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Everything Is Fodder original source, rights and native save continuity](#everything-is-fodder--original-source-rights-and-native-save-continuity-2026-10-15)
 - [Exalt original source, Linux port and bounded native gameplay](#exalt--original-source-linux-port-and-bounded-native-gameplay-2026-10-15)
 - [Experienced Pixel Dungeon final source, font composition and bounded native gameplay](#experienced-pixel-dungeon--final-source-font-composition-and-bounded-native-gameplay-2026-10-16)
+- [FAangband free assets, native save continuity and SDL2 audio](#faangband--free-assets-native-save-continuity-and-sdl2-audio-2026-10-18)
 
 ## Relocation map (2026-10-04)
 
@@ -409,6 +410,23 @@ CalcRogue filter and canonical **629** preservation ledger remain unchanged.
 Unrelated Dualmaster, Tern, auxiliary and AloneRL changes are not accepted or
 published by this integration.
 
+FAangband's **2026-10-18 candidate** adds one project name, **`faangband`**,
+one alphabetical README row and the prebuilt-output **`guard-faangband`**
+consumer target. From the scoped published ExpPD baseline, the publisher's
+isolated candidate-tree measurement is **249 project + 7 font = 256 installable
+names**, **262 check names**, **255 default-native names** and **274 linked
+README rows**. Five new package/launcher/notices/consumer files make **1,098
+tracked files** from **1,093**. These are measured **unpublished candidate**
+counts, not a whole-inventory pass; the prepared-tree receipt is
+**`local://faangband-publish-prepared.json`**. Main's actual current
+**whole-worktree** Make expansion instead yielded **251
+project / 7 font / 258 installable / 264 check / 257 default-native**, with
+ledger **629**; its two additional project entries belong to unrelated work
+and must not silently become scoped publication counts. The literal **629**
+source ledger, optional entry and i686-only filter are unchanged.
+
+
+
 
 Versions and descriptions were extracted from the linked `guix/tay/packages/`
 definitions, resolving literal strings, constant `git-version` expressions and
@@ -430,6 +448,176 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## FAangband — free assets, native save continuity and SDL2 audio (2026-10-18)
+
+[`faangband`](guix/tay/packages/faangband.scm) **2.0.1** packages Nick
+McConnell's original First Age Angband, not a similarly named replacement.
+It retains wilderness/towns, normal game definitions, character progression,
+GCU/curses, X11, SDL2, sound, fonts and all free tile sets. Source is pinned to
+[`7ad7178b5da5819fe1a2d13182001b5bf6e9eaac`](https://github.com/NickMcConnell/FAangband/tree/7ad7178b5da5819fe1a2d13182001b5bf6e9eaac),
+with codeload archive SHA-256
+**`6b521b077f385dc49bee435e6a84c8a54f53920a0d7b1db3908f744d63f2d997`**
+(archive hash, not a Git NAR). This is a C source build, not an upstream binary
+repack. **[#358](https://forge.nogroup.group/tay/guix-channel/issues/358) remains
+OPEN**: literal full lint retains own findings. Final independent read-only
+review found the corrected implementation **correct (0.85 confidence, no
+findings)**. Publication remains pending; no publication OID, deployment,
+profile installation or tracker closure is claimed.
+
+### Rights and the single restricted-asset omission
+
+The package elects **GPL version 2 only**, not GPL-2.0-or-later, from the
+overall grant in the pinned
+[`docs/copying.rst`](https://github.com/NickMcConnell/FAangband/blob/7ad7178b5da5819fe1a2d13182001b5bf6e9eaac/docs/copying.rst).
+The historical Angband alternative and attribution remain in the original
+notice. Original/old and Nomad tiles and icons use that affirmative umbrella
+grant; no new standalone Nomad licence or public-domain inference is invented.
+Adam Bolt's distinct any-purpose redistribution/modification grant is
+retained; David Gervais graphics use **CC BY 3.0**. Included font authors agreed
+to GPL distribution. BSD-style component clauses, WELL random-generator
+attribution and the public-domain string routine's notice are preserved in
+installed component-notice source files, not flattened into one blanket grant.
+
+Retained Dubtrain Records (Pete) **DASP v3.1.0** sound uses the rights holder's
+explicit **2023-12-23 CC BY 4.0** update on the
+[distribution page](http://www.dubtrain.com/angband/) (package rights retrieval
+**2026-10-18**). The historical NC-SA text still present in the pinned copying
+statement, sound configuration and older paragraph is preserved and explained,
+not silently rewritten. The
+[2023-12-26 maintainer change](https://github.com/NickMcConnell/FAangband/commit/fe28950e391c8edc2c877b9b36e553c84c5f9103)
+corroborates the change; the later rights-holder grant is the basis used here.
+
+**Only restricted Shockbolt artwork is omitted.** The origin snippet removes
+the entire Shockbolt directory, its build recursion and complete graphics-menu
+records **5 and 6** before source repacking/building, not just after install.
+Main's actual source-output inspection of
+**`/gnu/store/zp8im771vm8mr09wvwxp6lrlzjizz1mn-faangband-2.0.1.tar.zst`**
+confirmed tile inventory modes **1–4** and no Shockbolt in the repacked source.
+Original, Nomad, Adam Bolt and David Gervais assets, free fonts, sound and
+graphical frontends remain. Installed **`share/doc/faangband`** retains the
+original copying/thanks/readme/change records, detailed **`THIRD-PARTY-NOTICES`**
+and exact component clauses. The channel's
+[`faangband-notices.txt`](guix/tay/packages/files/faangband-notices.txt) records
+the elected grants and historical-versus-current sound distinction.
+
+### Launcher, frontends and reusable native consumer
+
+The ordinary launcher keeps immutable assets in **`share/faangband`** and
+mutable user/save/scores/archive/info/bone paths below
+**`$XDG_DATA_HOME/faangband`**, with **`$HOME/.local/share`** fallback. It seeds
+only the upstream help examples without overwriting player edits; it does not
+seed a save or test configuration. It preserves caller working directory and
+normal user options, including explicit last-option-wins directory overrides
+and frontend arguments after `--`. `ANGBAND_PATH` is not assumed implemented.
+Desktop entries use the actual store launcher and corrected SDL2 selection.
+The upstream directory-option parser is corrected to split at the **first
+`=` only**, preserving valid HOME/XDG paths containing another `=` while
+retaining errors for missing/empty values. This fixes the parser root cause,
+not a test-path exception. Final native evidence uses `data=proof` below.
+
+```sh
+faangband -msdl2 -ssdl -uMyCharacter
+faangband -mgcu -uMyCharacter -- -n1
+faangband -mx11 -uMyCharacter
+```
+
+These are usage examples, not three newly exercised checks. GCU and SDL2 were
+exercised below; **X11 is built and retained but not runtime-verified**.
+Sound is enabled through ordinary in-game options, not by injecting a config.
+
+[`tests/faangband-smoke.sh`](tests/faangband-smoke.sh) consumes a canonical
+**already-built direct store output** and a **fresh, nonexistent canonical
+absolute evidence directory outside the store**. It never builds FAangband;
+it may realize generic external observer tools. It records real PTY/XTest
+inputs, private namespaces/HOME/XDG state, read-only store mounts and before/
+after NAR identity. Repeat with a new evidence path, not a retained run:
+
+```sh
+make guard-faangband GUIX=/home/tay/.config/guix/current/bin/guix \
+  FAANGBAND_OUTPUT=/gnu/store/7yb2998iz1bsk7qgr67r2p5p6s86fzph-faangband-2.0.1 \
+  FAANGBAND_EVIDENCE=/tmp/faangband-native-repeat-1
+```
+
+### Actual final build, native5 receipt and remaining gates
+
+Main's final corrected build passed in **72.14 s** (`artifact://19272`), including
+**45 upstream unit suites, 297/297 tests and 5/5 scripted tests**. The check
+phase compiles an independent upstream test configuration with test-only
+private paths; it does not replace the production UI or fake sound. The
+pinned unit harness's nonempty all-passed total is checked in addition to
+process status. Scripted build tests are not native UI acceptance.
+Reproducibility **`--check` passed in 68.84 s** (`artifact://19274`) for
+**`/gnu/store/7yb2998iz1bsk7qgr67r2p5p6s86fzph-faangband-2.0.1`**.
+
+Main also exercised **`make guard-faangband`** with the explicit `GUIX`
+override, canonical output above and fresh absolute evidence path
+**`/home/tay/projects/guix-channel/.goocastle/faangband-integrated2`**. It passed
+in **41.00 s**. The actual integrated `consumer-receipt.json` records driver
+**0**, success and unchanged NAR
+**`0lqvy5wnrcj54bh79sicikfv3rvfdq4fbmfsqcmc3c82i7cwnb2f`**.
+Character/turn details below belong specifically to standalone native5, not an
+assumed identical randomly generated integrated session.
+
+The actual **`.goocastle/faangband-native5`** consumer passed in **37.07 s**,
+driver **0**. Its `consumer-receipt.json` records the same unchanged NAR
+**`0lqvy5wnrcj54bh79sicikfv3rvfdq4fbmfsqcmc3c82i7cwnb2f`**. The retained
+`native-gameplay.json`, terminal frames, SDL2 screenshots, input transcripts,
+logs and native saves establish:
+
+- Ordinary GCU birth of **OmpProof**, **Easterling Warrior**, in **Eriador
+  Town**, **HP 29/29**, **gold 50**; a visible native tile step, normal
+  save/quit and fresh-process resume with exact visible map, position,
+  identity and turn continuity. Game turns progress **1 → 11 → resumed 11 →
+  21**, Standard turns **0 → 1 → resumed 1 → 2**, with continued movement and
+  both GCU process exits **0**.
+- SDL2 visibly resumes the same character. Ordinary in-game sound enable and
+  **E** / visible starting-food selection consume a ration; Main's image
+  review reads **“That tastes good. You are full! You have no more Rations of
+  Food (a).”** with nonblank town rendering and HP **29/29**. This is actual
+  gameplay, not just a title window.
+- The private real PulseAudio **`fa_proof.monitor`** captures
+  **`sdl2-food-audio.wav`**, **22050 Hz stereo**, **23,136 nonzero samples**,
+  peak **1493**, after the ordinary food action. This demonstrates non-silent
+  native sound, not hardware-device behavior, listening quality or every
+  sound event. Normal SDL2 save/quit and empty native stderr are recorded by
+  Main's gate evidence.
+  The observer now requires the positive **“That tastes good.”** message and
+  rejects **“You have no food”**; opening an eat prompt alone cannot pass.
+- Real PTY/XTest input and native save files are observed without injected
+  game state. Earlier native1–3 failed attempts remain diagnostic evidence,
+  not additional passing consumers.
+- **`XDG_DATA_HOME=/tmp/faangband-evidence/private/data=proof`** is preserved
+  in full (`xdg_equals_path_preserved: true`); native save
+  **`data=proof/faangband/save/OmpProof`** remains beneath that exact root,
+  with no truncated sibling path. This exercises the corrected parser.
+
+Earlier native4/integrated1 passes on **hs6qw** remain historical and do not
+substitute for these final reviewed **7yb** output receipts.
+
+Acceptance is bounded to early-town birth/movement, save/resume continuity,
+continued movement, SDL2 food and sound. It does not establish a full
+playthrough, combat/boss balance, every race/class, all wilderness/dungeons,
+all tile modes, X11 runtime, every display/audio backend or cross-version save
+migration. Retained but unexercised features are not removed.
+
+Main's **literal full lint**, without checker exclusions, completed in
+**20.54 s** with command status **0**, but **is not clean**: FAangband retains
+**no-updater** and **Software Heritage/Disarchive** findings. Thus **#358 must
+remain OPEN**. Final independent read-only review found both earlier accuracy
+defects corrected, **0.85 confidence**, **no findings**. The original
+**`local://faangband-gates.json`** remains historical hs6qw evidence; the final
+7yb receipts and Main's final build/lint results above supersede it.
+The isolated candidate inventory was measured as recorded above; publication
+remains pending. This documentation worker ran no commands, checks or apps.
+
+Main completed the scoped cleanup of **three failed build trees and rev-fa**
+in **0.59 s**, with about **190 MiB** of tree usage reported. Archives and
+native evidence were retained. The concurrent filesystem readings (**35.29
+GiB free**, **91.94% metadata**) are observations, not space changes attributed
+to this cleanup. Main recorded the outcome in OKF
+**`network/servers/basedbox.md`** and **`network/log.md`**; this documentation
+worker made no OKF or vault/session changes.
 
 ## Experienced Pixel Dungeon — final source, font composition and bounded native gameplay (2026-10-16)
 

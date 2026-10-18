@@ -1,0 +1,146 @@
+FAangband 2.0.1 -- source and included-asset notices
+=================================================
+
+Upstream: https://github.com/NickMcConnell/FAangband
+Release: https://github.com/NickMcConnell/FAangband/releases/tag/2.0.1
+Source revision: 7ad7178b5da5819fe1a2d13182001b5bf6e9eaac
+Source archive: https://codeload.github.com/NickMcConnell/FAangband/tar.gz/7ad7178b5da5819fe1a2d13182001b5bf6e9eaac
+Archive SHA-256: 6b521b077f385dc49bee435e6a84c8a54f53920a0d7b1db3908f744d63f2d997
+
+The original docs/copying.rst is installed alongside this notice, unmodified.
+Its general grant is GNU GPL version 2 OR the historical Angband licence,
+with specifically enumerated exceptions.  This package elects the GPL
+version 2 branch, NOT an inferred "or later" grant.  The historical dual
+statement and all upstream attributions remain available.  src/main.c,
+src/init.c, and src/buildid.c explicitly confirm version 2 in their headers.
+The compiled copyright credits Angband contributors, 1987-2019; the copying
+statement credits Ben Harrison, James E. Wilson, and Robert A. Koeneke (1997).
+See also thanks.rst and the individual source and preference-file credits.
+
+Compiled component notices
+--------------------------
+The BSD-style two-condition redistribution notices for message.c/message.h
+(Elly and Andi Sidwell, 2007), sound.h/snd-sdl.h (Graeme Russ, 2016), and
+z-textblock.c/z-textblock.h (Andi Sidwell, 2010; Peter Denison, 2011) are
+reproduced verbatim in the installed component-notices/ source files.  Those
+headers require retention in source and reproduction with binary releases;
+no extra disclaimer is invented where the original header has none.
+
+The WELL random number generator in z-rand.c credits Francois Panneton and
+Pierre L'Ecuyer (University of Montreal) and Makoto Matsumoto (Hiroshima
+University); Erik Osheim modified it to work with unsigned integers.  The
+complete original notice is retained in component-notices/z-rand.c.
+z-util.c identifies its my_stristr implementation as public domain and cites
+http://c.snippets.org/code/stristr.c; that notice is retained verbatim too.
+GPL version 2: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+
+Included game and graphical data
+-------------------------------
+Game definitions, help, screens, default preferences, ghost templates, icons,
+and Original (old/8x8) and Nomad (nomad/8x16) tile assets are distributed under
+the general GPL version 2 election in docs/copying.rst.  That document starts
+with an overall FAangband grant and enumerates its exceptions; these assets
+are not exceptions.  This is an affirmative umbrella grant, not a claim that
+lack of a separate asset licence makes an asset free or public domain.
+
+Original tile credits: Lars Haugseth (original pixmap), with Dawnmist updates;
+see tiles/old/graf-xxx.prf.  Nomad tile credits: Nomad, adapted from fake ASCII,
+with Robert Ruehlmann's Adam Bolt mappings; see tiles/nomad/graf-nmd.prf.
+Tile mappings and their original in-file notices accompany the installed
+assets.  No separate or invented Nomad or Original tile licence is asserted.
+
+Adam Bolt's 16x16 graphics: "may be redistributed and used for any purpose,
+with or without modification" (docs/copying.rst).  This distinct permissive
+grant is preserved rather than relabelling the artwork as GPL.
+
+David Gervais' 32x32 graphics: Creative Commons Attribution 3.0 (CC BY 3.0),
+which permits redistribution, modification, and use under those terms.
+Attribution: David Gervais.  See docs/copying.rst and the installed preference
+files for additional credits.  Licence: https://creativecommons.org/licenses/by/3.0/
+
+Font files: Leon Marrick and/or Sheldon Simms III and/or Nick McConnell,
+all of whom agreed to release their Angband font work under the GPL
+(docs/copying.rst).  This package elects version 2 consistently with the
+overall grant; no additional font licence or version extension is inferred.
+
+Retained sound and later rights-holder grant
+-------------------------------------------
+Attribution: Dubtrain Records (Pete), copyright 2009.
+Dubtrain Angband Sound Pack (DASP) v3.1.0, released 2009-02-24.
+Contact: angband@dubtrain.com
+Rights-holder distribution page: http://www.dubtrain.com/angband/
+Historical readme: http://www.dubtrain.com/angband/readme.html
+Original Wave archive: http://www.dubtrain.com/angband/dasp_v31.zip
+
+The distribution page explicitly records: "updated 2023-12-23", "updated
+license to CC By 4.0 - thanks Tangar! :)" and links CC BY 4.0.  The packaged
+lib/sounds/*.mp3 are FAangband's encoded DASP v3.1.0 sounds; its sound.cfg
+identifies the pack and original 2009-02-24 date.  The package retains those
+files and distributes the sounds under this later rights-holder CC BY 4.0
+grant.  Encoding to MP3 and FAangband's sound-event configuration predate
+this package; this package makes no further audio changes.
+Licence: https://creativecommons.org/licenses/by/4.0/
+
+The pinned docs/copying.rst and lib/sounds/sound.cfg retain their original
+Attribution-NonCommercial-ShareAlike notices, as does the historical readme.
+The distribution page also still contains its older BY-NC-SA paragraph.
+Those historical statements are preserved, not silently rewritten.  The
+explicitly dated 2023-12-23 update on that same rights-holder page supplies
+the later CC BY 4.0 grant used here, including commercial use and derivatives
+subject to attribution.  Retrieval for this package: 2026-10-18.
+Upstream documented the change on 2023-12-26 in commit:
+https://github.com/NickMcConnell/FAangband/commit/fe28950e391c8edc2c877b9b36e553c84c5f9103
+That later maintainer change corroborates, but is not the basis for, the
+rights-holder grant.
+
+Excluded Shockbolt artwork
+--------------------------
+Raymond Gaustadnes' 2012 Shockbolt artwork has purpose, fee, and modification
+restrictions.  The source origin removes the complete lib/tiles/shockbolt
+directory, its build recursion, and graphics-menu entries 5 and 6, before
+building or installing anything.  No Shockbolt images or mapping files are
+included in the repacked source or installed package.  The original copying
+statement's explanation is retained as historical notice, not as a licence
+claim covering an installed asset.  All other tiles and graphical frontends,
+normal gameplay, curses, and sound remain present.
+
+Build, dependencies, and downstream changes
+------------------------------------------
+This is a source build, not a repackaged upstream executable.  The codeload
+archive has configure.ac and autogen.sh but no generated configure.  Its
+bootstrap runs aclocal, autoheader, and autoconf.  The production build uses
+private paths, curses, X11, SDL2, SDL2_image, SDL2_ttf, and SDL2_mixer; the
+ordinary spoiler frontend remains enabled.  Guix supplies the libraries as
+separately source-built packages with their own licences and notices; the
+historical SDL paragraph in copying.rst does not imply bundled SDL binaries.
+The launcher uses Guix Bash and Coreutils under their respective GPL licences.
+
+Downstream changes dated 2026-10-18: remove Shockbolt at source-origin time;
+stamp the fixed version via upstream's version-file fallback; install the
+immutable data closure in share/faangband; and provide an XDG_DATA_HOME
+launcher.  Fix src/main.c's -d parser to split at the first '=' only, retaining
+the entire directory path when HOME, XDG_DATA_HOME, or an explicit directory
+contains '='.  Missing path values retain the usage error.  Default writable
+user, save, scores, archive, info, and bone paths are in XDG_DATA_HOME/faangband
+(HOME/.local/share fallback).  Explicit user options, including directory
+overrides and -- frontend options, retain their upstream meaning.  No
+ANGBAND_PATH support is assumed: the source comment mentions it, but the
+pinned implementation reads compiled defaults instead.
+
+Build checks compile a separate upstream --with-no-install --enable-test
+configuration with no graphical or sound frontend, using the same source and
+a symlink to the original immutable assets (not a second asset copy).  They
+run the upstream C unit suites through make -C src tests / the Perl harness,
+and the upstream scripted game tests through run-tests, with a private HOME
+and an explicit test-only PRIVATE_USER_PATH.  Upstream tilde expansion uses
+the passwd database rather than HOME; the test-only compiler definition uses
+config.h's existing override guard to contain direct unit-test path setup.
+The ordinary launcher needs no tilde patch: initial default path construction
+allocates strings only, and all mutable paths are overridden before creation.
+SDL extension include paths are supplied explicitly because sdl2-config only
+provides the include directory for SDL itself, not its separate extensions.
+The unit-test harness output is checked for a nonempty, all-passed total
+because this pinned harness does not reliably fail its exit status on an
+assertion-count mismatch.  No test cases or assertions are disabled or changed.
+These scripted tests are build checks, not evidence of native curses, X11,
+SDL2, or audio acceptance.  Native UI acceptance is a separate consumer test.

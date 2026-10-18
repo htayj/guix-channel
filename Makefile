@@ -58,7 +58,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	lambdahack kimchi keeperrl \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
-	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned cracks-and-crevices dungeonminder dwarftown dungeonsofdecay encircled enemy-trench freebasic escape-from-lab-42 etrd eversector everything-is-fodder exalt experienced-pixel-dungeon
+	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned cracks-and-crevices dungeonminder dwarftown dungeonsofdecay encircled enemy-trench freebasic escape-from-lab-42 etrd eversector everything-is-fodder exalt experienced-pixel-dungeon faangband
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # Keep i686-only packages listed for inventory and lint, but realize them
 # through explicit architecture targets rather than the default native build.
@@ -121,6 +121,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES) \
 	check-agduria check-wenyan check-ludviglundgren-qbittorrent-cli \
 	check-lispy-rogue check-bodge-nuklear check-litegraph check-interlisp-medley check-natron check-sporkhack check-dungeonminder check-dwarftown guard-dungeonsofdecay guard-encircled guard-enemy-trench guard-escape-from-lab-42 guard-etrd guard-eversector guard-everything-is-fodder guard-exalt
 .PHONY: guard-experienced-pixel-dungeon
+.PHONY: guard-faangband
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
 		{ echo "expected $(EXPECTED_SOURCE_PACKAGE_COUNT) exported source packages, found $(SOURCE_PACKAGE_COUNT)"; exit 1; }
@@ -202,6 +203,10 @@ guard-exalt:
 guard-experienced-pixel-dungeon:
 	@test -n "$(EXPPD_OUTPUT)" -a -n "$(EXPPD_EVIDENCE)" || { echo 'Set EXPPD_OUTPUT and EXPPD_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/experienced-pixel-dungeon-smoke.sh "$(EXPPD_OUTPUT)" "$(EXPPD_EVIDENCE)"
+
+guard-faangband:
+	@test -n "$(FAANGBAND_OUTPUT)" -a -n "$(FAANGBAND_EVIDENCE)" || { echo 'Set FAANGBAND_OUTPUT and FAANGBAND_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/faangband-smoke.sh "$(FAANGBAND_OUTPUT)" "$(FAANGBAND_EVIDENCE)"
 
 check-durthang:
 	GUIX="$(GUIX)" tests/durthang-smoke.sh
