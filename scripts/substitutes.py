@@ -159,10 +159,10 @@ def discover(guix, log, env):
     text = run([guix, "repl", str(SCRIPTS / "substitute-targets.scm")], log, 600, env)
     targets = []
     for line in text.splitlines():
-        module, binding, name, version, outputs, systems, location = line.split("\t")
+        module, binding, name, version, outputs, systems, location, publication_policy = line.split("\t")
         targets.append(dict(module=module, binding=binding, name=name, version=version,
                             outputs=outputs.split(","), systems=systems.split(","),
-                            location=location))
+                            location=location, publication_policy=publication_policy))
     if not targets:
         raise RuntimeError("empty channel package inventory")
     return targets
@@ -173,19 +173,19 @@ def target_key(target):
     return re.sub(r"[^a-zA-Z0-9_.-]", "-", identity) + "-" + hashlib.sha256(identity.encode()).hexdigest()[:12]
 
 
-def build_options(target, system, seconds):
+def build_options(variant, system, seconds):
     return ["--system=" + system, "--cores=2", "--max-jobs=1", "--no-offload",
             "--timeout=" + str(seconds), "--max-silent-time=1800",
-            *(["--no-grafts"] if target["name"] == "fontra" else [])]
+            *(["--no-grafts"] if variant == "ungrafted" else [])]
 
 
-def derivation(guix, target, system, log, seconds, env):
+def derivation(guix, target, system, variant, log, seconds, env):
     module = "(list %s)" % " ".join(
         "(string->symbol %s)" % scheme_string(part) for part in target["module"].split())
     expression = "(module-ref (resolve-interface %s) (string->symbol %s))" % (
         module, scheme_string(target["binding"]))
     drv = run([guix, "build", "--derivations", "--expression=" + expression,
-               *build_options(target, system, seconds)], log, 300, env)
+               *build_options(variant, system, seconds)], log, 300, env)
     if not re.fullmatch(r"/gnu/store/[^/\s]+\.drv", drv):
         raise RuntimeError("expected exactly one derivation")
     inspection = dict(env, SUBSTITUTE_DERIVATION=drv)
@@ -210,19 +210,37 @@ def register_root(guix, path, output, log, env):
     os.replace(temporary, path)
 
 
-def build_target(guix, target, system, outputs, drv, state, log, seconds, env, smoke):
-    staging = log.parent / ("build-root-" + target_key(target) + "-" + system)
+def retain_outputs(guix, target, system, variant, outputs, state, log, env):
+    base = state / "roots" / target_key(target) / system
+    for output, store_path in outputs.items():
+        if not Path(store_path).exists():
+            raise RuntimeError("successful build omitted output " + output)
+        directory = base / variant / output
+        latest = directory / "latest"
+        # Migrate only this service's earlier variantless roots, whose policy
+        # was default grafts except Fontra. Register replacements before unlink.
+        legacy = base / output
+        legacy_variant = "ungrafted" if target["name"] == "fontra" else "grafted"
+        if variant == legacy_variant:
+            for generation in ("previous", "latest"):
+                old = legacy / generation
+                new = directory / generation
+                if old.is_symlink() and not new.is_symlink():
+                    register_root(guix, new, os.readlink(old), log, env)
+        if latest.is_symlink() and os.readlink(latest) != store_path:
+            register_root(guix, directory / "previous", os.readlink(latest), log, env)
+        register_root(guix, latest, store_path, log, env)
+        if variant == legacy_variant:
+            for generation in ("previous", "latest"):
+                (legacy / generation).unlink(missing_ok=True)
+
+
+def build_target(guix, target, system, variant, outputs, drv, state, log, seconds, env, smoke):
+    staging = log.parent / ("build-root-" + target_key(target) + "-" + system + "-" + variant)
     try:
-        run([guix, "build", drv, "--root=" + str(staging), *build_options(target, system, seconds),
+        run([guix, "build", drv, "--root=" + str(staging), *build_options(variant, system, seconds),
              *(["--no-substitutes"] if smoke else [])], log, seconds + 120, env)
-        for output, store_path in outputs.items():
-            if not Path(store_path).exists():
-                raise RuntimeError("successful build omitted output " + output)
-            directory = state / "roots" / target_key(target) / system / output
-            latest = directory / "latest"
-            if latest.is_symlink() and os.readlink(latest) != store_path:
-                register_root(guix, directory / "previous", os.readlink(latest), log, env)
-            register_root(guix, latest, store_path, log, env)
+        retain_outputs(guix, target, system, variant, outputs, state, log, env)
     finally:
         # Remove only the temporary roots created by this invocation. Never
         # remove store objects or roots owned by another user/service.
@@ -245,6 +263,15 @@ def evaluate(args, state, report, directory, env):
         if name in RESTRICTED or target["module"] in {"tay packages tern", "tay packages sentinelone"}:
             report["skipped"].append(dict(target, reason="excluded: operator-supplied restricted artifact"))
             continue
+        if target["publication_policy"].startswith("evaluation-failed:"):
+            report["failed"].append(dict(target, stage="publication-policy",
+                                         error=target["publication_policy"]))
+            continue
+        if target["publication_policy"] != "allowed":
+            policy = target["publication_policy"]
+            category = "publication-blocked" if "non-substitutable" in policy or "restricted-artifact" in policy else "license-blocked"
+            report["skipped"].append(dict(target, reason=category + ": " + policy))
+            continue
         systems = ["x86_64-linux", "i686-linux"] if name == "calcrogue" else ["x86_64-linux"]
         for system in systems:
             item = dict(target, system=system)
@@ -253,24 +280,35 @@ def evaluate(args, state, report, directory, env):
                 continue
             if args.mode == "smoke" and not (name.endswith("-source") or name.startswith("font-")):
                 continue
-            target_log = directory / (target_key(target) + "-" + system + ".log")
-            try:
-                drv, outputs = derivation(guix, target, system, target_log, args.target_timeout, env)
-                if args.mode == "smoke" and all(Path(path).exists() for path in outputs.values()):
-                    continue
-                before = {output: Path(path).exists() for output, path in outputs.items()}
-                build_target(guix, target, system, outputs, drv, state, target_log,
-                             args.target_timeout, env, args.mode == "smoke")
-                report["succeeded"].append(dict(item, derivation=drv, outputs=outputs,
-                                                existed_before=before))
-                smoke_done = args.mode == "smoke"
-            except (EvaluationInterrupted, DiskReserveError):
-                raise
-            except (RuntimeError, OSError, ValueError, subprocess.TimeoutExpired) as error:
-                report["failed"].append(dict(item, error=str(error), log=str(target_log)))
-            atomic_json(state / "status" / "running.json", report)
-            if smoke_done:
-                return
+            variants = ["ungrafted"] if name == "fontra" else ["ungrafted", "grafted"]
+            completed = {}
+            for variant in variants:
+                variant_item = dict(item, variant=variant)
+                target_log = directory / (target_key(target) + "-" + system + "-" + variant + ".log")
+                try:
+                    drv, outputs = derivation(guix, target, system, variant, target_log,
+                                              args.target_timeout, env)
+                    if args.mode == "smoke" and all(Path(path).exists() for path in outputs.values()):
+                        continue
+                    before = {output: Path(path).exists() for output, path in outputs.items()}
+                    identity = (drv, tuple(sorted(outputs.items())))
+                    duplicate_of = completed.get(identity)
+                    if duplicate_of is None:
+                        build_target(guix, target, system, variant, outputs, drv, state, target_log,
+                                     args.target_timeout, env, args.mode == "smoke")
+                        completed[identity] = variant
+                    else:
+                        retain_outputs(guix, target, system, variant, outputs, state, target_log, env)
+                    report["succeeded"].append(dict(variant_item, derivation=drv, outputs=outputs,
+                                                    existed_before=before, duplicate_of=duplicate_of))
+                    smoke_done = args.mode == "smoke"
+                except (EvaluationInterrupted, DiskReserveError):
+                    raise
+                except (RuntimeError, OSError, ValueError, subprocess.TimeoutExpired) as error:
+                    report["failed"].append(dict(variant_item, error=str(error), log=str(target_log)))
+                atomic_json(state / "status" / "running.json", report)
+                if smoke_done:
+                    return
     if args.mode == "smoke" and not smoke_done:
         raise RuntimeError("no missing channel source/font output was successfully built; cache hits do not satisfy smoke")
 

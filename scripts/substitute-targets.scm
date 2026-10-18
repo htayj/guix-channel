@@ -4,7 +4,8 @@
 ;;;
 ;;; stdout: headerless TSV, one row per distinct package object:
 ;;; module (space-separated symbols), binding, name, version,
-;;; outputs (comma-separated), supported systems (comma-separated), location file.
+;;; outputs (comma-separated), supported systems (comma-separated), location file,
+;;; publication policy ("allowed" or the first deterministic blocker).
 ;;; Package aliases use the lexically first module/binding selector.  In
 ;;; particular, name/version pairs are metadata, never build selectors.
 ;;; stderr: module-import-error or export-error diagnostics.  Any such error
@@ -14,8 +15,11 @@
              ((gnu packages) #:select (%package-module-path))
              (guix packages)
              (guix diagnostics)
+             ((guix licenses) #:select (license? license-uri))
+             ((guix utils) #:select (%current-system %current-target-system))
              (ice-9 format)
              (ice-9 hash-table)
+             (ice-9 match)
              (srfi srfi-1)
              (srfi srfi-13))
 
@@ -62,6 +66,123 @@
              (string-contains file "/tay/packages/"))
          file)))
 
+(define %no-permission-uri "https://choosealicense.com/no-permission/")
+(define %publication-blockers (make-hash-table))
+
+(define (restricted-package? package)
+  ;; Do this before forcing any license or input fields: operator-supplied
+  ;; artifacts must not be inspected as part of publication discovery.
+  (or (member (package-name package) '("tern" "sentinelone"))
+      (let ((file (tay-package-file package)))
+        (and file (member (basename file) '("tern.scm" "sentinelone.scm"))))))
+
+(define (no-permission-license? value)
+  (and (license? value)
+       (let ((uri (license-uri value)))
+         (if (list? uri)
+             (member %no-permission-uri uri)
+             (equal? uri %no-permission-uri)))))
+
+(define (explicitly-non-substitutable? package)
+  ;; Inspect only the declared argument list; do not lower build arguments or
+  ;; evaluate G-expressions.  An omitted flag is not a publication blocker.
+  (let* ((arguments (package-arguments package))
+         (flag (and (list? arguments) (memq #:substitutable? arguments))))
+    (and flag (pair? (cdr flag)) (eq? #f (cadr flag)))))
+
+(define (direct-publication-blocker package)
+  (cond
+   ((restricted-package? package) (cons "restricted-artifact" package))
+   ((explicitly-non-substitutable? package) (cons "non-substitutable" package))
+   (else
+    (let ((license (package-license package)))
+      (cond
+       ((not license) (cons "absent-license" package))
+       ((any no-permission-license? (if (list? license) license (list license)))
+        (cons "no-permission-license" package))
+       (else #f))))))
+
+(define (package-publication-blocker package cache)
+  ;; Guix's accessors force and normalize thunked input fields into labeled
+  ;; tuples.  package-transitive-inputs follows only propagated edges below
+  ;; those tuples; recurse over package-direct-inputs instead to include each
+  ;; dependency's native, regular, and propagated inputs.  Cache each package
+  ;; object once per system rather than recomputing every export's closure.
+  (let ((cached (hashq-ref cache package 'unseen)))
+    (cond
+     ((eq? cached 'visiting)
+      (error "cyclic package inputs during publication discovery"
+             (package-name package)))
+     ((not (eq? cached 'unseen)) cached)
+     (else
+      (hashq-set! cache package 'visiting)
+      (catch #t
+        (lambda ()
+          (let ((blocker
+                 (or (direct-publication-blocker package)
+                     (any (match-lambda
+                            ((_ (? package? input) _ ...)
+                             (package-publication-blocker input cache))
+                            (_ #f))
+                          (package-direct-inputs package)))))
+            (hashq-set! cache package blocker)
+            blocker))
+        (lambda (key . args)
+          ;; Do not leave an in-progress marker in the shared cache when an
+          ;; input thunk fails: other exports must see the actual error too.
+          (hashq-remove! cache package)
+          (apply throw key args)))))))
+
+(define (publication-policy package)
+  (let* ((systems (if (string=? (package-name package) "calcrogue")
+                      '("x86_64-linux" "i686-linux")
+                      '("x86_64-linux")))
+         (blocker
+          (or (direct-publication-blocker package)
+              (any (lambda (system)
+                     (and (member system (package-supported-systems package))
+                          (let ((cache
+                                 (or (hash-ref %publication-blockers system)
+                                     (let ((cache (make-hash-table)))
+                                       (hash-set! %publication-blockers system cache)
+                                       cache))))
+                            (parameterize ((%current-system system)
+                                           (%current-target-system #f))
+                              (package-publication-blocker package cache)))))
+                   systems))))
+    (if blocker
+        (string-append
+         (if (eq? package (cdr blocker)) "" "dependency-")
+         (car blocker)
+         (if (and (eq? package (cdr blocker))
+                  (string=? (car blocker) "restricted-artifact"))
+             ""
+             (string-append
+              ":" (string-map (lambda (character)
+                                 (if (memv character '(#\tab #\newline #\return))
+                                     #\space character))
+                               (package-name (cdr blocker))))))
+        "allowed")))
+
+(define (target-publication-policy package module binding)
+  (catch #t
+    (lambda () (publication-policy package))
+    (lambda (key . args)
+      ;; Policy evaluation failures are per-target failures, not license
+      ;; decisions or global discovery failures.  Preserve the export row so
+      ;; the orchestrator can record the failure and continue other targets.
+      (format (current-error-port)
+              "substitute-targets: policy-evaluation-error ~s: ~s ~s~%"
+              (list (module-name module) binding (package-name package))
+              key args)
+      (string-append
+       "evaluation-failed:"
+       (string-map (lambda (character)
+                     (if (memv character '(#\tab #\newline #\return))
+                         #\space character))
+                   (if (symbol? key) (symbol->string key)
+                       (format #f "~s" key)))))))
+
 (define (emit-module-exports module seen)
   (for-each
    (lambda (binding)
@@ -70,14 +191,15 @@
          (let* ((package (module-ref module binding))
                 (file (and (package? package) (tay-package-file package))))
            (when (and file (not (hashq-ref seen package)))
-             (format %output-port "~a\t~a\t~a\t~a\t~a\t~a\t~a~%"
+             (format %output-port "~a\t~a\t~a\t~a\t~a\t~a\t~a\t~a~%"
                      (module-string module)
                      (symbol->string binding)
                      (package-name package)
                      (package-version package)
                      (string-join (package-outputs package) ",")
                      (string-join (package-supported-systems package) ",")
-                     file)
+                     file
+                     (target-publication-policy package module binding))
              (hashq-set! seen package #t))))
        (lambda args
          (report-error 'export-error

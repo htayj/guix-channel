@@ -142,30 +142,52 @@ authenticated channel, not the older manually maintained Makefile package list.
 It retains module/binding identities to avoid same-name upstream collisions.
 Each evaluation resolves current Guix, Nonguix and tay refs once and records an
 authenticated exact-commit lock; uncommitted checkout modules are not inputs.
-Native `x86_64-linux` targets are represented throughout; CalcRogue's native
-target is explicitly skipped as unsupported and its `i686-linux` target built.
-Fontra uses `--no-grafts`; all targets, including Fontra, build with
-`--no-offload`. `tern` and `sentinelone` are excluded. Every selected target
-error is reported and fails
-the full run rather than silently reducing the inventory.
+Fontra builds ungrafted only (`--no-grafts`); all other ordinary targets
+build in both grafting variants, ungrafted (`--no-grafts`) and normally
+grafted (Guix's default). All targets, including Fontra, build with
+`--no-offload`. Every selected target error is reported and fails the full
+run rather than silently reducing the inventory. Guix grafting replaces
+derivations so a grafted build's references point at the grafted replacement
+items ([guix/grafts.scm](https://codeberg.org/guix/guix/src/branch/master/guix/grafts.scm));
+graft results are locally built and non-substitutable (`#:local-build? #t`,
+`#:substitutable? #f`), and a registered build root covers only the selected
+derivation's outputs. The ungrafted variant therefore continues to serve the
+original runtime packages to ordinary clients that expect them, so both
+variants are rooted separately. When the ungrafted and grafted derivations
+are identical (nothing to graft), the outputs are built once and the same
+outputs are rooted under both variant keys.
 
-Before and during every command, the orchestrator checks free space on the
-store/state filesystem (`/gnu/store`): if it falls below 5 GiB the evaluation
-stops, reports a failure, preserves existing GC roots, and runs no automatic
-garbage collection.
+The inventory is discovery-based, not an allowlist: every exported package
+object is a candidate unless excluded first by the publication policy.
+`tern` and `sentinelone` are explicit exclusions. Beyond those, a target is
+blocked when its package definition lacks a `license` field (`#f`) or
+declares exactly `https://choosealicense.com/no-permission/` as its license
+URI, and the block propagates transitively through the native, runtime and
+propagated input graphs to dependent packages. There is no broad
+nonfree/noncopyleft ban. Blocked targets are reported with a
+license-blocked reason and excluded from the build inventory; smoke runs
+select fresh candidates only from allowed targets.
 
-State lives under `/home/guixbot/substitutes`: per-target `latest` and `previous`
-GC roots retain the two successful outputs, while failed builds preserve old
-roots. `status/latest.json` describes the latest completed **full** evaluation;
+State lives under `/home/guixbot/substitutes`. GC roots are laid out as
+`roots/<module-binding-hash>/<system>/<variant>/<output>/{latest,previous}`:
+per-target `latest` and `previous` roots retain the two successful outputs of
+each grafting variant, while failed builds preserve old roots. Targets whose
+variants share one derivation therefore have identical outputs rooted under
+both variant directories. Existing variantless root paths are migrated into
+the new layout before first use of this version: a target's old `latest` and
+`previous` roots are re-registered under the matching policy variant (Fontra
+ungrafted, others grafted) before the variantless links are removed; failure
+roots and obsolete successful roots are retained as before.
+`status/latest.json` describes the latest completed **full** evaluation;
 `status/running.json` identifies an active full evaluation, and `status/smoke.json`
-is separate. The prepared HTTP companion exposes `/status/latest.json`
+is separate.
+The prepared HTTP companion exposes `/status/latest.json`
 (alias `/status.json`), `/status/success`, `/status/fresh`, and `/metrics` on port
 8081. Freshness means full evaluation completion within 30 hours, not success;
 check success separately. A smoke run cannot refresh the full-evaluation status:
 it must actually build a previously absent channel source/font output with
-substitutes disabled, and fails when no fresh candidate exists. Only an explicit
-manual dispatch with `smoke: true` changes the workflow's full default.
-
+substitutes disabled, and fails when no fresh candidate exists. Only an
+explicit manual dispatch with `smoke: true` changes the workflow's full default.
 See [the automation record](ACCOUNTING.md#substitute-automation--prepared-not-deployed-2026-10-18)
 for credential lifetime, retention and verification boundaries. Existing package
 acceptance receipts and build/check targets are unchanged.
@@ -618,6 +640,10 @@ verified program list.
   rights clearance. Never put installers, management tokens or credentials in
   Git; SentinelOne's `--with-source` also imports its artifact into the local
   store, and a non-substitutable flag alone does not protect `guix publish`.
+  The prepared substitute automation encodes the same boundary: targets whose
+  declared license is absent or carries the no-permission URI are
+  license-blocked (with transitive dependents), and `tern`/`sentinelone` are
+  explicit exclusions. See [Automated substitutes](#automated-substitutes).
 
 ## Documentation and contributing
 

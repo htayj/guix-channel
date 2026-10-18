@@ -155,21 +155,65 @@ exported dependency variants. It does not reuse `PROJECT_PACKAGES`,
 identity select actual package objects, avoiding ambiguous `name@version`
 lookups. Native `x86_64-linux` targets are represented, including an explicit
 unsupported skip for CalcRogue's native target alongside its selected
-`i686-linux` build. Fontra retains `--no-grafts`; every target, including
-Fontra, builds with `--no-offload`. `tern` and
-`sentinelone` are explicit exclusions, not successful builds. Existing source
+`i686-linux` build. Fontra builds ungrafted only (`--no-grafts`); every
+other ordinary target builds in both grafting variants, ungrafted
+(`--no-grafts`) and normally grafted (Guix's default). Every target,
+including Fontra, builds with `--no-offload`. Existing source
 licensing and redistribution caveats still apply; build success is not a grant
 of redistribution rights.
+
+**Publication policy.** The inventory is discovery-based: every exported
+package object is a candidate, and exclusions apply before selection rather
+than through an allowlist. `tern` and `sentinelone` are explicit exclusions.
+Beyond those, a target is license-blocked when its package definition lacks a
+`license` field (`#f`) or declares exactly
+`https://choosealicense.com/no-permission/` as its license URI; the block
+propagates transitively through the native, runtime and propagated input
+graphs to dependent packages. There is no broad nonfree/noncopyleft ban.
+The memoized target selector records an eighth TSV field, `publication_policy`,
+with value `allowed` or the block reason; license-blocked targets are reported
+with that reason and excluded from the build inventory, and smoke runs select
+fresh candidates only from allowed targets. Before license evaluation, a
+target whose package arguments carry an explicit literal `#:substitutable? #f`
+is publication-blocked with reason `non-substitutable`, and the block
+propagates transitively through the input graphs (Claude Code and Claude
+Desktop carry this flag; their sources state the proprietary packages must
+not be published). This matches the generic literal flag only — no derivation
+is created to test it — and is distinct from license-blocked; there is still
+no broad nonfree/noncopyleft ban. Input/license metadata exceptions
+are recorded as evaluation-failed target failures, not license-blocked skips,
+while a module/export discovery failure fails the whole evaluation strictly.
+No target counts are stated here; the selector census remains pending.
+
+**Variant rationale.** Guix grafting replaces derivations so a grafted
+build's references point at the grafted replacement items
+([guix/grafts.scm](https://codeberg.org/guix/guix/src/branch/master/guix/grafts.scm));
+graft derivations are locally built and non-substitutable
+(`#:local-build? #t`, `#:substitutable? #f`), and a registered build root
+covers only the selected derivation's outputs. The ungrafted variant
+therefore continues to serve the original runtime packages to ordinary
+clients that expect them; both variants are rooted separately. When the
+ungrafted and grafted derivations are identical (nothing to graft), the
+outputs are built once and the same outputs are rooted under both variant
+keys. `guix publish` remains the entire-store LAN publication boundary; the
+non-substitutable flag alone provides no protection and no new allowlist is
+introduced.
 
 An inventory/import/evaluation error is not an empty successful inventory.
 Every selected target records its result and any target failure makes the full
 run fail; unrelated targets can still produce useful successful outputs.
 Every declared derivation output is read and built explicitly. Successful
-outputs have registered GC roots under
-`/home/guixbot/substitutes/roots/<module+binding-safe-hash>/<system>/<output>/`;
-the identity key is a sanitized `module:binding` plus a SHA-256 prefix, not a
-package name. Roots retain `latest` and `previous`; a failed target leaves its
-old roots intact. The automation prunes only its own state/profile generations
+outputs have registered GC roots under the state root directory; the
+identity key is a sanitized `module:binding` plus a SHA-256 prefix, not a
+package name. Roots are laid out as
+`roots/<module+binding-safe-hash>/<system>/<variant>/<output>/{latest,previous}`;
+each grafting variant records its own `latest` and `previous` roots, and a
+failed target leaves its old roots intact. Existing variantless root paths
+are migrated into the new layout before first use: a target's old `latest`
+and `previous` roots are re-registered under the matching policy variant
+(Fontra ungrafted, others grafted) before the variantless links are removed;
+failure roots and obsolete successful roots are retained as before. The
+automation prunes only its own state/profile generations
 and retains the latest 20 report/log records rather than growing without bound.
 
 The status companion serves port 8081 with these read-only paths:
@@ -193,7 +237,8 @@ The workflow selects that mode **only** for manual `workflow_dispatch` with the
 boolean input `smoke: true`; all other accepted events and omitted/false inputs
 use the full mode. Smoke discovers source-snapshot/font candidates and requires
 an output absent from the store before running a real build with
-`--no-substitutes`. A cache hit is not acceptance; if there is no fresh candidate,
+`--no-substitutes`. Candidates are drawn only from publication-policy
+allowed targets. A cache hit is not acceptance; if there is no fresh candidate,
 the smoke fails rather than claiming a successful new channel build. Smoke does
 not establish complete inventory health, signed publication, or client-side
 substitution. Those remain separate deployment/acceptance evidence.
