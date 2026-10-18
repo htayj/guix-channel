@@ -61,12 +61,21 @@ def clean_environment():
                             "GUILE_LOAD_PATH", "GUILE_LOAD_COMPILED_PATH"}}
 
 
+def die_with_parent():
+    # A runner cancellation can SIGKILL this orchestrator.  Children run in
+    # their own session (for timeout process-group kills), so without this they
+    # would outlive it and keep holding the profile lock.
+    import ctypes
+    if ctypes.CDLL(None, use_errno=True).prctl(1, signal.SIGKILL) != 0:  # PR_SET_PDEATHSIG
+        os._exit(127)
+
+
 def run(command, log, timeout, env=None):
     require_disk_reserve()
     with log.open("ab") as errors:
         process = subprocess.Popen(command, cwd=REPOSITORY, env=env,
                                    stdout=subprocess.PIPE, stderr=errors,
-                                   start_new_session=True)
+                                   start_new_session=True, preexec_fn=die_with_parent)
         try:
             deadline = time.monotonic() + timeout
             while True:
