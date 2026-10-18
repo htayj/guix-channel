@@ -253,7 +253,7 @@ publication, source-required, and build gates appear in the final table.
 | [`opencode-desktop`](guix/tay/packages/opencode-desktop.scm) | `1.18.18` | Electron graphical client with a bundled local backend | Defined |
 | [`pi-coding-agent`](guix/tay/packages/pi-coding-agent.scm) | `0.84.2` | Pi coding-agent CLI/TUI with sessions and RPC | Verified |
 | [`sbcl-rplaca`](guix/tay/packages/rplaca.scm) | `0.1.0` | Lisp-native LLM chat interface | Defined |
-| [`autolith`](guix/tay/packages/autolith.scm) | `0.66.0` | Source-built live Common Lisp coding agent with pinned SBCL 2.6.6 runtime and full locked Lisp closure; immutable store output plus lazy mutable XDG active/recovery cores | Verified actual public onboarding, listener, help and clean-quit native flow; [limits](ACCOUNTING.md#autolith--source-built-live-common-lisp-agent-2026-10-18-buildrepronative-passed-publication-and-lint-residual-pending) |
+| [`autolith`](guix/tay/packages/autolith.scm) | `0.66.0` | Source-built live Common Lisp coding agent with pinned SBCL 2.6.6 runtime and full locked Lisp closure; immutable store output plus lazy mutable XDG active/recovery cores | Verified actual public onboarding, listener, help and clean-quit native flow; signed implementation published, not deployed; #758 OPEN on [Forgejo](https://forge.nogroup.group/tay/guix-channel/issues/758) / [#728](https://github.com/htayj/guix-channel/issues/728) (own updater/archive lint gates; [receipt and limits](ACCOUNTING.md#autolith--source-built-live-common-lisp-agent-2026-10-18)) |
 | [`squad`](guix/tay/packages/squad.scm) | `0.13.0` | AI-team SDK and CLI | Verified |
 
 ### Editors and Emacs tools

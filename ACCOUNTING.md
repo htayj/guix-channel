@@ -92,7 +92,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Exalt original source, Linux port and bounded native gameplay](#exalt--original-source-linux-port-and-bounded-native-gameplay-2026-10-15)
 - [Experienced Pixel Dungeon final source, font composition and bounded native gameplay](#experienced-pixel-dungeon--final-source-font-composition-and-bounded-native-gameplay-2026-10-16)
 - [FAangband free assets, native save continuity and SDL2 audio](#faangband--free-assets-native-save-continuity-and-sdl2-audio-2026-10-18)
-- [Autolith source-built live Common Lisp agent](#autolith--source-built-live-common-lisp-agent-2026-10-18-buildrepronative-passed-publication-and-lint-residual-pending)
+- [Autolith source-built live Common Lisp agent](#autolith--source-built-live-common-lisp-agent-2026-10-18)
 
 ## Substitute automation — prepared, not deployed (2026-10-18)
 
@@ -12275,7 +12275,7 @@ SCGI/XML-RPC integration or live tracker actions**.  No torrent, rTorrent
 instance, credentials, user configuration or installed profile was used or
 changed.
 
-## Autolith — source-built live Common Lisp agent (2026-10-18; build/repro/native passed, publication and lint residual pending)
+## Autolith — source-built live Common Lisp agent (2026-10-18)
 
 [`autolith`](guix/tay/packages/autolith.scm) **0.66.0** builds
 lambda-symbolics/autolith from source at pinned revision
@@ -12284,16 +12284,44 @@ lambda-symbolics/autolith from source at pinned revision
 `00xa6ikpz0a783iasql98nkbp8gacfvyw9rldk8i68hg8zk87cw4`), using a dedicated
 pinned SBCL **2.6.6** runtime ([`sbcl-autolith-runtime`](guix/tay/packages/autolith-dependencies.scm))
 and a full locked Lisp dependency closure so every system — including
-transitive Guix libraries — shares one compiler identity. No feature cuts. A fresh **native20 guard pass** established the actual
-public PTY flow, so the README row records **Verified** for that verified
-native path — with the documented residual **literal lint findings
-(explicitly not clean)** and **pending publication** as the remaining gates.
+transitive Guix libraries — shares one compiler identity. No feature cuts. A
+fresh **native20 guard pass** established the actual public PTY flow, so the
+README row records **Verified** for that verified native path. The residual
+**literal lint findings remain explicitly not clean** and their gates stay
+open.
 
 Licensing: the upstream source at the pinned revision is **ISC**;
 channel-authored definitions, patches, launcher scripts, smoke harness and
 documentation are GPL-3.0-or-later. Custom upstream notice sets are retained
 as packaged (including the ColorLisp native shim/runtime/grammar split and the
 locked FFF crate notices in [`autolith-rust-crates.scm`](guix/tay/packages/autolith-rust-crates.scm)).
+
+### Signed implementation publication (2026-10-18)
+
+The scoped Autolith implementation was pushed to **`origin/master`** as
+signed commit
+[`ef384426a5b7298b51706c0431e5f83fd4382ceb`](https://forge.nogroup.group/tay/guix-channel/commit/ef384426a5b7298b51706c0431e5f83fd4382ceb),
+parent **`45e407d…`**, tree **`77d651…`** — **15 files, 3,340 additions,
+0 deletions** — with the explicit authorized key **`6A27…`**. The ordinary
+push with the active pre-push hook succeeded (exit 0); `guix authenticate`
+verified the one new commit in **0.34 s**; an `ls-remote` readback returned
+the exact OID for `refs/heads/master`; the real index remained byte-exact
+(SHA-256 **`906f…`**, **104,800** bytes, **1,054** entries). Publication is
+not deployment, profile installation, or tracker closure.
+
+The paired packaging tracker issues were created and verified OPEN:
+[Forgejo #758](https://forge.nogroup.group/tay/guix-channel/issues/758) and
+[GitHub #728](https://github.com/htayj/guix-channel/issues/728), with
+byte-identical 3,735-byte bodies (SHA-256
+`b69ceb8ca3eda90788b86805686223bf8787d1ac065ba46cd5c3b572343529c4`),
+label kind:packaging / state:blocked. These form an **explicit** mirror pair
+(#758 ⇔ #728); the unrelated pre-existing protected Forgejo #728 remains
+untouched, and no numeric intersection between trackers is implied. A
+pre-write audit (117 fresh GETs) found zero drift; a post-write audit counted
+756 Forgejo / 726 GitHub issues with the 725 legacy pairs at zero normalized
+drift plus this new explicit pair — 726 totals, protected objects and
+comments unchanged. Both issues remain OPEN; no closure is claimed or
+performed.
 
 ### Build and test status (2026-10-18)
 
