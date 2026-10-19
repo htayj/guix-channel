@@ -94,6 +94,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [FAangband free assets, native save continuity and SDL2 audio](#faangband--free-assets-native-save-continuity-and-sdl2-audio-2026-10-18)
 - [Autolith source-built live Common Lisp agent](#autolith--source-built-live-common-lisp-agent-2026-10-18)
 - [FarmingRL unchanged browser roguelike and bounded native flow](#farmingrl--unchanged-browser-roguelike-2026-10-18)
+- [FOR recovered original alpha source](#for--recovered-original-alpha-source-2026-10-19)
 
 ## Substitute automation — prepared, not deployed (2026-10-18)
 
@@ -15921,3 +15922,180 @@ override that commit with `OLD_GUIX_COMMIT`.
 The first signed commit authorizes subsequent channel commits through
 `.guix-authorizations`.  The authorized OpenPGP fingerprint is
 `997E 2BA6 B523 4026 8A39 87E3 D94F 0A11 ACD7 8333`.
+
+## FOR — recovered original alpha source (2026-10-19)
+
+FOR (#364) is Lasse Carstensen's original C++ Fallout-like roguelike alpha,
+not a reconstruction or a data-only placeholder.  The canonical dead
+`https://github.com/lcarst/for` repository's full Software Heritage visit of
+2015-08-09 preserves master commit
+`6ce29fb0d9ebb020c12264630a828ec205a31362` (2014-04-22), snapshot
+`89681f81ff1cc436c2bb4f4a2a6211bfc131f873`, directory
+`67ae1e5002b1bc69f97a8fe4e1fd2736374356ae`.  The package pins the
+[fixed-hash cooked source bundle](https://archive.softwareheritage.org/api/1/vault/flat/swh:1:dir:67ae1e5002b1bc69f97a8fe4e1fd2736374356ae/raw/),
+10,432,113 bytes, SHA256
+`76d0dbbaf94726358470193cb698cbed8e7a23b5ed1285c3596f12f81ebe64ab`
+(Guix base32 `1av4pqggh4kgb71qa4pdnlipm3pdrfcbcg0rf223a9j7z6xdpl3n`).
+`0.1alpha-0.6ce29fb` identifies the original alpha and revision; it is not
+a claim of a tagged upstream release or investigation of every later visit.
+The directory/revision content identifier is fixed, but the vault bundle URL
+is a cooked cache endpoint: eviction or byte-different re-cooking can prevent
+a future uncached fetch.  The recorded hash rejects changed bytes; it does
+not promise permanent availability of this cooked archive.  The current
+`url-fetch` origin does not automatically cook missing vault bundles.
+
+The package compiles all **57** actual `src/*.cpp` translation units, complete
+bundled libnoise 1.0.0 models/modules and noiseutils, replacing the stale
+upstream Makefile manifest that requests nonexistent `AmmoParser.o` and
+other parser objects.  It reuses the existing separately source-built
+private `dwarftown-libtcod` 1.5.1 C/C++ renderer, with Guix SDL 1.2 API
+compatibility, Mesa and zlib, and uses system Boost and Xerces-C.  No opaque
+vendored objects, archives or platform shared libraries are used or installed.
+The prepared Guix source also removes the five extensionless libtcod sample/
+tool executables, the historical macOS `build/osx/FOR/build/Debug/for` binary,
+and the bundled `deps/libsdl/SDL.framework` tree.  No gameplay source is
+removed; the source output does not retain those opaque platform executables.
+The minimal portability patch corrects the Linux entry-point name, two
+qualified constructor expressions and Path.h's Util.h/Utils.h include typo;
+no gameplay source or unfinished interface is removed to simplify compilation.
+The active renderer is SDL/libtcod,
+not the commented-out former ncurses backend.
+
+Per-file game headers explicitly grant GPL-3.0-or-later; the upstream root
+`LICENSE` is an inconsistent GPL-2 text copy.  Both the unchanged root file
+and complete actual GPL-3 text ship, with an explanation.  Original
+`bin/font.png` bytes (SHA256
+`1e7af4dbdc86fd28e5c42d28dd892ff2f765da2d8f7272919820863fba1b8cce`)
+are retained.  Main's decoded-pixel comparison identifies it with bundled
+`dejavu_wide16x16_gs_tc.png`; the full official
+[Bitstream Vera and Arev notices](https://dejavu-fonts.github.io/License.html),
+retrieved 2026-10-19, ship alongside unchanged libtcod font README/credits.
+Only DejaVu changes are public domain: libtcod's blanket README wording is
+not treated as relicensing the whole underlying font.  LGPL-2.1-or-later
+libnoise/noiseutils, BSD libtcod and embedded LodePNG notices are retained.
+Unused `bin/terminal.png` remains in the archive but is not installed; its
+independent provenance is not established and it is not a gameplay asset.
+
+Only the three immutable runtime asset reads (`font.png`,
+`data/items.cfg`, `data/tileset.cfg`) are redirected to
+`share/for-roguelike`.  The launcher runs the original core from
+`$XDG_STATE_HOME/for-roguelike`, falling back to
+`$HOME/.local/state/for-roguelike`, with private creation permissions and an
+absolute state path outside the store.  No seed, save, configuration or asset
+is copied or injected.  The caller's working directory is preserved without
+game output there.  Native `leveldump.txt`, `visdump.txt`, `edgedump.txt` and
+`pathdump.txt` retain their original state-relative behavior.  Startup keeps
+`loadDebug=true`, the time-seeded RNG, the original 70×70 Junktown, 100×60
+green-on-black console and ordinary arrows/Escape interface.  Upstream save
+serializer bodies and the unwired AI hook remain unfinished; no resumable
+save or finished-game claim is made.
+
+Integration adds exactly one `PROJECT_PACKAGES` name (`for-roguelike`), one
+README game row and the external native consumer target `guard-for-roguelike`.
+Dependencies are closure, not additional applications.  The canonical **629**
+preservation-source ledger and its expected-count guard remain unchanged;
+this source recovery does not add a new preservation snapshot.  Unrelated
+working-tree changes are not accepted or published by this integration.
+
+Prepared commands for Main, not executed by the package worker:
+
+```sh
+guix build -L guix --no-grafts --no-offload --keep-failed --cores=1 --max-jobs=1 for-roguelike
+guix lint -L guix for-roguelike
+make guard-for-roguelike FOR_ROGUELIKE_OUTPUT=/gnu/store/ACTUAL-OUTPUT FOR_ROGUELIKE_EVIDENCE=/absolute/fresh/evidence
+```
+
+Main's pre-review serial source build completed in 29.68 seconds and its separate
+reproducibility check completed in 25.48 seconds, both successfully, for
+`/gnu/store/ic51ibdbpgv2v8mwmsbkk2xdp30cg9w4-for-roguelike-0.1alpha-0.6ce29fb`
+(derivation prefix `mxmvw29i6sjp1wljfk2070lf7pp6rwqd`).  This earlier build
+includes the line-length formatting correction and retains every game
+translation unit.  Main's earlier failed attempts exposed
+an unsupported file-search keyword, the original `Path.h` include typo and
+a duplicate read-only notice destination; each was corrected rather than
+excluding source or suppressing the build failure.
+
+That pre-review output's native consumer passed in **15.00 seconds** through the
+actual `make guard-for-roguelike` target, with evidence at
+`.goocastle/evidence/for-native2`.  Main inspected the initial and `move03`
+display frames: the original map and `@` player are visible, alongside
+`Vault Dweller`, level 1, HP 32/33, AP 10/10 and the FOR welcome HUD, without
+startup errors.  Ordinary arrow movement exposed new terrain and changed
+fog-of-war, followed by native Escape exit.  The shell status was zero and
+the receipt reports an unchanged output NAR.  This is actual evidence for
+that exact output, not an inference from the earlier run.  The first native consumer
+also passed in 12.54 seconds against historical output
+`pz93dwrgc8sdy4k487i84kzcgxn6jhmi` (source build 27.51 seconds,
+reproducibility check 26.07 seconds), with evidence at
+`.goocastle/evidence/for-native1`.
+The consumer also checks original-output/font identity, private XDG state and
+native dumps, network-namespace/store isolation and real display frames; a
+zero status alone would not establish startup because upstream catches
+exceptions and returns zero.  No combat, save/resume or finished-game claim
+follows from this bounded movement proof.
+The consumer measured native scratch at **20,078 apparent bytes / 32,768
+allocated bytes** and recorded `cleanup.json` with scratch removal successful.
+
+Main's first full literal lint (`.goocastle/for-lint1.log`) completed after
+111 seconds with process status zero but **not clean**: it reported owned
+source line lengths, generic HTML updater failure to discover releases, and
+a source archival/Disarchive diagnostic despite this actual pinned origin
+being a Software Heritage archive.  The owned line lengths were corrected
+by splitting Scheme string literals without changing emitted launcher bytes.
+Main's second full literal lint (`.goocastle/for-lint2.log`) completed in
+**24.01 seconds**, process status zero, with **exactly two remaining
+diagnostics**: the generic HTML updater could not discover releases, and the
+Software Heritage/Disarchive source-archival heuristic still warned.  No
+overlong source lines remained.  Exit status zero is not a clean-lint claim:
+the literal lint gate is **not clean** and #364 remains **OPEN**.  No finding
+was suppressed and no fake updater metadata was added.
+Independent review then found seven extensionless opaque platform binaries
+still present in the prepared source, although none were used by the build or
+installed runtime.  The source snippet now removes those explicit paths and
+the whole SDL framework tree, without removing gameplay code.  Review also
+narrowed the font credits to their actual 10×10/12×12 attribution and clarified
+the cooked-bundle availability limitation above.  Main's corrected serial
+build passed in **30.41 seconds**, producing
+`/gnu/store/1y6ry559bil8ah1gzn7qbplnnyh20j06-for-roguelike-0.1alpha-0.6ce29fb`
+(derivation prefix `d1q92cxf22qfqn42sffd76x21b6sq3gj`).  Main also realized
+the actual prepared source output
+`/gnu/store/a9m0ff480xsidvn81mp0yy9mvvjvckna-for-6ce29fb0d9ebb020c12264630a828ec205a31362.tar.zst`:
+its extracted magic-byte scan found **zero ELF/Mach-O binaries**, all **57**
+game C++ translation units remained, and the original active font's SHA256
+was unchanged.  Independent final review reports all four findings resolved
+and no new defects in scope.  This **corrected final output** also passed
+Main's separate reproducibility check in **25.00 seconds** and the actual
+`make guard-for-roguelike` native consumer in **14.79 seconds**.
+The final native evidence is `.goocastle/evidence/for-native3`: Main inspected
+the initial and `move03` screenshots, confirming the real original map, `@`
+player, level 1, HP 32/33, AP 10/10 and FOR welcome HUD, without startup errors.
+Four ordinary native moves exposed **47 newly lit cells** and left **120
+newly fogged cells**, followed by native Escape exit status zero.  No seed,
+save or configuration was injected, and the output NAR remained unchanged.
+This final-output proof supersedes the historical native1/native2 acceptance
+receipts above; no combat, save/resume or finished-game claim is added.
+
+Main's final full literal lint (`.goocastle/for-lint3.log`) completed in
+**24.26 seconds**, status zero, with exactly the same **two remaining
+diagnostics**: generic HTML updater release discovery and the Software
+Heritage/Disarchive source-archival heuristic.  There are no remaining owned
+line-length findings, but literal lint is still **not clean**.  #364 remains
+**OPEN**; publication is pending, and no findings were suppressed.
+
+Main's actual `make check-source-count` exited **2** after **4.07 seconds**:
+the first count check passed at **629**, but exported and textually parsed
+inventories differed.  A separate read-only set comparison found no
+exported-only names and exactly two parsed-only names: `autolith-sbcl-source`
+and `hermes-agent-source`.  The former is a prefix falsely captured from
+`autolith-sbcl-source-tree` by the parser's unanchored regex; the latter is an
+exported `origin`, not a package.  Publisher's read-only comparison with
+baseline `cfaea53a61ce2f9de4f858101a0e8f5baa7883dd` confirms both declarations
+and Makefile parser/count lines preexist unchanged.  This is a **preexisting
+inventory-guard defect, not a FOR regression**; neither the unrelated parser
+nor those definitions nor the **629** ledger is modified by this task.
+No whole-inventory guard pass is claimed.
+
+No package build, lint, native gameplay or consumer command was run by the
+package worker.  Repository-only implementation and local verification are
+not deployment or publication.
+

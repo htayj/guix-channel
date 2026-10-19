@@ -1,0 +1,83 @@
+FOR — original independently playable alpha source preservation
+2026-10-19
+
+Upstream: Lasse Carstensen, FOR (A Fallout-like Roguelike), canonical repository
+https://github.com/lcarst/for (currently unavailable).
+Recovered canonical master: 6ce29fb0d9ebb020c12264630a828ec205a31362,
+2014-04-22, "tile sets loaded by libtcod parser, also we revert to ASCII-only
+for symbols".  This is the full source alpha, not the placeholder XML data
+or a replacement implementation.  Version 0.1alpha-0.6ce29fb is the channel's
+alpha/revision identifier, not an upstream release-tag claim.
+
+Software Heritage full visit of 2015-08-09:
+swh:1:snp:89681f81ff1cc436c2bb4f4a2a6211bfc131f873
+swh:1:rev:6ce29fb0d9ebb020c12264630a828ec205a31362
+swh:1:dir:67ae1e5002b1bc69f97a8fe4e1fd2736374356ae
+Fixed-hash cooked source bundle URL:
+https://archive.softwareheritage.org/api/1/vault/flat/swh:1:dir:67ae1e5002b1bc69f97a8fe4e1fd2736374356ae/raw/
+Archive bytes: 10432113
+Raw SHA256: 76d0dbbaf94726358470193cb698cbed8e7a23b5ed1285c3596f12f81ebe64ab
+Guix base32: 1av4pqggh4kgb71qa4pdnlipm3pdrfcbcg0rf223a9j7z6xdpl3n
+The SWH directory/revision identifies source content, but this vault URL is
+a cooked cache endpoint, not an immutable archive-byte guarantee.  The bundle
+may be evicted and re-cooking may produce different archive bytes.  Guix's
+recorded SHA256 rejects changed bytes; future uncached retrieval may require
+the matching cooked bundle to be made available again.  No automatic cooking
+or availability guarantee is claimed for this url-fetch origin.
+
+Licensing and notices
+
+The per-file FOR source headers explicitly grant GPL version 3 or later.
+The root LICENSE is instead an upstream GPL version 2 text copy; preserve it
+unchanged as LICENSE, without misrepresenting it as the operative source grant.
+The complete GPL version 3 copy is for-roguelike-GPL-3.txt, obtained from
+https://www.gnu.org/licenses/gpl-3.0.txt on 2026-10-19 (SHA256
+3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986).
+The source's own data and metadata are retained; no replacement assets are used.
+The active font's original bytes are preserved; see the complete Bitstream
+Vera and Arev notices in for-roguelike-font-license.txt.  Original libtcod font
+README and credits are also retained.  Do not treat the complete DejaVu font
+as public domain solely because libtcod's README uses that blanket wording.
+The unreferenced bin/terminal.png remains in the source archive but is not an
+installed runtime asset; its independent provenance is not established.
+
+The exact libtcod 1.5.1 C/C++ API comes from the channel's existing source-built
+private dwarftown-libtcod recipe, with its BSD-3-Clause library notice,
+LodePNG source notices, SDL notice and credits installed alongside this file.
+The game bundle's original libtcod license and credits are retained too.
+libnoise 1.0.0 and noiseutils are compiled from the bundled source and retain
+their LGPL-2.1-or-later notices.  System Guix Boost and Xerces-C supply the
+remaining dependencies; vendored SDL, Xerces and platform binaries are not used.
+The source snippet explicitly removes the five extensionless libtcod sample/
+tool executables, build/osx/FOR/build/Debug/for, and the bundled SDL.framework
+tree (including its opaque Mach-O binary and symlinks).  These binaries are
+not retained by the prepared Guix source output; no game source is removed.
+
+Packaging changes, 2026-10-19
+
+All actual src/*.cpp files are compiled, rather than the stale upstream Linux
+Makefile object list (which requests nonexistent AmmoParser.cpp and other files).
+All bundled libnoise model/module sources and noiseutils.cpp are compiled too.
+The minimal portability patch supplies the normal Linux main entry point,
+corrects two qualified constructor names in new expressions, and fixes the
+Path.h include typo Util.h to the existing Utils.h.  No game classes, features
+or dormant unfinished interfaces are deleted to simplify compilation.
+Only the three immutable runtime asset read paths change: font.png,
+data/tileset.cfg and data/items.cfg now use the installed share/for-roguelike
+location.  The launcher's working directory is the writable private
+XDG_STATE_HOME/for-roguelike (HOME/.local/state/for-roguelike fallback).
+No game configurations, seeds, saves or assets are copied/injected into state.
+The caller's original directory is not changed or written by the game.
+
+Upstream behavior and limits
+
+The native SDL/libtcod console is 100x60, green on black.  Startup retains
+Game::Init's loadDebug=true branch and the time(NULL)-seeded RNG, generating
+the original 70x70 Junktown.  Arrows move; Escape quits.  Four native startup
+dumps (leveldump.txt, visdump.txt, edgedump.txt, pathdump.txt) remain native
+relative outputs in the writable state directory.  Upstream Savefile.cpp's
+serialize bodies are empty and its API is not wired to ordinary gameplay:
+this package does not claim save/resume.  Creature AI's unfinished main-loop
+hook is also unchanged.  "Complete alpha" means all recovered original code,
+not an invented finished game.  Native acceptance evidence is recorded in the
+channel accounting separately; this notice does not assert a build/test pass.
