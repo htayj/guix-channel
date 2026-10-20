@@ -95,6 +95,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Autolith source-built live Common Lisp agent](#autolith--source-built-live-common-lisp-agent-2026-10-18)
 - [FarmingRL unchanged browser roguelike and bounded native flow](#farmingrl--unchanged-browser-roguelike-2026-10-18)
 - [FOR recovered original alpha source](#for--recovered-original-alpha-source-2026-10-19)
+- [Geminum Orbis original source and native dungeon gameplay](#geminum-orbis--original-source-and-native-dungeon-gameplay-2026-10-20)
 
 ## Substitute automation — prepared, not deployed (2026-10-18)
 
@@ -651,6 +652,107 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Geminum Orbis — original source and native dungeon gameplay (2026-10-20)
+
+[`geminum-orbis`](guix/tay/packages/geminum-orbis.scm) **0-r59** builds
+Kevin Wells's (Dark_Oppressor) original Geminum Orbis, previously Adventure RPG,
+from the canonical [SourceForge Subversion trunk](https://svn.code.sf.net/p/adventurerpg/code/trunk/)
+at **revision 59**, dated **2009-02-04**.  It is not GearHead2 or a replacement
+game.  Main exported the complete canonical tree and obtained recursive NAR
+SHA-256/base32 **`0c3993xpns19jyhxz8h7b2ls3slixwxf2qzd4zs7p0r93yvkr7f0`**.
+The package uses `svn-fetch`, not the older 0.0.2 Windows release archive.
+
+### Source, rights and immutable data
+
+The full original C++ translation unit and headers build with the GNU build
+system and ncursesw.  The [platform patch](guix/tay/packages/patches/geminum-orbis-platform.patch)
+replaces Windows/PDCurses-specific terminal operations with actual ncurses
+input, drawing and color semantics.  Canonical source CRLF endings are
+normalized only in `.h`/`.cpp` files before zero-fuzz patch application; the
+origin hash remains that of the raw SVN export.  Both original static maps,
+`levels/sdlvl_starta.txt` and `levels/sdlvl_startb.txt`, are installed unchanged
+under `share/geminum-orbis/levels`, read through a fixed `GEMINUM_DATA_DIR`.
+Both map parsers skip CR bytes to match Windows text-mode reads while keeping
+the original CRLF data bytes and LF row handling.  The earlier source-review
+P1 concerning shifted CRLF map rows is resolved by this parser correction
+and the final native static-template comparison below.
+No replacement assets, generated level substitutes or prebuilt upstream
+executables are used.
+
+The selected license is **public domain**, based on the verified author's
+[RogueBasin revision 24451](https://roguebasin.com/index.php?title=Geminum_Orbis&oldid=24451)
+of **2011-04-21T04:47:32Z**, changing the project licensing field to
+`Public domain`; the [revision comparison](https://roguebasin.com/api.php?action=compare&format=json&fromrev=24448&torev=24451)
+preserves that author-side change.  Separately, the
+[SourceForge project metadata](https://sourceforge.net/rest/p/adventurerpg/)
+identifies `GNU General Public License version 2.0 (GPLv2)`.  Its edit date
+and per-version scope are unknown; it is not presented as an explicit
+upstream dual-license or fallback clause.  The recipe retains the primary
+URLs and installs a clearly downstream `LICENSE-PROVENANCE.txt` reproducing
+the two statements, original copyright banner and programming/playtester
+credits, together with all upstream design documents.  The external ncurses
+dependency retains its own license.
+
+### Launcher and actual native receipt
+
+The immutable `bin/geminum-orbis` launcher requires `HOME`.  An absolute
+`XDG_STATE_HOME` selects `$XDG_STATE_HOME/geminum-orbis`; unset or relative
+values fall back to `$HOME/.local/state/geminum-orbis`.  It rejects lexical
+and resolved `/gnu/store` state paths, uses a private umask, preserves caller
+arguments, and changes only the child working directory.  Maps stay in the
+store rather than being copied into writable state.  The launcher supplies
+the packaged ncurses terminfo directory without inventing `TERM`.  A real
+color terminal of at least **80 columns × 25 rows** is required.
+
+Main reports successful final source build and **`--check` reproducibility**
+for **`/gnu/store/vdsvi1qk51mrpy4zjlplrmyfb4bn8vhd-geminum-orbis-0-r59`**.
+The final native receipt, superseding the earlier level-1/2-only native5 run, is
+**`.goocastle/evidence/geminum-native6/native-result.json`** (`success: true`),
+from the [prebuilt-output consumer](tests/geminum-orbis-native.py) and
+[shell harness](tests/geminum-orbis-smoke.sh).  Actual retained terminal
+bytes/cells and rendered screenshots establish unseeded character/family
+creation, **202 verified movements**, opening/closing a real door, cancelled
+quit and confirmed ordinary exit **0**.  Ordinary descent reached the original
+static map at **level 5**: all **1,680 compared cells** match
+`sdlvl_starta.txt` exactly, with zero mismatches; the alternate
+`sdlvl_startb.txt` differs in its expected three cells and is not claimed as
+the encountered template.  Play continued **5→6→5→4**, including re-entry
+into the static level.  Main viewed **`0107-static-template-arrival.png`**;
+screenshots are renders of actual retained PTY cells, not invented game images.
+
+The final run used clean HOME/XDG directories, empty game `PATH`, a distinct
+network namespace with only down loopback/no routes, zero capability sets,
+and read-only `/gnu/store` mounts.  The output's before/after recursive NAR
+hashes both equal **`0c15wk4pyqfs893xd8gwg8pylz0g0ahqv1883hvw953r6g0wz4c5`**.
+No seed, save or configuration state was injected.  The receipt records
+scratch removal with evidence retained.  Main additionally removed seven
+measured task-owned extraction/build/export trees totaling **1,134,996 bytes**
+(71,753 + 141,443 + 141,443 + 70,176 + 378,912 + 151,211 + 180,058),
+retaining the source archive and evidence.
+
+### Literal gates and limits
+
+Main's full `guix lint` exited **0**, but was **not warning-free**.  Its three
+reported diagnostics are the SVN directory HTTP response's small size
+(**828 bytes**, not the size of the recursively fetched source), **no updater
+for geminum-orbis**, and **scheduled Software Heritage archival**.  Scheduling
+does not prove archival completed.  No checker was disabled and the canonical
+HTTPS SVN origin was not replaced to hide a directory-response diagnostic.
+The successful build also retained **six upstream compiler warnings**; it is
+not described as warning-clean.  Upstream supplies no automated test suite.
+
+This is bounded native gameplay evidence, **not implemented save/load,
+combat, or full-game completion**.  The original r59 save/load interface
+remains unimplemented; packaging does not resurrect commented save code or
+add a new game feature.  Both static maps are packaged unchanged; native6
+establishes an actual encounter with template A, not separate runtime coverage
+of template B.  The source-review CRLF parsing P1 is cleared by the correction
+and final proof.  **Forgejo #377 remains OPEN because literal full lint is
+not clean; publication is pending, and this repository-only addition is not
+deployed.**  Publishing a usable package would not waive those findings or
+close the issue.  No host/service state or network catalog fact changed, so
+no OKF page/log update applies.
 
 ## FarmingRL — unchanged browser roguelike (2026-10-18)
 
