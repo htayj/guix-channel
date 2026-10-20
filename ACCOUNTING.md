@@ -681,8 +681,10 @@ gnollcrawl-tiles             # native SDL2/OpenGL tiles frontend
 
 Alternatively, `guix shell -L guix gnollcrawl -- gnollcrawl` or
 `guix shell -L guix gnollcrawl -- gnollcrawl-tiles` runs the chosen command
-without profile installation.  These local-checkout commands do not imply
-the uncommitted recipe is already available through `guix pull`.
+without profile installation.  The signed feature commit
+[`0834d0373ae5b7e2ed8b82cbd5adb1416b81dfbc`](https://forge.nogroup.group/tay/guix-channel/commit/0834d0373ae5b7e2ed8b82cbd5adb1416b81dfbc)
+was pushed and verified on **2026-10-20 at 19:58:41Z**; channel users must
+pull that revision or later before installing without the checkout's `-L`.
 
 Both immutable launchers preserve caller arguments and the real `HOME`.
 An absolute `XDG_DATA_HOME` selects **`$XDG_DATA_HOME/gnollcrawl`**;
@@ -773,8 +775,9 @@ Main's final post-format full lint exited **0** in **22.65 s**, with exactly
 on Software Heritage and missing from the Disarchive database”**.
 Formatting is clean, but literal full lint is **not warning-free**.  No
 checker is disabled and archival is not asserted from scheduling alone.
-**Forgejo #378 remains OPEN: literal lint is not clean.  Publication is
-pending and this repository-only package is not deployed.**
+**Forgejo #378 remains OPEN: literal lint is not clean.**  The signed feature
+commit **`0834d0373ae5b7e2ed8b82cbd5adb1416b81dfbc`** is published as recorded
+above; publication does not establish profile installation or deployment.
 
 Gnollcrawl adds one project package and one README Crawl-family row;
 its two executable frontends and private build/test dependencies are not
