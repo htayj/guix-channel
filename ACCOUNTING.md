@@ -96,6 +96,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [FarmingRL unchanged browser roguelike and bounded native flow](#farmingrl--unchanged-browser-roguelike-2026-10-18)
 - [FOR recovered original alpha source](#for--recovered-original-alpha-source-2026-10-19)
 - [Geminum Orbis original source and native dungeon gameplay](#geminum-orbis--original-source-and-native-dungeon-gameplay-2026-10-20)
+- [Gnollcrawl original source and native terminal/tiles save continuity](#gnollcrawl--original-source-and-native-terminaltiles-save-continuity-2026-10-20)
 
 ## Substitute automation — prepared, not deployed (2026-10-18)
 
@@ -652,6 +653,135 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Gnollcrawl — original source and native terminal/tiles save continuity (2026-10-20)
+
+[`gnollcrawl`](guix/tay/packages/gnollcrawl.scm) **0.19-GnollCrawlA** builds
+the original [Dracunos/gnollcrawl](https://github.com/Dracunos/gnollcrawl)
+release at commit
+[`a8ffd03080715e6321eadab873c62b14f58ff646`](https://github.com/Dracunos/gnollcrawl/tree/a8ffd03080715e6321eadab873c62b14f58ff646).
+The codeload archive SHA-256/base32 is
+**`1ma1nx60lxlyzyvyzvbgl0w96jlxcnkcxmjc7vss4sw9dgf6fxpn`**
+(archive hash, not a Git NAR).  The inherited **0.9.2** DCSS tag and commit
+`33895e9a0446bc438a5dec2b39a335824ce23bf6` are not the Gnollcrawl release;
+the earlier source identification was corrected rather than packaged.
+This is the complete independently playable Gnollcrawl game, with gnoll
+encounters, no experience gain and no hunger, not another Crawl fork or a
+replacement implementation.
+
+### Install, launch and writable state
+
+From this checkout, install and run either frontend:
+
+```sh
+guix install -L guix gnollcrawl
+gnollcrawl                   # native terminal frontend
+gnollcrawl-tiles             # native SDL2/OpenGL tiles frontend
+```
+
+Alternatively, `guix shell -L guix gnollcrawl -- gnollcrawl` or
+`guix shell -L guix gnollcrawl -- gnollcrawl-tiles` runs the chosen command
+without profile installation.  These local-checkout commands do not imply
+the uncommitted recipe is already available through `guix pull`.
+
+Both immutable launchers preserve caller arguments and the real `HOME`.
+An absolute `XDG_DATA_HOME` selects **`$XDG_DATA_HOME/gnollcrawl`**;
+unset or relative values use **`$HOME/.local/share/gnollcrawl`**, requiring
+an absolute `HOME` in that fallback case.  The resolved state path is rejected
+if it is `/gnu/store` or beneath it, including paths through existing symlinks
+or `..`.  Both commands export that root as `CRAWL_DIR` and share native
+`saves/`, scores, macros and caches.  Original `~/.crawlrc`,
+`~/.crawl/init.txt` and explicit `-rc` configuration remain available;
+the package does not inject a seed or replacement configuration.
+The launchers supply packaged ncurses terminfo.  Game data remains immutable
+under `share/gnollcrawl`; the original data, maps, tiles and fonts are not
+copied into writable state.
+
+### Source build, complete assets and rights
+
+The recipe builds separate real terminal and SDL2/OpenGL executables against
+Guix Lua 5.1, SQLite, zlib, ncurses and SDL2/image/mixer libraries.  A third,
+uninstalled diagnostic build runs the upstream unit suite; release frontends
+do not acquire debug/test macros.  CRLF normalization is limited to C/C++
+code and its Makefile before the zero-fuzz
+[platform patch](guix/tay/packages/patches/gnollcrawl-platform.patch).
+Build changes provide modern compiler compatibility, immutable data paths,
+deterministic map-loader ordering and non-wall-clock version metadata, not
+new gameplay.  No feature/version cut, prebuilt upstream game, substitute
+artwork or replacement font is used.  The separate mutually exclusive
+**WEBTILES server deployment is not packaged**; both local frontends are.
+
+The exact release font gitlink,
+[`crawl/crawl-fonts` commit `6d3046974f35189a679a4d84b254efe82d1653b3`](https://github.com/crawl/crawl-fonts/tree/6d3046974f35189a679a4d84b254efe82d1653b3),
+supplies unchanged **DejaVu Sans and Sans Mono 2.33**.  Its archive hash is
+**`1my66aw1wmysqr0z3smz8qyz6j7q9f4j0h8f3w22b4gnklh5k6i8`**.
+The installed permission text preserves Bitstream Vera, Arev and DejaVu
+public-domain notices alongside the fonts and under `share/doc/gnollcrawl`.
+That directory also retains the upstream whole-game license, credits,
+component license directory, RLTiles notice, complete source-header notices
+and the Apache-2.0 text for PCG.
+
+The published whole-game grant is **GPL-2.0-or-later**, with BSD-2/BSD-3,
+CC0/public-domain, MIT and Apache-2.0 components; Apache compatibility uses
+the GPL's version-3-or-later option.  **Not all artwork is claimed CC0.**
+The upstream [standalone tiles provenance catalog](https://github.com/crawl/tiles/blob/master/TILES_UNDER_UNKNOWN_LICENSE.md)
+has historical exceptions, including the felid cat1–cat5 NetHack-origin
+claim.  The reviewed release contains no separate NetHack/NGPL notice for
+those files.  Distribution here relies on the published game-bundle grant,
+not an assertion that the standalone CC0 export covers every tile or that
+historical contributor title has been independently proven.  The retained
+rights review is **`local://gnollcrawl-rights-review.json`**; it records that
+provenance caveat as nonblocking and requires the notices preserved above.
+
+### Actual final-output native receipt
+
+Main reports a successful source build of
+**`/gnu/store/13gpjw57y90zn6q8jc8i4wbfdpfi0pjx-gnollcrawl-0.19-GnollCrawlA`**,
+including **27/27 upstream unit tests** and the upstream nondebug stress
+harness with its original defaults.  Main's final **`--check` reproducibility
+rebuild passed in 956.79 s** (**bg183**) for derivation
+**`9ffdac3sz4pq8qz2dzwhy5nr4h349kzb`**, retaining that same final output.
+
+The real [prebuilt-output consumer](tests/gnollcrawl-native.py) and
+[shell harness](tests/gnollcrawl-smoke.sh) produced
+**`.goocastle/evidence/gnollcrawl-native3/report.json`**, with
+**`success: true`** and **`nar_unchanged: true`**.  Both terminal and SDL2
+frontends started with fresh HOME/XDG trees, no seeded save or rc file,
+created a character, performed ordinary movement through native turns
+**0→1→2**, saved, restored in a fresh process at **turn 2**, and continued to
+**turn 3**.  Native character inventory and player position matched across
+restore; the subsequent resave changed bytes.  Retained raw input/output,
+native dumps, process evidence and screenshots ground those checks.
+Main viewed **`tiles-reload-0005-restored.png`** from this final receipt.
+
+The actual game processes retained **UID 1000/GID 998**, zero capabilities
+and `no_new_privs`, in distinct user/mount/network/PID namespaces with no
+external network routes and read-only store mounts.  The before/after recursive
+output NAR hash is identically
+**`1n9agyvm1m618y7z988gm3249i9inbm2ajb9f045xmhvxcg8wp87`**.
+New and restored SDL2 processes each opened a private PulseAudio stream with
+matching game/client/stream PID and format **s16le, 2 channels, 44100 Hz**.
+This proves native audio-device initialization, **not non-silent samples,
+physical audible sound, or bundled sound assets**; the source contains no
+bundled audio files.  No combat, deeper-level traversal or full-game
+completion is claimed by this bounded run.
+
+### Literal gates, inventory and publication boundary
+
+Main's final post-format full lint exited **0** in **22.65 s**, with exactly
+**two diagnostics**: **“no updater for gnollcrawl”** and **“source not archived
+on Software Heritage and missing from the Disarchive database”**.
+Formatting is clean, but literal full lint is **not warning-free**.  No
+checker is disabled and archival is not asserted from scheduling alone.
+**Forgejo #378 remains OPEN: literal lint is not clean.  Publication is
+pending and this repository-only package is not deployed.**
+
+Gnollcrawl adds one project package and one README Crawl-family row;
+its two executable frontends and private build/test dependencies are not
+extra top-level applications.  This does not add or alter the canonical
+**629** preservation snapshots, assert a new whole-inventory count/pass,
+or accept unrelated working-tree changes.  No host/service state or
+network-catalog fact changed, so no OKF page/log update applies.
 
 ## Geminum Orbis — original source and native dungeon gameplay (2026-10-20)
 

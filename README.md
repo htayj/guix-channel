@@ -403,6 +403,7 @@ publication, source-required, and build gates appear in the final table.
 | [`bloatcrawl2`](guix/tay/packages/bloatcrawl2.scm) | `2.2.0` | Terminal fork of Dungeon Crawl Stone Soup | Verified |
 | [`brogue`](guix/tay/packages/brogue.scm) | `1.15.1` | Brogue CE with SDL tiles and ncurses frontends, XDG native state | Verified ([receipt](ACCOUNTING.md#brogue)) |
 | [`brogue-lite`](guix/tay/packages/brogue-lite.scm) | `1.13-0.20240105` | Casual terminal roguelike dungeon game | Defined |
+| [`gnollcrawl`](guix/tay/packages/gnollcrawl.scm) | `0.19-GnollCrawlA` | Original Gnollcrawl, source-built terminal and SDL2/OpenGL tiles frontends, unchanged game data and exact upstream fonts; shared XDG native saves | Locally verified final-output source build/reproducibility, movement, turns and fresh-process save/restore in both frontends; SDL2 audio stream opened, not audible-sound proof; literal lint not clean; publication pending, not deployed; #378 OPEN ([install, source, rights and limits](ACCOUNTING.md#gnollcrawl--original-source-and-native-terminaltiles-save-continuity-2026-10-20)) |
 | [`hellcrawl`](guix/tay/packages/hellcrawl.scm) | `5.7` | Console Crawl variant with a streamlined dungeon | Verified |
 | [`kimchi`](guix/tay/packages/kimchi.scm) | `1.3.2` | Korean-localized console Crawl variant | Verified |
 | [`rapidbrogue`](guix/tay/packages/rapidbrogue.scm) | `1.4.0` | Ten-level rapid variant of the Brogue roguelike | Verified |
