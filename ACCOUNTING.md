@@ -97,6 +97,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [FOR recovered original alpha source](#for--recovered-original-alpha-source-2026-10-19)
 - [Geminum Orbis original source and native dungeon gameplay](#geminum-orbis--original-source-and-native-dungeon-gameplay-2026-10-20)
 - [Gnollcrawl original source and native terminal/tiles save continuity](#gnollcrawl--original-source-and-native-terminaltiles-save-continuity-2026-10-20)
+- [GnollHack original Unix tty/curses game and native save continuity](#gnollhack--original-unix-ttycurses-game-and-native-save-continuity-2026-10-21)
 
 ## Substitute automation — prepared, not deployed (2026-10-18)
 
@@ -653,6 +654,159 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## GnollHack — original Unix tty/curses game and native save continuity (2026-10-21)
+
+[`gnollhack`](guix/tay/packages/gnollhack.scm) **4.3.0-27** builds the original
+[hyvanmielenpelit/GnollHack](https://github.com/hyvanmielenpelit/GnollHack)
+stable release, published **2026-10-17**, at commit
+[`10c2529b38ee457e8d015f8e1561039ab4d4bf2e`](https://github.com/hyvanmielenpelit/GnollHack/tree/10c2529b38ee457e8d015f8e1561039ab4d4bf2e).
+The verified codeload archive, retained as
+**`/tmp/gnollhack-source-20261021.tar.gz`**, contains **161,648,315 bytes**.
+Its SHA-256 is
+**`180c565720ce333702092350f7161d5d991a65d7ae8d247fe18ba34e3f8ff31a`**;
+Guix base32 is
+**`06pkiwzlx8wbw5zj93dfsxjim6ax3lbgfl131413fcyf41bmc30q`**
+(archive hash, not a Git NAR).
+
+The user explicitly selected upstream's original **Linux Unix tty/curses
+port**, with the complete game simulation, original native text/maps and
+native saves.  This is not a replacement implementation, substitute-assets
+edition or gameplay cut.  Separate Windows/mobile/macOS multimedia clients,
+tile sheets, sound effects, music, voiceovers and FMOD are outside that
+approved scope; this receipt does not claim their completion or redistribution.
+
+### Install, launch and writable state
+
+From this checkout:
+
+```sh
+guix install -L guix gnollhack
+gnollhack -wtty               # original tty interface
+gnollhack -wcurses            # original curses interface
+gnollhack-recover             # upstream native recovery utility
+```
+
+Alternatively, `guix shell -L guix gnollhack -- gnollhack -wtty` or
+`guix shell -L guix gnollhack -- gnollhack -wcurses` runs either interface
+without profile installation.  Recovery arguments are described by the
+installed **`gnollhack-recover(6)`** manual; this receipt exercises native
+save/restore, not recovery from a crashed game.
+
+Both launchers preserve caller arguments, the real `HOME` and user
+configuration.  An absolute `XDG_DATA_HOME` selects
+**`$XDG_DATA_HOME/gnollhack`**; unset or relative values fall back to
+**`$HOME/.local/share/gnollhack`**, requiring an absolute `HOME`.
+The canonical state path must remain outside `/gnu/store` and fit the
+upstream **128-byte** environment-path limit.  Launchers use private creation
+permissions, create `save/`, `dumps/` and native score/log files, and export
+the state root as `GNOLLHACKDIR` and `NetHackDIR`.  Both interfaces share
+native saves, bones, level files, scores, logs and dumps.  Packaged ncurses
+terminfo is supplied; no seeded rc file or save is installed.
+Original compiled text/maps (`nhdat`), license, symbols and system
+configuration remain immutable under **`share/gnollhack`** in the store,
+not copied into writable state.
+
+### Corresponding native source, notices and rights boundary
+
+The [immutable-data patch](guix/tay/packages/patches/gnollhack-immutable-data.patch)
+and recipe integrate immutable data prefixes, private native mutable state,
+Guix-qualified tools and reproducible version metadata.  The original engine,
+all native levels and textual gameplay data are built from source.  Upstream
+has **no native Linux unit-test suite/check target**: `check-dlb` constructs
+the data archive and is not a test.  No upstream unit-test pass is claimed.
+
+The selected code, native text/maps and manuals are distributed under the
+**NetHack General Public License (NGPL)**.  The origin removes foreign-client
+trees **`win/win32`**, **`sys/android`**, **`binary`** and the unused
+**`sys/wince/gnollhack64x96.bmp`** sprite sheet; these are not consumed by
+the selected native port.  The separately licensed modern graphics/audio
+remain **CC BY-NC 4.0**, and multimedia audio uses proprietary **FMOD**.
+Those restrictions are real but do not describe this native installed closure.
+No multimedia fonts, logos, tile sheets or sound banks are installed.
+
+**`share/doc/gnollhack`** retains `LICENSE.md`, `dat/license`, credits and
+the Guidebook.  **`share/doc/gnollhack/native-source`** accompanies the
+executables with the complete patched corresponding native source:
+`src`, `include`, `util`, `dat`, `doc`, `sys/unix`, `sys/share`, `win/tty`,
+`win/curses`, `win/share` and native build files.  This is the **NGPL 3(a)**
+source-accompaniment route, not only a source offer or upstream archive link.
+Modified original sources carry prominent dated package notices under
+**NGPL 2(a)**.  Original source copyright/license headers and native
+`dat/tribute` author/book attributions are preserved, including inherited
+literary quotations; this does not assert ownership of those quoted works.
+The retained bounded rights reviews are **`local://gnollhack-rights.json`**
+and **`local://gnollhack-review.json`**; their pre-build limitations are
+superseded only by the actual build/gameplay evidence below, not by an
+assertion that the separate multimedia asset rights were cleared.
+
+### Actual source-build and native consumer evidence
+
+Main reports the final-definition source build **PASS in 99.17 s**, producing
+**`/gnu/store/k8byk78r10mzkbmdw7hf2mc0x30w5wkl-gnollhack-4.3.0-27`**
+from derivation **`svxabp48gqkwc2c6hj2rjclmwpxvbsn7`**
+(build receipt **artifact20895**).  The corresponding **`--check` rebuild
+PASS in 96.23 s** retained that same output (**artifact20900**).
+
+The real native consumer's final run **native8 PASS in 38.81 s** is retained
+at **`.goocastle/evidence/gnollhack-native8/report.json`**.  Independent fresh
+HOME trees exercised original **tty and curses**, each with a normal
+**Valkyrie at Standard difficulty**, no seeded rc/save and no wizard hooks.
+Both performed native turns **1→4**, actual **`#save`**, a fresh-process
+restore at **turn 4**, continuation to **turn 5**, and a native resave.
+The exact native map, player position, statistics and inventory matched on
+restore.  All **four game processes exited naturally with status 0**.
+Main inspected both actual restored screens.
+
+The game processes ran as the caller's **UID 1000/GID 998**, with zero
+capabilities and `no_new_privs`, in private user/mount/network/PID namespaces
+and a read-only store.  The before/after recursive output NAR hash remained
+**`0hrv8lh5j1wihhyifys90rc0pcaglagpsn7qdd6h9d6ximlyvjvl`**.
+
+Each fresh and restored session also used the actual native **`O`** options
+UI to select an installed symbol set, read the choice back and verify its
+rendering.  **TTY uses active DECgraphics; curses uses active original plain
+symbols**, because upstream curses explicitly does not support DECgraphics.
+An independent review reproduced **“Unable to access symbols file”** in
+native4.  The fix sets only the immutable `HACKPREFIX` to `DATAPREFIX`;
+all mutable prefixes retain their private writable locations.  The final
+native8 receipt includes the ordinary options-UI regression proof.
+
+Consumer corrections handle observed native pagination, the Book of Tyr
+birth-story overlay, transient selection messages and ordinary directional
+combat when a birth grid bug occupies the exit.  They do not alter game
+code, restart for favorable RNG, inject a game state or bypass native UI.
+This bounded receipt does not establish full-game completion, deep-level
+coverage or multimedia behavior.
+
+### Literal gates and inventory boundary
+
+The literal full-lint gate is **BLOCKED, not clean**.  The original full
+lint **bg193** exited **1 after 143.92 s**: it reported the patch
+representation issue and three long lines (subsequently fixed), then the
+official CVE-2026 feed download failed with an HTTP bad-response/unexpected
+EOF after **1,505,075 of 38,306,260 bytes**.  After those four fixes, full
+lint **bg197** also exited **1 after 176.04 s**, with a truncated CVE fetch
+at **8,372,403 of 38,306,260 bytes** and no recurrence of those four
+diagnostics.  That second run preceded the one-line immutable `HACKPREFIX`
+fix; it does not establish completed full lint for final output **`k8by…`**.
+
+Direct retrieval of the original official NVD URL, including two retries,
+failed with an HTTP/2 internal error; a bounded HTTP Range request received
+correct partial-response headers but its body read timed out.  No complete
+feed was obtained and **no Guix cache conversion was executed**.  No CVE
+cache, source or routing configuration was changed; no fake/stale database
+was substituted and no checker was skipped.  Checks after the failed fetch
+remain incomplete, so neither local build/native acceptance nor transport
+recovery attempts establish a clean full-lint pass.  **F379/G379 remain
+OPEN on this gate.**  No publication state, profile installation or host
+deployment is inferred from local acceptance.
+
+GnollHack adds one project package and one README NetHack-family row; its
+two native interfaces and recovery utility are not extra top-level games.
+This does not alter the canonical **629** preservation snapshots or assert a
+new whole-inventory count/pass.  No host/service or network-catalog fact
+changed, so no OKF page/log update applies.
 
 ## Gnollcrawl — original source and native terminal/tiles save continuity (2026-10-20)
 

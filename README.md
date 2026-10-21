@@ -382,6 +382,7 @@ publication, source-required, and build gates appear in the final table.
 | [`dynahack`](guix/tay/packages/dynahack.scm) | `0.6.0` | DynaHack curses NetHack variant | Verified |
 | [`evilhack`](guix/tay/packages/evilhack.scm) | `0.9.3` | EvilHack terminal NetHack variant | Verified |
 | [`fiqhack`](guix/tay/packages/fiqhack.scm) | `4.3.0` | FIQHack terminal NetHack variant | Verified |
+| [`gnollhack`](guix/tay/packages/gnollhack.scm) | `4.3.0-27` | Original upstream Unix GnollHack, complete native tty/curses game with immutable NGPL text/maps, corresponding source and XDG saves; separate multimedia clients excluded by approved scope | Locally verified final-output source build/reproducibility, installed symbol selection and fresh-process native save/restore in both interfaces; full lint blocked by truncated official CVE feed, not clean; F379/G379 OPEN ([install, source, rights and evidence](ACCOUNTING.md#gnollhack--original-unix-ttycurses-game-and-native-save-continuity-2026-10-21)) |
 | [`grunthack`](guix/tay/packages/grunthack.scm) | `0.2.4-0.51d75ee` | GruntHack terminal NetHack variant | Verified |
 | [`hack`](guix/tay/packages/hack.scm) | `1.0.3` | Original BSD-3-Clause source-built terminal game/data/manual/notices, immutable store assets and XDG native mutable state | Verified |
 | [`hackem`](guix/tay/packages/hackem.scm) | `1.2.2` | HACK’EM terminal NetHack variant | Verified |
