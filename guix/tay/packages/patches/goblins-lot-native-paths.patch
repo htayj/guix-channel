@@ -1,0 +1,95 @@
+Goblins’ Lot: preserve native XDG state and prefix-local desktop installation.
+
+Modified for GNU Guix on 2026-10-21.  These changes do not alter resources,
+renderer modes, game rules, version metadata or executable-relative discovery.
+
+--- a/game/src/platform/linux/DataImpl.cpp
++++ b/game/src/platform/linux/DataImpl.cpp
+@@ -26,13 +26,14 @@
+ 
+ namespace fs = boost::filesystem;
+ 
++// Modified for GNU Guix on 2026-10-21: correct the native XDG directory name.
+ namespace PathsImpl {
+ 	void FindPersonalDirectory(fs::path& dir) {
+ 		// Get config dir according to XDG Base Directory Specification
+ 		// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+ 		if (getenv("XDG_CONFIG_HOME"))
+ 		{
+-			dir = fs::path(std::string(getenv("XDG_CONFIG_HOME")) + "/goblinw-lot");
++			dir = fs::path(std::string(getenv("XDG_CONFIG_HOME")) + "/goblins-lot");
+ 		} else
+ 		{
+ 			dir = fs::path(std::string(getenv("HOME")) + "/.config/goblins-lot");
+--- a/game/CMakeLists.txt
++++ b/game/CMakeLists.txt
+@@ -15,7 +15,8 @@
+ 
+ # A fallback icon for Desktop Environments that ignores /usr/share/icons
+ # https://specifications.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html#directory_layout
+-INSTALL(FILES "goblin-camp-128x128.png" DESTINATION "/usr/share/pixmaps" RENAME "goblin-camp.png")
++# Modified for GNU Guix on 2026-10-21: respect the selected installation prefix.
++INSTALL(FILES "goblin-camp-128x128.png" DESTINATION "${GOBLIN_CAMP_DATA_BASE_DIR}/pixmaps" RENAME "goblin-camp.png")
+ 
+ 
+ 
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -32,7 +32,8 @@
+ SET(GOBLIN_CAMP_DATA_BASE_DIR "${CMAKE_INSTALL_PREFIX}/share" CACHE PATH "Base Data Dir Path")
+ SET(GOBLIN_CAMP_SHAREDIR "${GOBLIN_CAMP_DATA_BASE_DIR}/games/goblins-lot" CACHE PATH "Path to Goblins' Lot shared files")
+ 
+-find_package(Boost REQUIRED COMPONENTS system filesystem serialization iostreams)
++# Modified for GNU Guix on 2026-10-21: Boost.System is now header-only.
++find_package(Boost REQUIRED COMPONENTS filesystem serialization iostreams)
+ find_package(Boost COMPONENTS python REQUIRED)
+ 
+ find_package(Boost COMPONENTS python3 REQUIRED)
+@@ -193,7 +194,6 @@
+   ${SDL2_LIBRARY}
+   ${SDL2_IMAGE_LIBRARY}
+   ${Python3_LIBRARIES}
+-  ${Boost_SYSTEM_LIBRARY}
+   ${Boost_FILESYSTEM_LIBRARY}
+   ${Boost_SERIALIZATION_LIBRARY}
+   ${Boost_IOSTREAMS_LIBRARY}
+--- a/game/src/scripting/Engine.cpp
++++ b/game/src/scripting/Engine.cpp
+@@ -59,7 +59,6 @@
+ 	}
+ }
+ 
+-PyMODINIT_FUNC PyInit_zlib();
+ PyMODINIT_FUNC PyInit__functools();
+ PyMODINIT_FUNC PyInit__weakref();
+ PyMODINIT_FUNC PyInit_time();
+@@ -73,7 +72,6 @@
+ 		PyImport_AppendInittab((char*) "_weakref",  PyInit__weakref);
+ 		PyImport_AppendInittab((char*) "time",      PyInit_time);
+ 		PyImport_AppendInittab((char*) "_funtools", PyInit__functools);
+-		PyImport_AppendInittab((char*) "zlib",      PyInit_zlib);
+ 		ExposeAPI();
+ 
+ 		PyConfig py_config;
+@@ -114,6 +112,10 @@
+ 			py::object modSys = py::import("sys");
+ 
+ 			py::object modTB  = py::import("traceback");
++			// Modified for GNU Guix on 2026-10-21: zlib is a standard dynamic
++			// extension, not an exported libpython builtin.  Use the isolated
++			// interpreter's normal standard-library extension search path.
++			py::import("zlib");
+ 
+ 			Globals::printExcFunc    = modTB.attr("print_exception");
+ 
+--- a/game/src/GCamp.cpp
++++ b/game/src/GCamp.cpp
+@@ -389,6 +389,8 @@
+ 
+ 		if (function != NULL) {
+ 			function();
++			// Modified for GNU Guix on 2026-10-21: consume this shortcut once.
++			function = NULL;
+ 		} else {
+ 			if (mouseStatus.cx > edgex && mouseStatus.cx < edgex+width) {
+ 				selected = mouseStatus.cy - (edgey+2);

@@ -1,0 +1,55 @@
+Authentic third-party notice sources, retrieved 2026-10-21 over HTTPS
+
+Each following file is the complete fetched UTF-8 text. SHA256 covers the
+original fetched bytes, including line endings; source pefile COPYING uses
+CRLF. No license labels from newer versions replace these historical texts.
+
+goblins-lot-CPython-3.11-LICENSE.txt
+URL: https://raw.githubusercontent.com/python/cpython/3.11/LICENSE
+Bytes: 13936
+SHA256: 3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf
+
+goblins-lot-libtcod-1.5.1-LICENSE.txt
+URL: https://raw.githubusercontent.com/libtcod/libtcod/1.5.1/LIBTCOD-LICENSE.txt
+Bytes: 1700
+SHA256: 8d300336721e51d5e3f6eace4679489e558c033536bfd524bb35c37225ca2e88
+
+goblins-lot-libtcod-fonts-README.txt
+URL: https://raw.githubusercontent.com/libtcod/libtcod/1.5.1/data/fonts/README.txt
+Bytes: 1894
+SHA256: 676a9c4bb81d03cfd13d5aa3d5c85aa75f954a8029268c089f22dc9521435bf0
+
+goblins-lot-libtappp-LICENSE.txt
+URL: https://raw.githubusercontent.com/Leont/libtap--/master/LICENSE
+Bytes: 1071
+SHA256: a18f2a1b349ff89d105497017fcfbf384dd73504f513efd01f84fd455f141bca
+
+goblins-lot-CMake-Copyright.txt
+URL: https://raw.githubusercontent.com/Kitware/CMake/v2.8.12/Copyright.txt
+Bytes: 2637
+SHA256: 807e980b68eec65cc23f79eeb5bba13ae588abf27790f05016fd874943274913
+
+goblins-lot-pefile-COPYING.txt
+URL: https://raw.githubusercontent.com/erocarrera/pefile/0765430d39cb1f0e5b109665b71f556dd25ecbc2/COPYING
+Bytes: 1441
+SHA256: 2496edd489d0712399abd1c5e72799b9a05788ad23c9fbdfb6a53a38f1a6dee8
+
+goblins-lot-GLAD-LICENSE.txt
+URL: https://raw.githubusercontent.com/Dav1dde/glad/v0.1.28/LICENSE
+Bytes: 1086
+SHA256: a2a88399d4ef1cab60abcd6ddbd301b4535d10cf051e940edf35d8665749fb45
+
+goblins-lot-stb-LICENSE.txt
+URL: https://raw.githubusercontent.com/nothings/stb/2e2bef463a5b53ddf8bb788e25da6b8506314c08/LICENSE
+Bytes: 2510
+SHA256: bebfe904b14301657e4e5d655c811d51fd31b97c455b9cc2d8600d6bac6cff63
+
+Historical pefile source tag commit: 0765430d39cb1f0e5b109665b71f556dd25ecbc2.
+The original pefile header copyright 2005-2009 remains in the source; COPYING
+adds historical BSD-3-Clause copyright 2004-2006.
+
+CMake v2.8.12 Copyright.txt accompanies FindSDL2/FindSDL2_image BSD references;
+module-specific Kitware and Benjamin Eikel copyrights are retained.
+
+Original MIT libtappp lineage is documented in the bundled README and
+goblins-lot-THIRD-PARTY-NOTICES.txt; the current exact-copy fork omitted LICENSE.

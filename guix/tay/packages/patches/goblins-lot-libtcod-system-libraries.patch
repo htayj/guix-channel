@@ -1,0 +1,41 @@
+libtcod 1.23.0: discover external LodePNG, utf8proc and whole stb offline.
+
+Modified for GNU Guix on 2026-10-21.  Keep all renderers, compression, Unicode,
+threads and the original generated GLAD loader.  The upstream option vocabulary
+is unchanged; the utf8proc vcpkg branch now resolves the system pkg-config module.
+
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -74,8 +74,9 @@
+ 
+ set_property(CACHE LIBTCOD_LODEPNG PROPERTY STRINGS "vendored" "find_package" "disable")
+ if(LIBTCOD_LODEPNG STREQUAL "find_package")
+-    find_package(lodepng-c CONFIG REQUIRED)
+-    target_link_libraries(${PROJECT_NAME} PRIVATE lodepng-c)
++    # Modified for GNU Guix on 2026-10-21: use external Guix libraries.
++    find_library(LODEPNG_LIB NAMES lodepng REQUIRED)
++    target_link_libraries(${PROJECT_NAME} PRIVATE ${LODEPNG_LIB})
+ elseif(LIBTCOD_LODEPNG STREQUAL "vendored")
+     message("Will be vendored: LodePNG")
+     target_sources(${PROJECT_NAME} PRIVATE "vendor/lodepng.c")
+@@ -92,8 +93,9 @@
+     target_include_directories(${PROJECT_NAME} PRIVATE "vendor/utf8proc")
+     target_sources(${PROJECT_NAME} PRIVATE "vendor/utf8proc/utf8proc.c")
+ elseif (LIBTCOD_UTF8PROC STREQUAL "vcpkg")
+-    find_package(unofficial-utf8proc CONFIG REQUIRED)
+-    target_link_libraries(${PROJECT_NAME} PRIVATE utf8proc)
++    find_package(PkgConfig REQUIRED)
++    pkg_check_modules(UTF8PROC REQUIRED IMPORTED_TARGET libutf8proc)
++    target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::UTF8PROC)
+ elseif(LIBTCOD_UTF8PROC STREQUAL "disable")
+     target_compile_definitions(${PROJECT_NAME} PUBLIC TCOD_NO_UNICODE)
+ else()
+@@ -105,7 +107,7 @@
+     message("Will be vendored: stb")
+     target_include_directories(${PROJECT_NAME} PRIVATE "vendor/")
+ elseif(LIBTCOD_STB STREQUAL "find_package" OR LIBTCOD_STB STREQUAL "vcpkg")
+-    find_package(Stb REQUIRED)
++    find_path(Stb_INCLUDE_DIR NAMES stb_ds.h REQUIRED)
+     target_include_directories(${PROJECT_NAME} PRIVATE ${Stb_INCLUDE_DIR})
+ else()
+     message(FATAL_ERROR "Unknown option for LIBTCOD_STB: '${LIBTCOD_STB}'")

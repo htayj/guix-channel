@@ -1,0 +1,139 @@
+Goblins' Lot / original Goblin Camp: copyright and provenance
+Recorded 2026-10-21; upstream game snapshot
+497febbb3d1c807d475b7ba5299cb4527d5f8bd3 (0.25dev, not a 0.25 release).
+
+IDENTITY AND PROJECT LICENSE
+This is Ilkka Halila / Generic Container's original Goblin Camp, resumed by
+Nikolay Shaplov and renamed Goblins' Lot in 2024, not Korppi Games' new project.
+The source headers and current README license code under GPL version 3 or later.
+COPYING.txt contains the full GPL version 3. Original core data, artwork and
+icons are conservatively covered by the original author's game-wide GPLv3 grant:
+  "Goblin Camp is licensed under the GPLv3"
+Original About page, posted 2010-06-24, archived 2012-04-15:
+https://web.archive.org/web/20120415234108id_/http://www.goblincamp.com/about
+This records the existing grant; it does not purport to issue any new asset
+license or guarantee third-party title. Original/current source copyrights,
+license notices, game readme and tile author metadata are preserved.
+Corresponding-source access remains a separate GPL conveyance obligation;
+COPYING alone is not a substitute for it.
+
+ORIGINAL GRAPHICS AND CORE DATA
+Both default and default_x2 tilesets, original font and all application icons
+are retained. tilesetV2.dat credits onionknight, hutze, apostrophest and Crawl
+Stone Soup artists. Immortius contributed the orc/terrain sprite integration.
+The default_x2 PNGs are nearest-neighbor double-size versions of default PNGs.
+HouseCentipede is credited for the original Goblin Camp icon by author commit
+2a4805cc6257ee56b62f612a0fa6ca5da29b4e36 (2010-07-18); the installed icons are
+the original corresponding icon frames, not replacement art.
+Individual historical forum permission receipts were not recovered. The
+original author's game-wide GPLv3 grant and contribution history support this
+scope; no conflicting restrictive grant was established in the review.
+
+The imported crawl-tiles Oct-5-2010 collection explicitly grants CC0-1.0 for
+its enclosed curated tiles. This is NOT a statement that all Dungeon Crawl
+Stone Soup graphics are CC0. Its Filtered List records signoffs and DeletedList
+identifies omitted non-CC0 assets. Exact imported matches were established for
+bog_green3, cobble_blood5 and hive0; a complete per-sprite bijection was not
+established. The explicit named import, original credits and game-wide GPLv3
+grant supply additional provenance; do not generalize limited comparisons.
+Collection and primary metadata:
+https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/crawl-tiles/crawl-tiles%20Oct-5-2010.zip
+https://storage.googleapis.com/google-code-archive/v2/code.google.com/crawl-tiles/project.json
+https://storage.googleapis.com/google-code-archive/v2/code.google.com/crawl-tiles/downloads-page-1.json
+CC0 text: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+FONT
+Upstream game/terminal.png is byte-identical to libtcod 1.5.1
+ascii-paint/terminal.png (SHA256
+5e9e64246b857dc414bd0acde98820885274483580f751b9b3329b8ee86b82f4).
+The installed terminal_x2.png, renamed terminal.png by upstream's CMake rule,
+is its exact nearest-neighbor double-size version. The included historical
+libtcod BSD license preserves the library copyright, conditions and disclaimer.
+The historical font README calls its data/fonts collection public domain and
+references the old non-antialiased terminal. Its explicit directory scope is
+not an exact file-specific public-domain certificate for ascii-paint/terminal;
+the general BSD grant and original game grant provide additional evidence.
+See goblins-lot-libtcod-1.5.1-LICENSE.txt and
+    goblins-lot-libtcod-fonts-README.txt (full original texts).
+
+INCORPORATED LIBTCOD COLOR CODE
+Color.hpp contains copied libtcod color data, copyright 2008-2021 Jice and the
+libtcod contributors, under BSD-3-Clause. The complete source header, including
+its copyright, conditions and disclaimer, is installed as Color.hpp. This
+incorporated code's notice is retained independently of the libtcod dependency.
+
+COPIED CPYTHON ROUTINE
+The load_package implementation in game/lib/gcamp/utils.py is copied from
+CPython 3.11 Lib/imp.py, with project adaptations. Copyright Python Software
+Foundation and earlier Python contributors as detailed in the accompanying
+complete goblins-lot-CPython-3.11-LICENSE.txt (including historical agreements).
+Upstream modification summary: the copied package-path search is retained;
+loading uses importlib.util.spec_from_file_location with an empty submodule
+search list, re-executes an existing sys.modules entry when present, otherwise
+creates a module, inserts it in sys.modules and executes its loader. This
+replaces the removed imp interface for Python 3.12. GNU Guix does not replace
+or rewrite that copied implementation.
+https://github.com/python/cpython/blob/3.11/Lib/imp.py#L200
+
+RETAINED SOURCE-ONLY COMPONENTS
+The TAP test executables use bundled libtappp. Its README traces
+Leont/libperl-- -> cbab/libtappp -> dhyannataraj/libtappp. The bundled C++ files
+match the latter fork, which omitted the LICENSE referenced by its README.
+The original Leont/libtap-- MIT license has been restored as t/libtappp/LICENSE;
+see goblins-lot-libtappp-LICENSE.txt. This documents the MIT lineage, not a
+new grant on behalf of later contributors. Tests are built/run, not installed
+as game executables; no assertions were removed by the packaging.
+
+FindSDL2.cmake: Copyright 2003-2009 Kitware, Inc.
+FindSDL2_image.cmake: Copyright 2005-2009 Kitware, Inc.; Copyright 2012 Benjamin
+Eikel; originally created by Eric Wing. These headers refer to CMake's BSD
+Copyright.txt. The full authentic CMake v2.8.12 text is restored alongside and
+appended as comments in the distributed modules; their author notices remain.
+See goblins-lot-CMake-Copyright.txt.
+
+Source-only tools/pefile.py: Copyright 2005, 2006, 2007, 2008, 2009 Ero Carrera
+<ero@dkbza.org>. Version 1.2.10 revision 63 matches the historical upstream tag
+except for the expanded VCS revision keyword. Its authentic historical COPYING
+is BSD-3-Clause, copyright 2004, 2005, 2006 Ero Carrera, NOT the current project's
+MIT license. It is restored as tools/COPYING; see goblins-lot-pefile-COPYING.txt.
+The obsolete Windows installer tools are not used or installed by this package.
+
+NATIVE DEPENDENCIES
+Boost, Python, SDL2, SDL2_image, Mesa/OpenGL, PNG and zlib are separate Guix
+inputs. Private libtcod-goblins-lot 1.23.0 retains the original software renderer
+and all other original renderers, threads, compression and Unicode support.
+External Guix LodePNG/c, utf8proc, zlib and whole stb replace bundled copies.
+The generated GLAD 0.1.28 loader and Khronos header are retained with their
+notices. The private library installs its BSD license, credits, full generated
+loader/header notices, GLAD MIT license and actual externally compiled stb
+header notices in share/doc/libtcod-goblins-lot. Other shared dependencies
+retain their own Guix license materials; this is not an assertion that the
+whole transitive closure has one license.
+
+PACKAGING MODIFICATIONS
+Modified for GNU Guix on 2026-10-21: correct the native XDG directory spelling;
+make pixmap installation respect the prefix; install executable in bin and
+preserve native executable-relative resource discovery; find external libtcod
+dependencies offline and retain their notices; restore omitted source licenses.
+Remove only the obsolete compiled Boost.System component requirement:
+Boost 1.89 supplies its API header-only, while remaining compiled components
+are still required. Capture actual unpacked source roots for original test
+fixtures and copyright installation.
+Use Python's normal standard-library zlib extension instead of registering
+PyInit_zlib as a libpython builtin: Guix's Python builds zlib as a dynamic
+extension. Import it during existing bootstrap exception handling using the
+unchanged isolated interpreter search path, without wrappers or host fallbacks.
+Compression remains enabled; no save/load or scripting code is removed.
+Clear a consumed main-menu keyboard callback after it returns. Previously the
+selected callback persisted across frames and immediately reopened Settings
+or another selected screen after returning, trapping ordinary navigation.
+All original screens and keyboard/mouse menu actions remain available.
+Remove unused Windows-only opaque binaries from the repacked source:
+tools/installer/redists (Microsoft debug DLLs and VC2008/VC2010 installers),
+game/crash-reporter/prebuilt (SharpZipLib DLL, crash reporter EXE, debug symbols
+and its configuration), and game/crash-reporter/ICSharpCode.SharpZipLib.dll.
+Original Windows reporter source and every native game asset remain. This
+removal does not assert redistribution rights over Microsoft's binaries; the
+unchanged downloaded archive identity is recorded separately by the recipe.
+No game resources, rendering modes, game rules, native state-generation code
+or reproducible upstream 0.25dev version metadata are replaced or removed.
