@@ -1,0 +1,109 @@
+God of Change: original release, font and dependency provenance
+
+Game: God of Change, by Adam Gatt, released 2011-03-12.
+The official release is unversioned.  The package version 2011.03.12 records
+that date rather than adopting the secondary AUR package's "1.0".
+Original project: https://code.google.com/archive/p/godofchange/
+
+Original source archive:
+https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/godofchange/God%20of%20Change%20-%20Source.zip
+23262 bytes; SHA256:
+6fec974b9ab13d044c4302889d4a35f8a85a28796614c38373e41558e742440e
+It contains the complete GodOfChange.cpp, God of Change license.txt and
+God of Change readme.txt.  The latter two files are installed byte-for-byte,
+including the readme's original encoding and historical wording.  The readme
+mentions F5 fullscreen; the actual release source comments out that handler.
+This package does not enable it.  Upstream supplies no automated test suite.
+
+Original font and accompanying notices:
+https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/godofchange/God%20of%20Change%20-%20Linux.tar.gz
+241043 bytes; SHA256:
+19284bb90cdcbff8c75f0f15823023dacf2ec754f5b52c00672bc7aba01fe3b8
+The asset origin removes GodOfChange, libtcod.so and libtcodxx.so before it
+is used by the package.  None of those precompiled files is used, run or
+installed.  The game and its renderer are built from source instead.
+
+The installed share/god-of-change/terminal.png is the unchanged original
+5011-byte, 128 by 128 PNG from that release.  SHA256:
+2ecd9e9556b2aab8c36122a6b066ebac4e47b293520d55315451acec09f589e6
+Its 16 by 16 glyph grid has 8 by 8 cells and ASCII column ordering.  The
+package changes only its lookup path: an absolute installed path is selected
+before initRoot, preserving the original non-greyscale, non-TCOD font flags,
+95 by 61 console, 25 FPS timing, native random generation and all game content.
+No additional font, music, image, map or other substitute asset is installed.
+
+Blocking keyboard compatibility:
+The original March 2011 Linux archive identifies its libtcod as 1.5.1, but
+that library predates the August 2012 tag reused for the source-built API.
+Static ELF-byte inspection, without executing or loading the original
+library, establishes that its TCOD_sys_wait_for_keypress passes the mask
+TCOD_KEY_PRESSED (1) to TCOD_sys_SDLtoTCOD.  The later tag's legacy wrapper
+instead calls wait_for_event with TCOD_EVENT_KEY (PRESS | RELEASE), although
+its public documentation still promises to wait for a key press:
+https://raw.githubusercontent.com/libtcod/libtcod/a7cabfda0b0c770d4092f0dec02efbd2a3b6d990/src/sys_sdl_c.c
+https://raw.githubusercontent.com/libtcod/libtcod/a7cabfda0b0c770d4092f0dec02efbd2a3b6d990/include/console.hpp
+The earlier press-only implementation is also visible in upstream source:
+https://raw.githubusercontent.com/libtcod/libtcod/0f3a054b6ddd9ac8ffa676f600b24293da8595aa/src/sys_sdl_c.c
+
+The game-only input patch therefore uses the existing public
+TCODSystem::waitForEvent(TCOD_EVENT_KEY_PRESS, &key, NULL, true) at all four
+original wait sites: gameplay, targeting, and the two ending-screen waits.
+Each original flush=true argument is retained.  Key records are initialized
+or reset before waiting so SDL_QUIT still leaves a TCODK_NONE result.  Key
+release no longer becomes a second game action; legitimate held-key repeat,
+all original controls, timing, random generation and game actions remain.
+No shared renderer or other package consumer is changed.  This integration
+does not modify or claim to repair SDL12-compat's separate repeat handling.
+
+Rights evidence and limits:
+The complete Adam Gatt 2011 BSD-3-Clause grant is in God of Change license.txt.
+Adam Gatt's contemporaneous announcement, "7DRL Success: God of Change",
+displayed Mar 12, 2011, states: "It is released for Windows and Linux, and is
+released under the New BSD license."
+https://groups.google.com/g/rec.games.roguelike.announce/c/ngPgyFvfg3E
+The game-wide release grant and accompanying libtcod BSD-3-Clause notice
+support distribution of the original font.  No separate per-PNG copyright
+line, modification attribution or license grant was recovered.  Attribution
+of the game's tiny font modification to Adam Gatt is an inference, not an
+express per-file statement.
+
+The original game PNG is not byte- or pixel-identical to upstream libtcod's
+root PNG.  Compared with libtcod 1.5.0, 14 decoded pixels differ, confined
+to one triangle glyph; the other 255 glyphs are identical.  Upstream 1.5.0:
+https://raw.githubusercontent.com/libtcod/libtcod/0f3a054b6ddd9ac8ffa676f600b24293da8595aa/terminal.png
+The later 1.5.1 tag font differs further and is not substituted.
+
+libtcod-fonts-README.txt is preserved verbatim from the immutable URL:
+https://raw.githubusercontent.com/libtcod/libtcod/468fcaa412843d79ac02ec035cd756cb5412367f/data/fonts/README.txt
+1894 bytes; SHA256:
+676a9c4bb81d03cfd13d5aa3d5c85aa75f954a8029268c089f22dc9521435bf0
+Its public-domain statement begins "This directory contains antialiased
+fonts for libtcod."  That directory-scoped statement is not presented as a
+separate public-domain dedication of the non-antialiased root terminal.png.
+The readme separately describes that older root font and its 16 by 16 layout.
+It also names other fonts; none of those unrelated fonts is shipped here.
+
+Renderer and codec notice closure:
+The package reuses the channel's private source-built dwarftown-libtcod 1.5.1,
+also used by FOR.  Its pinned upstream source revision is:
+a7cabfda0b0c770d4092f0dec02efbd2a3b6d990
+https://github.com/libtcod/libtcod/tree/a7cabfda0b0c770d4092f0dec02efbd2a3b6d990
+This retains the full historical SDL/OpenGL renderer and embedded LodePNG
+codec, with separate Guix SDL, zlib and OpenGL dependencies.  The historical
+credits describe optional or old bundled components, not necessarily the
+actual rebuilt dependency closure.
+
+This documentation directory preserves both sets of libtcod notices:
+  bundled-LIBTCOD-LICENSE.txt, bundled-LIBTCOD-CREDITS.txt, bundled-README-SDL.txt
+    are the exact notices from the original game Linux archive;
+  LIBTCOD-LICENSE.txt, LIBTCOD-CREDITS.txt, README-SDL.txt
+    are copied from the source-built renderer;
+  lodepng.c and lodepng.h
+    retain the actual embedded codec source, version and full license text
+    from that same source-built renderer.
+The libtcod BSD-3-Clause and LodePNG zlib-style terms are preserved rather
+than replaced by new wording.  Separate Guix dependencies retain their own
+licenses and notices in their respective outputs.
+
+Provenance and rights evidence retrieved 2026-10-22.  These statements describe
+source and packaging provenance, not a claim of gameplay or build verification.

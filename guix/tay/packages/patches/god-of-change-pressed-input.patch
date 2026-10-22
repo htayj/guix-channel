@@ -1,0 +1,49 @@
+Restore the original release's PRESS-only blocking input contract.
+
+The March 2011 game shipped with a libtcod whose wait_for_keypress converts
+SDL events with TCOD_KEY_PRESSED only.  The reused August 2012 1.5.1 tag's
+legacy wrapper instead requests TCOD_EVENT_KEY (PRESS | RELEASE), despite
+still documenting a wait for a key press.  Without this adaptation a normal
+press/release tap can advance the game twice, including during targeting.
+
+Use the public event API directly at all four original waits.  Keep each
+original flush=true argument, initialize/reset the key to preserve the NONE
+result on SDL_QUIT, and retain normal held-key repeat and all game actions.
+The shared renderer and its other consumers are deliberately unchanged.
+
+--- a/GodOfChange.cpp
++++ b/GodOfChange.cpp
+@@ -390,7 +390,8 @@
+          player.stuck = false;
+          acted = true;
+       } else {
+-         TCOD_key_t key=TCODConsole::waitForKeypress(true);
++         TCOD_key_t key={TCODK_NONE,0};
++         TCODSystem::waitForEvent(TCOD_EVENT_KEY_PRESS,&key,NULL,true);
+          int destx = player.x, desty = player.y;
+          int testX = -1, testY = -1;
+          if (key.vk == TCODK_ESCAPE) {
+@@ -1118,7 +1119,8 @@
+       TCODConsole::root->flush();
+ 
+       // Allow the player to navigate with the arrow keys, confirm and cancel
+-      TCOD_key_t key=TCODConsole::waitForKeypress(true);
++      TCOD_key_t key={TCODK_NONE,0};
++      TCODSystem::waitForEvent(TCOD_EVENT_KEY_PRESS,&key,NULL,true);
+       if (key.vk == TCODK_UP || key.vk == TCODK_KP8 || key.c == 'k') {
+          if (curY > 0) {
+             if (distance(player.x, player.y, curX, curY-1) <= maxRange) {
+@@ -2429,9 +2431,11 @@
+    TCODConsole::root->putChar(MAP_LEFT+39, MAP_TOP+37, 17, TCOD_BKGND_SET);
+    TCODConsole::root->putChar(MAP_LEFT+57, MAP_TOP+37, 16, TCOD_BKGND_SET);
+    TCODConsole::root->flush();
+-   TCOD_key_t key=TCODConsole::waitForKeypress(true);
++   TCOD_key_t key={TCODK_NONE,0};
++   TCODSystem::waitForEvent(TCOD_EVENT_KEY_PRESS,&key,NULL,true);
+    while (key.vk != TCODK_ESCAPE) {
+-      key=TCODConsole::waitForKeypress(true);
++      key=TCOD_key_t();
++      TCODSystem::waitForEvent(TCOD_EVENT_KEY_PRESS,&key,NULL,true);
+    }
+    exit(0);
+ }

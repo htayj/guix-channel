@@ -1,0 +1,18 @@
+Use the installed original font without changing libtcod 1.5.1's defaults.
+
+The original game relies on terminal.png in the working directory.  Select
+its absolute installed path before console initialization, retaining ASCII
+column order, 16 by 16 characters, and neither greyscale nor TCOD layout.
+All gameplay, random generation, console dimensions and timing are unchanged.
+
+--- a/GodOfChange.cpp
++++ b/GodOfChange.cpp
+@@ -371,6 +371,8 @@
+ 
+ // Main Method
+ int main() {
++   TCODConsole::setCustomFont(GOD_OF_CHANGE_FONT,
++                             TCOD_FONT_LAYOUT_ASCII_INCOL,16,16);
+    TCODConsole::initRoot(95,61,"God of Change",false);
+    TCODSystem::setFps(25);
+ 

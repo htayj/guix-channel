@@ -99,6 +99,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Gnollcrawl original source and native terminal/tiles save continuity](#gnollcrawl--original-source-and-native-terminaltiles-save-continuity-2026-10-20)
 - [GnollHack original Unix tty/curses game and native save continuity](#gnollhack--original-unix-ttycurses-game-and-native-save-continuity-2026-10-21)
 - [Goblins' Lot original Goblin Camp source, rights and native colony continuity](#goblins-lot--original-goblin-camp-source-rights-and-native-colony-continuity-2026-10-21)
+- [God of Change recovered original source, font rights and bounded native gameplay](#god-of-change--recovered-original-source-font-rights-and-bounded-native-gameplay-2026-10-22)
 
 ## Substitute automation — prepared, not deployed (2026-10-18)
 
@@ -655,6 +656,184 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## God of Change — recovered original source, font rights and bounded native gameplay (2026-10-22)
+
+[`god-of-change`](guix/tay/packages/god-of-change.scm) **2011.03.12** builds
+Adam Gatt's complete original C++/libtcod **2011 7DRL**, not a replacement
+engine or an assets-stripped reconstruction.  The version dates the official
+unversioned **2011-03-12** release; the historical AUR recipe's **1.0** is
+secondary packaging metadata, not an established upstream semantic version.
+**Forgejo #381 and GitHub #381 remain OPEN**: the literal full lint did not
+complete cleanly.  Local build/runtime evidence establishes neither channel
+publication nor deployment.
+
+### Recovered source and complete original game
+
+The official
+[`God of Change - Source.zip`](https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/godofchange/God%20of%20Change%20-%20Source.zip)
+contains **23,262 bytes**, SHA-256
+**`6fec974b9ab13d044c4302889d4a35f8a85a28796614c38373e41558e742440e`**,
+Guix base32
+**`03j48bkmh5g4ff1w6536g4l5ma7q6m59v2028d608gdik95rgv3g`**.
+Recovery matched the official download's size/SHA-1 and an independent
+Wayback replay.  The historical source-unavailable blocker is corrected:
+Google Code Archive's **`hasSource: false`** describes its missing captured
+Mercurial repository, not the absence of this source-labelled release
+download.  No canonical Mercurial commit or later maintained release is
+claimed.
+
+The archive supplies the entire **2,437-line `GodOfChange.cpp`**, original
+readme and full Adam Gatt 2011 **BSD-3-Clause** notice.  All original game
+content remains: species-wide evolving traits and behaviours, the visible
+bestiary, the taunting God and changing walls, randomly generated branching
+dungeons, pathfinding and field of vision, monster interactions and abilities
+such as fire-breathing, webs, telepathy and hive minds, weapons/armour,
+four rechargeable wands and five consumable scroll types with targeting.
+Four ordinary dungeons lead to the fifth-dungeon Avatar boss and original
+victory story/ending.  This is source-preservation scope, **not a claim that
+every feature or the campaign was exercised**.
+
+From this checkout:
+
+```sh
+guix install -L guix god-of-change
+god-of-change
+# Or, without profile installation:
+guix shell -L guix god-of-change -- god-of-change
+```
+
+The ordinary native **`bin/god-of-change`** opens the original **95 × 61**
+cell graphical console at **25 FPS**.  Arrows/numpad/`hjkl` move;
+`SPACE`/numpad 5 waits; `qwer` selects wands; `1`–`5` selects scrolls;
+targeting uses movement, `SPACE` to confirm and `BACKSPACE` to cancel;
+`ESC` quits.  The original readme advertises Linux F5 fullscreen, but that
+handler is **commented out in the released source**.  It remains disabled;
+no fullscreen acceptance is claimed.  There is **no save/load system**,
+configuration migration or invented persistence.
+
+### Original font, positive grants and provenance limits
+
+The exact original **`share/god-of-change/terminal.png`** is **5,011 bytes**,
+SHA-256
+**`2ecd9e9556b2aab8c36122a6b066ebac4e47b293520d55315451acec09f589e6`**:
+**128 × 128 pixels**, a **16 × 16** column-major grid of **8 × 8** glyphs.
+Its official
+[`God of Change - Linux.tar.gz`](https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/godofchange/God%20of%20Change%20-%20Linux.tar.gz)
+origin is **241,043 bytes**, SHA-256
+**`19284bb90cdcbff8c75f0f15823023dacf2ec754f5b52c00672bc7aba01fe3b8`**,
+Guix base32
+**`1f733yhapirbcw02rdgmak3jxkys4cq8458gbz3zigyw1jwlna0r`**.
+The asset-origin snippet removes **`GodOfChange`, `libtcod.so` and
+`libtcodxx.so`**.  Main's actual sanitized-origin audit found exactly
+**six regular files** (five original documents and this font), **zero
+PE/ELF files**, and the unchanged font hash.  No opaque release executable
+or shared library is used or installed.
+
+The original author's
+[2011-03-12 release announcement](https://groups.google.com/g/rec.games.roguelike.announce/c/ngPgyFvfg3E)
+expressly releases the Windows/Linux **game under New BSD**.  That game-wide
+grant, the complete game BSD-3-Clause text and the accompanying **Jice &
+Mingos libtcod BSD-3-Clause** notice support shipping the original font;
+no contrary shipped-asset restriction was found.  This corrects the earlier
+rights/source blocker, not the author's license.  Independent review accepted
+this bounded rights conclusion.
+
+The font is **not byte- or pixel-identical** to upstream libtcod 1.5.0:
+**14 pixels in one triangle glyph differ**, while the other **255 glyphs**
+are pixel-identical.  Attribution of that tiny modification to Gatt is an
+**inference**, not a recovered per-file statement; no separate PNG-specific
+grant or modification log was found.  The authentic
+[`data/fonts/README.txt`](https://raw.githubusercontent.com/libtcod/libtcod/468fcaa412843d79ac02ec035cd756cb5412367f/data/fonts/README.txt)
+says **“This directory”** contains public-domain antialiased fonts.
+That directory-scoped statement is **not a public-domain certificate for
+the root terminal.png or all fonts**.  Unrelated fonts named in credits are
+not installed.  No substitute font or invented dedication is used.
+
+**`share/doc/god-of-change`** preserves the original game license/readme
+bytes, historical bundled libtcod license/credits/SDL notice, the rebuilt
+renderer's notices and exact LodePNG source/license, the authentic scoped
+font README, and **`god-of-change-provenance.txt`** with immutable references
+and these limits.
+
+### Source-built renderer and actual input correction
+
+The complete single translation unit builds as GNU C++98 against the existing
+private **`dwarftown-libtcod` 1.5.1**, source commit
+**`a7cabfda0b0c770d4092f0dec02efbd2a3b6d990`**, as FOR already does.
+Its full SDL/OpenGL renderer and codecs remain source-built; no new renderer
+or gameplay abstraction replaces them.  The font-path patch selects the
+installed absolute original PNG before `initRoot`, preserving the original
+column-major, non-greyscale **16 × 16** layout.  No CWD/state wrapper,
+RNG change, seeded state or gameplay simplification is introduced.
+
+Main's first native attempt failed after **26.69 s**: an ordinary **70 ms**
+Down tap moved two cells.  Inert ELF inspection of the original March 2011
+bundled libtcod (never executed) established a **PRESS-only** blocking wait;
+the reused later 1.5.1 tag's legacy wrapper returns **PRESS and RELEASE**.
+The package's
+[`god-of-change-pressed-input.patch`](guix/tay/packages/patches/god-of-change-pressed-input.patch)
+restores the public **`TCOD_EVENT_KEY_PRESS`** wait at **all four** original
+wait sites: main gameplay, targeting and both ending waits.  It retains
+`flush=true`, an initialized `NONE` fallback and original **500 ms / 30 ms**
+held-key repeat.  It does not merely weaken the movement assertion.
+
+A separate zero-delay tap experiment failed after **10.91 s**, producing
+one then seven moves; that consumer workaround was removed.  The
+[SDL12-compat 1.2.68 source](https://raw.githubusercontent.com/libsdl-org/sdl12-compat/release-1.2.68/src/SDL12_compat.c)
+has a distinct **KEYUP / pending-KEYDOWN / repeat-rearming ordering risk**.
+It remains **unfixed in this dependency closure**.  The zero-delay burst is
+consistent with that source path, **not runtime-instrumented causal proof**;
+no verified upstream fix was established.  The successful ordinary-tap run
+below is bounded evidence, **not all-timing or held-repeat coverage**, and
+this dependency input risk is not hidden as outside the package.
+
+### Final-output build and bounded native receipt
+
+Main's final serial source build passed in **9.82 s** (artifact **21241**),
+producing
+**`/gnu/store/fic748q2hpbx1w3xkwa4fvpnjga8ascv-god-of-change-2011.03.12`**,
+derivation prefix **`yc857yrqr022vq98pygmcm8piba6xss9`**.
+Its separate **`--check`** reproducibility rebuild passed in **6.00 s**
+(artifact **21242**).  The reused renderer's own **`--check`** passed in
+**7.25 s** (artifact **21193**) for
+**`/gnu/store/vbn90w1imdqx3fj0qmzl2wcw6qsksz1i-dwarftown-libtcod-1.5.1`**.
+Upstream provides **no automated test suite**; these are source-build and
+reproducibility results, not an upstream test pass.
+
+The external [`tests/god-of-change-smoke.sh`](tests/god-of-change-smoke.sh)
+and [`tests/god-of-change-native.py`](tests/god-of-change-native.py) consumed
+that final output.  Main's **native3** run passed in **43.86 s**; evidence is
+**`.goocastle/evidence/god-of-change-native3`**, including
+`native-result.json`, `shell-result.json`, input transcript and native frames.
+Main inspected the actual
+**`03-meaningful-gameplay-final-sample-01.png`** and game process status.
+One time-seeded launch received **45 ordinary 70 ms arrow taps**; all **45**
+were exact adjacent moves, from initial **(0,1)** to final **(17,1)**,
+with **20 HP**.  Action 45 changed **Troglodyte: Friendly → Apathetic**
+in the bestiary and displayed the original message:
+**“To be honest, I didn't mean to make Troglodytes Apathetic. That was an
+accident.”**  Native `ESC` exited the game and Xvfb with status **0**.
+No visible monster-motion change was recorded in this successful run.
+No combat, wand/scroll use, targeting, boss, victory, fullscreen or
+save/resume acceptance is inferred.
+
+The receipt records current-user **UID 1000 / GID 998**, zero capabilities,
+**NoNewPrivs=1**, private user/mount/network/PID namespaces, loopback only
+with no external route, fresh HOME/XDG state and recursively read-only store
+mounts.  No private files were generated; the original installed font hash
+matched.  The before/after recursive output NAR was unchanged:
+**`1jgdhk1ryggsnxm58dyka8wchjw7ylj4lakkdj5lrqx4knwnzfz2`**.
+These are bounded local observations, not a security certification.
+
+Main's literal **`guix lint -L guix god-of-change`** exited **1** after
+**192.11 s**: the official NVD 2026 feed ended at **915,042 of 38,618,028
+bytes**.  No earlier diagnostics were printed, but the run is **incomplete
+and not clean**, and predates the final notice-filename/input corrections.
+There is **no completed final full-lint result**.  No checker was skipped,
+finding suppressed or fake/stale CVE data supplied.  **F381/G381 remain OPEN**.
+The canonical **629** preservation-source ledger is unchanged.  This
+documentation worker ran no commands; Main owns the exercised verification.
 
 ## Goblins' Lot — original Goblin Camp source, rights and native colony continuity (2026-10-21)
 
