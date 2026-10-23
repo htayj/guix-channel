@@ -101,6 +101,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [Goblins' Lot original Goblin Camp source, rights and native colony continuity](#goblins-lot--original-goblin-camp-source-rights-and-native-colony-continuity-2026-10-21)
 - [God of Change recovered original source, font rights and bounded native gameplay](#god-of-change--recovered-original-source-font-rights-and-bounded-native-gameplay-2026-10-22)
 - [Gooncrawl original v2.0 source, rights and native console/tiles](#gooncrawl--original-v20-source-rights-and-native-consoletiles-2026-10-23)
+- [HandhRL original source, rights and native save continuity](#handhrl--original-source-rights-and-native-save-continuity-2026-10-23)
 
 ## Substitute automation — prepared, not deployed (2026-10-18)
 
@@ -657,6 +658,186 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## HandhRL — original source, rights and native save continuity (2026-10-23)
+
+[`handhrl`](guix/tay/packages/handhrl.scm) **0.3** packages John S. Berry III's
+original Python 2 science-fiction roguelike, based on Hulks and Horrors,
+not a rewrite or Python 3 port.  The canonical
+[`0.3` release](https://github.com/jarcane/handhRL/releases/tag/0.3), dated
+**2014-07-16**, is pinned with `git-fetch` from
+[jarcane/handhRL](https://github.com/jarcane/handhRL) at immutable commit
+[`03d0d256f150af256ac34a62fdafbf1a7514d76b`](https://github.com/jarcane/handhRL/tree/03d0d256f150af256ac34a62fdafbf1a7514d76b).
+The recursive checkout SHA-256, Guix base32, is
+**`04i5j81p9nlj16n7wqdgx3ldqii8409cfzafsh29lwaz19ppqqgd`**.
+Main compared all **42 original entries / 37 regular files / 29,136,256
+file bytes** against the retained original codeload archive: paths, types,
+file sizes/hashes, executable bits and symlink targets all match.  Only the
+root container name and non-NAR timestamp/ownership metadata were excluded.
+The original tarball SHA-256
+**`284fcabffd46fd4634e4d40e0b1b8b324916b697476a280e1123fbd616e558a3`**
+is comparison evidence, **not the current origin's recursive hash**.
+
+The exact Git revision is
+[already archived by Software Heritage](https://archive.softwareheritage.org/api/1/revision/03d0d256f150af256ac34a62fdafbf1a7514d76b/).
+Changing source representation at the same commit resolved the real
+updater/archive findings from the superseded tarball-form lint run; no
+checker waiver or archive submission was used.  This does not claim the
+compressed codeload tarball itself is archived.  Main's source/equivalence
+receipts are `local://handh-main-evidence.json` and
+`local://handh-git-source-equivalence.json`.
+
+### Component rights and historical tutorial limitation
+
+The game is **GPL-3.0-or-later**, with original `COPYING.txt`, README and
+module notices retained.  The original BSD-3 `libtcodpy.py` binding is
+integrated with official `cprotos.py` from the pinned renderer source,
+enabling upstream pointer-width-correct ctypes prototypes on Linux rather
+than a handwritten ABI table.  This addresses a static ABI risk, not a
+claimed reproduced game crash.  The package reuses the **unchanged**
+[`dwarftown-libtcod`](guix/tay/packages/dwarftown.scm) **1.5.1** recipe and
+its existing portability work; no duplicate renderer or bundled binary is
+used.  Native integration selects immutable library/font paths; original
+Linux game logic, RNG, save/load and score handling remain upstream.
+
+The unchanged **8,240-byte** `terminal16x16_gs_ro.png` has SHA-256
+**`0475c1cc68cf710cde725d532acf949f3143d130b90709903571f0f123d68896`**,
+matching the exact font in
+[original libtcod source](https://github.com/libtcod/libtcod/tree/a7cabfda0b0c770d4092f0dec02efbd2a3b6d990/data/fonts).
+That directory's `README.txt` explicitly declares the fonts public domain;
+it is installed as `libtcod-fonts-README.txt`.  This is independent of the
+tutorial-code discussion.  Original procedural starfield/computer-screen
+backgrounds remain code-generated, not replaced artwork.  Bundled native
+binaries, release executables and Windows-only py2exe/icon payloads are
+excluded; no independent icon grant is asserted.
+
+The tutorial-derived code relies on **Jotaf's affirmative 2011-04-10 BSD-3
+grant**, not an assertion that the tutorial is unconditionally public
+domain.  Main read the
+[author-attributed wiki revisions 24339 and 30638](https://www.roguebasin.com/api.php?action=query&prop=revisions&revids=24339%7C30638&rvprop=ids%7Ctimestamp%7Cuser%7Ccontent&rvslots=main&format=json)
+on **2026-10-23**: the former contains the unstruck affirmative grant;
+Jotaf's own **2012-12-17** revision strikes it and says, “I think I will
+just leave it in the Public Domain. Opinions?”  That tentative intent is
+**not a formal dedication**.  Berry's July 2014 derivation postdates the
+strike, an explicit chronology/interpretive limitation.  The
+[2014-12-28 Wayback capture](https://web.archive.org/web/20141228065818/http://www.roguebasin.com:80/index.php?title=Talk:Complete_Roguelike_Tutorial,_using_python%2Blibtcod)
+also shows the struck block but postdates the game release; it is not
+independent pre-release evidence.  The accepted distribution basis honors
+the earlier affirmative BSD permission with **all three conditions,
+including non-endorsement, and the complete disclaimer retained**.
+
+Muscles' credited October/November 2012 API/keypad contributions predate
+the December statement.  The copied delta is assessed as
+mechanical/functional with de-minimis expression, **not licensed by
+Jotaf** and not covered by an invented Muscles permission.  The complete
+grant, chronology, attribution and component notices are in
+[`handhrl-provenance.txt`](guix/tay/packages/files/handhrl-provenance.txt),
+installed under **`share/doc/handhrl/`** alongside the original notices,
+renderer credits/licenses and noticed LodePNG sources.  Component BSD-3,
+font public-domain and codec zlib-style terms do not relicense the GPL game.
+
+### Launcher and prebuilt-output consumer
+
+From this checkout, usage without profile installation is:
+
+```sh
+guix shell -L guix handhrl -- handhrl
+```
+
+The command is **`handhrl`**.  An absolute `XDG_DATA_HOME` selects
+**`$XDG_DATA_HOME/handhrl`**; unset or empty uses
+**`$HOME/.local/share/handhrl`**.  Relative data roots are rejected, not
+silently redirected.  The launcher sets **`umask 077`**, rejects literal
+and canonically resolved `/gnu/store` roots, and changes CWD to this private
+directory for the original **`savegame` / `scorefile` shelve databases**.
+Immutable modules/font stay in `share/handhrl`; no game tree is copied to
+HOME.  Original-file execution with **Python 2 `-B -s -E`** preserves
+pickle's `__main__` identities while disabling bytecode writes, user-site
+packages and Python environment overrides.
+
+The existing Makefile guard accepts a canonical **already-built** store
+output and a fresh, nonexistent, canonical absolute evidence directory
+outside the store:
+
+```sh
+make guard-handhrl \
+  HANDHRL_OUTPUT=/gnu/store/py2pv0w424pm36z1186j079y6zzykdmd-handhrl-0.3 \
+  HANDHRL_EVIDENCE=/absolute/fresh-handhrl-evidence
+```
+
+These are usage instructions, not a profile-installation or deployment claim.
+
+### Observed build, reproducibility, lint and native acceptance
+
+Main's final pinned-Git source build **bg256** passed in **7.75 s**;
+the same-output `--check` rebuild **bg257** passed in **3.09 s**; literal
+**`guix lint -L guix handhrl`**, **bg259**, passed cleanly in **9.01 s**
+with no output, skipped checkers or suppressions.  The resulting output is
+**`/gnu/store/py2pv0w424pm36z1186j079y6zzykdmd-handhrl-0.3`**.
+The usual Guile `delete` binding warning and uninstalled renderer Lua-sample
+missing-interpreter shebang warnings were not hidden.  **No upstream
+automated suite exists**; the check phase explicitly reports it not run.
+These receipts are in `local://handh-build-check.json`.
+
+The real [shell consumer](tests/handhrl-smoke.sh) and
+[native UI driver](tests/handhrl-native.py) finally passed as **bg263** in
+**63.80 s**.  Original evidence is retained under
+**`.goocastle/evidence/handhrl-native5/`**, including `native-result.json`,
+`shell-result.json`, inputs, process proofs, both saves and **seven original
+PNGs**.  The original source Python 2 game ran at **UID 1000/GID 998** in
+private user/mount/network/PID namespaces, offline, with all five
+capability sets zero, **NoNewPrivs 1** and read-only store mounts.  The
+before/after recursive output NAR hash was unchanged:
+**`163rhfydfcisp20viywpkswxldaksrnnb6zflxh4h2b3q38x4fk1`**.
+
+Ordinary Left input moved **(68,29) → (67,29)**, followed by upstream save
+and natural quit **0**.  A fresh process (**PID 6 → 468**) selected native
+Continue with identical full RGB, map, HUD, player position and save bytes
+before action.  A real next Left moved **(67,29) → (66,29)**; inventory input
+dequipped the combat knife, then upstream resave/natural quit **0** persisted
+changed inventory/objects.  Both save files are **217,088 bytes**, with
+first/final SHA-256 respectively:
+
+- `826f53b4d4f9de8d9d43fd2f47a3149ce1fcb8f721a0afb24d761b3207fd01a9`
+- `26402153ab88a5d573a3fb1ebbfdc91de5e997e2b3b15f553a8ae9d4d7ec8376`
+
+External inspection used read-only Python 2 `anydbm` and `pickletools`
+disassembly only: **no unpickling, game imports, hooks, injected saves,
+seeds or RNG rerolls**.  Main viewed original `first-world.png`,
+`inventory-dequipped.png` and `final-world.png`.  This is bounded native
+movement/save/Continue/next-turn/resave proof, **not all combat, levels,
+terminal interactions, death flows or audibility**.
+
+Earlier failures remain failures in `local://handh-native-attempts.json`:
+attempt **1** stopped at tool package-spec parsing before launch;
+**2/3** hit inaccessible Mesa/amdgpu initialization; **4** reached the
+correct title but strict string recognition misread a star behind a label
+space.  Existing software-driver environment settings resolved Mesa;
+a general exact-nonspace foreground predicate fixed title recognition
+without mutating frame data or weakening RGB/map/HUD comparisons.  Main's
+focused `local://handh-foreground-label-probe.json` confirms altered or
+missing required glyphs are rejected; that probe alone was not acceptance.
+
+### Scoped cleanup and publication boundary
+
+Final native private scratch was removed, Xvfb exited **0**, and no raw
+capture temporaries remain; original compressed evidence/saves are retained.
+Main also removed the isolated task Git cache and four released comparison
+or superseded store outputs using **exact-output GC**, retaining the original
+archive and current source/package outputs
+(`local://handh-git-source-cleanup.json`).  A separately receipted cleanup
+removed **150** older raw Gnollcrawl captures totaling **621,662,100 file
+bytes** after preservation proof; **1,516** other entries/hashes remained
+unchanged (`local://gnollcrawl-raw-cleanup-result.json` and
+`local://handh-additional-evidence-cleanup-boundary.json`).  The earlier
+root-owned failed Gooncrawl build still requires user privilege.  No global
+GC, shared-cache/profile/vault change or measured physical-reclamation
+claim follows from these bounded removals.
+
+HandhRL is a normal game package, **not a `-source` snapshot**; the canonical
+**629** source-package ledger is unchanged.  **Forgejo #390 and GitHub #390
+remain OPEN**; no publication, installation, deployment or issue closure is
+claimed.
 
 ## Gooncrawl — original v2.0 source, rights and native console/tiles (2026-10-23)
 

@@ -139,6 +139,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES) \
 .PHONY: guard-autolith
 .PHONY: guard-farmingrl
 .PHONY: guard-for-roguelike
+.PHONY: guard-handhrl
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
 		{ echo "expected $(EXPECTED_SOURCE_PACKAGE_COUNT) exported source packages, found $(SOURCE_PACKAGE_COUNT)"; exit 1; }
@@ -236,6 +237,10 @@ guard-farmingrl:
 guard-for-roguelike:
 	@test -n "$(FOR_ROGUELIKE_OUTPUT)" -a -n "$(FOR_ROGUELIKE_EVIDENCE)" || { echo 'Set FOR_ROGUELIKE_OUTPUT and FOR_ROGUELIKE_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/for-roguelike-smoke.sh "$(FOR_ROGUELIKE_OUTPUT)" "$(FOR_ROGUELIKE_EVIDENCE)"
+
+guard-handhrl:
+	@test -n "$(HANDHRL_OUTPUT)" -a -n "$(HANDHRL_EVIDENCE)" || { echo 'Set HANDHRL_OUTPUT and HANDHRL_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/handhrl-smoke.sh "$(HANDHRL_OUTPUT)" "$(HANDHRL_EVIDENCE)"
 
 check-durthang:
 	GUIX="$(GUIX)" tests/durthang-smoke.sh
