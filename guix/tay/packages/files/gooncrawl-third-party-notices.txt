@@ -1,0 +1,383 @@
+Gooncrawl v2.0 — third-party notices
+
+This file supplements, and does not replace, upstream licence.txt,
+CREDITS.txt, docs/license/*.txt and Gooncrawl's own documentation. The full
+original grants reproduced below retain their original source formatting.
+See gooncrawl-font-notices.txt for BOTH exact original font licenses.
+
+The original program grant is GPL version 2 or (at your option) any later
+version. For the combined executable incorporating Apache-2.0 PCG code,
+this package exercises that later-version option on a GPLv3-compatible
+basis; it is not a GPL-2.0-only combination. This does not erase separately
+applicable permissive licenses or make every asset CC0. The complete GPLv3
+and Apache-2.0 texts accompany this file as gooncrawl-GPL-3.txt and
+gooncrawl-Apache-2.0.txt. Upstream licence.txt also retains its GPLv2 text.
+
+Original integrated grant and stated exceptions
+===============================================
+Source: https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/licence.txt#L1-L24
+
+Dungeon Crawl Stone Soup
+Copyright 1997-2017 Linley Henzell, the dev team, and the contributors
+(please refer to CREDITS.txt for details).
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+Certain pieces come with different licenses, all compatible with the GPL.
+These include:
+* 3-clause BSD: MSVC/stdint.h
+* 2-clause BSD: all contributions by Steve Noonan and Jesse Luehrs
+* Public Domain|CC0: most of tiles, perlin.cc, perlin.h
+* MIT: json.cc/json.h, some .js files in webserver/static/scripts/contrib/
+       worley.{cc,h}
+* zlib: webserver/static/scripts/contrib/inflate.js
+* Apache v2: pcg.cc
+
+The majority of Crawl's tiles and artwork are released under the CC0 license
+(https://creativecommons.org/publicdomain/zero/1.0/), and new submissions are
+under this license unless otherwise specified. However, the licensing situation
+may be complex, especially for older pieces. For information regarding the
+licenses of our tiles and artwork, see https://github.com/crawl/tiles
+
+========================================================================
+PCG — Apache License 2.0
+========================================================================
+
+Original pcg.cc:1-7 attribution. get_uint32 derives from M.E. O'Neill's minimal PCG implementation; Makefile.obj:180 compiles pcg.o. The complete Apache text is in gooncrawl-Apache-2.0.txt. No upstream NOTICE file was found in the parent archive; this is an attribution collection, not an invented upstream NOTICE. Preserve prominent modification notices if this Apache-covered file is changed.
+
+Source: https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/source/pcg.cc#L1
+Original file SHA256: 3be706a525233cd9b68375b07a65b18768cb1f5415df1df55a3bfc31ae637814
+
+/* This class implements a 128-bit pseudo-random number generator.
+ * Despite a reduction in state space, it still passes TestU01 BigCrush.
+ *
+ * get_uint32 is derived from M.E. O'Neill's minimal PCG implementation.
+ * That function (c) 2014 M.E. O'Neill / pcg-random.org
+ * Licensed under Apache License 2.0
+ */
+
+========================================================================
+Domino tilings — BSD 2-Clause
+========================================================================
+
+Same full grant applies to domino.cc:1-25, domino.h:16-40 and domino-data.h:1-24. The root exception list does not name this additional BSD-2-Clause component; its own file headers govern.
+
+Source: https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/source/domino.cc#L1
+Original file SHA256: dbf11c2b64beb72d47c51f088dfc2c47208bd270e91c33b9823bfebe007be06b
+
+/**
+ * Copyright (c) 2014 Brendan Hickey
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ **/
+
+========================================================================
+JSON — MIT
+========================================================================
+
+Same full grant in json.cc:1-22 and json.h:1-22; json.h:24 identifies the CCAN origin, http://ccodearchive.net/info/json.html.
+
+Source: https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/source/json.cc#L1
+Original file SHA256: 222cab9010472491409d3426847c4b6170e1e6fe471c371172bb74cc7509e3cf
+
+/*
+  Copyright (C) 2011 Joseph A. Adams (joeyadams3.14159@gmail.com)
+  All rights reserved.
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  THE SOFTWARE.
+*/
+
+========================================================================
+Worley noise — MIT
+========================================================================
+
+Same full grant in worley.cc:1-30 and worley.h:1-30. docs/license/worley.txt records Steven Worley's 2012-12-19 authorization to replace the earlier custom terms with MIT; it is retained, but does not substitute for the full grant below.
+
+Source: https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/source/worley.cc#L1
+Original file SHA256: c0177ec6c59b65bd9014c229c480fd2594a48311cac7fa7a98a78be3da00b215
+
+/* Copyright 1994, 2002 by Steven Worley
+
+   Permission is hereby granted, free of charge, to any person
+   obtaining a copy of this software and associated documentation files
+   (the "Software"), to deal in the Software without restriction,
+   including without limitation the rights to use, copy, modify, merge,
+   publish, distribute, sublicense, and/or sell copies of the Software,
+   and to permit persons to whom the Software is furnished to do so,
+   subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be
+   included in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+   IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+   CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+   A detailed description and application examples can be found in the
+   1996 SIGGRAPH paper "A Cellular Texture Basis Function" and
+   especially in the 2002 book "Texturing and Modeling, a Procedural
+   Approach, 3rd edition." There is also extra information on the web
+   site http://www.worley.com/cellular.html .
+
+   If you do find interesting uses for this tool, and especially if
+   you enhance it, please drop me an email at steve@worley.com.
+*/
+
+========================================================================
+CrissCross platform header — original notice
+========================================================================
+
+The root licence.txt:13 states "2-clause BSD: all contributions by Steve
+Noonan and Jesse Luehrs". The platform.h header below instead says "New
+BSD License" (conventionally the 3-clause name). This is an upstream
+labeling discrepancy, not a reason to silently select one label. Both
+statements are preserved; no separate exact full Noonan/Luehrs grant text
+was recovered in the pinned tree. In particular, the generic BSD text in
+source/debian/copyright names Cambridge and Google and is NOT reproduced
+as their grant. The project-level GPL2+ aggregate grant is retained, with
+this source-notice uncertainty disclosed rather than an invented full
+license or individual copyright line. See CREDITS.txt for attribution.
+
+Source: https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/source/platform.h#L1
+Original file SHA256: facaf7611a4c4cd74b3125001f117e867a894922f56f313418fcc9de9f986d62
+
+/*
+ *   CrissCross
+ *   A multi-purpose cross-platform library.
+ *
+ *   A product of Uplink Laboratories.
+ *
+ *   (c) 2006-2009 Steven Noonan.
+ *   Licensed under the New BSD License.
+ *
+ */
+Source: https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/source/Makefile#L6-L7
+
+# largely written by Steven Noonan <steven@uplinklabs.net>
+#    (if something breaks, blame him.)
+
+
+========================================================================
+Simplex noise — scoped CC0 notice
+========================================================================
+
+This CC0 statement concerns perlin.cc/perlin.h, not all game assets. Upstream docs/license/cc0.txt supplies the complete CC0 legal text.
+
+Source: https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/source/perlin.cc#L1
+Original file SHA256: a9837e1e3144f5425869a6c9eb050c18eb25d0d37a7255d7297bce63b6ae555b
+
+/*
+ * This is a C++ port of version Stefan Gustavson's public domain
+ * implementation of simplex noise (Version 2012-03-09), which can be
+ * found at <http://webstaff.itn.liu.se/~stegu/simplexnoise/>.
+ *
+ * (Simplex Noise is a new (2001) algorithm created by Ken Perlin to
+ * replace his classic "Perlin" noise algorithm.)
+ *
+ * It was ported by Brendan Hickey (brendan@bhickey.net) and released on
+ * 2012-09-16.
+ *
+ * It is made available under the Creative Commons CC0 license.
+ *
+ * A speed-improved simplex noise algorithm for 2D, 3D and 4D in C++.
+ *
+ * Based on example code by Stefan Gustavson (stegu@itn.liu.se).
+ * Optimisations by Peter Eastman (peastman@drizzle.stanford.edu).
+ * Better rank ordering method by Stefan Gustavson in 2012.
+ * This could be speeded up even further, but it's useful as it is.
+ *
+ * Clumsily ported to some horrendous C/C++ mix by
+ *      Brendan Hickey (brendan@bhickey.net)
+ *
+ * Version 2012-09-16
+ *
+ * This code was placed in the public domain by its original author,
+ * Stefan Gustavson. You may use it as you see fit, but
+ * attribution is appreciated.
+ *
+ */
+
+========================================================================
+Unicode terminal width — Markus Kuhn permission
+========================================================================
+
+The complete original header, including permission and warranty disclaimer, follows.
+
+Source: https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/source/wcwidth.cc#L1
+Original file SHA256: 171803249680dba82e91343493069802144e634807c9ba86d162b1c68d046314
+
+/*
+ * This is an implementation of wcwidth() and wcswidth() (defined in
+ * IEEE Std 1002.1-2001) for Unicode.
+ *
+ * http://www.opengroup.org/onlinepubs/007904975/functions/wcwidth.html
+ * http://www.opengroup.org/onlinepubs/007904975/functions/wcswidth.html
+ *
+ * In fixed-width output devices, Latin characters all occupy a single
+ * "cell" position of equal width, whereas ideographic CJK characters
+ * occupy two such cells. Interoperability between terminal-line
+ * applications and (teletype-style) character terminals using the
+ * UTF-8 encoding requires agreement on which character should advance
+ * the cursor by how many cell positions. No established formal
+ * standards exist at present on which Unicode character shall occupy
+ * how many cell positions on character terminals. These routines are
+ * a first attempt of defining such behavior based on simple rules
+ * applied to data provided by the Unicode Consortium.
+ *
+ * For some graphical characters, the Unicode standard explicitly
+ * defines a character-cell width via the definition of the East Asian
+ * FullWidth (F), Wide (W), Half-width (H), and Narrow (Na) classes.
+ * In all these cases, there is no ambiguity about which width a
+ * terminal shall use. For characters in the East Asian Ambiguous (A)
+ * class, the width choice depends purely on a preference of backward
+ * compatibility with either historic CJK or Western practice.
+ * Choosing single-width for these characters is easy to justify as
+ * the appropriate long-term solution, as the CJK practice of
+ * displaying these characters as double-width comes from historic
+ * implementation simplicity (8-bit encoded characters were displayed
+ * single-width and 16-bit ones double-width, even for Greek,
+ * Cyrillic, etc.) and not any typographic considerations.
+ *
+ * Much less clear is the choice of width for the Not East Asian
+ * (Neutral) class. Existing practice does not dictate a width for any
+ * of these characters. It would nevertheless make sense
+ * typographically to allocate two character cells to characters such
+ * as for instance EM SPACE or VOLUME INTEGRAL, which cannot be
+ * represented adequately with a single-width glyph. The following
+ * routines at present merely assign a single-cell width to all
+ * neutral characters, in the interest of simplicity. This is not
+ * entirely satisfactory and should be reconsidered before
+ * establishing a formal standard in this area. At the moment, the
+ * decision which Not East Asian (Neutral) characters should be
+ * represented by double-width glyphs cannot yet be answered by
+ * applying a simple rule from the Unicode database content. Setting
+ * up a proper standard for the behavior of UTF-8 character terminals
+ * will require a careful analysis not only of each Unicode character,
+ * but also of each presentation form, something the author of these
+ * routines has avoided to do so far.
+ *
+ * http://www.unicode.org/unicode/reports/tr11/
+ *
+ * Markus Kuhn -- 2007-05-26 (Unicode 5.0)
+ *
+ * Permission to use, copy, modify, and distribute this software
+ * for any purpose and without fee is hereby granted. The author
+ * disclaims all warranties with regard to this software.
+ *
+ * Latest version: http://www.cl.cam.ac.uk/~mgk25/ucs/wcwidth.c
+ */
+
+========================================================================
+GNU Bison parser skeleton — GPLv3-or-later with special exception
+========================================================================
+
+The source archive includes generated C++ source, not an opaque executable.
+If the prebuilt parser is used, its original skeleton notice is retained.
+Regeneration with the source-built Bison input is also permitted; its own
+skeleton notice remains applicable. Original prebuilt notice follows.
+
+Source: https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/source/prebuilt/levcomp.tab.cc#L1-L34
+
+/* A Bison parser, made by GNU Bison 3.0.4.  */
+
+/* Bison implementation for Yacc-like parsers in C
+
+   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+
+/* As a special exception, you may create a larger work that contains
+   part or all of the Bison parser skeleton and distribute that work
+   under terms of your choice, so long as that work isn't itself a
+   parser generator using the skeleton or a modified version thereof
+   as a parser skeleton.  Alternatively, if you modify or redistribute
+   the parser skeleton itself, you may (at your option) remove this
+   special exception, which will cause the skeleton and the resulting
+   Bison output files to be licensed under the GNU General Public
+   License without this special exception.
+
+   This special exception was added by the Free Software Foundation in
+   version 2.2 of Bison.  */
+
+/* C LALR(1) parser skeleton written by Richard Stallman, by
+   simplifying the original so-called "semantic" parser.  */
+
+========================================================================
+Other original source and system dependencies
+========================================================================
+
+The package retains the original CREDITS.txt, licence.txt and all upstream
+docs/license/*.txt: cc0.txt, lgpl.txt, libpng-LICENSE.txt, lualicense.txt,
+pcre_license.txt and worley.txt. Historical convenience texts are preserved
+as historical upstream documents, not falsely asserted to control a newer
+system library version (including SDL1 LGPL versus SDL2 zlib licensing).
+
+Native Linux uses source-built Guix system inputs instead of bundled
+contrib library copies. Their exact versions, corresponding source and
+notices belong to those Guix package outputs and derivations. See
+ gooncrawl-provenance.txt for original gitlink identities and primary license
+URLs; those historical pins are not a claim that every vendored codec,
+platform demo or external file is linked or covered by the core grant.
+
+The native build does not install the separate webserver frontend or its
+contributed JavaScript/CSS, Windows MSVC compatibility headers, Android
+project, or util/dcss.svg. Preserve their source notices when redistributing
+the source; audit their own terms if changing that installation boundary.
+The original SVG is Mel Collins's CC-BY-3.0 work, not a CC0 desktop asset.
+Artwork scope, positive integrated-GPL basis, historical Nethack-cat
+replacement evidence and remaining individual-CC0 uncertainty are recorded
+in gooncrawl-provenance.txt. No blanket CC0 grant is asserted here.

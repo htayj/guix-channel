@@ -1,0 +1,40 @@
+Build the original native game with explicit headers and reproducible metadata.
+
+The domino header declares std::ostream operators and must include its own
+standard header.  Use the selected GCC executable rather than the absent cc
+alias for host identification.  Keep release version metadata while removing
+the wall-clock compilation date and time; the immutable source pin identifies
+the release precisely.
+
+--- a/crawl-ref/source/domino.h
++++ b/crawl-ref/source/domino.h
+@@ -44,6 +44,7 @@
+ #include <algorithm>
+ #include <cstdlib>
+ #include <map>
++#include <ostream>
+ #include <set>
+ #include <stdint.h>
+ #include <vector>
+--- a/crawl-ref/source/Makefile
++++ b/crawl-ref/source/Makefile
+@@ -161,7 +161,7 @@
+ uname_P := $(shell sh -c 'uname -p 2>/dev/null || echo not')
+ uname_V := $(shell sh -c 'uname -v 2>/dev/null || echo not')
+ 
+-HOST := $(shell sh -c 'cc -dumpmachine || echo unknown')
++HOST := $(shell sh -c 'gcc -dumpmachine || echo unknown')
+ ARCH := $(HOST)
+ 
+ ifdef CROSSHOST
+--- a/crawl-ref/source/version.cc
++++ b/crawl-ref/source/version.cc
+@@ -38,7 +38,7 @@
+ #endif
+ 
+ const char* compilation_info =
+-    "Compiled with " COMPILER " on " __DATE__ " at " __TIME__ "\n"
++    "Compiled with " COMPILER " (reproducible Guix build)\n"
+     "Build platform: " CRAWL_HOST "\n"
+     "Platform: " CRAWL_ARCH "\n"
+     "CFLAGS: " CRAWL_CFLAGS "\n"

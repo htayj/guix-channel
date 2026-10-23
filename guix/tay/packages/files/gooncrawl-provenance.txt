@@ -1,0 +1,374 @@
+Gooncrawl v2.0 — original-source and rights provenance
+2026-10-23
+
+Identity and source pins
+========================
+
+Original independently playable Gooncrawl, Floodkiller/crawl, stable v2.0:
+https://github.com/Floodkiller/crawl
+https://github.com/Floodkiller/crawl/releases/tag/v2.0
+Tag object: c852996bd79869b7748a8748a83a4a714c7656e7
+Commit: eb805b9c1b92935c93094ffc5c19a99ba18839d8
+Commit date: 2021-04-23T17:15:37Z
+Release publication: 2021-04-23T17:38:52Z
+The tag was not reported cryptographically verified. Immutable content and
+hashes identify the source; no signed-release claim is made. This pin is
+four commits beyond the stale default gooncrawl branch, not a different
+fork or a current-development claim. The attached release ZIP binaries are
+not used; their own description says 1.0 downloads from 2020-10-08 due to
+build environment issues. Source, not the binary label, is authoritative.
+
+Original source archive (12910912 bytes):
+https://codeload.github.com/Floodkiller/crawl/tar.gz/eb805b9c1b92935c93094ffc5c19a99ba18839d8
+SHA256: 5b4d967662be1d18afabe4a5dca06422a3b8a9141d536e412cff970bf2d32a56
+Guix base32: 0miasgr0p5zz5i0nwlqx2jlvi8r2cjhdr9g4mfpih7dyc9v9ckav
+
+Original fonts gitlink: 6d3046974f35189a679a4d84b254efe82d1653b3
+https://github.com/crawl/crawl-fonts/tree/6d3046974f35189a679a4d84b254efe82d1653b3
+https://codeload.github.com/crawl/crawl-fonts/tar.gz/6d3046974f35189a679a4d84b254efe82d1653b3
+Archive SHA256: 289a59209df69125041f0e4120894bf848f33d46bfeaf141c6da571eb832c6d7
+Guix base32: 1my66aw1wmysqr0z3smz8qyz6j7q9f4j0h8f3w22b4gnklh5k6i8
+Both original fonts are retained unmodified, not substituted system fonts:
+DejaVuSans.ttf, Version 2.33:
+  SHA256 709faab3a9ecd9d3057ba6751eb4bbbe60bca3f4418aa66fdd8ee35a694b914d
+DejaVuSansMono.ttf, Version 2.33:
+  SHA256 9ed156360629de7c45de7ff11b6e43cc3c611252a98570a5787511b44bcf93f7
+The complete Bitstream grant and the Sans-only Arev grant are transcribed
+from each font's OpenType name table (nameID 0, 13, 14) in
+ gooncrawl-font-notices.txt, including original spelling and typographical
+errors. Only DejaVu changes are public domain, not the entire fonts.
+Canonical license corroboration: https://dejavu-fonts.github.io/License.html
+Embedded historical license URL:
+http://dejavu.sourceforge.net/wiki/index.php/License
+
+Native package and installation boundary
+=========================================
+
+The package is the native console and SDL2/OpenGL local-tiles game with
+sound support, original maps, tiles, translations, scripts, settings and
+Gooncrawl documents. Native sprint, tutorial, hints, arena and wizard
+capabilities are not intentionally replaced by a reduced terminal-only
+variant. Separate webserver deployment infrastructure is not a native
+playability prerequisite and is not claimed built or deployed here.
+
+The selected upstream Makefile installs dat/des, dat/dlua (plus generated
+loadmaps.lua), dat/clua, dat/database, dat/defaults, dat/descript and its
+language directories, settings, docs/*.txt, developer/level documents,
+docs/license/*.txt and CREDITS.txt; local tiles also installs dat/tiles/*.png.
+Anchors: crawl-ref/source/Makefile:1362-1415 at the pinned commit.
+The generated tile sheets use rltiles manifests, not every source PNG:
+rltiles/Makefile:67 selects main,dngn,floor,wall,feat,player,gui,icons;
+source/Makefile:1044,1630 builds/compresses their output. Fixed original
+native PNGs include 28 titles/logos/icons. Source/rltiles/UNUSED is not a
+blanket native installation list and is not deleted to simplify licensing.
+
+No shipped wav/ogg/mp3/flac/mid/midi pack was found in the stable source.
+Sound is the original user-selected-file facility: source/sound.cc:28-37
+maps message regexes to user files, :97-110 calls Mix_LoadWAV. SOUND=y with
+SDL2_mixer is not a promise of a missing original audio-media package.
+
+util/dcss.svg is a separately scoped CC-BY-3.0 work by Mel Collins, dated
+2010-08-15 (embedded metadata:1797-1816), not a CC0 desktop addition. It is
+not added to the native installation, nor is a new desktop/SVG integration
+claimed. Its source notice remains in the source. Windows/Android/Mac
+support files and separate webserver contributions retain source notices
+but are not asserted to be native Linux runtime assets or linked code.
+
+Stable notice installation contract (package build, not a deployment receipt):
+share/doc/gooncrawl/ contains these five files unchanged:
+  gooncrawl-provenance.txt
+  gooncrawl-font-notices.txt
+  gooncrawl-third-party-notices.txt
+  gooncrawl-GPL-3.txt
+  gooncrawl-Apache-2.0.txt
+The font notice is also copied as
+share/gooncrawl/dat/tiles/FONT-LICENSES.txt alongside the exact fonts.
+Explicitly retain upstream crawl-ref/licence.txt, CREDITS.txt, all original
+docs/license/*.txt and Gooncrawl documents. Unix install-data does not copy
+root licence.txt itself; ZIP/mac documentation rules do not close that gap.
+
+Positive integrated license basis — not blanket CC0
+====================================================
+
+The exact pinned crawl-ref/licence.txt:1-24 grants the program GPL version
+2 or, at the recipient's option, any later version, and lists compatible
+exceptions. It says the MAJORITY of artwork is CC0 and explicitly warns
+that older pieces have complex licensing. It does not exclude remaining
+artwork from the integrated program grant. The manual states most game
+components are GPL2+ and the rest compatible (docs/crawl_manual.rst:1147-1150).
+
+Primary pinned grants:
+https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/licence.txt#L1-L24
+  SHA256 837af06408735d2760a6b88b41a28c2261db8545727d2d82d00fcbd63a0b1fc7
+https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/docs/crawl_manual.rst#L1147-L1150
+  SHA256 96bb001d3298df28a0d0e5caa77189eb3872489b02298acad5535e0f4f1fb1ef
+
+The historical contribution policy explicitly allowed tiles under regular
+dual Crawl/GPL2+ licensing; CC0 was encouraged only as a request, not a
+condition for inclusion in the game:
+https://github.com/crawl/crawl/commit/07a19813d67100d08795b38ecf6165772f45d4fe
+  2010-10-05, crawl-ref/licence.txt additions, especially final three lines:
+  "Also, you are encouraged to put tile graphics into the Public Domain / CC0"
+  "so they can be contributed back to the rltiles project.  This is merely"
+  "a request, tiles contributions under the regular dual licensing are fine."
+The later completed relicensing is recorded in pinned
+crawl-ref/source/debian/changelog:314-320, dated 2011-05-22:
+https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/source/debian/changelog#L314-L320
+  SHA256 464ae330c61f94307b5487645b790852913d9c4ccbee62983db8bb8e97b40adb
+Historical final-release corroboration:
+https://raw.githubusercontent.com/crawl/crawl/0.8.0/crawl-ref/licence.txt
+The interim 2010-12-17 transition warning at commit
+8d74ffd849f0c250e58e3c0e1b40a6854e11c074 was before completion, not a
+current stable-source prohibition.
+
+Pinned docs/develop/tiles_creation.txt:466-469 provides the CC0 default
+for new submissions UNLESS otherwise specified, matching licence.txt:20-24:
+https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/docs/develop/tiles_creation.txt#L458-L469
+  SHA256 740e70816c0167479d17c54949ba9ac3853374001e2f8ba5719d436a2e506155
+This supports the integrated game's permission; it does not recover every
+individual artist's separate authorization. Existing artwork stays intact;
+no asset substitution or deletion is justified by a blanket CC0 shortcut.
+
+The separate crawl/tiles repository exports only its selected CC0 subset:
+https://github.com/crawl/tiles/tree/a6ea1655db5c044829d9eea19a232fa6fcac87b0
+README.md (2015-11-19) explains separating CC0 tiles from authors not
+contacted or not consenting to that separate reuse. ARTISTS.md and
+TILES_UNDER_UNKNOWN_LICENSE.md are dated 2016-01-04 at this pin. The latter
+is an individual-CC0 export exclusion list, NOT proof that every listed
+asset is nonfree in the integrated GPL game. Exact primary records:
+https://github.com/crawl/tiles/blob/a6ea1655db5c044829d9eea19a232fa6fcac87b0/README.md
+  SHA256 b278580bc67fd1035d04c356a74b6efb94a802eea39b63da88777b99ebc08c16
+https://github.com/crawl/tiles/blob/a6ea1655db5c044829d9eea19a232fa6fcac87b0/ARTISTS.md
+  SHA256 4cf57f08401c6abc87e4597dbd10988a8434d166607dafacd60c21454ca2245f
+https://github.com/crawl/tiles/blob/a6ea1655db5c044829d9eea19a232fa6fcac87b0/TILES_UNDER_UNKNOWN_LICENSE.md
+  SHA256 e0c16a00493cd00b11829174ea3c961165322e189b0e5f415edc49e5fee7442c
+
+In particular, that list's :131-136 warning about Nethack-derived felid
+cat1..5 is stale for the pinned Gooncrawl blobs. Their replacement history:
+https://github.com/Floodkiller/crawl/commit/2564a95c9927fc25ab3fb7cf1c519f8e12491d56
+https://github.com/Floodkiller/crawl/commit/58057f02132a2763969084078eb2cd453b1c59ca
+https://github.com/Floodkiller/crawl/commit/02d5b61e5fd4238dba7a40a0a143baec52112ebe
+Denzi replaced all five in 58057f0, followed by the default swap 02d5b61;
+Denzi is in ARTISTS.md:17. Selected felid inputs are pinned
+rltiles/dc-player.txt:157-168:
+https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/source/rltiles/dc-player.txt#L157-L168
+  SHA256 2839b311b3d371ee4e7d3320afd884ea38e15239123858592ef532b749794ef0
+Pinned cat1..5 git blob identities respectively:
+  86f1f3bbd56c6ec93c06eb0159e727070334c7c3
+  849dae1b2e8482a1939687721709300ada983b77
+  a1e3b137d36d26194ce0e8d8625ffc91d1d67cc9
+  f9af2a5b089202d0fc3756e1cbb827c83ae579e2
+  5a84318fe92c01f318649807ede50a9ffd02218c
+This history resolves that specific old warning; it is not a new blanket
+CC0 claim about other artwork or a relabeling of historical Nethack art.
+
+Gooncrawl's title/logo modifications are attributed to Metoron in commit
+106b2e1f1557c48d31b6392ae91b3cff9fafa0af (2018-09-20); its native icon changed
+in aafd978934ddcdcb64d0959bb9caa047a3efa0dd (2018-09-23). These remain under
+the project GPL2+ and submitted-art policy; no separately signed individual
+CC0 grant is claimed here. Older title authors white_noise, Psiweapon,
+Peileppe and ShadyAmish occur in the CC0 exclusion record. Original title
+filenames and CREDITS retain author attribution; they are not renamed away
+or asserted to have become CC0 merely because the game uses them.
+
+Compatible combined executable and complete notices
+====================================================
+
+pcg.cc:1-7 attributes get_uint32 to M.E. O'Neill's minimal PCG implementation,
+(c) 2014 M.E. O'Neill / pcg-random.org, Apache License 2.0; Makefile.obj:180
+actively includes pcg.o. This package exercises the original GPL2+ later
+option for a GPLv3-compatible combined executable and retains Apache terms.
+It does not call the combination GPL-2.0-only, erase original GPL2+ grants,
+or relicense every third-party component as GPL. Compatibility guidance:
+https://www.gnu.org/licenses/license-list.html#apache2
+
+Full original domino BSD2, json/worley MIT, PCG attribution, scoped perlin
+CC0 and wcwidth permission notices are in gooncrawl-third-party-notices.txt.
+The upstream Steven Noonan/Jesse Luehrs BSD2 exception and platform.h's
+"New BSD" header discrepancy are preserved without fabricating full grant
+text or using Debian's unrelated Cambridge/Google BSD notice as theirs.
+The generated parser's GNU Bison GPL3+ skeleton exception is retained.
+
+Complete GPLv3 text: gooncrawl-GPL-3.txt, byte-exact reuse of this channel's
+for-roguelike-GPL-3.txt, originally obtained from the primary GNU URL on
+2026-10-19 (license effective 2007-06-29):
+https://www.gnu.org/licenses/gpl-3.0.txt
+SHA256: 3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986
+Complete Apache2 text: gooncrawl-Apache-2.0.txt, primary URL retrieved
+2026-10-23 (license effective January 2004):
+https://www.apache.org/licenses/LICENSE-2.0.txt
+SHA256: cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30
+Neither text has invented copyright owners inserted into its application
+instructions. This provenance is analysis, not a replacement license grant.
+
+Historical bundled dependency pins and system-library path
+===========================================================
+
+The codeload parent archive omits gitlink contents. The Linux build uses
+source-built Guix system libraries and explicitly supplies only the exact
+font gitlink. Vendored library pins below document original history, not
+the versions of selected Guix runtime inputs, their complete transitive
+closure, or blanket grants over external codecs/platform files.
+
+All paths below are under crawl-ref/source/contrib/ at the source pin.
+For each, its pinned repository URL plus the primary license path identifies
+that historical grant. Separate system inputs retain their own notices and
+corresponding source through Guix outputs/derivations. Original convenience
+texts for Lua/PCRE/libpng/SDL1 must not be presented as controlling newer
+system versions. Lua 5.1 is used, not an unexplained LuaJIT substitution.
+
+fonts 6d3046974f35189a679a4d84b254efe82d1653b3
+  https://github.com/crawl/crawl-fonts/tree/6d3046974f35189a679a4d84b254efe82d1653b3
+  DejaVuSans.ttf/DejaVuSansMono.ttf nameID13; Bitstream + Sans Arev;
+  exact full grants in gooncrawl-font-notices.txt, hashes above.
+freetype 9968cd7325b05a5fb2c0e977c01758ea22553532
+  https://github.com/crawl/crawl-freetype/tree/9968cd7325b05a5fb2c0e977c01758ea22553532
+  https://raw.githubusercontent.com/crawl/crawl-freetype/9968cd7325b05a5fb2c0e977c01758ea22553532/docs/LICENSE.TXT
+  docs/LICENSE.TXT:2-31: FTL OR GPL-2.0-or-later, compatible path available.
+libpng ccd6a270020a4d5acca57b285dbce69c2b787879
+  https://github.com/crawl/crawl-libpng/tree/ccd6a270020a4d5acca57b285dbce69c2b787879
+  https://raw.githubusercontent.com/crawl/crawl-libpng/ccd6a270020a4d5acca57b285dbce69c2b787879/LICENSE
+  libpng license; png.h controls on discrepancy; contrib tools separate.
+lua 881acfc2d9217f122147fbb5b21b2b141c4300c3
+  https://github.com/crawl/crawl-lua/tree/881acfc2d9217f122147fbb5b21b2b141c4300c3
+  https://raw.githubusercontent.com/crawl/crawl-lua/881acfc2d9217f122147fbb5b21b2b141c4300c3/COPYRIGHT
+  COPYRIGHT:12-30: MIT.
+luajit dcd543c784817528517f323ac75cee5a1f845f04
+  https://github.com/crawl/crawl-luajit/tree/dcd543c784817528517f323ac75cee5a1f845f04
+  https://raw.githubusercontent.com/crawl/crawl-luajit/dcd543c784817528517f323ac75cee5a1f845f04/COPYRIGHT
+  COPYRIGHT:4-46: MIT including Lua MIT; optional alternative, not used.
+pcre 710ea426a54999192b21bab80b46f11aaaa4753e
+  https://github.com/crawl/crawl-pcre/tree/710ea426a54999192b21bab80b46f11aaaa4753e
+  https://raw.githubusercontent.com/crawl/crawl-pcre/710ea426a54999192b21bab80b46f11aaaa4753e/LICENCE
+  LICENCE:7-9,27ff: BSD3; separate JIT/C++ notices remain in full text.
+sdl2 1e068b9cb9947819f111f3fbaa2535263b37a67a
+  https://github.com/crawl/crawl-sdl2/tree/1e068b9cb9947819f111f3fbaa2535263b37a67a
+  https://raw.githubusercontent.com/crawl/crawl-sdl2/1e068b9cb9947819f111f3fbaa2535263b37a67a/COPYING.txt
+  COPYING.txt:3-19: zlib, NOT historical SDL1 LGPL.
+sdl2-image 9d03f5e3ef23d6e997a3918ff70230fafed068e3
+  https://github.com/crawl/crawl-sdl2-image/tree/9d03f5e3ef23d6e997a3918ff70230fafed068e3
+  https://raw.githubusercontent.com/crawl/crawl-sdl2-image/9d03f5e3ef23d6e997a3918ff70230fafed068e3/COPYING.txt
+  COPYING.txt:3-19: zlib core; external codecs have separate terms.
+sdl2-mixer 16dbc95d9dd0ee3c8928abb3a62d910c386dc44f
+  https://github.com/crawl/crawl-sdl2-mixer/tree/16dbc95d9dd0ee3c8928abb3a62d910c386dc44f
+  https://raw.githubusercontent.com/crawl/crawl-sdl2-mixer/16dbc95d9dd0ee3c8928abb3a62d910c386dc44f/COPYING.txt
+  COPYING.txt:3-19: zlib core; external codecs/timidity separate.
+sqlite 42f0cfa93c5bffc184ad7961c766c229aff8d16c
+  https://github.com/crawl/crawl-sqlite/tree/42f0cfa93c5bffc184ad7961c766c229aff8d16c
+  https://raw.githubusercontent.com/crawl/crawl-sqlite/42f0cfa93c5bffc184ad7961c766c229aff8d16c/sqlite3.c
+  sqlite3.c:30-37: author's public-domain disclaimer; blessing not a restriction.
+zlib c34b4f48a59db2cd1c48eb2fea91b4a63dff28db
+  https://github.com/crawl/crawl-zlib/tree/c34b4f48a59db2cd1c48eb2fea91b4a63dff28db
+  https://raw.githubusercontent.com/crawl/crawl-zlib/c34b4f48a59db2cd1c48eb2fea91b4a63dff28db/zlib.h
+  zlib.h:4-20: zlib; separate contrib bindings not blanket covered.
+
+Historical SDL2_mixer source-blocker correction:
+The actual release-tree gitlink ends ...44f, NOT ...44c. The final-c value
+16dbc95d9dd0ee3c8928abb3a62d910c386dc44c was a transcription error; failed
+requests for it do not establish that original mixer source is unavailable.
+Authoritative original-tree entry:
+https://api.github.com/repos/Floodkiller/crawl/git/trees/eb805b9c1b92935c93094ffc5c19a99ba18839d8?recursive=1
+  path crawl-ref/source/contrib/sdl2-mixer, mode 160000,
+  SHA 16dbc95d9dd0ee3c8928abb3a62d910c386dc44f.
+Correct source archive (10200485 bytes), fetched during source audit:
+https://codeload.github.com/crawl/crawl-sdl2-mixer/tar.gz/16dbc95d9dd0ee3c8928abb3a62d910c386dc44f
+SHA256: b9d72c525d648deafad827985a6155f6270cefbe4f50b1f8a65956f9d6212114
+Guix base32: 051147bgjmjrlvwb2l2gpvphq9znamhmm617v3xfm3b4bm92rmxr
+This historical archive is not an additional runtime input when system
+SDL2_mixer is selected. Upstream already supports the full-feature system
+path, independently of gitlink availability:
+  crawl-ref/INSTALL.txt:117-123 lists SDL2_mixer and says contribs not needed;
+  crawl-ref/source/Makefile:679-696 resolves system SDL2/freetype and links
+    -lSDL2_mixer when TILES+SOUND are enabled;
+  :223-243,255-269 selects bundled mixer for Darwin or BUILD_ALL;
+  :1093-1096 includes bundled mixer only when BUILD_SDL2MIXER is set.
+https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/INSTALL.txt#L117-L123
+https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/source/Makefile#L679-L696
+
+Packaging source corrections, 2026-10-23
+========================================
+
+gooncrawl-build.patch adds the explicit <ostream> include required by
+domino.h's std::ostream declarations, uses the selected gcc executable
+instead of the absent cc alias for Makefile HOST identification, and
+replaces version.cc's wall-clock __DATE__/__TIME__ string with a fixed
+reproducible-build description. The release source pin remains unchanged.
+
+gooncrawl-jester-equipment.patch repairs two actual Jester starting-item
+specifications in source/job-data.h:343-344, exposed by Main's real
+diagnostic job-data failure. The missing comma between adjacent C++ string
+literals combined "quarterstaff ego:chaos" and "robe" into an invalid
+"chaosrobe" specification; restoring the comma supplies the two intended
+items. The pie specification's stale "ego:blinding" spelling becomes
+"ego:atropa", the parser's name for the same SPMSL_BLINDING brand. The
+quantity remains four pies; the item brand is not rebalanced or removed.
+
+Source anchors at the original pin: mapdef.cc:4901-4931 missile_brands,
+item-prop-enum.h:513-514 and item-name.cc:402-403 establish the atropa
+mapping; makeitem.cc:526-527,589-593 intentionally retains SPMSL_BLINDING
+for pies. jobs.cc:105-119 give_job_equipment uses the same item_list parser
+as :145-162 debug_jobdata, so the malformed definitions affect native
+gameplay, not just a diagnostic. The patch is applied to diagnostic,
+console and tiles source trees; no test, parser rule, other equipment,
+asset or feature is removed to avoid the failure. This records the
+bounded source correction, not a post-patch diagnostic/build/play pass.
+
+gooncrawl-stress-pledge.patch changes only the default command in the
+upstream test/stress/run harness, adding the public early option
+"-extra-opt-first pledge=none". Main's diagnostic run had reached the
+normal-game fireworks scenario, which timed out in choose_game/read/wgetch
+at HP 0 and turn 0 before the Lua bot could begin gameplay. Gooncrawl's
+normal character creation requires a pledge selection (newgame.cc:649-668),
+but initfile.cc:290 defaults pledge to "unknown", opening that interactive
+menu. The inherited stress configurations do not answer it; their bots
+start only after character creation. Earlier sprint scenarios bypass it
+by assigning PLEDGE_NONE (newgame.cc:670-673).
+
+The harness's "none" value maps to the existing PLEDGE_NONE
+(pledge.cc:37-40). extra-opt-first is applied before scenario rc files
+(initfile.cc:1590-1600), so explicit scenario choices retain precedence.
+All upstream scenarios, seed 1, assertions, 595-second timeout and exit
+handling remain unchanged. This is an unattended-test setup correction,
+not production launcher/user-configuration/consumer option injection or
+removal of the interactive native pledge feature. No post-patch stress
+or whole-build pass is claimed by this provenance amendment.
+
+gooncrawl-stress-lua-loader.patch replaces four stale global require calls
+with Crawl's supported crawl_require loader in test/stress/fireworks.rc:27,40,
+woken_rest.rc:21 and unwoken_rest.rc:20. CLua::init_lua deliberately excludes
+Lua's package library (clua.cc:735-763), so global require is unavailable;
+clua.cc:826 registers crawl_require, whose execution failures propagate
+at :1232-1250. Production Dungeon Lua already uses this interface in
+dat/dlua/dungeon.lua:6-8 and dat/dlua/debug.lua:6.
+
+Main's later diagnostic run exposed nil require/stress errors before the
+fireworks timeout. The first two stress scenarios' earlier successful
+exits were NOT meaningful setup passes: their entomb/awaken helper calls
+had not executed. The patch restores those original helper/setup calls
+at all four loader sites without changing the helper code or opening
+unrestricted Lua libraries. It does not suppress errors, skip scenarios,
+alter assertions or timeouts, or inject production/consumer hooks. The
+loader correction's runtime resolution and a complete stress/build pass
+remain unverified by this provenance amendment.
+
+Limits and verification boundary
+=================================
+
+This is pinned-source/embedded-metadata provenance, not legal advice or a
+claim of individual signed author grants for every legacy tile. Positive
+integrated GPL permission is supported above; the separate individual-CC0
+status of some older art remains unresolved. Short literary quotations in
+game databases likewise have no separately recovered author grants (e.g.
+source/dat/database/monspeak.txt:5779-5780 comments "Copyright U2?" above one
+short phrase). No positive nonfree/NC/ND restriction was identified by the
+bounded source audit. Those residuals are disclosed, not silently renamed
+CC0, expanded into fabricated restrictions, or removed from the real game.
+
+The source and rights audits retrieved pinned primary material and compared
+original archive/font identities. They did not run tilegen or prove a final
+installed manifest, build, native play, complete selected system dependency
+closure, or deployment. This file does not claim those checks ran. Actual
+build/test/installation and corresponding-source receipts belong to the
+main integration record. Source URLs, revisions, hashes and original
+notices must accompany redistribution; this file alone is not the complete
+corresponding source or a substitute for its license obligations.

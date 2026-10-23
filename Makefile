@@ -42,7 +42,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	vt05 weidu blincolnlights pdp10-its-disassembler itstar pdp11 pdp6 uc-explorer \
 	azurra-gtk-theme pdp10-xpl-pdp-10 faugus-launcher react-blessed wanderers \
 	clojure-roguelike astx acehack bell-labs-rogue7 aquarium-arena atlas-warriors \
-	bcrawl avanor bootrogue brogue brogue-lite rapidbrogue chessrogue corerl cryptrover \
+	bcrawl avanor bootrogue brogue brogue-lite gooncrawl rapidbrogue chessrogue corerl cryptrover \
 	cutlassrl dhack diabaig dnethack dragonslayer grippy-socks gruesome hack hunger-games hydra-slayer \
 	martins-dungeon-bash nlarn robotfindskitten fontra dicom2mesh modus \
 	trial-by-combat xrogue keymapper liquid input-remapper emacs-cl \
@@ -99,6 +99,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES) \
 	check-aquarium-arena \
 	check-atlas-warriors \
 	check-bcrawl \
+	check-gooncrawl \
 	check-bootrogue \
 	check-bell-labs-rogue7 \
 	check-acehack \
@@ -489,6 +490,10 @@ check-atlas-warriors:
 check-bcrawl:
 	GUIX="$(GUIX)" tests/bcrawl-smoke.sh
 
+check-gooncrawl:
+	@test -n "$(GOONCRAWL_OUTPUT)" -a -n "$(GOONCRAWL_EVIDENCE)" || { echo 'Set GOONCRAWL_OUTPUT and GOONCRAWL_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/gooncrawl-smoke.sh "$(GOONCRAWL_OUTPUT)" "$(GOONCRAWL_EVIDENCE)"
+
 check-bootrogue:
 	GUIX="$(GUIX)" tests/bootrogue-smoke.sh
 
@@ -860,7 +865,7 @@ check: check-source-count check-sentinelone check-datamosh-security check-ffglit
 	check-mudpuppy check-notion-river check-mushkin check-mushtato \
 	check-potato check-pycat check-rune check-secretpathway \
 	check-tinyfugue check-tapeutils check-trebuchet check-heroic-gogdl check-vt05 check-blincolnlights check-klh10 check-suppty check-pdp10-its-disassembler check-itstar check-pdp11 check-shadow-over-darkmoor check-avanor check-bootrogue check-hack check-emacs-org-popup-posframe \
-	check-emacs-forth-mode check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-bcrawl check-dragonslayer check-hydra-slayer check-nlarn check-robotfindskitten check-fontra \
+	check-emacs-forth-mode check-emacs-mentor-pinned check-emacs-vim-region check-org-mind-map check-bcrawl check-gooncrawl check-dragonslayer check-hydra-slayer check-nlarn check-robotfindskitten check-fontra \
 	check-aiwnios check-aiwnios-bytecode check-wrogue check-babel7drl \
 	check-smiths-hand check-tetraworld check-splicehack-rewrite \
 	check-space-privateers check-slashem check-shamogu \

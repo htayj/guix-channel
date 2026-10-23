@@ -100,6 +100,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [GnollHack original Unix tty/curses game and native save continuity](#gnollhack--original-unix-ttycurses-game-and-native-save-continuity-2026-10-21)
 - [Goblins' Lot original Goblin Camp source, rights and native colony continuity](#goblins-lot--original-goblin-camp-source-rights-and-native-colony-continuity-2026-10-21)
 - [God of Change recovered original source, font rights and bounded native gameplay](#god-of-change--recovered-original-source-font-rights-and-bounded-native-gameplay-2026-10-22)
+- [Gooncrawl original v2.0 source, rights and native console/tiles](#gooncrawl--original-v20-source-rights-and-native-consoletiles-2026-10-23)
 
 ## Substitute automation — prepared, not deployed (2026-10-18)
 
@@ -656,6 +657,276 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Gooncrawl — original v2.0 source, rights and native console/tiles (2026-10-23)
+
+[`gooncrawl`](guix/tay/packages/gooncrawl.scm) **2.0** targets the complete
+original [Floodkiller/crawl](https://github.com/Floodkiller/crawl) game,
+not another Crawl fork or a replacement implementation.  The immutable
+[`v2.0` release](https://github.com/Floodkiller/crawl/releases/tag/v2.0),
+published **2021-04-23**, resolves to commit
+[`eb805b9c1b92935c93094ffc5c19a99ba18839d8`](https://github.com/Floodkiller/crawl/tree/eb805b9c1b92935c93094ffc5c19a99ba18839d8).
+It is four commits ahead of the stale default `gooncrawl` branch tip
+`31bc37a1295a2c0b2af726d11cf8c967067e8639` dated **2020-08-14**.
+No active-maintenance or signed-tag claim is made.  The recipe uses source,
+not the attached release binaries, whose release note reports older
+**1.0-era** builds.
+
+The exact codeload archive contains **12,910,912 bytes**, SHA-256
+**`5b4d967662be1d18afabe4a5dca06422a3b8a9141d536e412cff970bf2d32a56`**,
+Guix base32
+**`0miasgr0p5zz5i0nwlqx2jlvi8r2cjhdr9g4mfpih7dyc9v9ckav`**
+(archive hash, not a Git NAR).  Independent source/rights review approved
+this pin and integrated redistribution **with the notice obligations below**;
+that gate is not installed-package or runtime acceptance.
+
+### Historical mixer blocker correction
+
+The earlier unreconstructable-source claim queried the wrong SDL2_mixer
+gitlink: **`16dbc95d9dd0ee3c8928abb3a62d910c386dc44c`** ends in `c`.
+The [pinned release tree](https://api.github.com/repos/Floodkiller/crawl/git/trees/eb805b9c1b92935c93094ffc5c19a99ba18839d8?recursive=1)
+actually records
+[`16dbc95d9dd0ee3c8928abb3a62d910c386dc44f`](https://github.com/crawl/crawl-sdl2-mixer/tree/16dbc95d9dd0ee3c8928abb3a62d910c386dc44f),
+ending in `f`; its commit and **10,200,485-byte** codeload archive are publicly
+retrievable.  Main verified the archive SHA-256
+**`b9d72c525d648deafad827985a6155f6270cefbe4f50b1f8a65956f9d6212114`**.
+The old HTTP 422/404 responses concern the mistyped SHA, not this release's
+gitlink.  Independently, upstream
+[`INSTALL.txt`](https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/INSTALL.txt#L117-L123)
+explicitly supports a complete Linux system-library build including
+SDL2_mixer, without bundled contrib dependencies.  That is the native
+package's source-built Guix dependency path, not a substitute game or a
+reason to disable sound.
+
+### Native frontends, complete assets and writable state
+
+From this checkout, the package interface is:
+
+```sh
+guix install -L guix gooncrawl
+gooncrawl                   # native curses console
+gooncrawl-tiles             # native SDL2/OpenGL local tiles, SOUND=y
+# Or, without profile installation:
+guix shell -L guix gooncrawl -- gooncrawl
+guix shell -L guix gooncrawl -- gooncrawl-tiles
+```
+
+These are usage instructions, **not a claim of installation, publication or
+deployment**.  Immutable executables are installed under
+`libexec/gooncrawl/`; launchers in `bin/` retain caller arguments and the real
+`HOME`.  An absolute `XDG_STATE_HOME` selects **`$XDG_STATE_HOME/gooncrawl`**;
+an unset or relative value falls back to
+**`$HOME/.local/state/gooncrawl`**, requiring an absolute `HOME`.
+The resolved root must not be `/gnu/store` or beneath it, including through
+symlinks or `..`.  Both commands set `CRAWL_DIR` and pass the public
+**`-macro <state>/macros`** option, keeping native saves, morgues, scores,
+macros and caches in variant-specific writable state without rewriting
+`HOME`.  Original `~/.crawlrc`, `~/.crawl/init.txt` and explicit `-rc`
+configuration remain upstream interfaces; no seeded save or replacement
+configuration is supplied.
+
+The recipe preserves separate native console and SDL2/OpenGL tiles builds,
+with Lua 5.1, ncursesw, SQLite, zlib, SDL2/image/mixer, FreeType, libpng,
+Mesa and GLU.  Normal dungeon play, Sprint, tutorial, hints, arena, wizard
+and explore capabilities remain source features; no claim that every mode
+has been exercised follows from their retention.  A separate uninstalled
+diagnostic tree runs actual upstream tests, not an installed replacement
+for the release game.  Build integration supplies deterministic `v2.0`
+version/date metadata and retains sorted original map inputs.
+
+Four source patches retain intended native semantics rather than skip
+failures: [`gooncrawl-build.patch`](guix/tay/packages/patches/gooncrawl-build.patch)
+provides compiler/build and immutable-data integration;
+[`gooncrawl-jester-equipment.patch`](guix/tay/packages/patches/gooncrawl-jester-equipment.patch)
+restores the missing comma separating the Jester's chaos quarterstaff and
+robe, and spells the four blinding pies' existing ego as `atropa`, preserving
+`SPMSL_BLINDING`.  The real initial diagnostic failure exposed this shared
+runtime equipment-parser bug; the test was not suppressed.
+[`gooncrawl-stress-pledge.patch`](guix/tay/packages/patches/gooncrawl-stress-pledge.patch)
+supplies the public `pledge=none` default only to the unattended upstream
+test harness (scenario rc files retain override priority), resolving a
+mandatory startup-menu block.
+[`gooncrawl-stress-lua-loader.patch`](guix/tay/packages/patches/gooncrawl-stress-lua-loader.patch)
+changes four stale stress-rc `require` calls to the existing supported
+`crawl_require` loader, restoring original helper setup without opening
+unrestricted Lua libraries.  All original scenarios, seeds, assertions,
+exit handling and **595-second** timeouts remain.  None of that test-only
+setup is injected into the ordinary native consumer.
+
+Original maps, Lua scripts, databases, defaults, descriptions/translations,
+settings, fixed tiles and source-generated tile atlases remain immutable in
+`share/gooncrawl`.  The exact font gitlink
+[`crawl/crawl-fonts` commit `6d3046974f35189a679a4d84b254efe82d1653b3`](https://github.com/crawl/crawl-fonts/tree/6d3046974f35189a679a4d84b254efe82d1653b3)
+supplies unchanged **DejaVu Sans and Sans Mono 2.33**, archive base32
+**`1my66aw1wmysqr0z3smz8qyz6j7q9f4j0h8f3w22b4gnklh5k6i8`**.
+There is no artwork/font substitution, opaque upstream executable or native
+feature cut.  SDL2 tiles retains upstream audio-file playback support;
+the source contains **no bundled soundtrack/audio files**.  User-selected
+regex-to-file sound mappings are upstream functionality, not missing assets.
+Enabled audio support alone is not evidence of an opened audio device,
+non-silent samples or physical audible output.
+
+### Integrated game rights and scoped asset notices
+
+The original
+[`licence.txt`](https://github.com/Floodkiller/crawl/blob/eb805b9c1b92935c93094ffc5c19a99ba18839d8/crawl-ref/licence.txt)
+grants the game **GPL-2.0-or-later**, with compatible file-specific
+exceptions.  The linked Apache-2.0 PCG component uses the GPL's
+**version-3-or-later option** for the integrated executable; it is not a
+GPL-2.0-only combination.  BSD-2/BSD-3, MIT, Apache-2.0 and
+CC0/public-domain contributions retain their own scoped notices.
+**The artwork is not blanket CC0.**  Majority-CC0 tile/export policy and
+historical standalone export exclusions do not override the integrated
+game's grant or establish that every individual tile has separately
+recovered CC0 authorization.  The historical NetHack felid exclusion is
+stale against the pinned Denzi replacement tiles; other non-CC0 provenance
+caveats remain scoped, not silently relabelled or removed.
+
+The package explicitly retains the original `licence.txt`, `CREDITS.txt`
+and `docs/license/` under `share/doc/gooncrawl`, with Gooncrawl-specific
+documentation in `share/gooncrawl/docs/gooncrawl`; upstream Unix
+`install-data` alone omits the root license and variant documentation.
+Installed provenance, font and
+third-party notices preserve the full GPLv3/Apache-2.0 texts, PCG
+attribution, BSD domino and MIT json/worley grants, and both fonts' exact
+Bitstream Vera/DejaVu notices (plus Arev for Sans).  Font name/trademark
+conditions remain applicable.  The source's separately scoped CC-BY-3.0
+`util/dcss.svg` is not installed as a desktop icon or claimed CC0.
+System input packages retain their own notices and corresponding source;
+this is not one blanket license for the transitive closure.
+
+### Optional Webtiles deployment boundary
+
+The independently playable native console and local tiles frontends do not
+deploy the separate upstream **WEBTILES** server.  Upstream makes WEBTILES
+and local SDL tiles mutually exclusive builds.  Original server source and
+documentation remain available, but its Python 2-era/Tornado **2.3–3.x**
+deployment, authentication database, writable rc/ttyrec/socket state and
+HTTP/WebSocket service require a separate deployment contract.  The old
+configuration defaults to binding all interfaces, not a loopback-only
+service; it must not be autoactivated as a package-install side effect.
+No server/browser frontend, network service or deployment acceptance is
+claimed here, and no native gameplay feature is removed to create that
+boundary.
+
+### Verification status, inventory and publication boundary
+
+Main's final source build **bg228** passed in **1,285.26 s**, producing
+**`/gnu/store/0ria82c2vfbssczwf3ycd6nxfv0rf98k-gooncrawl-2.0`** from
+derivation **`cr958rvjl8bm4dh9ayjapxd9052g5bxg`**.  All three separate
+diagnostic/console/tiles builds completed (**1,181.7 s**), then the real
+upstream check phase passed **30/30 diagnostic tests and all ten original
+stress scenarios** (**74.6 s**).  Earlier failures are not passes: they
+exposed the Jester and harness defects described above; an intermediate
+attempt also failed with `ENOSPC` before compilation.
+
+Main's final **`guix build -L guix gooncrawl --check --cores=1 --max-jobs=1
+--no-grafts --no-offload --keep-failed`** rebuild **bg233** passed in
+**1,383.14 s**, byte-reproducing that same output.  It rebuilt all three
+trees (**1,279.4 s**) and again passed **30/30 diagnostic tests plus all ten
+stress scenarios** (**79.5 s**).  These are actual source-build and
+reproducibility receipts, not dry-run closure predictions.
+
+The final real [shell consumer](tests/gooncrawl-smoke.sh) and
+[native UI driver](tests/gooncrawl-native.py) passed as **bg241** in
+**32.43 s**, retaining
+**`.goocastle/evidence/gooncrawl-native4/report.json`** with
+**`success: true`** and **`nar_unchanged: true`**.  Both console and SDL2
+frontends started with fresh HOME/XDG trees, no seed, injected rc/save,
+runtime hook or rerolled game.  Through ordinary UI input, each created a
+Human Fighter with no pledge, waited **turn 0→1**, moved one floor square
+**1→2**, used native save/exit, restored in a fresh process at **turn 2**,
+waited to **turn 3**, and saved again with changed save bytes.  Native
+character/inventory and map position matched across restore; all **four
+save exits were natural status 0**.
+
+The actual game processes retained **UID 1000/GID 998**, zero capabilities
+and `no_new_privs` in private user/mount/network/PID namespaces, without
+external routes, with read-only store mounts and unchanged real HOME.
+Before/after recursive output NAR hashes match:
+**`0ynns328h085n9b7hddsbirzm6d02qrvn9ggmvd12nch71629l4f`**.
+The original font bytes matched SHA-256
+**`709faab3a9ecd9d3057ba6751eb4bbbe60bca3f4418aa66fdd8ee35a694b914d`**
+(Sans) and
+**`9ed156360629de7c45de7ff11b6e43cc3c611252a98570a5787511b44bcf93f7`**
+(Mono), with their filenames present as the native executable defaults.
+Main read the final terminal captures `terminal-new-game-0048-initial.txt`,
+`terminal-reload-0005-restored.txt` and `terminal-reload-0006-next-turn.txt`.
+Their incremental PTY time HUD retains stale fragments; native `#` dumps
+are authoritative for turn counts, and flawless terminal rendering is not
+claimed.  Main also viewed four original SDL framebuffers from that receipt:
+`tiles-new-game-0015-initial.png`, `tiles-new-game-0019-moved.png`,
+`tiles-reload-0006-restored.png` and `tiles-reload-0007-next-turn.png`.
+They show readable original fonts, map/inventory and native times **0, 2,
+2, 3**; OCR-derived crops are not substituted for the original screenshots.
+
+Fresh and restored SDL game PIDs **12/688** each opened a private PulseAudio
+stream with matching native/client/stream PID, **s16le, 2 channels,
+44100 Hz**, uncorked and unmuted.  This proves native audio-stream
+initialization, **not audio-file playback, non-silent samples or physical
+audibility**.  The observed source-built runtime closure includes
+SDL2_mixer **2.6.3**, mpg123 **1.33.5**, libvorbis **1.3.7**, libogg
+**1.3.6** and Opus; codec presence is not codec-playback acceptance.
+
+Consumer fixes retained the strict outside-output guard: its interpreter
+uses a separate consumer Python output because the game's real
+PipeWire→JACK2 closure also includes ordinary Python.  A prior water-tile
+movement assumption was corrected in the helper, not by altering gameplay,
+seeding or rerolling; the failure's retained dump/map/viewport in the cleanup
+manifest supports a six-candidate `~` helper regression,
+**not an actual water-passability test**.  Both final
+native moves were ordinary floor movement.  This bounded run does not
+establish combat, campaign completion, deeper traversal, all
+species/classes/modes, sound-file playback or Webtiles deployment.
+
+The final rerun followed a consumer-only correction adding explicit
+single-core/single-job, no-offload and keep-failed flags to both Guix
+consumer-realization commands.  It preserved the package output and NAR;
+both final moves were the ordinary `h` floor step **[-1, 0]**.
+
+At the user's request on **2026-10-23**, cleanup removed the superseded
+`gooncrawl-native1/2/3` evidence trees and **28** redundant final-native4
+uncompressed XWD captures.  All final-native4 original compressed PNGs,
+report, saves, inputs, PTY captures and process metadata remain.  Failure
+and superseded reports, the actual water dump/map/viewport fixture and
+hashes of released intermediates are preserved in the session-local
+**`local://gooncrawl-native-cleanup-manifest.json`**, not a tracked report
+file.  Main's **bg243** cleanup check passed in **4.50 s**, confirming the
+**31** released paths absent and **28** final original PNG counterparts
+retained.  Local historical receipts describe artifacts at the time of
+their runs; they do not assert that superseded intermediate paths remain
+present after this cleanup.
+
+The existing Makefile pattern exposes the prebuilt-output consumer as:
+
+```sh
+make check-gooncrawl GOONCRAWL_OUTPUT=/gnu/store/…-gooncrawl-2.0 \
+  GOONCRAWL_EVIDENCE=/absolute/fresh-evidence-directory
+```
+
+Main's final literal **`guix lint -L guix gooncrawl`** run **bg242** on the
+corrected recipe exited **1** after **555.51 s**, aborting in
+`check-vulnerabilities` on the official **NVD 2026 feed EOF at
+13,000,786/38,618,028 bytes**.  An ambient `libcamera-minimal` duplicate
+import warning also appeared.  **Literal full lint remains incomplete and
+not clean**; this is not an all-checkers pass.
+
+The earlier **bg223** full-lint attempt exited **1** after **263.76 s**,
+reporting a **95-character package line** and the same feed's EOF at
+**2,715,322/38,618,028 bytes**.  That line was subsequently wrapped; its
+warning was not emitted before the final abort, which still does not prove
+all checkers clean.  No checker is skipped, warning suppressed,
+fabricated/stale CVE data used, or cache/routing change made to manufacture
+a pass.  The successful build, reproducibility and final-native4 receipts
+remain unaffected by this lint failure.
+**Forgejo #382 and GitHub #382 remain OPEN.**  These local receipts make
+no signed-publication, profile-installation or deployment claim.
+
+Gooncrawl is one project package and one alphabetic README Crawl-family
+row; its two frontends and diagnostic/dependency builds are not extra
+top-level games.  The canonical **629** preservation snapshots remain
+unchanged; this entry asserts neither a new whole-inventory total/pass nor
+acceptance of unrelated edits.
 
 ## God of Change — recovered original source, font rights and bounded native gameplay (2026-10-22)
 
