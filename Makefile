@@ -59,7 +59,7 @@ PROJECT_PACKAGES := aptitude-custom-aliases bell-museum \
 	gearhead2 gearhead fiqhack evilhack dynahack alone-rl allure \
 	agduria wenyan ludviglundgren-qbittorrent-cli \
 	lispy-rogue bodge-nuklear litegraph maiko interlisp-medley natron sporkhack meta-typing rot-js node-ink sbcl-imago persephil calcrogue city-of-the-condemned cracks-and-crevices dungeonminder dwarftown dungeonsofdecay encircled enemy-trench freebasic escape-from-lab-42 etrd eversector everything-is-fodder exalt experienced-pixel-dungeon faangband autolith farmingrl \
-	for-roguelike
+	for-roguelike infection
 INSTALLABLE_PACKAGES := $(FONT_PACKAGES) $(PROJECT_PACKAGES)
 # Keep i686-only packages listed for inventory and lint, but realize them
 # through explicit architecture targets rather than the default native build.
@@ -140,6 +140,7 @@ CHECK_PACKAGES := $(INSTALLABLE_PACKAGES) $(OPTIONAL_PROPRIETARY_PACKAGES) \
 .PHONY: guard-farmingrl
 .PHONY: guard-for-roguelike
 .PHONY: guard-handhrl
+.PHONY: guard-infection
 check-source-count:
 	@test "$(SOURCE_PACKAGE_COUNT)" -eq "$(EXPECTED_SOURCE_PACKAGE_COUNT)" || \
 		{ echo "expected $(EXPECTED_SOURCE_PACKAGE_COUNT) exported source packages, found $(SOURCE_PACKAGE_COUNT)"; exit 1; }
@@ -241,6 +242,10 @@ guard-for-roguelike:
 guard-handhrl:
 	@test -n "$(HANDHRL_OUTPUT)" -a -n "$(HANDHRL_EVIDENCE)" || { echo 'Set HANDHRL_OUTPUT and HANDHRL_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
 	GUIX="$(GUIX)" sh tests/handhrl-smoke.sh "$(HANDHRL_OUTPUT)" "$(HANDHRL_EVIDENCE)"
+
+guard-infection:
+	@test -n "$(INFECTION_OUTPUT)" -a -n "$(INFECTION_EVIDENCE)" || { echo 'Set INFECTION_OUTPUT and INFECTION_EVIDENCE (canonical prebuilt store output and fresh, nonexistent absolute evidence directory outside the store).' >&2; exit 1; }
+	GUIX="$(GUIX)" sh tests/infection-smoke.sh "$(INFECTION_OUTPUT)" "$(INFECTION_EVIDENCE)"
 
 check-durthang:
 	GUIX="$(GUIX)" tests/durthang-smoke.sh

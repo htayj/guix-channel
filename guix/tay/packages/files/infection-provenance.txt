@@ -1,0 +1,238 @@
+Infection 2013: source, integration and third-party notices
+=========================================================
+
+Original game and source identity
+---------------------------------
+
+Infection is Luca Carbone's 2013 Seven Day Roguelike Challenge game.
+Canonical author page: https://www.tndwolf.org/infection/
+Source archive: https://www.tndwolf.org/infection/infection_src.rar
+Archive size: 1835852 bytes
+Raw archive SHA256:
+1a9606c9e2e429b02af438b173ad91ea0ebe4af45defd6851844d6a6eb5a120a
+Guix base32 SHA256 of that archive:
+02hjbbmsdmj4322xdvsxyi5bw3paj6np7c9qyhmb0ag4wb4hd5hs
+
+Package download transport (the original archive, not a new source line):
+https://web.archive.org/web/20160809031909/http://www.tndwolf.org/infection/infection_src.rar
+The live canonical author URL remains the source identity above.  On
+2026-10-24, Guix's download and full lint encountered the author's malformed
+media-type header, reported as:
+Bad media-type header component: application/application/x-rar-compressed
+Guix's download fallback redirected to the exact Wayback capture above
+and obtained bytes accepted by the same fixed archive SHA256.  The recipe
+therefore uses that verified archival transport directly, retaining the
+original canonical URL and unchanged hash.  No lint checker is disabled;
+fresh build/check/lint and native verification of the revised package
+remain separate gates, not assumed successful by this transport change.
+
+The two channel notice files are installed with explicit stable names:
+share/doc/infection/infection-provenance.txt and
+share/doc/infection/infection-font-notices.txt.  The font license metadata
+refers to that exact installed font-notice path, without a store-hash
+prefix in the filename.
+
+The conservative package version is 2013, not an invented numbered
+release or revision.  Source and distribution comparisons recorded on
+2026-10-24 found every one of the 14 overlapping regular files in the
+author's last Windows distribution byte-identical to the source archive
+working tree.  The source archive, rather than a hypothetical maintained
+repository, is the pinned upstream identity.
+
+All six game modules (main, characters, map, system, traits, world) and
+the Linux Derelict closure are built with the free LDC compiler.  The
+archived infection.exe, libtcod.dll, SDL.dll, src/lib/*.lib and
+src/build/infection.obj are not extracted for the build or installed.
+The .hg history is also excluded, including historical binary revlogs.
+No archive build script is executed.  The root Windows compile.bat and
+src/cmdfile.txt are not used; the latter specifies release mode, which
+the package retains.  HTML/screenshots are distribution documentation,
+not runtime game data; they are not installed.
+
+The included DerelictTCOD types identify libtcod 1.5.1.  All three TCOD
+modules and util/exception.d, loader.d, sharedlib.d and system.d are
+compiled directly, not replaced by a new external bindings dependency.
+The unused Windows-only wintypes.d and unused xtypes.d are not passed
+to the Linux compiler; no active Linux feature imports them.  The full
+Boost notice below applies to the included bindings.
+
+The portability patch removes the two Windows import-library pragmas,
+replaces four removed std.string.xformat calls with std.format.format,
+uses core.sys.posix.dlfcn instead of the removed std.c.linux.linux
+import, and uses core.stdc.stdlib.exit instead of std.c.stdlib.exit.
+It imports the required standard-library modules explicitly.
+Game-module dependencies are also explicit: system imports main, traits
+imports map and world, and world imports system.  These resolve the
+original qualified references, not replacement module aliases.
+Four old bare catches become catch(Throwable), retaining their catch-all behavior
+without suppressing compiler diagnostics.  The loader is pointed at the
+absolute immutable libtcod.so supplied by the unchanged channel renderer.
+There are no gameplay, AI, RNG, difficulty, data or input changes.
+
+For the 64-bit D frontend, MAX_MESSAGES keeps the value 4 with an
+explicit uint type, preventing its platform-sized type from promoting
+small console coordinates to 64 bits.  Map dimensions use uint: the
+existing initMap interface accepts ubyte dimensions and multiplies them
+by the fixed CELL_SIZE of 5, so each dimension is at most 1275.  The FOV
+center interface matches the existing uint player positions.  Array
+indices otherwise remain size_t, including foreach indices that
+previously relied on deprecated implicit narrowing.  Explicit int casts
+at libtcod's existing C boundaries cover bounded map coordinates, menu
+and map-name positions, tileset/archetype index bounds and the original
+breeder probability expression.  World spawning explicitly converts the
+character count to uint before its original unsigned-32 probability
+arithmetic; the existing prob > 99 test and RNG call ordering are intact.
+Console offsets add signed indices so negative
+offscreen positions retain their original meaning.  No C ABI signatures,
+RNG call ordering, probability bounds, seeds or game data are changed;
+there is no new clamping, filtering or recovery behavior.  These edits
+address observed compile diagnostics, not a claim of completed build or
+runtime verification.
+
+Modern Phobos parses the original small positive JSON literals as signed
+integers.  The old unsigned-only accessor rejected them: native debugging
+observed "JSONValue is not an unsigned integer" in initWorld before map
+allocation, followed by the original caller dereferencing the absent map.
+The patch fixes the cause, not that downstream symptom: every active
+.uinteger accessor becomes .integer, retaining every original ubyte cast.
+The full inventory is three reads in world.d (cells, width and height),
+three character RGB component reads in characters.d, and nine tileset
+component reads in map.d (three background and six foreground bounds).
+The original eight levels have dimensions 5 through 8 and cornerstone
+counts 3 through 7; all character and tileset color components are
+nonnegative integers at most 255.  None of these fields requires a
+large unsigned representation.  Existing signed integer accesses for
+character variables and inventory remain unchanged.  No JSON bytes,
+parser replacement, exception suppression, initialization guard, fallback,
+RNG call or game mechanic is introduced by this accessor migration.
+Its revised build and full native behavior still require verification.
+
+The original getVar, getInv and modInv functions treat absent lookup keys
+as zero via their surrounding catch blocks.  With modern D release-mode
+associative-array bounds checks omitted, the indexed missing-key read can
+instead dereference null before that catch can run.  Native debugging
+observed this at modInv's final inventory read during Citotoxic.onAdded,
+after the original code deliberately declined to insert an absent key
+for a negative resource cost.  Those three potentially absent reads now
+use the associative-array get(key, 0) operation.  This preserves their
+original zero result without inserting a default entry or changing any
+inventory mutation or negative-cost rule.  modVar still reads its key
+only after the existing branch updates or inserts it; that read remains
+unchanged.  The surrounding catches and release build mode remain, with
+no RNG, trait, inventory-order or asset changes.  The revised output
+still requires complete native verification.
+
+The original assets remain data/gameData.js, bowels.js, brain.js,
+heart.js, kidneys.js, liver.js, lungs.js, nanofactory.js, stomach.js,
+title.png and dejavu16x16_gs_tc.png.  The data directory is copied without
+content rewriting to share/infection/data.  The original font SHA256 is
+checked during unpack:
+cb17ade2c0a346af0de6f5d66877d68cf2736d1689ae7bc4dc4e34382e1720ce
+The author's title.png SHA256 is:
+196a17313e73e28f3e0ac6afe9487aee79276c1a3ecdeec012d8d51151ec7284
+
+The font is the author's modified DejaVu-derived 512x128 TCOD bitmap,
+including two custom glyph cells; it is not the unmodified libtcod sample
+or a rerendered font.  Full Bitstream Vera and Arev permission/disclaimer
+notices and the DejaVu changes statement are in infection-font-notices.txt.
+The original libtcod font README is installed as libtcod-fonts-README.txt.
+Its general public-domain wording is not a blanket license for this
+DejaVu-derived bitmap.  The reserved font-name clauses remain effective.
+The original leading return in changeSize remains unchanged: the author
+disabled the 24px resize path, and neither the source working tree nor
+the final Windows distribution supplies a 24px font.  No such font or
+feature is recovered from history or synthesized.
+
+The public bin/infection launcher sets umask 077, changes directory to
+immutable share/infection and execs libexec/infection, preserving its
+arguments.  Relative data/ reads therefore retain their original layout.
+The original game has no active save system (the save reference is a
+comment); no copied writable game tree, persistent cache or invented
+save mechanism is added.  HOME and XDG directories remain caller-owned.
+This describes the integration, not proof of observed runtime writes,
+ABI resolution, gameplay or reproducibility.  Those require the separate
+package build/check and native display verification.
+
+Original author BSD-2-Clause notice
+----------------------------------
+
+The following grant is from src/license.txt, which is also installed
+separately without rewriting.  It covers the game and author-original
+data/title art and the author's two-cell font modification layer; it
+does not replace the font lineage notices.
+
+Copyright (c) 2013, Luca Carbone
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Included DerelictTCOD and DerelictUtil
+------------------------------------
+
+The following full notice appears atop all nine original binding modules
+in src/derelict; those headers are not stripped during the source build.
+
+Boost Software License - Version 1.0 - August 17th, 2003
+
+Permission is hereby granted, free of charge, to any person or organization
+obtaining a copy of the software and accompanying documentation covered by
+this license (the "Software") to use, reproduce, display, distribute,
+execute, and transmit the Software, and to prepare derivative works of the
+Software, and to permit third-parties to whom the Software is furnished to
+do so, all subject to the following:
+
+The copyright notices in the Software and this entire statement, including
+the above license grant, this restriction and the following disclaimer,
+must be included in all copies of the Software, in whole or in part, and
+all derivative works of the Software, unless such copies or derivative
+works are solely in the form of machine-executable object code generated by
+a source language processor.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
+SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
+FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+Historical renderer and actual runtime
+--------------------------------------
+
+This package reuses, unchanged, the existing private dwarftown-libtcod
+1.5.1 package from (tay packages dwarftown), also shared by other games.
+It is built from:
+https://github.com/libtcod/libtcod/commit/a7cabfda0b0c770d4092f0dec02efbd2a3b6d990
+Its sanitized pinned source supplies the original data/fonts/README.txt;
+no replacement renderer recipe is introduced here.  Its installed full
+LIBTCOD-LICENSE.txt (BSD-3-Clause), LIBTCOD-CREDITS.txt, README-SDL.txt,
+and embedded codec lodepng.c and lodepng.h (including complete notices
+and version) are copied into this game's documentation directory.
+LodePNG is built from the renderer's source, not an opaque codec binary.
+
+The actual runtime renderer links the Guix sdl12-compat implementation,
+zlib and Mesa.  sdl12-compat provides the SDL 1.2 interface over SDL2;
+sdl12-compat and SDL2 use the zlib license.  The archived SDL.dll is not
+shipped or executed.  README-SDL.txt's old SDL 1.2 / LGPL-2.1 discussion
+is retained as historical provenance, not as the licensing of the actual
+Guix runtime dependency.  Native library version correspondence is not
+proof of symbol-by-symbol ABI resolution; the original Derelict loader
+must load and bind the source-built libtcod during native verification.

@@ -102,6 +102,7 @@ and superseded by [its final receipt](#alonerl-final-local-acceptance-2026-10-04
 - [God of Change recovered original source, font rights and bounded native gameplay](#god-of-change--recovered-original-source-font-rights-and-bounded-native-gameplay-2026-10-22)
 - [Gooncrawl original v2.0 source, rights and native console/tiles](#gooncrawl--original-v20-source-rights-and-native-consoletiles-2026-10-23)
 - [HandhRL original source, rights and native save continuity](#handhrl--original-source-rights-and-native-save-continuity-2026-10-23)
+- [Infection original D source, rights and native gameplay](#infection--original-d-source-rights-and-native-gameplay-2026-10-24)
 
 ## Substitute automation — prepared, not deployed (2026-10-18)
 
@@ -658,6 +659,145 @@ linters or formatters**. Rendered readability, inventory/link checks and final
 package verification are owned by the integrating agent. No described host or
 service changed, and no material network-catalog correction was established;
 therefore no OKF page/log update applies to this repository-only guide rewrite.
+
+## Infection — original D source, rights and native gameplay (2026-10-24)
+
+[`infection`](guix/tay/packages/infection.scm) **2013** builds Luca Carbone's
+original Seven Day Roguelike Challenge game, not a rewrite or an opaque
+Windows binary.  The [author's page](https://www.tndwolf.org/infection/) links
+the original `infection_src.rar`: **1,835,852 bytes**, SHA256
+**`1a9606c9e2e429b02af438b173ad91ea0ebe4af45defd6851844d6a6eb5a120a`**,
+Guix base32 **`02hjbbmsdmj4322xdvsxyi5bw3paj6np7c9qyhmb0ag4wb4hd5hs`**.
+The historical tracker hash omitted the final **`a`**; the full measured
+digest is 64 hexadecimal characters.  All 14 files in the author's last
+Windows distribution match the corresponding source-archive files byte for
+byte.  No archived executable, DLL, import library or Mercurial history is
+used as compiled input.
+
+The author server supplies malformed Content-Type
+`application/application/x-rar-compressed`, which actually broke Guix's
+download/header parsing and the first full lint.  The recipe uses the
+[observed 2016-08-09 archive capture](https://web.archive.org/web/20160809031909/http://www.tndwolf.org/infection/infection_src.rar)
+as transport for the **same hash-verified source bytes**.  This is not a
+different game release, a claim that the source is in Software Heritage,
+or a waiver of archival checks.
+
+### Source, assets and notices
+
+The original `src/license.txt` grants **BSD-2-Clause**, Luca Carbone 2013;
+included DerelictTCOD/Util sources carry **Boost-1.0** notices.  The binding's
+declared API is libtcod **1.5.1**.  The package reuses the existing private
+`dwarftown-libtcod` source recipe unchanged, including its actual
+**sdl12-compat / zlib / Mesa** closure.  The archived SDL DLL's historical
+notice is retained as provenance, not misidentified as the license of the
+current SDL compatibility implementation.
+
+All **11 original data files** are installed byte-identically, including
+the title and original **512×128**, **32×8 TCOD-layout** font.  The font's
+SHA256 is **`cb17ade2c0a346af0de6f5d66877d68cf2736d1689ae7bc4dc4e34382e1720ce`**.
+It differs from the pinned renderer sample in **237 pixels**, confined to
+two custom glyph cells; the other **254 cells** match.  The author's player
+and wall glyphs are retained, not substituted.  The upstream `changeSize`
+function begins with an unconditional return; its disabled 24px-font path
+is neither enabled nor supplied with invented assets.
+
+Installed under **`share/doc/infection/`**: original BSD-2 license,
+[`infection-provenance.txt`](guix/tay/packages/files/infection-provenance.txt),
+[`infection-font-notices.txt`](guix/tay/packages/files/infection-font-notices.txt),
+original libtcod font README, BSD-3 renderer license/credits, historical SDL
+notice, and complete noticed LodePNG source/header.  These include the full
+Bitstream Vera and Arev grants and DejaVu changes-public-domain statement;
+they do **not** declare the entire derived font public domain or waive
+reserved font-name terms.  Both local notice files use stable installed
+names, including the path referenced by the package's font-license URI.
+
+### Minimal portability and runtime behavior
+
+LDC **1.38.0** compiles all six original game modules and seven included
+Linux-relevant Derelict modules.  The patch removes Windows import-library
+pragmas, makes actual module dependencies explicit, replaces removed
+Phobos formatting/POSIX/exit interfaces, expresses bounded integer C-ABI
+conversions, and retains old catch-all semantics with `catch(Throwable)`.
+No libtcod C signatures, game assets, RNG calls, AI or difficulty rules are
+changed.  Guix's GCC is selected explicitly as LDC's linker driver.
+
+Two actual menu-to-Normal crashes were diagnosed with symbolized GDB:
+modern `std.json` classifies the original small positive numbers as signed
+integers, so the original `.uinteger` accessors threw before map allocation;
+all **15** affected reads now use `.integer` with the original casts and
+unchanged data.  The next crash was a missing associative-array key read in
+release mode: the original catch intended zero, but modern unchecked access
+dereferenced null.  Exactly three reads now use non-inserting `get(key, 0)`;
+inventory mutation and negative trait-cost behavior remain unchanged.
+These fix observed causes, not suppress exceptions or add recovery modes.
+
+```sh
+guix shell -L guix infection -- infection
+```
+
+The **`infection`** launcher sets **`umask 077`**, changes CWD to immutable
+**`share/infection`**, then execs the compiled **`libexec/infection`**.
+Original relative `data/` reads work without copying a writable game tree.
+The original game has **no active save system**; no fabricated save/load
+feature or persistence test is added.  This usage is not a profile
+installation or deployment claim.
+
+### Exercised verification and remaining findings
+
+Final-source build **bg282** passed in **5.68 s**; same-output serial
+`--check` **bg284** passed in **3.80 s**.  Both used `--cores=1`,
+`--max-jobs=1`, `--no-grafts`, `--no-offload` and `--keep-failed`.
+Output: **`/gnu/store/z4zyc05g4r64i4m5phjn9hqb8dhhbycz-infection-2013`**.
+No upstream automated suite exists; its check phase explicitly reports
+**test suite not run**.  Guile binding and uninstalled renderer-sample
+interpreter warnings were not hidden.
+
+The literal full **`guix lint -L guix infection`**, **bg279 / 122.57 s**,
+completed with two **own, unwaived findings**: `generic-html` failed to find
+upstream releases; source is not archived on Software Heritage and is
+missing from Disarchive.  Final-source lint **bg285** repeated both findings
+and completed before the subsequent unavailable `make` command failed;
+the combined command took **19.95 s**.  Exit zero is **not clean lint**.
+No checker was skipped, fake updater added, archival result fabricated or
+property waiver introduced.  These findings keep **Forgejo #402 and
+GitHub #402 OPEN**.
+
+The [shell consumer](tests/infection-smoke.sh) and
+[external native UI driver](tests/infection-native.py) passed as **bg283**
+in **17.52 s**, using the exact output above.  Original evidence is retained
+under **`.goocastle/evidence/infection-native3/`**: receipts, process/input
+proofs and **five original PNG checkpoints**.  The game ran at
+**UID 1000/GID 998**, in private user/mount/network/PID namespaces, offline,
+with zero capabilities, `NoNewPrivs=1` and read-only store mounts.  Exact
+ELF/CWD identity and unchanged before/after output NAR hashes were checked.
+
+Ordinary **Play - Normal** rendered the original Lungs HUD **H:10/10 - C:3**.
+Real XTEST arrows proved movement and a further turn through exact
+translation of multiple distinct wall tiles; the camera keeps the player
+at screen `(30,17)`, so no false screen-coordinate movement is claimed.
+Tab opened original Inventory/Your Traits/Buy Traits; Down navigated and
+`q` returned to the identical world image.  `h` opened original help and
+Escape restored that same image.  Original gameplay `q` exited naturally
+with **status 0**.  Independent image inspection confirmed real terrain,
+custom player glyph, readable traits/help and no blank/error surface.
+No seed selection, reroll, state injection, game hooks or synthetic success
+mode was used.  Private scratch was removed and Xvfb exited zero; original
+informational X/font diagnostics are retained.
+
+```sh
+make guard-infection \
+  INFECTION_OUTPUT=/gnu/store/z4zyc05g4r64i4m5phjn9hqb8dhhbycz-infection-2013 \
+  INFECTION_EVIDENCE=/absolute/fresh-infection-evidence
+```
+
+Infection is a normal game package, not a `-source` snapshot; the canonical
+**629** exported source-package count remains unchanged.  The explicit
+Guix-Make `check-source-count` run failed its independent textual-inventory
+comparison: existing `autolith-sbcl-source` and `hermes-agent-source`
+definitions appear only in that parsed set.  No unrelated definition or
+expected count was changed to hide this discrepancy.  Publication and issue
+closure are separate gates; no installation, deployment or closure is
+claimed here.
 
 ## HandhRL — original source, rights and native save continuity (2026-10-23)
 
